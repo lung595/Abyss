@@ -1,0 +1,67 @@
+import QtQuick
+import qs.Common
+import qs.Widgets
+import qs.Modules.Plugins
+import "components/Terminal.js" as Terminal
+
+// Plugin settings. Everything works out of the box; each option says in one
+// short line what it changes.
+PluginSettings {
+    id: root
+    pluginId: "abyss"
+
+    // Section title with air above it: hierarchy from size and weight only
+    component Section: StyledText {
+        width: parent ? parent.width : 0
+        topPadding: Theme.spacingXL
+        bottomPadding: Theme.spacingXS
+        font.pixelSize: Theme.fontSizeLarge
+        font.weight: Font.Bold
+        color: Theme.surfaceText
+    }
+
+    Section {
+        topPadding: 0
+        text: "The deep"
+    }
+
+    ToggleSetting {
+        settingKey: "showOffline"
+        label: "Show offline peers"
+        description: "Asleep on the sea floor"
+        defaultValue: true
+    }
+
+    ToggleSetting {
+        settingKey: "pulses"
+        label: "Light pulses"
+        description: "Traffic running along the tentacles"
+        defaultValue: true
+    }
+
+    ToggleSetting {
+        settingKey: "desktopLive"
+        label: "Keep the desktop alive"
+        description: "Otherwise it only moves under the pointer · ⚡ Uses more battery"
+        defaultValue: false
+    }
+
+    Section {
+        text: "Peers"
+    }
+
+    ToggleSetting {
+        settingKey: "notifications"
+        label: "Notifications"
+        description: "When a peer comes online or goes offline (muted peers stay quiet)"
+        defaultValue: false
+    }
+
+    SelectionSetting {
+        settingKey: "terminal"
+        label: "Terminal for SSH"
+        description: "Automatic tries the usual ones"
+        options: Terminal.options()
+        defaultValue: "auto"
+    }
+}
