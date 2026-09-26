@@ -1,0 +1,29 @@
+{
+    "$schema": "https://github.com/AvengeMedia/DankMaterialShell/raw/refs/heads/master/PLUGINS/plugin-schema.json",
+    "id": "abyss",
+    "name": "Abyss",
+    "description": "Your NetBird mesh as a glowing deep sea: you are the jellyfish, each peer a creature at the depth of its latency, its tentacle lit by its live traffic. Bar, Control Center and desktop.",
+    "version": "0.1.0",
+    "author": "lung595",
+    "license": "MIT",
+    "icon": "vpn_lock",
+    "type": "composite",
+    "capabilities": [
+        "daemon",
+        "dankbar-widget",
+        "control-center",
+        "desktop-widget"
+    ],
+    "components": {
+        "daemon": "./AbyssDaemon.qml",
+        "widget": "./AbyssWidget.qml",
+        "desktop": "./AbyssDesktop.qml"
+    },
+    "settings": "./AbyssSettings.qml",
+    "requires_dms": ">=1.6.0",
+    "permissions": [
+        "settings_read",
+        "settings_write",
+        "process"
+    ]
+}
