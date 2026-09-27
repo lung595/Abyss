@@ -1037,6 +1037,9 @@ Item {
     }
     property bool netsOpen: false
     property string dropName: ""
+    // The carried light is over the middle of the open group: dropping it
+    // there gives Internet to the whole group (GroupPeek shows what it will do)
+    property bool aimAll: false
     property string query: ""
     property string omenHidden: ""
 
@@ -1193,6 +1196,7 @@ Item {
         _carrying = true;
         const t = _sunTarget(px, py);
         dropName = t && t.peer ? t.peer.name : "";
+        aimAll = peekId !== "" && !!t && !t.peer;
         if (peekId !== "")
             focusId = t && t.peer ? "m:" + t.peer.id : "";
         // Leaving the bubble closes it; resting on a shoal opens it
@@ -1230,6 +1234,7 @@ Item {
         const inPool = peekId !== "" && Math.hypot(px - peekCentre.x, py - peekCentre.y) <= peekR + 24;
         _carrying = false;
         dropName = "";
+        aimAll = false;
         dropHint = "Drop on a peer";
         sunDwell.stop();
         _sunDwellId = "";

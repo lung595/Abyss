@@ -96,6 +96,7 @@ scripts/preview/render.sh connected "$PWD/out.png"   # offscreen renders from th
 ### Unreleased (0.3.0)
 
 - **Livelier animals**: between trips every creature now has its own life — the fish beats its tail and wanders, the manta flaps its wings, the squid squeezes and jets upward, the seahorse sways upright, the turtle paddles, the whale and the nautilus roll slowly — and now and then the ones that can turn look the other way. Inside an open group the members live too (they were still). Calmer asleep, still with *Reduce motion*, and nothing runs while nobody looks: it rides the scene's existing clock, moving the shapes without repainting them (idle CPU unchanged: 3.7 % vs 3.6 % of one core, same session).
+- **See what "the whole group" means before letting go**: carrying the light over the middle of an open group shows a ring where it will rest and faint tentacles to every member; once dropped, a bead of light runs out to each of them, once.
 - **Your own groups**: right-click a creature or a group to add it to a group, start one, rename, ungroup, or keep an automatic group. They come first and never reshuffle.
 - **Internet through a whole group**: drop the light in the middle of a group; it stays there, tied to the member lending the Internet, and the next best member takes over if that one goes offline. Drag it out of the group to stop. Also `dms ipc call abyss exit <group or peer>`.
 - **Carry the Internet into groups**: resting the light on a group opens it (the groups hold still meanwhile), you can then leave it on any member; carrying it out of the bubble closes it.
@@ -158,8 +159,9 @@ Sending your Internet through a peer (a NetBird exit node) should explain itself
 **Choosing a group**
 - ✓ Carrying the light over a shoal opens it; drop on a member for that one only.
 - ✓ Drop it in the middle of the group for the whole group: the group lends its best member online, and switches by itself when that one goes offline.
-- **While you carry it over the middle**, a ring appears there with "All of Homelab", and faint tentacles reach out to every member: you see what dropping will do before you let go.
-- **Once dropped**, the light settles in the middle and a pulse runs once along the tentacles; the member that lends it is lit, the others wait on dotted lines, marked "ready to take over".
+- ✓ **While you carry it over the middle**, a ring appears where it will rest, faint tentacles reach out to every member, and the light says "Internet through all of Homelab": you see what dropping will do before you let go.
+- ✓ **Once dropped**, the light settles in the middle and a bead of light runs once along the tentacles; the member that lends it is lit, the others wait on dotted lines.
+- The members waiting on dotted lines say "ready to take over" when the lens is on them.
 - With the group closed, its shoal wears a small sun and the beam falls on it, labelled "Internet via Homelab · studio".
 - When the group switches member, a short note says so ("studio went offline, now via nas").
 - ✓ Right-click a group: "Internet through it" / "Stop Internet through it"; ✓ right-click a creature to make a group of your own.
