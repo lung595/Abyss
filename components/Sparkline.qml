@@ -1,7 +1,8 @@
 import QtQuick
 import qs.Common
 
-// A peer's last minute of traffic: download filled, upload dashed.
+// A peer's last minute of traffic: download filled in the peer's colour,
+// upload dashed in yours (upColor), as the card's rates above it.
 Canvas {
     id: spark
 
@@ -9,9 +10,12 @@ Canvas {
     property var points: []
     property color color: Theme.primary
     property color ink: "white"
+    property color upColor: Theme.tertiary
 
     onPointsChanged: requestPaint()
     onWidthChanged: requestPaint()
+    onColorChanged: requestPaint()
+    onUpColorChanged: requestPaint()
 
     onPaint: {
         const c = getContext("2d");
@@ -48,7 +52,7 @@ Canvas {
         c.beginPath();
         pts.forEach((p, i) => i ? c.lineTo(X(i), Y(p[1])) : c.moveTo(X(i), Y(p[1])));
         c.setLineDash([4, 3]);
-        c.strokeStyle = Qt.rgba(ink.r, ink.g, ink.b, 0.6);
+        c.strokeStyle = Qt.rgba(upColor.r, upColor.g, upColor.b, 0.85);
         c.lineWidth = 1.2;
         c.stroke();
     }
