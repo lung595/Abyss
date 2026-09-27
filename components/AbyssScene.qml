@@ -1055,10 +1055,10 @@ Item {
     property bool aimAll: false
     // While the light is carried, what cannot lend Internet steps back
     function carryFade(peer) {
-        return _carrying && peer && !peer.exit ? 0.3 : 1;
+        return _carrying && peer && !peer.exit ? 0.15 : 1;
     }
     function carryFadeGroup(it) {
-        return _carrying && it && !it.members.some(id => peerById[id] && peerById[id].exit) ? 0.3 : 1;
+        return _carrying && it && !it.members.some(id => peerById[id] && peerById[id].exit) ? 0.15 : 1;
     }
     property string query: ""
     property string omenHidden: ""
@@ -1148,6 +1148,12 @@ Item {
     readonly property var exitMine: MyGroups.byId(prefs.groups, prefs.exitGroup)
     // What the carried light says under it
     property string dropHint: "Drop on a peer"
+    // What you tried and could not do: why, what to do, and the README
+    // section (anchor) that explains it. HelpNote shows it, then clears it.
+    property var note: null
+    function explain(title, hint, anchor, px, py) {
+        note = { "title": title, "hint": hint, "anchor": anchor, "x": px, "y": py };
+    }
     function setExit(peerName, groupId) {
         if (actions && actions.setExit) {
             actions.setExit(peerName, groupId);
@@ -1222,6 +1228,7 @@ Item {
     property bool _poolEntered: false
     function dragOver(px, py) {
         _carrying = true;
+        note = null;
         const t = _sunTarget(px, py);
         dropName = t && t.peer ? t.peer.name : "";
         aimAll = peekId !== "" && !!t && !t.peer;
@@ -1249,7 +1256,7 @@ Item {
         }
         const it = itemById[peekId];
         if (t && !_canLend(t))
-            dropHint = t.peer ? t.peer.name + " can't lend Internet" : "No one here can lend Internet";
+            dropHint = t.peer ? "⊘ " + t.peer.name + " can't lend Internet" : "⊘ No one here can lend Internet";
         else if (t)
             dropHint = "Internet through " + (t.peer ? t.peer.name : "all of " + t.name);
         else if (g && !g.asleep)
@@ -1272,7 +1279,10 @@ Item {
             focusId = "";
         carryCancelled();
     }
+    // The last drop was refused: SurfaceSun bounces back instead of gliding
+    property bool sunRefused: false
     function dropSun(px, py) {
+        sunRefused = false;
         const t = _sunTarget(px, py);
         const inPool = peekId !== "" && Math.hypot(px - peekCentre.x, py - peekCentre.y) <= peekR + 24;
         _carrying = false;
@@ -1286,9 +1296,16 @@ Item {
         // Let go inside a bubble, on nothing: keep what was there
         if (!t && inPool)
             return;
-        // On what cannot lend: the light goes back where it was
-        if (t && !_canLend(t))
+        // On what cannot lend: the light bounces back where it was, and a
+        // note says why and where to read more (never a silent refusal)
+        if (t && !_canLend(t)) {
+            sunRefused = true;
+            if (t.peer)
+                explain(t.peer.name + " isn't an exit node", "Turn it on in NetBird's dashboard", "internet-through-a-peer", px, py + 80);
+            else
+                explain("No exit node in " + t.name, "Turn one on in NetBird's dashboard", "internet-through-a-peer", px, py + 80);
             return;
+        }
         if (t && t.keep) {
             // What you see in the bubble is what you keep (all of it when
             // the bubble could only show part)
@@ -2103,6 +2120,9 @@ Item {
             home: groupPeek.lit ? Qt.point(groupPeek.cx, groupPeek.cy) : onMember ? Qt.point(groupPeek.memberPose(root.exitPeer.id).x, groupPeek.memberPose(root.exitPeer.id).y - 46) : root.exitPeer ? Qt.point(root.anchorOfPeer(root.exitPeer.id).x, root.frame.surfaceY) : Qt.point(root.width - root.insetTop - 58, root.frame.surfaceY)
             label: groupPeek.lit || onMember ? "" : root.exitMine && root.exitPeer ? "Internet via " + root.exitMine.name + " · " + root.exitPeer.name : root.exitPeer ? "Internet via " + root.exitPeer.name : "Internet"
             onDropped: (px, py) => root.dropSun(px, py)
+        }
+        HelpNote {
+            scene: root
         }
         // The open group's name (click to rename) and its settings, at the top
         GroupTitle {

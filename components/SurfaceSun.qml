@@ -74,7 +74,10 @@ Item {
     // the live home, which may still move while it travels.
     property point _from
     property real _t0: 0
-    function glideFrom(px, py) {
+    // A refused drop comes back with a little bounce past its place
+    property bool _bounce: false
+    function glideFrom(px, py, bounce) {
+        _bounce = !!bounce;
         _from = Qt.point(px, py);
         _t0 = Date.now();
         if (reduceMotion || Math.hypot(home.x - px, home.y - py) < 2) {
@@ -104,8 +107,10 @@ Item {
         repeat: true
         onTriggered: {
             const k = Math.min(1, (Date.now() - sun._t0) / 600);
-            // Ease in and out: sets off gently, lands softly
-            const e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+            // Ease in and out: sets off gently, lands softly. Refused: sets
+            // off at once and overshoots a little before settling (ease out back)
+            const c = 1.4;
+            const e = sun._bounce ? 1 + (c + 1) * Math.pow(k - 1, 3) + c * Math.pow(k - 1, 2) : k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
             sun.shown = Qt.point(sun._from.x + (sun.home.x - sun._from.x) * e, sun._from.y + (sun.home.y - sun._from.y) * e);
             if (k >= 1) {
                 stop();
@@ -147,7 +152,7 @@ Item {
                 sun.dropped(sun.x + sun.width / 2, sun.y + sun.height / 2);
             // From where it was let go back up to its (maybe new) home
             if (wasDragged)
-                sun.glideFrom(sun.x + sun.width / 2, sun.y + sun.height / 2);
+                sun.glideFrom(sun.x + sun.width / 2, sun.y + sun.height / 2, sun.scene.sunRefused);
             sun._settle();
         }
     }
