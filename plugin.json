@@ -2,7 +2,7 @@
     "$schema": "https://github.com/AvengeMedia/DankMaterialShell/raw/refs/heads/master/PLUGINS/plugin-schema.json",
     "id": "abyss",
     "name": "Abyss",
-    "description": "Your NetBird mesh as a glowing deep sea: you are the jellyfish, each peer a creature at the depth of its latency, its tentacle lit by its live traffic. Bar, Control Center and desktop.",
+    "description": "Your NetBird mesh as a glowing deep sea: you are the jellyfish, each peer a creature at the depth of its latency, its tentacle lit by its live traffic. Bar, Control Center, desktop and launcher.",
     "version": "0.2.0",
     "author": "lung595",
     "license": "MIT",
@@ -12,13 +12,16 @@
         "daemon",
         "dankbar-widget",
         "control-center",
-        "desktop-widget"
+        "desktop-widget",
+        "launcher"
     ],
     "components": {
         "daemon": "./AbyssDaemon.qml",
         "widget": "./AbyssWidget.qml",
-        "desktop": "./AbyssDesktop.qml"
+        "desktop": "./AbyssDesktop.qml",
+        "launcher": "./AbyssLauncher.qml"
     },
+    "trigger": "abyss",
     "settings": "./AbyssSettings.qml",
     "requires_dms": ">=1.6.0",
     "permissions": [

@@ -47,6 +47,26 @@ Item {
         Qt.openUrlExternally(url);
     }
 
+    // The jellyfish's click: the one step that moves the connection forward
+    function pressJelly() {
+        const st = source.view.state;
+        if (st === "needsLogin")
+            source.login();
+        else if (st === "stopped")
+            source.startService();
+        else
+            source.toggle();
+    }
+
+    // The deep, in the bar's popout (the launcher, a keyboard shortcut).
+    // Needs Abyss in the bar; otherwise says so
+    function open() {
+        if (BarWidgetService.triggerWidgetPopout("abyss"))
+            return true;
+        ToastService.showInfo("Abyss", "Add Abyss to the bar to open it from here");
+        return false;
+    }
+
     // A peer by name, id or IP (for the IPC)
     function findPeer(key) {
         const k = String(key || "").toLowerCase();
@@ -106,7 +126,7 @@ Item {
         }
     }
 
-    // dms ipc call abyss status | toggle | connect | disconnect
+    // dms ipc call abyss open | status | toggle | connect | disconnect
     // dms ipc call abyss copy <peer> | ssh <peer>
     // dms ipc call abyss exit <peer | group of mine | off>
     // dms ipc call abyss demo connected | disconnected | connecting | needsLogin | stopped | relayDown | relayUp
@@ -118,6 +138,11 @@ Item {
             const v = root.source.view;
             const on = v.peers.filter(p => p.online).length;
             return v.state + (v.state === "connected" ? " · " + on + "/" + v.peers.length + " online" : "");
+        }
+
+        // Opens (or closes) the deep in the bar's popout
+        function open(): string {
+            return root.open() ? "OK" : "Abyss is not in the bar";
         }
 
         function toggle(): string {
