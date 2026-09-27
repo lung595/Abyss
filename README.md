@@ -88,7 +88,7 @@ scripts/preview/render.sh connected "$PWD/out.png"   # offscreen renders from th
 ### 0.2.0 — in progress (branch `lens`, not released yet)
 
 - **Lens**: a soft magnetic lens follows the pointer and gently enlarges what it lights; the scroll wheel sets its strength. The pointer is a warm light in a darker, more immersive deep.
-- **Groups**: never more than 5 things on screen (3–10 in settings). Busy, struggling and favourite peers stay alone; the rest gather in automatic groups that open when you hover them. Type anywhere to find, and everything else blurs.
+- **Groups**: never more than 5 things on screen (3–10 in settings). Busy, struggling and favourite peers stay alone; the rest gather in automatic groups. Rest the pointer on one and the camera glides and zooms towards it until it opens in the middle of the view; move away and it glides back. Type anywhere to find, and everything else blurs.
 - **Sonar fan**: the jellyfish sits at the top and peers fan out below it, farther when slower, with sonar rings in ms.
 - **Grab and release**: drag any creature; it springs back to its place, like Orbit.
 - **Peer card like Orbit**: the card rises and the creature dives toward it and rides up with it; on close it swims straight home.

@@ -52,12 +52,16 @@ Window {
             scene.cardId = "demo-harbor-vps";
         if (mode === "find")
             scene.query = "pi";
-        if (["crowd", "lens", "peek", "search"].indexOf(mode) >= 0)
+        if (["crowd", "lens", "peek", "search", "zoom"].indexOf(mode) >= 0)
             demo.setProfile("crowd");
         if (mode === "search")
             scene.query = "nas";
         if (mode === "unfly" || mode === "step")
             scene.cardId = "demo-harbor-vps";
+        if (mode === "zoom") {
+            cam.start();
+            return;
+        }
         if (mode === "fly" || mode === "unfly" || mode === "step") {
             flight.start();
             return;
@@ -121,6 +125,36 @@ Window {
             const n = ++frame;
             // One tick more than frames, so the last grab is written
             if (n === 12) {
+                stop();
+                Qt.quit();
+                return;
+            }
+            const path = win.out.replace(/\.png$/, "-" + n + ".png");
+            win.contentItem.grabToImage(r => r.saveToFile(path));
+        }
+    }
+
+    // The camera gliding to a group and back, frame by frame: open the first
+    // awake group once the deep has settled, grab every 70 ms, then close it
+    Timer {
+        id: cam
+        property int frame: -1
+        interval: frame < 0 ? 1600 : 70
+        repeat: true
+        onTriggered: {
+            if (frame < 0) {
+                const g = scene.arr.items.find(i => i.type === "group" && !i.asleep && !i.fog);
+                if (g)
+                    scene.openPeek(g.id);
+                // The pointer rides along to the middle, so the group stays open
+                scene.pinnedPointer = scene.peekCentre;
+            }
+            const n = ++frame;
+            if (n === 10) {
+                scene.pinnedPointer = Qt.point(-1, -1);
+                scene.closePeek();
+            }
+            if (n === 19) {
                 stop();
                 Qt.quit();
                 return;

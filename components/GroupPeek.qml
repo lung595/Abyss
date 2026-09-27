@@ -4,9 +4,9 @@ import qs.Widgets
 import "Mesh.js" as Mesh
 
 // An open group: its members spread out large over the blurred deep, on
-// rings with the busiest at the top; no frame, just the zoom. It blooms out
-// of the shoal and folds back into it (brief transitions, instant with
-// Reduce motion). The pointer's lamp and lens work here as in the deep; a
+// rings with the busiest at the top; no frame, just the zoom. The camera
+// glides to it and it blooms out of the shoal into the middle, and folds
+// back into it (brief transitions, instant with Reduce motion). The pointer's lamp and lens work here as in the deep; a
 // click opens a member's card, a click near them opens the one the lens is on.
 Item {
     id: gp
@@ -29,15 +29,9 @@ Item {
             _shown = item;
     }
 
-    // 0 = folded into the shoal, 1 = open (a little overshoot as it blooms)
-    property real grow: open ? 1 : 0
-    Behavior on grow {
-        NumberAnimation {
-            duration: gp.scene.reduceMotion ? 0 : gp.open ? 420 : 260
-            easing.type: gp.open ? Easing.OutBack : Easing.InCubic
-            easing.overshoot: 1.2
-        }
-    }
+    // 0 = folded into the shoal, 1 = open in the middle: it rides the
+    // scene's camera, so the group and the deep behind move as one
+    readonly property real grow: scene.camera
     readonly property real _g: Math.min(1, grow)
     readonly property real cx: from.x + (centre.x - from.x) * _g
     readonly property real cy: from.y + (centre.y - from.y) * _g
