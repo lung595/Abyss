@@ -23,7 +23,7 @@ You are the giant jellyfish. Every peer is a creature floating at the depth of i
 
 ![A peer's card](screenshots/card.png)
 
-**Click a creature** to open its card: live rates and a 60-second curve, copy its IP or name, SSH, open in the browser, use as exit node, favorite, mute, latency, connected since, last handshake, totals, networks it opens.
+**Click a creature** to open its card: live rates and a 60-second curve, copy its IP or name, SSH, open in the browser, use as exit node, favorite, mute, latency, connected since, last handshake, totals, networks it opens. <kbd>←</kbd> <kbd>→</kbd> (or the ‹ › arrows) step to the previous or next device without leaving the card.
 
 **Type a name** to find a peer (favorites first), <kbd>Enter</kbd> opens its card, <kbd>Esc</kbd> closes.
 
@@ -91,7 +91,10 @@ scripts/preview/render.sh connected "$PWD/out.png"   # offscreen renders from th
 - **Groups**: never more than 5 things on screen (3–10 in settings). Busy, struggling and favourite peers stay alone; the rest gather in automatic groups that open when you hover them. Type anywhere to find, and everything else blurs.
 - **Sonar fan**: the jellyfish sits at the top and peers fan out below it, farther when slower, with sonar rings in ms.
 - **Grab and release**: drag any creature; it springs back to its place, like Orbit.
-- **Peer card like Orbit**: the card rises and the creature flies up into it.
+- **Peer card like Orbit**: the card rises and the creature dives toward it and rides up with it; on close it swims straight home.
+- **Frosted glass card**: the deep shows through, blurred once as the card opens (nothing is re-blurred while it stays open). Every device gets the same compact height; the details scroll inside.
+- **Step through devices** with ‹ › or <kbd>←</kbd> <kbd>→</kbd>: the circle stays still while the creature, the name and the status crossfade in place, and the previous creature fades back home.
+- **The pointer light reveals the scenery** instead of glowing: a soft disc under the lens uncovers a reef in three planes (far ridge, cliffs, floor) with a little parallax, swaying kelp and gorgonians, sponges, anemones and a small shoal of fish passing now and then. Muted on purpose; it costs nothing measurable.
 - Thinner traffic tentacles (a thread when idle, a ribbon when busy) and calmer motion.
 - The jellyfish now has loose threads of light; each linked peer takes one over. Its bell fades smoothly between asleep and awake.
 - Caves (routed networks) always glow a little, and burn when on. Their thread to the gateway only shows while you hover them, and leaves from above the name.
@@ -112,14 +115,7 @@ No promises, no dates. Everything here was asked for and is not in a release yet
 - **Devices swim** to their new depth in their animal's gait instead of jumping (wired, being tuned).
 - **A wake-up wave**: when you connect, light spreads from the jellyfish to each device; switched on, everything floats gently; switched off, the deep sleeps, dimmer and stiller (wired, being tuned).
 - **Tentacles that hold their device**: the tip wraps around the creature, as if the jellyfish really held it.
-- **A pointer light that reveals the scenery**: a much softer glow, but under it you see the details of the floor (sand, rocks, coral, plants) instead of a white haze.
-- **A varied reef** (coral, sponges, anemones, kelp) with a small shoal of fish passing now and then.
-- **A new peer card**:
-  - on click it scales up and fades in, frosted glass over the blurred deep;
-  - the card comes first, then the creature flies into it, and both land together;
-  - the same compact height for every device, with no jump when you switch;
-  - the device icon sits in a fixed circle at the top;
-  - arrows (and <kbd>←</kbd> <kbd>→</kbd>) go to the previous or next device: the icon, the name and the status crossfade in place, and nothing moves or resizes.
+- **The card first, then the creature**: both finish landing at the same moment.
 - **A group view**:
   - hovering or clicking a group glides to it, centres it and zooms in until it fills most of the screen;
   - the rest gets much blurrier and a little darker;

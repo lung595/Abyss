@@ -51,8 +51,8 @@ Item {
         x: cr.pose.x
         y: cr.pose.y
         scale: cr.pose.s
-        // Hidden while its twin sits on the open card (CardHero)
-        opacity: cr.scene.heroPeerId === cr.peer.id ? 0 : 1
+        // Hidden while its twin sits on the open card, back in fade as ‹ › steps away (CardHero)
+        opacity: cr.scene.heroOpacity(cr.peer.id)
 
         Item {
             id: body

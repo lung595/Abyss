@@ -7,7 +7,8 @@ import "../../components"
 // Usage: see render.sh. Modes: connected, disconnected, connecting,
 // needsLogin, stopped, card, relay, find, exit, nets, work, crowd, lens,
 // peek, search (these four on the 30-peer crowd mesh), grab, fly / unfly (the card
-// opening / closing, as frames out-0.png ... out-11.png); a "-light" suffix uses a light theme's accents, "-cc" the Control Center size.
+// opening / closing, as frames out-0.png ... out-11.png), step (the open card
+// stepping to the next peer, same frames, 35 ms apart); a "-light" suffix uses a light theme's accents, "-cc" the Control Center size.
 Window {
     id: win
     readonly property var args: Qt.application.arguments
@@ -55,9 +56,9 @@ Window {
             demo.setProfile("crowd");
         if (mode === "search")
             scene.query = "nas";
-        if (mode === "unfly")
+        if (mode === "unfly" || mode === "step")
             scene.cardId = "demo-harbor-vps";
-        if (mode === "fly" || mode === "unfly") {
+        if (mode === "fly" || mode === "unfly" || mode === "step") {
             flight.start();
             return;
         }
@@ -107,10 +108,12 @@ Window {
     Timer {
         id: flight
         property int frame: -1
-        interval: frame < 0 ? 1600 : 70
+        interval: frame < 0 ? 1600 : win.mode === "step" ? 35 : 70
         repeat: true
         onTriggered: {
-            if (frame < 0)
+            if (frame < 0 && win.mode === "step")
+                scene.stepCard(1);
+            else if (frame < 0)
                 scene.cardId = win.mode === "fly" ? "demo-harbor-vps" : "";
             const n = ++frame;
             // One tick more than frames, so the last grab is written

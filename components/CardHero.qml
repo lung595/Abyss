@@ -5,6 +5,8 @@ import "Mesh.js" as Mesh
 // The peer's creature on its open card, as in Orbit: it leaves its place in
 // the water, glides onto the card's top edge and grows (a beat later) into a
 // medallion that breaks out of the frame; on close it swims back home.
+// Stepping to another peer (‹ ›) keeps the medallion still and cross-fades
+// the two creatures inside it (switchTo).
 // Brief transitions only, never a loop; instant with Reduce motion.
 Item {
     id: hero
@@ -20,8 +22,12 @@ Item {
     property point to
     property real diameter: 104
 
+    // The peer stepped away from, fading out while this one fades in (0 → 1)
+    property string prevId: ""
+    property real swap: 1
+
     readonly property var peer: scene.peerById[peerId] || null
-    readonly property bool live: !!peer && peer.online && scene.connected
+    readonly property var prevPeer: prevId !== "" ? scene.peerById[prevId] || null : null
     readonly property color tint: peer ? scene.tintOf(peer.name) : "white"
     // The creature art is drawn in a 96 px box; it fills ~75% of the medallion
     readonly property real toScale: diameter / 104
@@ -44,12 +50,36 @@ Item {
     }
     // Another card opened straight away: start the flight again from its creature
     onPeerIdChanged: {
-        if (!open)
+        if (!open || _stepping)
             return;
         flyOut.stop();
         flight = 0;
         grow = 0;
         flyIn.restart();
+    }
+
+    // Steps to another peer while the card stays open: no flight, the new
+    // creature appears in the medallion as the old one fades back home
+    property bool _stepping: false
+    function switchTo(id) {
+        if (id === peerId)
+            return;
+        cross.stop();
+        prevId = peerId;
+        _stepping = true;
+        peerId = id;
+        _stepping = false;
+        swap = 0;
+        cross.restart();
+    }
+    NumberAnimation {
+        id: cross
+        target: hero
+        property: "swap"
+        to: 1
+        duration: 260 * hero._ms
+        easing.type: Easing.InOutQuad
+        onFinished: hero.prevId = ""
     }
 
     ParallelAnimation {
@@ -113,21 +143,39 @@ Item {
         // Keeps breathing on the card while the deep flows
         y: hero.scene.flowing ? Math.sin(hero.scene.t * 0.9) * 2 * hero.grow : 0
 
+        Twin {
+            peer: hero.prevPeer
+            opacity: 1 - hero.swap
+        }
+        Twin {
+            peer: hero.peer
+            opacity: hero.prevPeer ? hero.swap : 1
+        }
+    }
+
+    // One creature in the medallion: its halo says how busy it is
+    component Twin: Item {
+        id: twin
+        property var peer
+        readonly property bool live: !!peer && peer.online && hero.scene.connected
+        readonly property color tint: peer ? hero.scene.tintOf(peer.name) : "white"
+        visible: !!peer && opacity > 0.01
+
         Halo {
             width: 130
             height: 130
             x: -65
             y: -65
-            color: hero.tint
-            opacity: hero.live ? 0.35 + 0.5 * Mesh.level(hero.peer.down + hero.peer.up) : 0.08
+            color: twin.tint
+            opacity: twin.live ? 0.35 + 0.5 * Mesh.level(twin.peer.down + twin.peer.up) : 0.08
         }
         CreatureShape {
             x: -48
             y: -48
-            kind: hero.peer ? hero.peer.kind : "desktop"
-            color: hero.live ? Qt.lighter(hero.tint, 1.25) : hero.scene.sleepColor
-            glow: hero.live ? 0.9 : 0.1
-            asleep: !hero.live
+            kind: twin.peer ? twin.peer.kind : "desktop"
+            color: twin.live ? Qt.lighter(twin.tint, 1.25) : hero.scene.sleepColor
+            glow: twin.live ? 0.9 : 0.1
+            asleep: !twin.live
         }
     }
 }

@@ -257,6 +257,13 @@ Item {
     }
     // The peer whose creature is flying to or sitting on the open card
     readonly property string heroPeerId: cardHero.visible ? cardHero.peerId : ""
+    // How visible a peer's creature is in the water: hidden while its twin is
+    // on the card, fading back in as ‹ › steps away from it
+    function heroOpacity(id) {
+        if (id === heroPeerId)
+            return 0;
+        return id === cardHero.prevId ? cardHero.swap : 1;
+    }
 
     // Where the things the lens can aim at rest, keyed like the springs:
     // the items of the deep by their Groups.js id, or, while a bubble is
@@ -909,9 +916,27 @@ Item {
     // dims, and the peer's creature flies onto its top edge (CardHero)
     readonly property real cardW: Math.min(360, width - 24)
     readonly property real medallion: Math.round(Math.min(104, cardW * 0.3))
+    // Always this tall, whoever it shows (the details scroll inside)
+    readonly property real cardH: Math.min(400, height - medallion * 0.4 - 16)
+    property bool _cardWasOpen: false
     onCardIdChanged: {
         if (cardId !== "")
             cardHero.peerId = cardId;
+        // A still of the deep for the card's glass, taken once as it opens
+        if (cardId !== "" && !_cardWasOpen)
+            cardShot.scheduleUpdate();
+        _cardWasOpen = cardId !== "";
+    }
+    // The peers ‹ › steps through, in the order of the deep
+    readonly property var cardOrder: shown.map(p => p.id)
+    function stepCard(dir) {
+        const n = cardOrder.length;
+        const i = cardOrder.indexOf(cardId);
+        if (cardId === "" || n < 2)
+            return;
+        const next = cardOrder[((i < 0 ? 0 : i) + dir + n) % n];
+        cardHero.switchTo(next);
+        cardId = next;
     }
 
     function openCard(id) {
@@ -1393,6 +1418,28 @@ Item {
             hideSource: visible
             visible: root.blurMix > 0
         }
+        // The deep behind the open card, for its glass: one still picture
+        // taken as the card opens and blurred once; the card cuts its shape
+        // out of it (PeerCard)
+        ShaderEffectSource {
+            id: cardShot
+            anchors.fill: parent
+            sourceItem: world
+            live: false
+            visible: false
+        }
+        MultiEffect {
+            id: cardGlass
+            anchors.fill: parent
+            visible: false
+            layer.enabled: root.cardId !== "" || peerCard.visible
+            source: cardShot
+            autoPaddingEnabled: false
+            blurEnabled: true
+            blurMax: 48
+            blur: 1
+            brightness: -0.12
+        }
         MultiEffect {
             anchors.fill: parent
             source: worldShot
@@ -1625,7 +1672,7 @@ Item {
             readonly property real openY: root.height - height - 8
             visible: !!p && opacity > 0.01
             width: root.cardW
-            height: Math.min(implicitHeight, root.height - root.medallion * 0.4 - 16)
+            height: root.cardH
             x: (root.width - width) / 2
             y: root.cardId !== "" ? openY : root.height + 20
             opacity: root.cardId !== "" ? 1 : 0
@@ -1664,6 +1711,14 @@ Item {
             muted: !!p && root.prefs.isMuted(p.id)
             viaNetworks: root.source && p ? root.source.networks.filter(n => n.via === p.name) : []
             onClosed: root.cardId = ""
+            glass: cardGlass
+            glassAt: Qt.point(x, y)
+            prevPeer: cardHero.prevPeer
+            prevFavorite: !!prevPeer && root.prefs.isFavorite(prevPeer.id)
+            prevIsTop: !!prevPeer && root.view.topId === prevPeer.id
+            swap: cardHero.swap
+            canStep: root.cardOrder.length > 1
+            onStep: dir => root.stepCard(dir)
         }
 
         // The creature flies from its place in the water onto the card's top edge
@@ -1703,6 +1758,11 @@ Item {
                 closePeek();
             else
                 return;
+            event.accepted = true;
+            return;
+        }
+        if ((event.key === Qt.Key_Left || event.key === Qt.Key_Right) && cardId !== "") {
+            stepCard(event.key === Qt.Key_Left ? -1 : 1);
             event.accepted = true;
             return;
         }
