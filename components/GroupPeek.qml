@@ -88,10 +88,51 @@ Item {
     // This group carries your Internet: the light sits in the middle
     readonly property bool lit: open && !!item && !!item.mine && item.mine === scene.prefs.exitGroup && !!scene.exitPeer
 
+    // The light carried over the middle: dropping it here means the whole
+    // group, so show it before the drop (a ring where it will rest, faint
+    // tentacles to every member)
+    readonly property bool aiming: open && scene.aimAll
+
+    // Once dropped, a single pulse runs out to the members (then nothing
+    // moves; none with Reduce motion)
+    property real pulse: 1
+    NumberAnimation {
+        id: pulseRun
+        target: gp
+        property: "pulse"
+        from: 0
+        to: 1
+        duration: 900
+        easing.type: Easing.OutCubic
+    }
+    onLitChanged: {
+        if (lit && !scene.reduceMotion)
+            pulseRun.restart();
+    }
+
+    Rectangle {
+        readonly property real r: 24
+        x: gp.cx - r
+        y: gp.cy - r
+        width: r * 2
+        height: r * 2
+        radius: r
+        color: Qt.rgba(gp.scene.sunColor.r, gp.scene.sunColor.g, gp.scene.sunColor.b, 0.08)
+        border.width: 1.5
+        border.color: Qt.rgba(gp.scene.sunColor.r, gp.scene.sunColor.g, gp.scene.sunColor.b, 0.55)
+        opacity: gp.aiming && !gp.lit ? gp._g : 0
+        visible: opacity > 0.01
+        Behavior on opacity {
+            NumberAnimation {
+                duration: gp.scene.reduceMotion ? 0 : 150
+            }
+        }
+    }
+
     // ...tied to every member online, like the jellyfish to its peers: a
     // full line to the one lending the Internet, dashed to those ready to
-    // take over. Repainted only when something moves (camera, lens), never
-    // by a clock.
+    // take over. Repainted only when something moves (camera, lens, the
+    // one pulse), never by a clock.
     Canvas {
         id: links
         // The pool's square, riding with it (this item has no size of its own)
@@ -99,19 +140,21 @@ Item {
         height: width
         x: gp.cx - width / 2
         y: gp.cy - height / 2
-        visible: gp.lit
+        visible: gp.lit || gp.aiming
         opacity: gp._g
-        readonly property var _key: [gp.lit, gp.cx, gp.cy, gp.members, gp.scene.poseRev, gp.scene.exitPeer ? gp.scene.exitPeer.id : ""]
-        on_KeyChanged: if (gp.lit) requestPaint()
+        readonly property var _key: [gp.lit, gp.aiming, gp.pulse, gp.cx, gp.cy, gp.members, gp.scene.poseRev, gp.scene.exitPeer ? gp.scene.exitPeer.id : ""]
+        on_KeyChanged: if (visible) requestPaint()
         onVisibleChanged: if (visible) requestPaint()
         onPaint: {
             const c = getContext("2d");
             c.reset();
-            if (!gp.lit)
+            if (!visible)
                 return;
             // Drawn in scene coordinates
             c.translate(-x, -y);
-            const col = gp.scene.sunColor, lend = gp.scene.exitPeer.id;
+            // Aiming only: every member as a faint dotted promise
+            const ghost = !gp.lit;
+            const col = gp.scene.sunColor, lend = ghost ? "" : gp.scene.exitPeer.id;
             c.lineCap = "round";
             c.lineJoin = "round";
             gp.members.forEach(id => {
@@ -130,9 +173,18 @@ Item {
                     c.lineWidth = 6;
                     c.stroke();
                 }
-                c.strokeStyle = Qt.rgba(col.r, col.g, col.b, on ? 0.85 : 0.3);
+                c.strokeStyle = Qt.rgba(col.r, col.g, col.b, on ? 0.85 : ghost ? 0.45 : 0.3);
                 c.lineWidth = on ? 2 : 1.2;
                 c.stroke();
+                // The pulse just after the drop: a bead of light running out
+                if (!ghost && gp.pulse < 1) {
+                    const pt = line[Math.min(line.length - 1, Math.round(gp.pulse * (line.length - 1)))];
+                    c.setLineDash([]);
+                    c.fillStyle = Qt.rgba(col.r, col.g, col.b, 0.9 * (1 - gp.pulse * gp.pulse));
+                    c.beginPath();
+                    c.arc(pt[0], pt[1], 3, 0, Math.PI * 2);
+                    c.fill();
+                }
             });
         }
     }
