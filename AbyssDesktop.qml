@@ -69,13 +69,14 @@ DesktopPluginComponent {
         abyss: scene.abyss
         tints: scene.reefTints
     }
-    // The water darkens round an open group, so its pool stands out
+    // The water darkens round an open group, so its pool stands out, and
+    // behind an open card, so it reads clearly
     FishBowl {
         anchors.fill: parent
         part: "shade"
         b: root.bowl
         abyss: scene.abyss
-        opacity: 0.85 * scene.blurMix
+        opacity: 0.85 * Math.max(scene.blurMix, scene.cardMix)
         visible: opacity > 0.01
     }
     AbyssScene {
@@ -94,10 +95,12 @@ DesktopPluginComponent {
         freezeWhenIdle: true
         interacting: root.hot
     }
-    // The glass over the scene (lets the pointer through)
+    // The glass over the scene (lets the pointer through); it fades while
+    // a card is open, its highlights would streak across the text
     FishBowl {
         anchors.fill: parent
         part: "front"
+        opacity: 1 - 0.8 * scene.cardMix
         b: root.bowl
         ink: scene.ink
         shallow: scene.shallow

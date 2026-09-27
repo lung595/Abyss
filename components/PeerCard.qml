@@ -31,6 +31,9 @@ Item {
     // scene) and where the card sits over it
     property Item glass: null
     property point glassAt
+    // In the fishbowl the deep has no water behind it, so the blurred
+    // picture is mostly clear: the tint carries the card instead
+    property bool clearWater: false
 
     // Stepping with ‹ ›: the peer shown before, fading out while this one
     // fades in (0 → 1); canStep hides the arrows when there is no other peer
@@ -87,7 +90,7 @@ Item {
     Rectangle {
         anchors.fill: parent
         radius: card.radius
-        color: Qt.rgba(card.scene.abyss.r, card.scene.abyss.g, card.scene.abyss.b, card.glass ? 0.7 : 0.9)
+        color: Qt.rgba(card.scene.abyss.r, card.scene.abyss.g, card.scene.abyss.b, card.clearWater ? 0.97 : card.glass ? 0.7 : 0.9)
         border.width: 1
         border.color: Qt.rgba(card.tint.r, card.tint.g, card.tint.b, 0.45)
     }

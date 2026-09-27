@@ -101,6 +101,7 @@ scripts/preview/render.sh connected "$PWD/out.png"   # offscreen renders from th
 - The jellyfish now has loose threads of light; each linked peer takes one over. Its bell fades smoothly between asleep and awake.
 - Caves (routed networks) always glow a little, and burn when on. Their thread to the gateway only shows while you hover them, and leaves from above the name.
 - **The desktop widget is a fishbowl**: round glass with a rim, highlights and a soft shadow on your wallpaper, water tinted by your theme and a bed of sand at the bottom. The deep fills the whole belly of the bowl without spilling past the glass. The top bar only shows while you use it. A group opening inside the bowl melts into the water at its edges.
+- **A readable card in the bowl**: opening a device darkens the bowl's water and fades its glass behind the card, instead of a dark box spilling past the glass.
 - **Inside a group**: the rest of the deep darkens and fades around it, and the group's ring grows into a lit pool, its home. The opening animation is unchanged.
 - **Steadier fan**: devices keep their side when their traffic changes, instead of swimming across the view; caves keep clear of them.
 - **The top consumer label stops flickering**: its filled, coloured label only moves to another device when that one is clearly busier (30 % more).

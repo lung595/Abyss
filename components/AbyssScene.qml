@@ -977,6 +977,14 @@ Item {
 
     // --- Actions -----------------------------------------------------------
     property string cardId: ""
+    // 0 -> 1 as the card opens: the desktop bowl darkens its water and
+    // fades its glass with it, so the card reads clearly (a short fade only)
+    property real cardMix: cardId !== "" ? 1 : 0
+    Behavior on cardMix {
+        NumberAnimation {
+            duration: root.reduceMotion ? 0 : 400
+        }
+    }
     property bool netsOpen: false
     property string dropName: ""
     property string query: ""
@@ -1834,11 +1842,12 @@ Item {
             ink: root.arr.hits ? root.sunColor : Theme.warning
         }
 
-        // Dims the water behind the open card; a click there closes it
+        // Dims the water behind the open card; a click there closes it. In
+        // the bowl it stays clear: the bowl darkens its own water (cardMix)
         Rectangle {
             anchors.fill: parent
             z: 39
-            color: "black"
+            color: root.borderless ? "transparent" : "black"
             opacity: root.cardId !== "" ? 0.4 : 0
             visible: opacity > 0.01
             Behavior on opacity {
@@ -1899,6 +1908,7 @@ Item {
             viaNetworks: root.source && p ? root.source.networks.filter(n => n.via === p.name) : []
             onClosed: root.cardId = ""
             glass: cardGlass
+            clearWater: root.borderless
             glassAt: Qt.point(x, y)
             prevPeer: cardHero.prevPeer
             prevFavorite: !!prevPeer && root.prefs.isFavorite(prevPeer.id)

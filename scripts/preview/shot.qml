@@ -52,7 +52,7 @@ Window {
             demo.setProfile("work");
         if (mode === "nets")
             scene.netsOpen = true;
-        if (mode === "card")
+        if (mode === "card" || mode === "desk-card")
             scene.cardId = "demo-harbor-vps";
         if (mode === "find")
             scene.query = "pi";
@@ -110,7 +110,7 @@ Window {
         visible: win.desk && opacity > 0.01
         x: 50; y: 30; width: win.width - 100; height: win.height - 60
         part: "shade"; b: win.bowl; abyss: scene.abyss
-        opacity: 0.85 * scene.blurMix
+        opacity: 0.85 * Math.max(scene.blurMix, scene.cardMix)
     }
     AbyssScene {
         id: scene
@@ -131,7 +131,7 @@ Window {
     FishBowl {
         visible: win.desk
         x: 50; y: 30; width: win.width - 100; height: win.height - 60
-        part: "front"; b: win.bowl
+        part: "front"; b: win.bowl; opacity: 1 - 0.8 * scene.cardMix
         ink: scene.ink; shallow: scene.shallow; abyss: scene.abyss; tints: scene.reefTints
     }
 
