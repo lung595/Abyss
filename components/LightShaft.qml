@@ -2,23 +2,28 @@ import QtQuick
 
 // The Internet light falling from the surface onto the peer that lends it:
 // a soft beam, narrow under the sun and opening as it goes down, with a few
-// brighter streaks, fading before it reaches the peer, and a small pool of
-// light on it. Painted once per colour at a fixed size and only stretched
+// brighter streaks, fading as it goes but still reaching the peer, and a
+// small pool of light on it. Painted once per colour at a fixed size and only stretched
 // to fit: moving it costs nothing.
 Item {
     id: shaft
 
     property color color: "white"
-    // Where the light lands, and the surface it falls from (parent coordinates)
+    // Where the light starts (the sun) and where it lands (the peer, as
+    // drawn), in parent coordinates. The lens can shift the peer away from
+    // under the sun: the beam then leans to still join them.
+    property real fromX: 0
+    property real fromY: 0
     property real toX: 0
     property real toY: 0
-    property real fromY: 0
 
     readonly property real spread: 64
-    x: toX - spread / 2
+    x: fromX - spread / 2
     y: fromY
     width: spread
-    height: Math.max(0, toY - fromY)
+    height: Math.hypot(toX - fromX, Math.max(0, toY - fromY))
+    transformOrigin: Item.Top
+    rotation: -Math.atan2(toX - fromX, Math.max(1, toY - fromY)) * 180 / Math.PI
 
     Canvas {
         id: beam
@@ -57,12 +62,12 @@ Item {
                 c.fillStyle = Qt.rgba(col.r, col.g, col.b, s[1]);
                 c.fill();
             });
-            // Strong under the sun, gone before the peer
+            // Strong under the sun, still there on the peer so it points at it
             c.globalCompositeOperation = "destination-in";
             const fade = c.createLinearGradient(0, 0, 0, h);
             fade.addColorStop(0, "rgba(0,0,0,1)");
-            fade.addColorStop(0.55, "rgba(0,0,0,0.6)");
-            fade.addColorStop(1, "rgba(0,0,0,0)");
+            fade.addColorStop(0.6, "rgba(0,0,0,0.6)");
+            fade.addColorStop(1, "rgba(0,0,0,0.3)");
             c.fillStyle = fade;
             c.fillRect(0, 0, w, h);
         }
@@ -76,6 +81,8 @@ Item {
         x: (shaft.width - width) / 2
         y: shaft.height - height / 2
         color: shaft.color
-        strength: 0.22
+        strength: 0.4
+        // Lies flat on the peer even when the beam leans
+        rotation: -shaft.rotation
     }
 }
