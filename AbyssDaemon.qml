@@ -4,6 +4,7 @@ import Quickshell.Io
 import qs.Services
 import "components"
 import "components/Terminal.js" as Terminal
+import "components/MyGroups.js" as MyGroups
 
 // The one engine every surface shares: the mesh source, the actions that
 // leave the shell (copy, SSH, browser), notifications and the IPC.
@@ -52,6 +53,46 @@ Item {
         return source.view.peers.find(p => p.name.toLowerCase() === k || p.id === k || p.ip === k) || source.view.peers.find(p => p.name.toLowerCase().startsWith(k)) || null;
     }
 
+    // --- Internet exit -------------------------------------------------------
+    // Through one peer (its name), through a group of mine (its id: the
+    // group lends its best member, MyGroups.pickExit), or "" to stop
+    function setExit(peerName, groupId) {
+        _choosing = true;
+        prefs.set("exitGroup", groupId || "");
+        if (groupId)
+            _followExitGroup(groupId);
+        else
+            source.setExitNode(peerName || "");
+        _choosing = false;
+    }
+    property bool _choosing: false
+    // A group of mine carries the exit: when its member goes offline, the
+    // next best takes over. Runs on each read, never on its own.
+    function _followExitGroup(id) {
+        const g = MyGroups.byId(prefs.groups, id);
+        if (!g)
+            return;
+        const p = MyGroups.pickExit(source.view.peers, g.members, source.exitNode);
+        if (p && p.name !== source.exitNode)
+            source.setExitNode(p.name);
+    }
+    Connections {
+        target: demo
+        function onViewChanged() {
+            if (prefs.exitGroup !== "")
+                root._followExitGroup(prefs.exitGroup);
+        }
+        // An exit chosen elsewhere (the bar's menu, a profile switch) ends
+        // the group's
+        function onExitNodeChanged() {
+            if (root._choosing || prefs.exitGroup === "")
+                return;
+            const g = MyGroups.byId(prefs.groups, prefs.exitGroup), p = root.findPeer(demo.exitNode);
+            if (!g || !p || g.members.indexOf(p.id) < 0)
+                prefs.set("exitGroup", "");
+        }
+    }
+
     // --- Notifications (off by default, never for a muted peer) -------------
     Connections {
         target: demo
@@ -67,6 +108,7 @@ Item {
 
     // dms ipc call abyss status | toggle | connect | disconnect
     // dms ipc call abyss copy <peer> | ssh <peer>
+    // dms ipc call abyss exit <peer | group of mine | off>
     // dms ipc call abyss demo connected | disconnected | connecting | needsLogin | stopped | relayDown | relayUp
     IpcHandler {
         target: "abyss"
@@ -109,6 +151,25 @@ Item {
                 return "No peer named " + peer;
             root.ssh(p.fqdn || p.ip);
             return "OK";
+        }
+
+        // Internet through a peer, a group of mine (by name), or "off"
+        function exit(target: string): string {
+            const k = String(target || "").trim().toLowerCase();
+            if (k === "" || k === "off" || k === "none") {
+                root.setExit("", "");
+                return "Internet exit off";
+            }
+            const g = prefs.groups.find(x => x.name.toLowerCase() === k);
+            if (g) {
+                root.setExit("", g.id);
+                return "Internet through " + g.name + (root.source.exitNode ? " (" + root.source.exitNode + ")" : ": nobody online");
+            }
+            const p = root.findPeer(k);
+            if (!p)
+                return "No peer or group named " + target;
+            root.setExit(p.name, "");
+            return "Internet through " + p.name;
         }
 
         // Jumps the demo mesh to a state, to try the interface

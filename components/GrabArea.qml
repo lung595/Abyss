@@ -18,16 +18,21 @@ MouseArea {
 
     hoverEnabled: true
     preventStealing: true
+    acceptedButtons: Qt.LeftButton | Qt.RightButton
     cursorShape: pressed && _dragging ? Qt.ClosedHandCursor : Qt.PointingHandCursor
 
     onPressed: mouse => {
+        if (mouse.button === Qt.RightButton) {
+            scene.openMenu(itemId, mapToItem(scene, mouse.x, mouse.y));
+            return;
+        }
         _from = mapToItem(scene, mouse.x, mouse.y);
         const n = scene.nudgeOf(itemId);
         _base = Qt.point(n.x, n.y);
         _dragging = false;
     }
     onPositionChanged: mouse => {
-        if (!pressed)
+        if (!(pressedButtons & Qt.LeftButton))
             return;
         // In scene coordinates: the item moves under the hand while dragged
         const p = mapToItem(scene, mouse.x, mouse.y), dx = p.x - _from.x, dy = p.y - _from.y;
@@ -36,15 +41,17 @@ MouseArea {
         _dragging = true;
         scene.grab(itemId, _base.x + dx, _base.y + dy);
     }
-    onReleased: {
-        if (_dragging)
+    onReleased: mouse => {
+        if (mouse.button === Qt.LeftButton && _dragging)
             scene.letGo(itemId);
     }
     onCanceled: {
         scene.letGo(itemId);
         _dragging = false;
     }
-    onClicked: {
+    onClicked: mouse => {
+        if (mouse.button !== Qt.LeftButton)
+            return;
         if (!_dragging)
             tapped();
         _dragging = false;

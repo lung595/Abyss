@@ -27,10 +27,17 @@ QtObject {
     readonly property bool desktopLive: _get("desktopLive", false)
     // How many things the deep shows at once; more peers gather in groups
     readonly property int maxItems: _get("maxItems", 5)
+    // How a group opens: "both" (resting the pointer on it, or a click),
+    // "hover" or "click"
+    readonly property string groupOpen: _get("groupOpen", "both")
     // Peers the user muted (no notifications, drawn asleep): id -> name
     readonly property var muted: _get("muted", ({}))
     // Peers the user pinned (a star, listed first when searching): id -> name
     readonly property var favorites: _get("favorites", ({}))
+    // The user's own groups (right-click a creature): [{ id, name, members }]
+    readonly property var groups: _get("groups", [])
+    // Internet through a whole group of mine (its id), "" otherwise
+    readonly property string exitGroup: _get("exitGroup", "")
 
     readonly property bool reduceMotion: SettingsData.reduceMotion
 

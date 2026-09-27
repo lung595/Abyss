@@ -19,11 +19,15 @@ You are the giant jellyfish. Every peer is a creature floating at the depth of i
 | A coral lantern on a tentacle | The relay a peer goes through; blinking orange = the relay stopped answering |
 | A creature asleep on the floor | Offline |
 | Caves on the floor | Networks and routes; click one to turn it on or off |
-| The light of the surface | Internet. Drag it onto a peer to use it as exit node, drop it in the water to stop |
+| The light of the surface | Internet. Drag it onto a peer to use it as exit node, drop it in the water to stop. Rest it on a group to open it, then leave it on a member, or in the middle for the whole group |
 
 ![A peer's card](screenshots/card.png)
 
 **Click a creature** to open its card: live rates and a 60-second curve, copy its IP or name, SSH, open in the browser, use as exit node, favorite, mute, latency, connected since, last handshake, totals, networks it opens. <kbd>←</kbd> <kbd>→</kbd> (or the ‹ › arrows) step to the previous or next device without leaving the card.
+
+**Right-click** a creature or a group to make your own groups: add a peer to a group, start a new one, rename, ungroup, or keep an automatic group as yours. Your groups come first and keep their members.
+
+**Internet through a whole group**: carry the light into a group and let it go in the middle. It stays there, tied by a tentacle to the member lending the Internet (NetBird uses one exit node at a time) and by dashed lines to the ones ready to take over: if that member goes offline, the next best one (direct first, then the lowest latency) takes over by itself. Drag the light out of the group to stop.
 
 **Type a name** to find a peer (favorites first), <kbd>Enter</kbd> opens its card, <kbd>Esc</kbd> closes.
 
@@ -48,13 +52,15 @@ dms ipc call abyss status          # "connected · 8/10 online"
 dms ipc call abyss toggle          # or connect / disconnect
 dms ipc call abyss copy <peer>     # copies the peer's IP
 dms ipc call abyss ssh <peer>      # SSH in your terminal
+dms ipc call abyss exit <target>   # Internet through a peer or one of your
+                                   # groups; "off" to stop
 dms ipc call abyss demo <state>    # demo only: connected, disconnected, connecting,
                                    # needsLogin, stopped, relayDown, relayUp
 ```
 
 ## Settings
 
-Offline peers on the floor, light pulses, keeping the desktop alive, notifications when a peer comes or goes (off by default; muted peers stay quiet), and the terminal used for SSH (automatic by default).
+How groups open (on hover and click by default, or only one of them; carrying the Internet light always opens them), offline peers on the floor, light pulses, keeping the desktop alive, notifications when a peer comes or goes (off by default; muted peers stay quiet), and the terminal used for SSH (automatic by default).
 
 ## Lightweight
 
@@ -67,7 +73,7 @@ Measured numbers will be added here before the first stable release.
 ## Privacy
 
 - The plugin never talks to the network itself and has no telemetry.
-- Peers, addresses and traffic stay in memory for the session; nothing is written to disk except your settings (favorites and muted peers included).
+- Peers, addresses and traffic stay in memory for the session; nothing is written to disk except your settings (favorites, muted peers, your groups and the group carrying the Internet included).
 - Copy uses DMS's clipboard, SSH opens your own terminal.
 
 ## Install
@@ -90,6 +96,11 @@ scripts/preview/render.sh connected "$PWD/out.png"   # offscreen renders from th
 ### Unreleased (0.3.0)
 
 - **Livelier animals**: between trips every creature now has its own life — the fish beats its tail and wanders, the manta flaps its wings, the squid squeezes and jets upward, the seahorse sways upright, the turtle paddles, the whale and the nautilus roll slowly — and now and then the ones that can turn look the other way. Inside an open group the members live too (they were still). Calmer asleep, still with *Reduce motion*, and nothing runs while nobody looks: it rides the scene's existing clock, moving the shapes without repainting them (idle CPU unchanged: 3.7 % vs 3.6 % of one core, same session).
+- **Your own groups**: right-click a creature or a group to add it to a group, start one, rename, ungroup, or keep an automatic group. They come first and never reshuffle.
+- **Internet through a whole group**: drop the light in the middle of a group; it stays there, tied to the member lending the Internet, and the next best member takes over if that one goes offline. Drag it out of the group to stop. Also `dms ipc call abyss exit <group or peer>`.
+- **Carry the Internet into groups**: resting the light on a group opens it (the groups hold still meanwhile), you can then leave it on any member; carrying it out of the bubble closes it.
+- **Setting "Open groups"**: on hover and click (default), on hover only, or on click only.
+- **Fixed**: a click, or resting the pointer, opened a creature or a group a hand-width away; it now takes the pointer being on it (the lens still aims from afar).
 
 ### 0.2.0 — 2026-09-27
 
@@ -127,11 +138,11 @@ No promises, no dates. Everything here was asked for and is not in a release yet
 - **The card first, then the creature**: both finish landing at the same moment.
 - **Rename a group**: click its name at the top of the group view; a small ⚙ opens its settings.
 - **The jellyfish as the only on/off switch**: the extra toggle goes, and a small ON/OFF word sits by the jellyfish.
-- **Drop the Internet light into a group** to pick the exit node among its devices.
 - **A cleaner layout**: one sector per relay, so no tentacle or lantern ever hides a device or a label.
 - **Shoals**: the creatures of a group swim together like a real school of fish (only while you watch).
 - **A goldfish companion** in every view (bar popout, Control Center, desktop): it waves when you click it and lives its life, eats, sleeps with little *z z z*, and cleans the bowl now and then. Still while nobody looks.
 - Measured CPU cost while a view is open, and fresh screenshots.
+- Naming a group types in the view: it needs keyboard focus, which the desktop widget may not get (the name stays "Group n" there; rename it from the popout).
 
 ### Later
 

@@ -7,6 +7,7 @@ import qs.Widgets
 import "Mesh.js" as Mesh
 import "Layout.js" as Lay
 import "Groups.js" as Groups
+import "MyGroups.js" as MyGroups
 import "Query.js" as Query
 import "Spring.js" as Spring
 import "Swim.js" as Swim
@@ -109,6 +110,7 @@ Item {
         _lastSet = _setKey;
         arr = Groups.view(shown, maxItems, filters, {
             "favorites": prefs.favorites,
+            "mine": prefs.groups,
             "broken": downRelays,
             "memo": arr
         });
@@ -117,7 +119,10 @@ Item {
     // your hand: while the pointer is on the deep, a bubble or card is open
     // or something is held, a traffic change waits. A peer coming or going
     // regroups at once.
-    readonly property bool _handsOn: lensOn || peekId !== "" || cardId !== "" || _springing
+    readonly property bool _handsOn: lensOn || peekId !== "" || cardId !== "" || _springing || _carrying
+    // A group of mine made, changed or undone: at once
+    readonly property var _mine: prefs.groups
+    on_MineChanged: regroup()
     readonly property string _setKey: shown.map(p => p.id + (p.online ? "+" : "-")).join("|")
     property string _lastSet: ""
     property bool _regroupLater: false
@@ -262,6 +267,21 @@ Item {
     // LENS), and back when it leaves. The wheel sets its strength (not in the
     // small Control Center view). Inside a bubble it works on the members.
     property string focusId: ""
+    // The focused thing, only while the pointer is actually on it: the lens
+    // aims from afar (it is a magnifier), but a click acts on what is under
+    // the hand, never on something a hand-width away
+    property string aimedId: ""
+    readonly property real touchR: 60
+    function _within(id, at) {
+        let q;
+        if (id.indexOf("m:") === 0) {
+            q = groupPeek.memberPose(id.slice(2));
+        } else {
+            const h = spotOf(id), o = offsetOf(id);
+            q = Qt.point(h.x + o.x, h.y + o.y);
+        }
+        return Math.hypot(q.x - at.x, q.y - at.y) <= touchR;
+    }
     property bool lensOn: false
     property real lensX: 0
     property real lensY: 0
@@ -323,6 +343,7 @@ Item {
         if (here) {
             const at = pinned ? pinnedPointer : pointer.point.position;
             focusId = Lay.lensFocus(homes, at.x, at.y, lensReach * 0.9, focusId);
+            aimedId = focusId !== "" && _within(focusId, at) ? focusId : "";
             const c = Lay.lensCentre(homes, at.x, at.y, lensReach * 0.45);
             if (!lensOn || reduceMotion) {
                 lensX = c.x;
@@ -343,8 +364,10 @@ Item {
         } else {
             lensOn = false;
             focusId = "";
+            aimedId = "";
             dwell.stop();
-            if (peekId !== "" && cardId === "" && pinnedPointer.x < 0)
+            // While the light is carried, dragOver alone says when it leaves
+            if (peekId !== "" && cardId === "" && pinnedPointer.x < 0 && !_carrying)
                 peekLeave.start();
         }
         const swinging = _stepPoses(homes, dt);
@@ -579,10 +602,10 @@ Item {
     }
 
     // --- The bubble (GroupPeek) ----------------------------------------------
-    // No clicking into groups: rest the pointer on a shoal and it opens by
-    // itself, a large lit bubble over the blurred, dimmed deep, its members
-    // on rings with the busiest at the top. Leaving it closes it; so do Esc
-    // and a click outside. A click on a shoal opens it at once.
+    // Rest the pointer on a shoal and it opens by itself, a large lit bubble
+    // over the blurred, dimmed deep, its members on rings with the busiest at
+    // the top; a click opens it at once (prefs.groupOpen picks either or
+    // both). Leaving it closes it; so do Esc and a click outside.
     property string peekId: ""
     // Members shown (peer ids, busiest first), fixed while open so they
     // never jump between two traffic reads
@@ -610,6 +633,7 @@ Item {
         _dwellId = "";
         dwell.stop();
         peekLeave.stop();
+        _poolEntered = false;
         focusId = "";
         peekId = id;
         cardId = "";
@@ -630,6 +654,9 @@ Item {
         _lensMoving = true;
     }
     function _peekWatch(at) {
+        // The carried light has its own rules (dragOver)
+        if (_carrying)
+            return;
         if (peekId !== "") {
             const out = Math.hypot(at.x - peekCentre.x, at.y - peekCentre.y) > peekR + 24;
             if (out && cardId === "") {
@@ -640,11 +667,11 @@ Item {
             }
             return;
         }
-        const it = itemById[focusId], home = it ? lay.peers[focusId] : null;
-        const near = !!home && it.type === "group" && !it.fog && Math.hypot(at.x - home.x, at.y - home.y) < 60;
+        const it = itemById[focusId];
+        const near = !!it && it.type === "group" && !it.fog && aimedId === focusId;
         if (_peekBlock !== "" && (focusId !== _peekBlock || !near))
             _peekBlock = "";
-        if (!near || focusId === _peekBlock || cardId !== "" || _springing) {
+        if (!near || prefs.groupOpen === "click" || focusId === _peekBlock || cardId !== "" || _springing) {
             dwell.stop();
             _dwellId = "";
             return;
@@ -671,9 +698,16 @@ Item {
     }
     // The group vanished (a regroup, a search): close its bubble
     onItemByIdChanged: {
-        if (peekId !== "" && !itemById[peekId])
-            closePeek();
+        if (peekId !== "" && !itemById[peekId]) {
+            // Kept as a group of mine while open: the same bubble, new id
+            if (_peekBecomes !== "" && itemById[_peekBecomes])
+                peekId = _peekBecomes;
+            else
+                closePeek();
+        }
+        _peekBecomes = "";
     }
+    property string _peekBecomes: ""
 
     // Where a peer's creature is drawn right now: in the bubble, on its own,
     // or inside its shoal (for the card's flight)
@@ -1025,9 +1059,10 @@ Item {
         forceActiveFocus();
     }
     // A click on a thing: a peer (or a bubble member, "m:") opens its card,
-    // a shoal opens its bubble, the fog (what a search left out) clears the
+    // a shoal opens its bubble (Enter always; a click unless groups open on
+    // hover only), the fog (what a search left out) clears the
     // search
-    function activate(id) {
+    function activate(id, byKey) {
         if (id.indexOf("m:") === 0) {
             openCard(id.slice(2));
             return;
@@ -1039,7 +1074,7 @@ Item {
             openCard(it.peerId);
         else if (it.fog)
             query = "";
-        else
+        else if (byKey || prefs.groupOpen !== "hover")
             openPeek(id);
         forceActiveFocus();
     }
@@ -1070,9 +1105,221 @@ Item {
         });
         return best;
     }
-    function dragOver(px, py) {
+    // --- Internet, carried (SurfaceSun) -------------------------------------
+    readonly property var exitPeer: source && source.exitNode ? view.peers.find(p => p.name === source.exitNode) || null : null
+    // The group of mine the exit goes through, if any
+    readonly property var exitMine: MyGroups.byId(prefs.groups, prefs.exitGroup)
+    // What the carried light says under it
+    property string dropHint: "Drop on a peer"
+    function setExit(peerName, groupId) {
+        if (actions && actions.setExit) {
+            actions.setExit(peerName, groupId);
+        } else if (source) {
+            // No daemon (previews): the same choice, without the failover
+            const g = MyGroups.byId(prefs.groups, groupId);
+            const p = g ? MyGroups.pickExit(view.peers, g.members, source.exitNode) : null;
+            prefs.set("exitGroup", g ? groupId : "");
+            source.setExitNode(p ? p.name : peerName);
+        }
+    }
+    // The nearest shoal around a point (for the carried light)
+    function _groupAt(px, py) {
+        let best = null, dist = 50;
+        arr.items.forEach(it => {
+            const s = lay.peers[it.id];
+            if (it.type !== "group" || it.fog || !s)
+                return;
+            const d = Math.hypot(s.x - px, s.y - py);
+            if (d < dist) {
+                dist = d;
+                best = it;
+            }
+        });
+        return best;
+    }
+    // What the light would go to: { peer } or { group: id of mine, name }
+    function _sunTarget(px, py) {
+        if (peekId !== "") {
+            let best = null, dist = 34;
+            peekMembers.forEach(id => {
+                const p = peerById[id], q = groupPeek.memberPose(id);
+                const d = Math.hypot(q.x - px, q.y - py);
+                if (p && p.online && d < dist) {
+                    dist = d;
+                    best = p;
+                }
+            });
+            if (best)
+                return { "peer": best };
+            // The middle of any group: all of it (a shoal the mesh made is
+            // kept as a group of yours, so its members stay put)
+            const it = itemById[peekId];
+            if (it && it.type === "group" && !it.fog && Math.hypot(px - peekCentre.x, py - peekCentre.y) < peekR)
+                return it.mine ? { "group": it.mine, "name": it.label } : { "keep": it.id, "name": _keepName(it) };
+            return null;
+        }
         const p = _peerAt(px, py);
-        dropName = p ? p.name : "";
+        if (p)
+            return { "peer": p };
+        const g = _groupAt(px, py);
+        return g && g.mine ? { "group": g.mine, "name": g.label } : null;
+    }
+    property string _sunDwellId: ""
+    // "5 busy" -> "Busy": the name a shoal keeps when it becomes yours
+    function _keepName(it) {
+        const s = it.label.replace(/^\d+\s+/, "");
+        return s.charAt(0).toUpperCase() + s.slice(1);
+    }
+    // The light is in hand: groups hold still until it is let go
+    property bool _carrying: false
+    // The bubble opens in the middle, away from the hand that carried the
+    // light there: leaving it only counts once the light has been inside
+    property bool _poolEntered: false
+    function dragOver(px, py) {
+        _carrying = true;
+        const t = _sunTarget(px, py);
+        dropName = t && t.peer ? t.peer.name : "";
+        if (peekId !== "")
+            focusId = t && t.peer ? "m:" + t.peer.id : "";
+        // Leaving the bubble closes it; resting on a shoal opens it
+        const inPool = peekId !== "" && Math.hypot(px - peekCentre.x, py - peekCentre.y) <= peekR + 24;
+        if (inPool)
+            _poolEntered = true;
+        if (peekId !== "") {
+            if (inPool || !_poolEntered)
+                peekLeave.stop();
+            else if (!peekLeave.running)
+                peekLeave.start();
+        }
+        const g = peekId === "" ? _groupAt(px, py) : null;
+        if (!g || g.asleep || g.id === _peekBlock) {
+            if (!g)
+                _peekBlock = "";
+            sunDwell.stop();
+            _sunDwellId = "";
+        } else if (_sunDwellId !== g.id) {
+            _sunDwellId = g.id;
+            sunDwell.restart();
+        }
+        const it = itemById[peekId];
+        if (t)
+            dropHint = "Internet through " + (t.peer ? t.peer.name : "all of " + t.name);
+        else if (g && !g.asleep)
+            dropHint = "Opening " + g.label + "…";
+        else if (peekId !== "" && !inPool && _poolEntered)
+            dropHint = "Leaving the group";
+        else
+            dropHint = it && it.mine ? "Drop on a peer, or here for all" : "Drop on a peer";
+    }
+    function dropSun(px, py) {
+        const t = _sunTarget(px, py);
+        const inPool = peekId !== "" && Math.hypot(px - peekCentre.x, py - peekCentre.y) <= peekR + 24;
+        _carrying = false;
+        dropName = "";
+        dropHint = "Drop on a peer";
+        sunDwell.stop();
+        _sunDwellId = "";
+        if (peekId !== "")
+            focusId = "";
+        // Let go inside a bubble, on nothing: keep what was there
+        if (!t && inPool)
+            return;
+        if (t && t.keep) {
+            // What you see in the bubble is what you keep (all of it when
+            // the bubble could only show part)
+            const all = itemById[t.keep].members;
+            const r = MyGroups.create(prefs.groups, peekId === t.keep && all.length <= peekMax ? peekMembers : all, t.name);
+            if (peekId === t.keep)
+                _peekBecomes = "g:u:" + r.id;
+            // Saved first: the daemon looks the group up to pick its member
+            prefs.set("groups", r.groups);
+            setExit("", r.id);
+            return;
+        }
+        setExit(t && t.peer ? t.peer.name : "", t && t.group ? t.group : "");
+    }
+    Timer {
+        id: sunDwell
+        interval: 450
+        onTriggered: {
+            if (root._sunDwellId !== "")
+                root.openPeek(root._sunDwellId);
+            root._sunDwellId = "";
+        }
+    }
+
+    // --- Groups of mine: the right-click menu (MyGroups.js) ----------------
+    // The thing the menu is for ("p:<id>", "m:<peer id>" or a group item id)
+    property string menuId: ""
+    property point menuAt: Qt.point(0, 0)
+    // The group being named (just made, or "Rename")
+    property string naming: ""
+    function openMenu(id, at) {
+        menuId = id;
+        menuAt = at;
+        naming = "";
+        netsOpen = false;
+        forceActiveFocus();
+    }
+    function closeMenu() {
+        menuId = "";
+        naming = "";
+        forceActiveFocus();
+    }
+    function _menuPeer(id) {
+        if (id.indexOf("m:") === 0)
+            return peerById[id.slice(2)] || null;
+        const it = itemById[id];
+        return it && it.type === "peer" ? peerById[it.peerId] || null : null;
+    }
+    // [{ text, act, arg }] for the thing under the menu
+    function menuActions(id, mine) {
+        const out = [], p = _menuPeer(id), it = itemById[id];
+        if (p) {
+            const g = MyGroups.groupOf(mine, p.id);
+            mine.filter(x => x !== g).forEach(x => out.push({ "text": "Add to " + x.name, "act": "join", "arg": x.id }));
+            out.push({ "text": "New group", "act": "create", "arg": p.id });
+            if (g)
+                out.push({ "text": "Leave " + g.name, "act": "leave", "arg": p.id });
+        } else if (it && it.mine) {
+            out.push({ "text": prefs.exitGroup === it.mine ? "Stop Internet through it" : "Internet through it", "act": "exit", "arg": it.mine });
+            out.push({ "text": "Rename", "act": "rename", "arg": it.mine });
+            out.push({ "text": "Ungroup", "act": "remove", "arg": it.mine });
+        } else if (it && it.type === "group" && !it.fog) {
+            out.push({ "text": "Keep as my group", "act": "keep", "arg": id });
+        }
+        return out;
+    }
+    function doMenu(a) {
+        const mine = prefs.groups;
+        if (a.act === "create" || a.act === "keep") {
+            const ids = a.act === "create" ? [a.arg] : itemById[a.arg].members;
+            const r = MyGroups.create(mine, ids);
+            prefs.set("groups", r.groups);
+            // Named at once, or left as "Group n" by clicking away
+            naming = r.id;
+            return;
+        }
+        if (a.act === "rename") {
+            naming = a.arg;
+            return;
+        }
+        if (a.act === "join")
+            prefs.set("groups", MyGroups.join(mine, a.arg, _menuPeer(menuId).id));
+        else if (a.act === "leave")
+            prefs.set("groups", MyGroups.leave(mine, a.arg));
+        else if (a.act === "remove") {
+            // Internet stays with the peer it was going through
+            if (prefs.exitGroup === a.arg)
+                setExit(source ? source.exitNode : "", "");
+            prefs.set("groups", MyGroups.remove(mine, a.arg));
+        } else if (a.act === "exit")
+            setExit("", prefs.exitGroup === a.arg ? "" : a.arg);
+        closeMenu();
+    }
+    function nameGroup(id, name) {
+        prefs.set("groups", MyGroups.rename(prefs.groups, id, name));
+        closeMenu();
     }
 
     // --- Layers ------------------------------------------------------------
@@ -1194,14 +1441,14 @@ Item {
                 maskSpreadAtMin: 1
             }
 
-            // The lens aims for you: a click anywhere opens what it focuses
+            // A click opens what the lens focuses, when the pointer is on it
             MouseArea {
                 anchors.fill: parent
-                cursorShape: root.focusId !== "" ? Qt.PointingHandCursor : Qt.ArrowCursor
+                cursorShape: root.aimedId !== "" ? Qt.PointingHandCursor : Qt.ArrowCursor
                 onClicked: {
                     root.netsOpen = false;
-                    if (root.focusId !== "" && root.cardId === "")
-                        root.activate(root.focusId);
+                    if (root.aimedId !== "" && root.cardId === "")
+                        root.activate(root.aimedId);
                     else
                         root.cardId = "";
                     root.forceActiveFocus();
@@ -1420,20 +1667,6 @@ Item {
                         root.source.startService();
                     else if (root.source)
                         root.source.toggle();
-                }
-            }
-
-            SurfaceSun {
-                readonly property var exitPeer: root.source && root.source.exitNode ? root.view.peers.find(p => p.name === root.source.exitNode) : null
-                visible: root.connected && !!root.source
-                scene: root
-                home: exitPeer ? Qt.point(root.spotOfPeer(exitPeer.id).x, root.frame.surfaceY) : Qt.point(root.width - root.insetTop - 58, root.frame.surfaceY)
-                label: exitPeer ? "Internet via " + exitPeer.name : "Internet"
-                onDropped: (px, py) => {
-                    const p = root._peerAt(px, py);
-                    root.dropName = "";
-                    if (root.source)
-                        root.source.setExitNode(p ? p.name : "");
                 }
             }
 
@@ -1738,6 +1971,18 @@ Item {
             from: root.peekFrom
             radius: root.peekR
         }
+        // Internet, as the light at the surface. It rides above the bubble:
+        // carried over a group, the group opens, and the light can be left on
+        // one of its members, or in the middle of a group of mine for all of it
+        SurfaceSun {
+            visible: root.connected && !!root.source && (dragging || root.cardId === "" && (root.peekId === "" || groupPeek.lit))
+            z: 22
+            scene: root
+            // In the open group it carries: in the middle, tied to its members
+            home: groupPeek.lit ? Qt.point(groupPeek.cx, groupPeek.cy) : root.exitPeer ? Qt.point(root.spotOfPeer(root.exitPeer.id).x, root.frame.surfaceY) : Qt.point(root.width - root.insetTop - 58, root.frame.surfaceY)
+            label: groupPeek.lit ? "" : root.exitMine && root.exitPeer ? "Internet via " + root.exitMine.name + " · " + root.exitPeer.name : root.exitPeer ? "Internet via " + root.exitPeer.name : "Internet"
+            onDropped: (px, py) => root.dropSun(px, py)
+        }
         // The open group's name (click to rename) and its settings, at the top
         GroupTitle {
             z: 21
@@ -1846,7 +2091,7 @@ Item {
                             color: root.ink
                         }
                         StyledText {
-                            text: "0.0.0.0/0 · via " + (root.source ? root.source.exitNode : "")
+                            text: "0.0.0.0/0 · via " + (root.exitMine ? root.exitMine.name + " · " : "") + (root.source ? root.source.exitNode : "")
                             font.pixelSize: 10
                             font.family: Theme.monoFontFamily
                             color: root.inkDim
@@ -1858,14 +2103,114 @@ Item {
                         height: 26
                         text: "Stop"
                         ink: root.ink
-                        onClicked: root.source.setExitNode("")
+                        onClicked: root.setExit("", "")
                     }
                 }
                 StyledText {
                     width: netCol.width
-                    text: "Tip: drag the light at the surface onto a peer to send your Internet through it."
+                    text: "Tip: drag the light at the surface onto a peer, or a group of yours (right-click a creature), to send your Internet through it."
                     font.pixelSize: 10
                     color: root.inkDim
+                }
+            }
+        }
+
+        // Groups of mine: the right-click menu. A click anywhere else closes it.
+        MouseArea {
+            anchors.fill: parent
+            visible: root.menuId !== ""
+            z: 39
+            acceptedButtons: Qt.LeftButton | Qt.RightButton
+            onClicked: root.closeMenu()
+        }
+        Rectangle {
+            id: menu
+            readonly property var acts: root.menuId !== "" ? root.menuActions(root.menuId, root.prefs.groups) : []
+            readonly property var named: MyGroups.byId(root.prefs.groups, root.naming)
+            visible: root.menuId !== "" && (acts.length > 0 || !!named)
+            z: 40
+            width: 200
+            height: menuCol.implicitHeight + 12
+            // Opens at the pointer, kept inside the view
+            x: Math.max(6, Math.min(root.width - width - 6, root.menuAt.x + 4))
+            y: Math.max(6, Math.min(root.height - height - 6, root.menuAt.y + 4))
+            radius: 12
+            color: Qt.rgba(root.abyss.r, root.abyss.g, root.abyss.b, 0.94)
+            border.width: 1
+            border.color: Qt.rgba(root.ink.r, root.ink.g, root.ink.b, 0.14)
+
+            Column {
+                id: menuCol
+                x: 6
+                y: 6
+                width: parent.width - 12
+                spacing: 2
+                // Naming a group: type, Enter keeps it, Esc or a click away leaves it as is
+                Rectangle {
+                    visible: !!menu.named
+                    width: parent.width
+                    height: 32
+                    radius: 8
+                    color: Qt.rgba(root.ink.r, root.ink.g, root.ink.b, 0.08)
+                    TextInput {
+                        id: nameField
+                        anchors.fill: parent
+                        anchors.leftMargin: 10
+                        anchors.rightMargin: 10
+                        verticalAlignment: TextInput.AlignVCenter
+                        color: root.ink
+                        selectionColor: Theme.primary
+                        selectedTextColor: Theme.primaryText
+                        font.pixelSize: 13
+                        font.family: Theme.fontFamily
+                        maximumLength: 32
+                        selectByMouse: true
+                        onAccepted: root.nameGroup(root.naming, text)
+                        Keys.onEscapePressed: root.closeMenu()
+                    }
+                    Connections {
+                        target: root
+                        function onNamingChanged() {
+                            if (!menu.named)
+                                return;
+                            nameField.text = menu.named.name;
+                            nameField.selectAll();
+                            nameField.forceActiveFocus();
+                        }
+                    }
+                }
+                StyledText {
+                    visible: !!menu.named
+                    leftPadding: 10
+                    text: "Enter to keep the name"
+                    font.pixelSize: 10
+                    color: root.inkDim
+                }
+                Repeater {
+                    model: menu.named ? [] : menu.acts
+                    Rectangle {
+                        required property var modelData
+                        width: menuCol.width
+                        height: 30
+                        radius: 8
+                        color: rowArea.containsMouse ? Qt.rgba(root.ink.r, root.ink.g, root.ink.b, 0.1) : "transparent"
+                        StyledText {
+                            anchors.verticalCenter: parent.verticalCenter
+                            x: 10
+                            width: parent.width - 20
+                            elide: Text.ElideRight
+                            text: modelData.text
+                            font.pixelSize: 12
+                            color: root.ink
+                        }
+                        MouseArea {
+                            id: rowArea
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.doMenu(modelData)
+                        }
+                    }
                 }
             }
         }
@@ -2028,7 +2373,9 @@ Item {
     focus: true
     Keys.onPressed: event => {
         if (event.key === Qt.Key_Escape) {
-            if (query !== "")
+            if (menuId !== "")
+                closeMenu();
+            else if (query !== "")
                 query = "";
             else if (cardId !== "" || netsOpen) {
                 cardId = "";
@@ -2048,9 +2395,9 @@ Item {
         if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
             const hits = arr.items.filter(i => !i.fog);
             if (query !== "" && arr.hits === 1 && hits.length === 1)
-                activate(hits[0].id);
+                activate(hits[0].id, true);
             else if (focusId !== "")
-                activate(focusId);
+                activate(focusId, true);
             else
                 return;
             event.accepted = true;

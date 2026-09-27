@@ -112,10 +112,29 @@ function _groupItem(id, label, members, extra) {
 
 // Arranges `peers` into at most `max` items.
 // opts: { favorites: {id: name}, broken: [relay names down],
+//         mine: the user's own groups (MyGroups.js),
 //         memo: { key, stars: [ids], solo: [ids] } from the previous call }
 // Returns { items, key, stars, solo, scores }.
 function arrange(peers, max, opts) {
     opts = opts || {};
+    // The user's own groups come first and always stay whole: their online
+    // members gather there, whatever the traffic; the rest is sorted as usual
+    const mine = [], taken = {};
+    (opts.mine || []).forEach(g => {
+        const members = peers.filter(p => p.online && !taken[p.id] && g.members.indexOf(p.id) >= 0);
+        if (!members.length)
+            return;
+        members.forEach(p => taken[p.id] = true);
+        mine.push(_groupItem("g:u:" + g.id, g.name, members, { "mine": g.id }));
+    });
+    if (!mine.length)
+        return _arrange(peers, max, opts);
+    const r = _arrange(peers.filter(p => !taken[p.id]), Math.max(1, max - mine.length), opts);
+    r.items = mine.concat(r.items);
+    return r;
+}
+
+function _arrange(peers, max, opts) {
     const memo = opts.memo || {};
     const favorites = opts.favorites || {};
     const broken = p => p.online && p.relayed && (opts.broken || []).indexOf(p.relay) >= 0;

@@ -3,6 +3,7 @@ import qs.Common
 import qs.Widgets
 import "Mesh.js" as Mesh
 import "Swim.js" as Swim
+import "Layout.js" as Lay
 
 // An open group: its members spread out large over the blurred deep, on
 // rings with the busiest at the top, inside their shoal's ring grown into a
@@ -84,6 +85,58 @@ Item {
         };
     }
 
+    // This group carries your Internet: the light sits in the middle
+    readonly property bool lit: open && !!item && !!item.mine && item.mine === scene.prefs.exitGroup && !!scene.exitPeer
+
+    // ...tied to every member online, like the jellyfish to its peers: a
+    // full line to the one lending the Internet, dashed to those ready to
+    // take over. Repainted only when something moves (camera, lens), never
+    // by a clock.
+    Canvas {
+        id: links
+        // The pool's square, riding with it (this item has no size of its own)
+        width: gp._fullR * 2 + 40
+        height: width
+        x: gp.cx - width / 2
+        y: gp.cy - height / 2
+        visible: gp.lit
+        opacity: gp._g
+        readonly property var _key: [gp.lit, gp.cx, gp.cy, gp.members, gp.scene.poseRev, gp.scene.exitPeer ? gp.scene.exitPeer.id : ""]
+        on_KeyChanged: if (gp.lit) requestPaint()
+        onVisibleChanged: if (visible) requestPaint()
+        onPaint: {
+            const c = getContext("2d");
+            c.reset();
+            if (!gp.lit)
+                return;
+            // Drawn in scene coordinates
+            c.translate(-x, -y);
+            const col = gp.scene.sunColor, lend = gp.scene.exitPeer.id;
+            c.lineCap = "round";
+            c.lineJoin = "round";
+            gp.members.forEach(id => {
+                const p = gp.scene.peerById[id];
+                if (!p || !p.online)
+                    return;
+                const q = gp.memberPose(id), dx = q.x - gp.cx, dy = q.y - gp.cy, L = Math.hypot(dx, dy) || 1;
+                // From the light's rim to just short of the creature
+                const line = Lay.tentacle([gp.cx + dx / L * 12, gp.cy + dy / L * 12], [q.x - dx / L * 10, q.y - dy / L * 10], null);
+                const on = id === lend;
+                c.setLineDash(on ? [] : [3, 6]);
+                c.beginPath();
+                line.forEach((pt, i) => i ? c.lineTo(pt[0], pt[1]) : c.moveTo(pt[0], pt[1]));
+                if (on) {
+                    c.strokeStyle = Qt.rgba(col.r, col.g, col.b, 0.12);
+                    c.lineWidth = 6;
+                    c.stroke();
+                }
+                c.strokeStyle = Qt.rgba(col.r, col.g, col.b, on ? 0.85 : 0.3);
+                c.lineWidth = on ? 2 : 1.2;
+                c.stroke();
+            });
+        }
+    }
+
     // The pointer's lamp, over the blurred deep (the one in the water is
     // part of the still picture behind)
     Halo {
@@ -98,18 +151,18 @@ Item {
         strength: 0.11
     }
 
-    // Near the members, a click opens the one the lens is on (no need to hit
-    // the creature itself); further out, the scene's catcher closes the group
+    // On a member, a click opens it (the lens only counts when the pointer is
+    // on the creature); further out, the scene's catcher closes the group
     MouseArea {
         width: gp.radius * 2
         height: width
         x: gp.cx - gp.radius
         y: gp.cy - gp.radius
         enabled: gp.open
-        cursorShape: gp.scene.focusId.indexOf("m:") === 0 ? Qt.PointingHandCursor : Qt.ArrowCursor
+        cursorShape: gp.scene.aimedId.indexOf("m:") === 0 ? Qt.PointingHandCursor : Qt.ArrowCursor
         onClicked: {
-            if (gp.scene.focusId.indexOf("m:") === 0)
-                gp.scene.activate(gp.scene.focusId);
+            if (gp.scene.aimedId.indexOf("m:") === 0)
+                gp.scene.activate(gp.scene.aimedId);
         }
     }
 
