@@ -16,6 +16,12 @@ Item {
     property point home
     property string label: ""
     readonly property bool dragging: area.drag.active
+    property bool reduceMotion: false
+    // Where it is drawn: `home`, but a new home (an exit picked from the
+    // menu, a drop, Escape) is reached by gliding there in 0.6 s instead of
+    // jumping. Small moves (its peer swimming) are followed at once.
+    property point shown: home
+    readonly property bool gliding: glide.running
 
     // Asks the scene for the peer under a point
     signal dropped(real px, real py)
@@ -23,8 +29,8 @@ Item {
     width: 44
     height: 44
     // Dragging writes x/y directly; the release puts these bindings back
-    x: home.x - width / 2
-    y: home.y - height / 2
+    x: shown.x - width / 2
+    y: shown.y - height / 2
     z: 20
 
     Halo {
@@ -42,9 +48,9 @@ Item {
         color: Qt.lighter(sun.scene.sunColor, 1.1)
     }
     StyledText {
-        anchors.right: parent.left
+        // Left of the light, or right of it when the edge is too near
+        x: sun.x - implicitWidth - 2 < 4 ? sun.width + 2 : -implicitWidth - 2
         anchors.verticalCenter: parent.verticalCenter
-        anchors.rightMargin: 2
         visible: !sun.dragging && sun.label !== ""
         text: sun.label
         wrapMode: Text.NoWrap
@@ -63,12 +69,57 @@ Item {
         color: sun.scene.sunColor
     }
 
+    // The glide: a Timer at 60 Hz rather than an animation, so only this
+    // window redraws (P40), and only for the 0.6 s of the trip. It aims at
+    // the live home, which may still move while it travels.
+    property point _from
+    property real _t0: 0
+    function glideFrom(px, py) {
+        _from = Qt.point(px, py);
+        _t0 = Date.now();
+        if (reduceMotion || Math.hypot(home.x - px, home.y - py) < 2) {
+            glide.stop();
+            shown = Qt.binding(() => sun.home);
+        } else {
+            shown = _from;
+            glide.start();
+        }
+    }
+    function _settle() {
+        sun.x = Qt.binding(() => sun.shown.x - sun.width / 2);
+        sun.y = Qt.binding(() => sun.shown.y - sun.height / 2);
+    }
+    property point _last: home
+    onHomeChanged: {
+        // A far move, even halfway through a trip: set off again from
+        // where it is, so it never jumps
+        const far = Math.hypot(home.x - _last.x, home.y - _last.y) > 24;
+        if (far && !dragging)
+            glide.running ? glideFrom(shown.x, shown.y) : glideFrom(_last.x, _last.y);
+        _last = home;
+    }
+    Timer {
+        id: glide
+        interval: 16
+        repeat: true
+        onTriggered: {
+            const k = Math.min(1, (Date.now() - sun._t0) / 600);
+            // Ease in and out: sets off gently, lands softly
+            const e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+            sun.shown = Qt.point(sun._from.x + (sun.home.x - sun._from.x) * e, sun._from.y + (sun.home.y - sun._from.y) * e);
+            if (k >= 1) {
+                stop();
+                sun.shown = Qt.binding(() => sun.home);
+            }
+        }
+    }
+
     Connections {
         target: sun.scene
         function onCarryCancelled() {
             area.cancelled = true;
-            sun.x = Qt.binding(() => sun.home.x - sun.width / 2);
-            sun.y = Qt.binding(() => sun.home.y - sun.height / 2);
+            sun.glideFrom(sun.x + sun.width / 2, sun.y + sun.height / 2);
+            sun._settle();
         }
     }
 
@@ -91,10 +142,13 @@ Item {
                 sun.scene.dragOver(sun.x + sun.width / 2, sun.y + sun.height / 2);
         }
         onReleased: {
+            const wasDragged = drag.active;
             if (drag.active && !cancelled)
                 sun.dropped(sun.x + sun.width / 2, sun.y + sun.height / 2);
-            sun.x = Qt.binding(() => sun.home.x - sun.width / 2);
-            sun.y = Qt.binding(() => sun.home.y - sun.height / 2);
+            // From where it was let go back up to its (maybe new) home
+            if (wasDragged)
+                sun.glideFrom(sun.x + sun.width / 2, sun.y + sun.height / 2);
+            sun._settle();
         }
     }
 }

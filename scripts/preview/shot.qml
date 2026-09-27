@@ -4,6 +4,7 @@ import qs.Common
 import qs.Services
 import "../../components"
 import "../../components/Bowl.js" as Bowl
+import "../../components/MyGroups.js" as MyGroups
 
 // Offscreen renders from the demo mesh (fictional names and addresses).
 // Usage: see render.sh. Modes: connected, disconnected, connecting,
@@ -12,7 +13,7 @@ import "../../components/Bowl.js" as Bowl
 // opening / closing, as frames out-0.png ... out-11.png), step (the open card
 // stepping to the next peer, same frames, 35 ms apart), zoom (the camera
 // gliding to a group and back, frames), desk (the frameless desktop view on a
-// made-up wallpaper; desk-hover with the pointer over it, desk-sleep awake then left just before the shot, desk-zoom a group opening in the bowl); life / life-peek (frames of the deep, or an open group, left alone); mine, menu, menu-name, carry, carry-crowd, carry-mid, carry-aim, carry-pulse, carry-fade, sun-menu, carry-reopen (groups of mine, the Internet light carried into a group, left on a member or in the middle; held over the middle; just dropped there); a "-light" suffix uses a light theme's accents, "-cc" the Control Center size.
+// made-up wallpaper; desk-hover with the pointer over it, desk-sleep awake then left just before the shot, desk-zoom a group opening in the bowl); life / life-peek (frames of the deep, or an open group, left alone); mine, menu, menu-name, carry, carry-crowd, carry-mid, carry-aim, carry-pulse, carry-fade, sun-menu, sun-glide, carry-reopen (groups of mine, the Internet light carried into a group, left on a member or in the middle; held over the middle; just dropped there); a "-light" suffix uses a light theme's accents, "-cc" the Control Center size.
 Window {
     id: win
     readonly property var args: Qt.application.arguments
@@ -29,6 +30,28 @@ Window {
 
     DemoSource {
         id: demo
+    }
+    // sun-glide: where the light is, every 100 ms of its trip
+    Timer {
+        id: glideLog
+        property var sun
+        property point from
+        property int n: 0
+        interval: 100
+        repeat: true
+        onTriggered: {
+            console.log("glide: " + n * 100 + " ms x " + Math.round(sun.shown.x) + " (from " + Math.round(from.x) + " to " + Math.round(sun.home.x) + ") gliding " + sun.gliding);
+            if (++n > 8) {
+                // Near the left edge its words go to its right
+                const words = sun.children.find(c => c.text !== undefined && c.text === sun.label);
+                const x0 = sun.x;
+                sun.x = 20;
+                console.log("glide: label at the edge x " + Math.round(words.x) + ", in the open x " + (sun.x = 300, Math.round(words.x)));
+                sun.x = x0;
+                stop();
+                win.grabLater();
+            }
+        }
     }
 
     Component.onCompleted: {
@@ -67,7 +90,7 @@ Window {
             cam.start();
             return;
         }
-        if (["mine", "menu", "menu-name", "carry", "carry-crowd", "carry-mid", "carry-aim", "carry-pulse", "carry-fade", "sun-menu", "carry-reopen"].indexOf(mode) >= 0) {
+        if (["mine", "menu", "menu-name", "carry", "carry-crowd", "carry-mid", "carry-aim", "carry-pulse", "carry-fade", "sun-menu", "sun-glide", "carry-reopen"].indexOf(mode) >= 0) {
             if (mode === "carry-crowd")
                 demo.setProfile("crowd");
             mine.start();
@@ -267,10 +290,34 @@ Window {
                 stop();
             } else {
                 const g = scene.arr.items.find(i => i.type === "group" && !i.asleep && !i.fog);
+                if (win.mode === "sun-glide") {
+                    // Picked from the light's menu: it glides to the far
+                    // lender instead of jumping; logged along the way
+                    const find = o => o.objectName === "surfaceSun" ? o : (o.children || []).reduce((f, c) => f || find(c), null);
+                    const sun = find(scene);
+                    const lenders = demo.view.peers.filter(p => p.online && p.exit);
+                    scene.setExit(lenders[0].name, "");
+                    const t0 = Date.now();
+                    Qt.callLater(() => {
+                        const a = sun.shown;
+                        scene.setExit(lenders[lenders.length - 1].name, "");
+                        glideLog.from = a;
+                        glideLog.sun = sun;
+                        glideLog.start();
+                    });
+                    stop();
+                    return;
+                }
                 if (win.mode === "sun-menu") {
                     // A click on the light: where Internet can go
-                    scene.openMenu("sun", Qt.point(scene.width - 220, 70));
-                    console.log("sun: " + scene.menuActions("sun", scene.prefs.groups).map(a => a.text).join(" | "));
+                    // Two groups of mine, one lent Internet: it opens unfolded
+                    const ids = n => demo.view.peers.filter(p => n.indexOf(p.name) >= 0).map(p => p.id);
+                    scene.prefs.set("groups", [{ "id": "u1", "name": "Busy", "members": ids(["atlas-server", "nook-nas", "harbor-vps"]) }, { "id": "u2", "name": "Quiet", "members": ids(["tern-vps"]) }]);
+                    const mg = scene.prefs.groups[0];
+                    if (mg)
+                        scene.setExit("", mg.id);
+                    scene.openMenu("sun", Qt.point(scene.width - 250, 60));
+                    console.log("sun: " + JSON.stringify(MyGroups.exitTree(scene.prefs.groups, demo.view.peers, scene.sunOpen, demo.exitNode, scene.prefs.exitGroup)));
                     const q = demo.view.peers.find(p => p.online && p.exit);
                     const it = scene.arr.items.find(i => i.type === "peer" && i.peerId === q.id);
                     if (it)
