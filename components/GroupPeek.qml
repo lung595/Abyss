@@ -129,8 +129,8 @@ Item {
 
             Item {
                 scale: m.s
-                // Hidden while its twin sits on the open card (CardHero)
-                opacity: m.p && gp.scene.heroPeerId === m.p.id ? 0 : 1
+                // Hidden while its twin sits on the open card, back in fade as ‹ › steps away (CardHero)
+                opacity: m.p ? gp.scene.heroOpacity(m.p.id) : 1
 
                 Halo {
                     width: 110

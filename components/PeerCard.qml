@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Effects
 import qs.Common
 import qs.Widgets
 import "Mesh.js" as Mesh
@@ -7,7 +8,9 @@ import "Mesh.js" as Mesh
 // and the last minute, its addresses to copy, and what you can do with it.
 // Its creature is not drawn here: CardHero flies it onto the top edge, in a
 // medallion that breaks out of the frame (topPad leaves room for it).
-Rectangle {
+// Frosted glass over a still, blurred picture of the deep; always the same
+// height, so ‹ › can step through peers with only a cross-fade in place.
+Item {
     id: card
 
     property var scene
@@ -24,20 +27,69 @@ Rectangle {
     // Room at the top for the lower half of the creature's medallion
     property real topPad: 0
 
+    // The glass: a blurred still of the deep (a layered item the size of the
+    // scene) and where the card sits over it
+    property Item glass: null
+    property point glassAt
+
+    // Stepping with ‹ ›: the peer shown before, fading out while this one
+    // fades in (0 → 1); canStep hides the arrows when there is no other peer
+    property var prevPeer: null
+    property bool prevFavorite: false
+    property bool prevIsTop: false
+    property real swap: 1
+    property bool canStep: false
+
     signal closed
+    signal step(int dir)
 
     readonly property bool live: peer.online && scene.connected
     readonly property color ink: scene.ink
+    readonly property real radius: 18
 
-    implicitHeight: col.implicitHeight + 24 + topPad
-    radius: 18
-    color: Qt.rgba(scene.abyss.r, scene.abyss.g, scene.abyss.b, 0.9)
-    border.width: 1
-    border.color: Qt.rgba(tint.r, tint.g, tint.b, 0.45)
+    // Only what sits under the scroll area changes the height: the card
+    // itself keeps the size the scene gives it
+    readonly property real headH: header.implicitHeight + 8
 
     // Swallow clicks so they do not reach the water behind
     MouseArea {
         anchors.fill: parent
+    }
+
+    // The deep behind, blurred once when the card opened, cut to the card's
+    // rounded shape. Nothing is re-blurred while it is open: the cut only
+    // follows the card while it rises or sinks.
+    ShaderEffectSource {
+        id: glassCut
+        width: card.width
+        height: card.height
+        visible: false
+        sourceItem: card.glass
+        sourceRect: Qt.rect(card.glassAt.x, card.glassAt.y, card.width, card.height)
+    }
+    Rectangle {
+        id: glassMask
+        anchors.fill: parent
+        radius: card.radius
+        visible: false
+        layer.enabled: true
+    }
+    MultiEffect {
+        anchors.fill: parent
+        visible: !!card.glass
+        source: glassCut
+        maskEnabled: true
+        maskSource: glassMask
+        // Sharp enough for the rounded corner, soft enough to stay smooth
+        maskThresholdMin: 0.5
+        maskSpreadAtMin: 0.2
+    }
+    Rectangle {
+        anchors.fill: parent
+        radius: card.radius
+        color: Qt.rgba(card.scene.abyss.r, card.scene.abyss.g, card.scene.abyss.b, card.glass ? 0.7 : 0.9)
+        border.width: 1
+        border.color: Qt.rgba(card.tint.r, card.tint.g, card.tint.b, 0.45)
     }
 
     component Line: Row {
@@ -105,64 +157,68 @@ Rectangle {
         onClicked: card.closed()
     }
 
+    // Who it is, fixed under its creature; the peer before fades out in the
+    // same place while this one fades in
+    Item {
+        id: header
+        x: 44
+        y: card.topPad + 4
+        width: card.width - 88
+        implicitHeight: now.implicitHeight
+        CardHeader {
+            width: parent.width
+            visible: opacity > 0.01
+            opacity: 1 - card.swap
+            scene: card.scene
+            peer: card.prevPeer
+            favorite: card.prevFavorite
+            isTop: card.prevIsTop
+        }
+        CardHeader {
+            id: now
+            width: parent.width
+            opacity: card.swap
+            scene: card.scene
+            peer: card.peer
+            favorite: card.favorite
+            isTop: card.isTop
+        }
+    }
+    // ‹ › and ←/→: the peer before or after, without leaving the card
+    ActionChip {
+        visible: card.canStep
+        x: 8
+        anchors.verticalCenter: header.verticalCenter
+        height: 30
+        icon: "chevron_left"
+        ink: card.ink
+        onClicked: card.step(-1)
+    }
+    ActionChip {
+        visible: card.canStep
+        x: card.width - width - 8
+        anchors.verticalCenter: header.verticalCenter
+        height: 30
+        icon: "chevron_right"
+        ink: card.ink
+        onClicked: card.step(1)
+    }
+
     Flickable {
+        id: details
         anchors.fill: parent
         anchors.margins: 12
-        anchors.topMargin: 12 + card.topPad
+        anchors.topMargin: card.topPad + card.headH
         contentHeight: col.implicitHeight
         clip: true
         boundsBehavior: Flickable.StopAtBounds
+        // The details of the new peer settle in as its name fades in
+        opacity: 0.4 + 0.6 * card.swap
 
         Column {
             id: col
             width: parent.width
             spacing: 9
-
-            // Who it is, centred under its creature
-            Column {
-                width: parent.width
-                StyledText {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    text: ({
-                            "server": "SERVER",
-                            "vps": "VPS",
-                            "laptop": "LAPTOP",
-                            "desktop": "DESKTOP",
-                            "phone": "PHONE",
-                            "pi": "RASPBERRY PI",
-                            "nas": "NAS"
-                        })[card.peer.kind] || ""
-                    font.pixelSize: 10
-                    font.letterSpacing: 1
-                    color: card.scene.inkDim
-                }
-                StyledText {
-                    width: parent.width
-                    horizontalAlignment: Text.AlignHCenter
-                    text: (card.favorite ? "★ " : "") + card.peer.name
-                    font.pixelSize: 19
-                    font.weight: Font.Black
-                    color: card.ink
-                    wrapMode: Text.WrapAnywhere
-                }
-                Row {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    spacing: 6
-                    Rectangle {
-                        width: 8
-                        height: 8
-                        radius: 4
-                        anchors.verticalCenter: parent.verticalCenter
-                        color: card.live ? Theme.success : Qt.rgba(card.ink.r, card.ink.g, card.ink.b, 0.35)
-                    }
-                    StyledText {
-                        text: !card.peer.online ? "Offline" : !card.scene.connected ? "Mesh disconnected" : "Online · " + (card.peer.relayed ? "via " + card.peer.relay : "direct (P2P)") + (card.isTop ? " · top consumer" : "")
-                        font.pixelSize: 11
-                        color: card.scene.inkDim
-                        wrapMode: Text.NoWrap
-                    }
-                }
-            }
 
             Row {
                 width: parent.width
@@ -199,7 +255,7 @@ Rectangle {
 
             Sparkline {
                 width: parent.width
-                height: 54
+                height: 40
                 points: card.history
                 color: card.tint
                 ink: card.ink
@@ -314,6 +370,26 @@ Rectangle {
                         onClicked: card.source && card.source.toggleNetwork(modelData.id)
                     }
                 }
+            }
+        }
+    }
+
+    // More below: the details fade out at the bottom edge instead of being cut
+    Rectangle {
+        visible: details.contentY < details.contentHeight - details.height - 1
+        x: 1
+        width: card.width - 2
+        height: 22
+        y: card.height - height - 1
+        radius: card.radius
+        gradient: Gradient {
+            GradientStop {
+                position: 0
+                color: Qt.rgba(card.scene.abyss.r, card.scene.abyss.g, card.scene.abyss.b, 0)
+            }
+            GradientStop {
+                position: 1
+                color: Qt.rgba(card.scene.abyss.r, card.scene.abyss.g, card.scene.abyss.b, 0.95)
             }
         }
     }
