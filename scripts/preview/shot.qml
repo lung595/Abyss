@@ -11,7 +11,7 @@ import "../../components/Bowl.js" as Bowl
 // opening / closing, as frames out-0.png ... out-11.png), step (the open card
 // stepping to the next peer, same frames, 35 ms apart), zoom (the camera
 // gliding to a group and back, frames), desk (the frameless desktop view on a
-// made-up wallpaper; desk-hover with the pointer over it, desk-sleep awake then left just before the shot, desk-zoom a group opening in the bowl); a "-light" suffix uses a light theme's accents, "-cc" the Control Center size.
+// made-up wallpaper; desk-hover with the pointer over it, desk-sleep awake then left just before the shot, desk-zoom a group opening in the bowl); life / life-peek (frames of the deep, or an open group, left alone); a "-light" suffix uses a light theme's accents, "-cc" the Control Center size.
 Window {
     id: win
     readonly property var args: Qt.application.arguments
@@ -56,7 +56,7 @@ Window {
             scene.cardId = "demo-harbor-vps";
         if (mode === "find")
             scene.query = "pi";
-        if (["crowd", "lens", "peek", "search", "zoom"].indexOf(mode) >= 0)
+        if (["crowd", "lens", "peek", "search", "zoom", "life-peek"].indexOf(mode) >= 0)
             demo.setProfile("crowd");
         if (mode === "search")
             scene.query = "nas";
@@ -64,6 +64,10 @@ Window {
             scene.cardId = "demo-harbor-vps";
         if (mode === "zoom" || mode === "desk-zoom") {
             cam.start();
+            return;
+        }
+        if (mode === "life" || mode === "life-peek") {
+            alive.start();
             return;
         }
         if (mode === "fly" || mode === "unfly" || mode === "step") {
@@ -212,6 +216,35 @@ Window {
                 scene.closePeek();
             }
             if (n === 19) {
+                stop();
+                Qt.quit();
+                return;
+            }
+            const path = win.out.replace(/\.png$/, "-" + n + ".png");
+            win.contentItem.grabToImage(r => r.saveToFile(path));
+        }
+    }
+
+    // Life at rest, frame by frame: the deep (or an open group) left alone,
+    // grabbed every 300 ms, to see tails beat and animals look round
+    Timer {
+        id: alive
+        property int frame: -1
+        interval: frame < 0 ? 1600 : 300
+        repeat: true
+        onTriggered: {
+            if (frame < 0 && win.mode === "life-peek") {
+                const g = scene.arr.items.find(i => i.type === "group" && !i.asleep && !i.fog);
+                if (g)
+                    scene.openPeek(g.id);
+                scene.pinnedPointer = scene.peekCentre;
+                interval = 1200;
+                frame = 0;
+                return;
+            }
+            interval = 300;
+            const n = ++frame;
+            if (n === 13) {
                 stop();
                 Qt.quit();
                 return;

@@ -87,6 +87,10 @@ scripts/preview/render.sh connected "$PWD/out.png"   # offscreen renders from th
 
 ## Changelog
 
+### Unreleased (0.3.0)
+
+- **Livelier animals**: between trips every creature now has its own life — the fish beats its tail and wanders, the manta flaps its wings, the squid squeezes and jets upward, the seahorse sways upright, the turtle paddles, the whale and the nautilus roll slowly — and now and then the ones that can turn look the other way. Inside an open group the members live too (they were still). Calmer asleep, still with *Reduce motion*, and nothing runs while nobody looks: it rides the scene's existing clock, moving the shapes without repainting them (idle CPU unchanged: 3.7 % vs 3.6 % of one core, same session).
+
 ### 0.2.0 — 2026-09-27
 
 - **Lens**: a soft magnetic lens follows the pointer and gently enlarges what it lights; the scroll wheel sets its strength. The pointer is a warm light in a darker, more immersive deep.
