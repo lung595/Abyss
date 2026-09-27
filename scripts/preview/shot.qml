@@ -12,7 +12,7 @@ import "../../components/Bowl.js" as Bowl
 // opening / closing, as frames out-0.png ... out-11.png), step (the open card
 // stepping to the next peer, same frames, 35 ms apart), zoom (the camera
 // gliding to a group and back, frames), desk (the frameless desktop view on a
-// made-up wallpaper; desk-hover with the pointer over it, desk-sleep awake then left just before the shot, desk-zoom a group opening in the bowl); life / life-peek (frames of the deep, or an open group, left alone); mine, menu, menu-name, carry, carry-crowd, carry-mid, carry-aim, carry-pulse, carry-fade, sun-menu (groups of mine, the Internet light carried into a group, left on a member or in the middle; held over the middle; just dropped there); a "-light" suffix uses a light theme's accents, "-cc" the Control Center size.
+// made-up wallpaper; desk-hover with the pointer over it, desk-sleep awake then left just before the shot, desk-zoom a group opening in the bowl); life / life-peek (frames of the deep, or an open group, left alone); mine, menu, menu-name, carry, carry-crowd, carry-mid, carry-aim, carry-pulse, carry-fade, sun-menu, carry-reopen (groups of mine, the Internet light carried into a group, left on a member or in the middle; held over the middle; just dropped there); a "-light" suffix uses a light theme's accents, "-cc" the Control Center size.
 Window {
     id: win
     readonly property var args: Qt.application.arguments
@@ -67,7 +67,7 @@ Window {
             cam.start();
             return;
         }
-        if (["mine", "menu", "menu-name", "carry", "carry-crowd", "carry-mid", "carry-aim", "carry-pulse", "carry-fade", "sun-menu"].indexOf(mode) >= 0) {
+        if (["mine", "menu", "menu-name", "carry", "carry-crowd", "carry-mid", "carry-aim", "carry-pulse", "carry-fade", "sun-menu", "carry-reopen"].indexOf(mode) >= 0) {
             if (mode === "carry-crowd")
                 demo.setProfile("crowd");
             mine.start();
@@ -321,6 +321,31 @@ Window {
                     shot.interval = 300;
                     shot.start();
                     stop();
+                } else if (win.mode === "carry-reopen") {
+                    const c = scene.peekCentre;
+                    if (step === 1) {
+                        scene.dragOver(c.x, c.y);
+                        scene.dropSun(c.x, c.y);
+                        console.log("reopen: dropped; exitGroup " + scene.prefs.exitGroup + " peek " + scene.peekId);
+                        scene.pinnedPointer = Qt.point(c.x, c.y);
+                        interval = 300;
+                    } else if (step === 2 && scene.peekId !== "") {
+                        // Glide out, as a hand would
+                        scene.pinnedPointer = Qt.point(5, scene.height - 5);
+                        step = 1;
+                        interval = 1500;
+                    } else if (step === 2) {
+                        const it = scene.arr.items.find(i => i.mine === scene.prefs.exitGroup);
+                        console.log("reopen: peek now '" + scene.peekId + "', my group item " + (it ? it.id : "none"));
+                        const at = scene.spotOf(it.id);
+                        scene.pinnedPointer = Qt.point(at.x, at.y);
+                        interval = 250;
+                    } else if (step < 12) {
+                        console.log("reopen: t" + step + " peek '" + scene.peekId + "' focus " + scene.focusId + " block " + scene._peekBlock);
+                    } else {
+                        win.grabLater();
+                        stop();
+                    }
                 } else if (step === 1 && win.mode === "carry-mid") {
                     console.log("carry: group open " + (scene.peekId === g.id));
                     const c = scene.peekCentre;
