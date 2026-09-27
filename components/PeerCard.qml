@@ -5,6 +5,8 @@ import "Mesh.js" as Mesh
 
 // Everything about one peer, opened by a click on its creature: live rates
 // and the last minute, its addresses to copy, and what you can do with it.
+// Its creature is not drawn here: CardHero flies it onto the top edge, in a
+// medallion that breaks out of the frame (topPad leaves room for it).
 Rectangle {
     id: card
 
@@ -19,12 +21,16 @@ Rectangle {
     property bool muted: false
     property var viaNetworks: []
 
+    // Room at the top for the lower half of the creature's medallion
+    property real topPad: 0
+
     signal closed
 
     readonly property bool live: peer.online && scene.connected
     readonly property color ink: scene.ink
 
-    radius: 16
+    implicitHeight: col.implicitHeight + 24 + topPad
+    radius: 18
     color: Qt.rgba(scene.abyss.r, scene.abyss.g, scene.abyss.b, 0.9)
     border.width: 1
     border.color: Qt.rgba(tint.r, tint.g, tint.b, 0.45)
@@ -88,9 +94,21 @@ Rectangle {
         }
     }
 
+    // Back, top left (as in Orbit); Esc or a click outside also closes
+    ActionChip {
+        x: 10
+        y: 10
+        z: 1
+        height: 30
+        icon: "arrow_back"
+        ink: card.ink
+        onClicked: card.closed()
+    }
+
     Flickable {
         anchors.fill: parent
         anchors.margins: 12
+        anchors.topMargin: 12 + card.topPad
         contentHeight: col.implicitHeight
         clip: true
         boundsBehavior: Flickable.StopAtBounds
@@ -100,57 +118,49 @@ Rectangle {
             width: parent.width
             spacing: 9
 
-            Item {
+            // Who it is, centred under its creature
+            Column {
                 width: parent.width
-                height: head.implicitHeight
-                Column {
-                    id: head
-                    width: parent.width - 30
-                    StyledText {
-                        text: ({
-                                "server": "SERVER",
-                                "vps": "VPS",
-                                "laptop": "LAPTOP",
-                                "desktop": "DESKTOP",
-                                "phone": "PHONE",
-                                "pi": "RASPBERRY PI",
-                                "nas": "NAS"
-                            })[card.peer.kind] || ""
-                        font.pixelSize: 10
-                        font.letterSpacing: 1
-                        color: card.scene.inkDim
-                    }
-                    StyledText {
-                        width: parent.width
-                        text: (card.favorite ? "★ " : "") + card.peer.name
-                        font.pixelSize: 19
-                        font.weight: Font.Black
-                        color: card.ink
-                        wrapMode: Text.WrapAnywhere
-                    }
-                    Row {
-                        spacing: 6
-                        Rectangle {
-                            width: 8
-                            height: 8
-                            radius: 4
-                            anchors.verticalCenter: parent.verticalCenter
-                            color: card.live ? Theme.success : Qt.rgba(card.ink.r, card.ink.g, card.ink.b, 0.35)
-                        }
-                        StyledText {
-                            text: !card.peer.online ? "Offline" : !card.scene.connected ? "Mesh disconnected" : "Online · " + (card.peer.relayed ? "via " + card.peer.relay : "direct (P2P)") + (card.isTop ? " · top consumer" : "")
-                            font.pixelSize: 11
-                            color: card.scene.inkDim
-                            wrapMode: Text.NoWrap
-                        }
-                    }
+                StyledText {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: ({
+                            "server": "SERVER",
+                            "vps": "VPS",
+                            "laptop": "LAPTOP",
+                            "desktop": "DESKTOP",
+                            "phone": "PHONE",
+                            "pi": "RASPBERRY PI",
+                            "nas": "NAS"
+                        })[card.peer.kind] || ""
+                    font.pixelSize: 10
+                    font.letterSpacing: 1
+                    color: card.scene.inkDim
                 }
-                ActionChip {
-                    anchors.right: parent.right
-                    anchors.top: parent.top
-                    icon: "close"
-                    ink: card.ink
-                    onClicked: card.closed()
+                StyledText {
+                    width: parent.width
+                    horizontalAlignment: Text.AlignHCenter
+                    text: (card.favorite ? "★ " : "") + card.peer.name
+                    font.pixelSize: 19
+                    font.weight: Font.Black
+                    color: card.ink
+                    wrapMode: Text.WrapAnywhere
+                }
+                Row {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    spacing: 6
+                    Rectangle {
+                        width: 8
+                        height: 8
+                        radius: 4
+                        anchors.verticalCenter: parent.verticalCenter
+                        color: card.live ? Theme.success : Qt.rgba(card.ink.r, card.ink.g, card.ink.b, 0.35)
+                    }
+                    StyledText {
+                        text: !card.peer.online ? "Offline" : !card.scene.connected ? "Mesh disconnected" : "Online · " + (card.peer.relayed ? "via " + card.peer.relay : "direct (P2P)") + (card.isTop ? " · top consumer" : "")
+                        font.pixelSize: 11
+                        color: card.scene.inkDim
+                        wrapMode: Text.NoWrap
+                    }
                 }
             }
 

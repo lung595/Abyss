@@ -5,7 +5,8 @@ import "../../components"
 
 // Offscreen renders from the demo mesh (fictional names and addresses).
 // Usage: see render.sh. Modes: connected, disconnected, connecting,
-// needsLogin, stopped, card, relay, find, exit, nets, work; a "-light"
+// needsLogin, stopped, card, relay, find, exit, nets, work, crowd, lens,
+// peek, search (these four on the 30-peer crowd mesh), grab; a "-light"
 // suffix uses a light theme's accents, "-cc" the Control Center size.
 Window {
     id: win
@@ -48,10 +49,13 @@ Window {
             scene.netsOpen = true;
         if (mode === "card")
             scene.cardId = "demo-harbor-vps";
-        if (mode === "find") {
+        if (mode === "find")
             scene.query = "pi";
-            scene.findId = "demo-pi-garden";
-        }
+        if (["crowd", "lens", "peek", "search"].indexOf(mode) >= 0)
+            demo.setProfile("crowd");
+        if (mode === "search")
+            scene.query = "nas";
+        shot.interval = mode === "peek" ? 3000 : mode === "lens" || mode === "grab" ? 2600 : 1600;
         shot.start();
     }
 
@@ -61,6 +65,35 @@ Window {
         source: demo
         compact: win.cc
         cornerRadius: 16
+    }
+
+    // After the first reads: aim the lens at a peer, or rest it on a group
+    // until its bubble opens by itself, then on one of its members
+    Timer {
+        running: win.mode === "lens" || win.mode === "peek" || win.mode === "grab"
+        interval: 700
+        // The lens keeps aiming (the demo traffic reshuffles the groups)
+        repeat: win.mode !== "grab"
+        onTriggered: {
+            if (win.mode === "grab") {
+                // Hold the busiest peer up and to the right: its ribbon stretches
+                const p = scene.arr.items.find(i => i.type === "peer");
+                if (p)
+                    scene.grab(p.id, 110, -70);
+            } else if (win.mode === "lens") {
+                const p = scene.arr.items.find(i => i.type === "peer");
+                const at = p ? scene.lay.peers[p.id] : null;
+                scene.pinnedPointer = at ? Qt.point(at.x + 8, at.y - 4) : Qt.point(scene.width / 2, scene.height / 2);
+            } else if (scene.peekId === "") {
+                const g = scene.arr.items.find(i => i.type === "group" && !i.asleep && !i.fog);
+                const at = g ? scene.lay.peers[g.id] : null;
+                if (at)
+                    scene.pinnedPointer = Qt.point(at.x + 4, at.y);
+            } else {
+                const q = scene.peekSpots[1] || scene.peekSpots[0];
+                scene.pinnedPointer = Qt.point(scene.peekCentre.x + q.x + 6, scene.peekCentre.y + q.y + 4);
+            }
+        }
     }
 
     // Let a few clock ticks run so pulses and tentacles are in place

@@ -94,18 +94,19 @@ function peerOf(d) {
         "tx": Number(d.transferSent) || 0,
         "down": 0,
         "up": 0,
+        "calm": 0,
         "since": _time(d.statusSince),
         "handshake": _time(d.lastWireguardHandshake)
     };
 }
 
-// Online first, then by latency (closest first), then by name, so the order
-// (and every layout built from it) is stable from one read to the next
+// Online first, then by steady latency (closest first), then by name, so the
+// order (and every layout built from it) is stable from one read to the next
 function _order(a, b) {
     if (a.online !== b.online)
         return a.online ? -1 : 1;
-    if (a.online && a.latencyMs !== b.latencyMs)
-        return a.latencyMs - b.latencyMs;
+    if (a.online && a.steadyMs !== b.steadyMs)
+        return a.steadyMs - b.steadyMs;
     return a.name.localeCompare(b.name);
 }
 
@@ -118,6 +119,53 @@ function rate(bytesNow, bytesBefore, seconds) {
     return d > 0 ? d * 8 / seconds : 0;
 }
 
+// Shown rates ease toward each new measure in about a second, so a burst
+// reads as a steady figure. What arranges the deep (calm traffic, steady
+// latency) follows over ~20 s, so nothing swaps places on a blip.
+const EASE_S = 1.2;
+const CALM_S = 20;
+// A read this close to the last one, or after a pause this long (the view
+// was closed), measures nothing: the last figures are kept
+const MIN_GAP_S = 0.5;
+const MAX_GAP_S = 5;
+// The steady latency only follows its average past this (log) ratio, ~20 %
+const STEADY_BAND = 0.18;
+
+// Fills a peer's figures from its previous read b, dt seconds earlier:
+// down/up (eased rates), calm (slow average of both, for the arrangement),
+// msAvg and steadyMs (latency averaged, and the value the layout uses)
+function follow(p, b, dt, live) {
+    if (p.online && b && b.online && b.msAvg > 0 && p.latencyMs > 0) {
+        const k = 1 - Math.exp(-Math.min(Math.max(dt, 0), MAX_GAP_S) / CALM_S);
+        p.msAvg = Math.exp(Math.log(b.msAvg) + (Math.log(p.latencyMs) - Math.log(b.msAvg)) * k);
+        p.steadyMs = Math.abs(Math.log(p.msAvg / b.steadyMs)) < STEADY_BAND ? b.steadyMs : Math.round(p.msAvg * 10) / 10;
+    } else {
+        p.msAvg = p.latencyMs;
+        p.steadyMs = p.latencyMs;
+    }
+    if (!live || !p.online || !b)
+        return;
+    if (!(dt >= MIN_GAP_S && dt <= MAX_GAP_S)) {
+        p.down = b.down;
+        p.up = b.up;
+        p.calm = b.calm;
+        p.measured = b.measured;
+        return;
+    }
+    const down = rate(p.rx, b.rx, dt), up = rate(p.tx, b.tx, dt);
+    if (!b.measured) {
+        p.down = down;
+        p.up = up;
+        p.calm = down + up;
+    } else {
+        const e = 1 - Math.exp(-dt / EASE_S), c = 1 - Math.exp(-dt / CALM_S);
+        p.down = b.down + (down - b.down) * e;
+        p.up = b.up + (up - b.up) * e;
+        p.calm = b.calm + (down + up - b.calm) * c;
+    }
+    p.measured = true;
+}
+
 // Below this a peer is idle, not "the top consumer"
 const TOP_MIN_BPS = 50000;
 // A WireGuard handshake happens every 2 minutes on a live tunnel
@@ -127,19 +175,16 @@ function parse(daemonStatus, json, prev, now) {
     const state = stateOf(daemonStatus);
     const s = json || {};
     now = now || Date.now();
-    const list = ((s.peers || {}).details || []).map(peerOf).sort(_order);
+    const list = ((s.peers || {}).details || []).map(peerOf);
     const before = {};
     if (prev && prev.peers && prev.at)
         prev.peers.forEach(p => before[p.id] = p);
     const dt = prev && prev.at ? (now - prev.at) / 1000 : 0;
+    // rx is what we received from a peer: its download toward us
+    list.forEach(p => follow(p, before[p.id], dt, state === "connected"));
+    list.sort(_order);
     let down = 0, up = 0, top = null, online = 0;
     list.forEach(p => {
-        const b = before[p.id];
-        // rx is what we received from that peer: its download toward us
-        if (b && p.online && state === "connected") {
-            p.down = rate(p.rx, b.rx, dt);
-            p.up = rate(p.tx, b.tx, dt);
-        }
         if (p.online) {
             online++;
             down += p.down;

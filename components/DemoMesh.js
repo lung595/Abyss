@@ -44,6 +44,29 @@ const PROFILES = {
     }
 };
 
+// A crowded made-up mesh (30 peers), to try the groups, the lens and the
+// search. Built from word lists so every name stays fictional.
+function _crowd() {
+    const birds = ["heron", "egret", "plover", "swift", "gannet", "puffin", "ibis", "osprey", "curlew", "dunlin", "merlin", "shrike", "robin", "wagtail", "linnet"];
+    const kinds = ["server", "phone", "laptop", "nas", "vps", "pi", "desktop"];
+    const peers = [];
+    for (let i = 0; i < 30; i++) {
+        const kind = kinds[i % kinds.length];
+        const name = birds[i % birds.length] + "-" + (kind === "desktop" ? "pc" : kind) + (i >= birds.length ? "-2" : "");
+        const ms = i % 9 === 8 ? 0 : [3, 8, 14, 26, 48, 75, 120, 160][i * 5 % 8];
+        const relay = kind === "vps" || i % 6 === 5 ? (i % 2 ? EU : US) : "";
+        const rate = i === 3 ? 6.5 : [0.02, 0.3, 0.08, 1.2, 0.05, 0.5, 0.01][i % 7];
+        peers.push([name, "100.93." + (10 + i) + "." + (i * 7 % 250 + 2), ms, relay, rate, 60 + i * 97]);
+    }
+    return {
+        "fqdn": "wren.crowd.example",
+        "ip": "100.93.0.1/16",
+        "peers": peers,
+        "networks": [{ "id": "home-lan", "cidr": "192.168.1.0/24", "via": "plover-laptop", "on": true }]
+    };
+}
+PROFILES.crowd = _crowd();
+
 function profiles() {
     return Object.keys(PROFILES);
 }
@@ -68,7 +91,7 @@ function status(profile, now, up, counters, offline, relayDown) {
         const online = up && ms > 0 && !offline[name] && (!relay || relayOk(relay));
         const c = counters[name] || { "rx": 0, "tx": 0 };
         return {
-            "fqdn": name + (profile === "work" ? ".corp.example" : ".mesh.example"),
+            "fqdn": name + (({ "work": ".corp.example", "crowd": ".crowd.example" })[profile] || ".mesh.example"),
             "netbirdIp": ip,
             "publicKey": "demo-" + name,
             "status": online ? "Connected" : "Idle",
