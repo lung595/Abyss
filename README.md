@@ -103,6 +103,7 @@ scripts/preview/render.sh connected "$PWD/out.png"   # offscreen renders from th
 - **Choose the screens for the desktop bowl**: a "Desktop" section at the top of Abyss's settings (all displays, or pick them one by one), from the Plugins page or from Settings › Desktop Widgets.
 - **No bar over the bowl**: who is online and the live totals are written in the bed of sand, a fine line of your theme's accent colour poured against the glass, like a sand bottle, following the bowl's curve. Click the jellyfish to connect; right-click it to connect or disconnect, switch profile, or show and hide offline peers (everywhere, not just in the bowl). The bar stays in the bar popout and the Control Center.
 - **Card**: received and sent now sit either side of the creature's medallion, on small cards in their own colours (received in the peer's colour, sent in yours, as the curve below), and the address and the name share one line, each with its copy button.
+- **The light that lends Internet**: a soft beam now falls from it onto the peer (it was a hard rectangle). The light holds still while you look around the deep, follows that peer when you drag it, and takes a deliberate pull to lift, so a click or a brush no longer carries it away.
 - **TOP CONSUMER** is told by its caption alone; its label no longer changes colour.
 - **Fixed**: a click, or resting the pointer, opened a creature or a group a hand-width away; it now takes the pointer being on it (the lens still aims from afar).
 
@@ -135,6 +136,47 @@ scripts/preview/render.sh connected "$PWD/out.png"   # offscreen renders from th
 ## Roadmap
 
 No promises, no dates. Everything here was asked for and is not in a release yet.
+
+### Internet, the whole journey
+
+Sending your Internet through a peer (a NetBird exit node) should explain itself at every step. The full list, from the user's side; ✓ = already in 0.3.0.
+
+**Knowing where you stand**
+- ✓ The light at the surface is your Internet; its label says where it goes out ("Internet via studio", or just "Internet" when it goes out directly).
+- ✓ A soft beam falls from it onto the peer that lends it, and follows that peer when you drag it.
+- The bar pill shows a small sun while your Internet goes out through a peer, so you know it away from the deep too.
+- The beam's label shows the traffic going out through it (↓ ↑), and the card of the lending peer says "Lends you Internet".
+
+**Choosing a peer**
+- Hovering the light says what it does: "Drag onto a device to go out through it".
+- While you carry it, the peers that can lend Internet (they offer an exit node) glow softly and the others dim, so you only aim at what works; dropping on one that cannot says why.
+- ✓ Drop it on a peer: "Internet through X".
+- Click the light (no dragging needed): a short list of the peers and groups that can lend it, and "Stop".
+- A peer's card and its right-click menu: "Use for Internet" / "Stop using for Internet".
+- Escape while carrying puts the light back where it was.
+
+**Choosing a group**
+- ✓ Carrying the light over a shoal opens it; drop on a member for that one only.
+- ✓ Drop it in the middle of the group for the whole group: the group lends its best member online, and switches by itself when that one goes offline.
+- **While you carry it over the middle**, a ring appears there with "All of Homelab", and faint tentacles reach out to every member: you see what dropping will do before you let go.
+- **Once dropped**, the light settles in the middle and a pulse runs once along the tentacles; the member that lends it is lit, the others wait on dotted lines, marked "ready to take over".
+- With the group closed, its shoal wears a small sun and the beam falls on it, labelled "Internet via Homelab · studio".
+- When the group switches member, a short note says so ("studio went offline, now via nas").
+- ✓ Right-click a group: "Internet through it" / "Stop Internet through it"; ✓ right-click a creature to make a group of your own.
+
+**Stopping or changing**
+- ✓ Drag the light out of the group to stop it there.
+- Drag the light back up to the surface, or anywhere empty: back to your own connection ("Direct" for a moment under it).
+- Dropping it on another peer or group simply moves it there.
+
+**When something goes wrong**
+- While NetBird switches, the light pulses once and says "Switching…"; if it fails, it goes back and says why.
+- The lending peer goes offline (alone, not in a group): the beam goes out, the light turns to a warning colour with "studio is offline", and a click offers the next best peer.
+- Disconnected: the light is dim and cannot be carried ("Connect first").
+
+**Everywhere**
+- ✓ Same gestures in the bar popout, the Control Center and the desktop bowl; ✓ `dms ipc call abyss exit <peer | group | off>`, plus `exit` with no argument to say where Internet goes out now.
+- Reduce motion: no pulse and no travelling light, only the end states.
 
 ### Next
 

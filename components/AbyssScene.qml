@@ -221,6 +221,20 @@ Item {
     function spotOfPeer(peerId) {
         return spotOf(itemOfPeer(peerId));
     }
+    // Where it is drawn right now: its place plus the lens, a grab or a
+    // swim under way (the sun and its beam follow a peer being dragged)
+    // Where a peer really is, without the lens: its place, its swim and a
+    // grab, but not the fisheye that shifts it at every pointer move (the
+    // light hangs on this, so it holds still while you look around)
+    function anchorOfPeer(peerId) {
+        poseRev;
+        const id = itemOfPeer(peerId), p = spotOf(id), n = _nudges[id], w = _tripPose[id];
+        return Qt.point(p.x + (n ? n.x : 0) + (w ? w.dx : 0), p.y + (n ? n.y : 0) + (w ? w.dy : 0));
+    }
+    function drawnOfPeer(peerId) {
+        const id = itemOfPeer(peerId), p = spotOf(id), o = offsetOf(id);
+        return Qt.point(p.x + o.x, p.y + o.y);
+    }
 
     // --- Awake and asleep --------------------------------------------------
     // power eases after the jellyfish is switched (0 asleep .. 1 awake). The
@@ -1511,25 +1525,15 @@ Item {
                 strength: 0.06
             }
 
-            // Internet exit: a shaft of light from the surface to the exit peer
-            Rectangle {
+            // Internet exit: a soft beam from the surface onto the exit peer
+            LightShaft {
                 readonly property var exitPeer: root.source && root.source.exitNode ? root.view.peers.find(p => p.name === root.source.exitNode) : null
-                readonly property point at: exitPeer ? root.spotOfPeer(exitPeer.id) : Qt.point(0, 0)
-                visible: !!exitPeer && exitPeer.online && root.connected
-                x: at.x - 26
-                y: root.frame.surfaceY
-                width: 52
-                height: Math.max(0, at.y - root.frame.surfaceY)
-                gradient: Gradient {
-                    GradientStop {
-                        position: 0
-                        color: Qt.rgba(root.sunColor.r, root.sunColor.g, root.sunColor.b, 0.38)
-                    }
-                    GradientStop {
-                        position: 1
-                        color: Qt.rgba(root.sunColor.r, root.sunColor.g, root.sunColor.b, 0.04)
-                    }
-                }
+                readonly property point at: exitPeer ? root.drawnOfPeer(exitPeer.id) : Qt.point(0, 0)
+                visible: !!exitPeer && exitPeer.online && root.connected && height > 20
+                toX: at.x
+                toY: at.y
+                fromY: root.frame.surfaceY
+                color: root.sunColor
             }
 
             Repeater {
@@ -2006,7 +2010,7 @@ Item {
             z: 22
             scene: root
             // In the open group it carries: in the middle, tied to its members
-            home: groupPeek.lit ? Qt.point(groupPeek.cx, groupPeek.cy) : root.exitPeer ? Qt.point(root.spotOfPeer(root.exitPeer.id).x, root.frame.surfaceY) : Qt.point(root.width - root.insetTop - 58, root.frame.surfaceY)
+            home: groupPeek.lit ? Qt.point(groupPeek.cx, groupPeek.cy) : root.exitPeer ? Qt.point(root.anchorOfPeer(root.exitPeer.id).x, root.frame.surfaceY) : Qt.point(root.width - root.insetTop - 58, root.frame.surfaceY)
             label: groupPeek.lit ? "" : root.exitMine && root.exitPeer ? "Internet via " + root.exitMine.name + " · " + root.exitPeer.name : root.exitPeer ? "Internet via " + root.exitPeer.name : "Internet"
             onDropped: (px, py) => root.dropSun(px, py)
         }
