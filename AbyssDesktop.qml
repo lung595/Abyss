@@ -4,17 +4,19 @@ import qs.Common
 import qs.Services
 import qs.Modules.Plugins
 import "components"
+import "components/Bowl.js" as Bowl
 
-// Desktop surface: the deep as a window onto the wallpaper. Still by
+// Desktop surface: the deep in a round glass fishbowl standing on the
+// wallpaper (FishBowl draws the glass, the water and the gravel around it). Still by
 // default: no clock and no traffic reads until the pointer is over it
 // (or "Keep the desktop alive" is on).
 DesktopPluginComponent {
     id: root
 
-    minWidth: 340
-    minHeight: 280
-    property real defaultWidth: 580
-    property real defaultHeight: 440
+    minWidth: 400
+    minHeight: 340
+    property real defaultWidth: 680
+    property real defaultHeight: 560
 
     readonly property var daemon: PluginService.pluginDaemonInstances["abyss"] ?? null
     readonly property bool hot: hover.hovered
@@ -56,14 +58,39 @@ DesktopPluginComponent {
         id: hover
     }
 
+    readonly property var bowl: Bowl.build(width, height, scene.topH)
+
+    FishBowl {
+        anchors.fill: parent
+        part: "back"
+        b: root.bowl
+        ink: scene.ink
+        shallow: scene.shallow
+        abyss: scene.abyss
+        tints: scene.reefTints
+    }
     AbyssScene {
         id: scene
-        anchors.fill: parent
+        x: root.bowl.scene.x
+        y: root.bowl.scene.y
+        width: root.bowl.scene.w
+        height: root.bowl.scene.h
         source: root.daemon ? root.daemon.source : null
         actions: root.daemon
         cornerRadius: Theme.cornerRadius
+        borderless: true
         active: true
         freezeWhenIdle: true
         interacting: root.hot
+    }
+    // The glass over the scene (lets the pointer through)
+    FishBowl {
+        anchors.fill: parent
+        part: "front"
+        b: root.bowl
+        ink: scene.ink
+        shallow: scene.shallow
+        abyss: scene.abyss
+        tints: scene.reefTints
     }
 }

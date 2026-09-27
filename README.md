@@ -35,7 +35,7 @@ You are the giant jellyfish. Every peer is a creature floating at the depth of i
 
 - **Bar**: a small jellyfish with the number of peers online. Click opens the deep, right click connects or disconnects.
 - **Control Center**: a NetBird tile (toggle) with the deep underneath.
-- **Desktop**: the deep as a window onto your wallpaper. It stays still until the pointer is over it.
+- **Desktop**: a round fishbowl on your wallpaper, with gravel, glass and a water line; the deep lives inside it. It stays still until the pointer is over it.
 
 ![Control Center](screenshots/connected-cc.png)
 
@@ -98,6 +98,7 @@ scripts/preview/render.sh connected "$PWD/out.png"   # offscreen renders from th
 - Thinner traffic tentacles (a thread when idle, a ribbon when busy) and calmer motion.
 - The jellyfish now has loose threads of light; each linked peer takes one over. Its bell fades smoothly between asleep and awake.
 - Caves (routed networks) always glow a little, and burn when on. Their thread to the gateway only shows while you hover them, and leaves from above the name.
+- **The desktop widget is a fishbowl**: round glass with a rim, highlights and a soft shadow on your wallpaper, water tinted by your theme and gravel at the bottom. The top bar only shows while you use it. A group opening inside the bowl melts into the water at its edges.
 - Fixed: a traffic spike each time the view opened; grabbing moved only the tentacle.
 - Still to come in 0.2.0: see the [Roadmap](#roadmap).
 
@@ -123,6 +124,9 @@ No promises, no dates. Everything here was asked for and is not in a release yet
 - **The jellyfish as the only on/off switch**: the extra toggle goes, and a small ON/OFF word sits by the jellyfish.
 - **Drop the Internet light into a group** to pick the exit node among its devices.
 - **A cleaner layout**: one sector per relay, so no tentacle or lantern ever hides a device or a label.
+- **Inside a group, you feel you entered its world**: clearer that you are in a group, with its own surroundings.
+- **Shoals**: the creatures of a group swim together like a real school of fish (only while you watch).
+- **A goldfish companion** in every view (bar popout, Control Center, desktop): it waves when you click it and lives its life, eats, sleeps with little *z z z*, and cleans the bowl now and then. Still while nobody looks.
 - Measured CPU cost while a view is open, and fresh screenshots.
 
 ### Later
@@ -142,6 +146,7 @@ No promises, no dates. Everything here was asked for and is not in a release yet
 ## Credits
 
 - The idea of a NetBird plugin for DMS comes from **NetbirdStatus** by [Dadangdut33](https://github.com/Dadangdut33), in [dms-plugins](https://github.com/Dadangdut33/dms-plugins). Thank you!
+- The fishbowl desktop widget (and the goldfish to come) is a nod to Gumball and Darwin's bowl in *The Amazing World of Gumball* (Cartoon Network); everything here is drawn from scratch, no character is reproduced.
 - Built on [DankMaterialShell](https://github.com/AvengeMedia/DankMaterialShell) and [Quickshell](https://quickshell.org).
 
 ## License
