@@ -171,8 +171,9 @@ Sending your Internet through a peer (a NetBird exit node) should explain itself
 
 **Stopping or changing**
 - ✓ Drag the light out of the group to stop it there.
-- Drag the light back up to the surface, or anywhere empty: back to your own connection ("Direct" for a moment under it).
-- Dropping it on another peer or group simply moves it there.
+- ✓ Drag the light back up to the surface, or anywhere empty: back to your own connection.
+- ✓ Dropping it on another peer or group simply moves it there.
+- A word under the light for a moment ("Direct", "Through studio") confirms each change.
 
 **When something goes wrong**
 - While NetBird switches, the light pulses once and says "Switching…"; if it fails, it goes back and says why.
