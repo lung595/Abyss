@@ -101,8 +101,8 @@ scripts/preview/render.sh connected "$PWD/out.png"   # offscreen renders from th
 - **Carry the Internet into groups**: resting the light on a group opens it (the groups hold still meanwhile), you can then leave it on any member; carrying it out of the bubble closes it.
 - **Setting "Open groups"**: on hover and click (default), on hover only, or on click only.
 - **Choose the screens for the desktop bowl**: a "Desktop" section at the top of Abyss's settings (all displays, or pick them one by one), from the Plugins page or from Settings › Desktop Widgets.
-- **No bar over the bowl**: who is online and the live totals are scratched into the glass in front of the sand. Click the jellyfish to connect; right-click it to connect or disconnect, switch profile, or show and hide offline peers (everywhere, not just in the bowl). The bar stays in the bar popout and the Control Center.
-- **Card**: received and sent now sit either side of the creature's medallion, and the address and the name share one line, each with its copy button.
+- **No bar over the bowl**: who is online and the live totals are cut into the glass in front of the sand, like an engraving (lit lower edge, shadowed upper edge, a few scratches). Click the jellyfish to connect; right-click it to connect or disconnect, switch profile, or show and hide offline peers (everywhere, not just in the bowl). The bar stays in the bar popout and the Control Center.
+- **Card**: received and sent now sit either side of the creature's medallion, on small cards in their own colours (received in the peer's colour, sent in yours, as the curve below), and the address and the name share one line, each with its copy button.
 - **TOP CONSUMER** is told by its caption alone; its label no longer changes colour.
 - **Fixed**: a click, or resting the pointer, opened a creature or a group a hand-width away; it now takes the pointer being on it (the lens still aims from afar).
 

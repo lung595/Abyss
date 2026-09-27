@@ -48,6 +48,8 @@ Item {
 
     readonly property bool live: peer.online && scene.connected
     readonly property color ink: scene.ink
+    // What you send: your own colour, as the "you" chip
+    readonly property color upTint: Theme.tertiary
     readonly property real radius: 18
 
     // Only what sits under the scroll area changes the height: the card
@@ -161,34 +163,51 @@ Item {
         onClicked: card.closed()
     }
 
-    // Live rates on either side of the creature's medallion: received on
-    // the left (flowing to you), sent on the right. Under the back button,
-    // level with the medallion's lower half.
-    component Rate: StyledText {
+    // Live rates on either side of the creature's medallion, each on its
+    // own small card: received on the left in the peer's colour (it comes
+    // from them), sent on the right in yours (the "you" tint), the same
+    // colours as the curve below. Just under the back button.
+    component Rate: Rectangle {
         property real rate
-        y: card.topPad - height - 2
-        width: card.width / 2 - card.scene.medallion / 2 - 22
-        height: 22
-        verticalAlignment: Text.AlignVCenter
-        font.pixelSize: 15
-        font.weight: Font.Bold
-        font.family: Theme.monoFontFamily
-        // A narrow card shrinks the figure rather than cutting it
-        fontSizeMode: Text.HorizontalFit
-        minimumPixelSize: 10
-        wrapMode: Text.NoWrap
-        color: card.ink
+        property string arrow
+        property color hue
+        // 4 px under the back button (y 10, 30 high)
+        y: 44
+        width: card.width / 2 - card.scene.medallion / 2 - 20
+        height: Math.max(20, card.topPad - 44)
+        radius: 9
+        color: Qt.rgba(hue.r, hue.g, hue.b, 0.12)
+        border.width: 1
+        border.color: Qt.rgba(hue.r, hue.g, hue.b, 0.3)
         opacity: 0.4 + 0.6 * card.swap
+        StyledText {
+            anchors.fill: parent
+            anchors.leftMargin: 8
+            anchors.rightMargin: 8
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+            text: parent.arrow + " " + Mesh.fmtRate(card.live ? parent.rate : 0)
+            font.pixelSize: 14
+            font.weight: Font.Bold
+            font.family: Theme.monoFontFamily
+            // A narrow card shrinks the figure rather than cutting it
+            fontSizeMode: Text.HorizontalFit
+            minimumPixelSize: 10
+            wrapMode: Text.NoWrap
+            color: parent.hue
+        }
     }
     Rate {
         x: 12
-        horizontalAlignment: Text.AlignRight
-        text: "↓ " + Mesh.fmtRate(card.live ? card.peer.down : 0)
+        arrow: "↓"
+        rate: card.peer.down
+        hue: card.tint
     }
     Rate {
         x: card.width - width - 12
-        horizontalAlignment: Text.AlignLeft
-        text: "↑ " + Mesh.fmtRate(card.live ? card.peer.up : 0)
+        arrow: "↑"
+        rate: card.peer.up
+        hue: card.upTint
     }
 
     // Who it is, fixed under its creature; the peer before fades out in the
@@ -259,6 +278,7 @@ Item {
                 height: 40
                 points: card.history
                 color: card.tint
+                upColor: card.upTint
                 ink: card.ink
             }
 
