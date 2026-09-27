@@ -69,12 +69,23 @@ DesktopPluginComponent {
         abyss: scene.abyss
         tints: scene.reefTints
     }
+    // The water darkens round an open group, so its pool stands out
+    FishBowl {
+        anchors.fill: parent
+        part: "shade"
+        b: root.bowl
+        abyss: scene.abyss
+        opacity: 0.85 * scene.blurMix
+        visible: opacity > 0.01
+    }
     AbyssScene {
         id: scene
         x: root.bowl.scene.x
         y: root.bowl.scene.y
         width: root.bowl.scene.w
         height: root.bowl.scene.h
+        insetTop: root.bowl.scene.insetTop
+        insetFloor: root.bowl.scene.insetFloor
         source: root.daemon ? root.daemon.source : null
         actions: root.daemon
         cornerRadius: Theme.cornerRadius

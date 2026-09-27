@@ -43,6 +43,10 @@ Item {
     // it has no frame, water, reef or floor of its own; the top bar only
     // shows while the pointer is over it
     property bool borderless: false
+    // In the desktop bowl: how far in from each side the surface (top bar,
+    // sun) and the floor (caves, sleepers) must stay, as the glass narrows
+    property real insetTop: 0
+    property real insetFloor: 0
     readonly property bool chromeShown: !borderless || interacting || netsOpen || query !== ""
 
     readonly property Prefs prefs: Prefs {}
@@ -184,7 +188,17 @@ Item {
         };
     }
     readonly property var layItems: arr.items.filter(it => it.type !== "peer" || !!peerById[it.peerId]).map(_asPeer)
-    readonly property var lay: Lay.layout(layItems, Math.max(240, width), Math.max(220, height), topH)
+    readonly property var lay: Lay.layout(layItems, Math.max(240, width), Math.max(220, height), topH, {
+        "top": insetTop,
+        "floor": insetFloor,
+        "caves": reefCaves
+    }, _laid.deg)
+    // The last layout's angles, so the next one keeps things on their side
+    // (Layout._keepOrder). A constant object filled in place: reading it in
+    // the binding above adds no dependency, so no binding loop
+    readonly property var _laid: ({
+            "deg": null
+        })
     readonly property var frame: lay.frame
     // Delegates are rebuilt only when the set of items changes, not on
     // every traffic read
@@ -465,6 +479,36 @@ Item {
         if (planned || before !== Object.keys(_trips).length)
             poseRev++;
     }
+    // Falling asleep mid-trip (the desktop once the pointer leaves) must not
+    // freeze things half-way, stacked where they left: they land at once
+    function _landTrips() {
+        Object.keys(_trips).forEach(id => {
+            const w = _tripAt(_trips[id]);
+            _faces[id] = w.f;
+        });
+        _trips = {};
+        _tripPose = {};
+        _swimming = false;
+        poseRev++;
+    }
+    onAwakeChanged: {
+        if (awake)
+            return;
+        const moved = _swimming || Object.keys(_poses).length > 0;
+        if (_swimming)
+            _landTrips();
+        // Same for the lens's pull: back to rest, not frozen mid-swing
+        if (Object.keys(_poses).length) {
+            _poses = {};
+            lensOn = false;
+            _lensMoving = false;
+            poseRev++;
+        }
+        // No tick follows once asleep: the tentacles must be rebuilt here,
+        // or they stay drawn where things were a moment ago
+        if (moved)
+            _build();
+    }
     function _tripAt(trip) {
         const w = Swim.at(trip, t);
         w.dx = w.x - trip.to[0];
@@ -649,6 +693,12 @@ Item {
     property var tentPts: ({})
     property var threads: []
     onLayChanged: {
+        const deg = {};
+        Object.keys(lay.peers).forEach(id => {
+            if (lay.peers[id].deg !== undefined)
+                deg[id] = lay.peers[id].deg;
+        });
+        _laid.deg = deg;
         _planTrips();
         _build();
     }
@@ -1367,7 +1417,7 @@ Item {
                 readonly property var exitPeer: root.source && root.source.exitNode ? root.view.peers.find(p => p.name === root.source.exitNode) : null
                 visible: root.connected && !!root.source
                 scene: root
-                home: exitPeer ? Qt.point(root.spotOfPeer(exitPeer.id).x, root.frame.surfaceY) : Qt.point(root.width - 58, root.frame.surfaceY)
+                home: exitPeer ? Qt.point(root.spotOfPeer(exitPeer.id).x, root.frame.surfaceY) : Qt.point(root.width - root.insetTop - 58, root.frame.surfaceY)
                 label: exitPeer ? "Internet via " + exitPeer.name : "Internet"
                 onDropped: (px, py) => {
                     const p = root._peerAt(px, py);
@@ -1541,8 +1591,42 @@ Item {
                 blurEnabled: true
                 blurMax: 32
                 blur: 0.85 * root.blurMix
-                brightness: -0.3 * root.blurMix
-                saturation: -0.25 * root.blurMix
+                brightness: -0.45 * root.blurMix
+                saturation: -0.5 * root.blurMix
+            }
+            // Outside the open group's pool the deep falls away into the dark:
+            // clear round the pool, near black at the edges (a gradient over
+            // one rectangle, cheap to move with the camera)
+            Shape {
+                anchors.fill: parent
+                opacity: root.blurMix
+                ShapePath {
+                    strokeWidth: -1
+                    fillGradient: RadialGradient {
+                        centerX: groupPeek.cx
+                        centerY: groupPeek.cy
+                        centerRadius: Math.max(groupPeek.homeR + 1, Math.hypot(root.width, root.height) * 0.75)
+                        focalX: groupPeek.cx
+                        focalY: groupPeek.cy
+                        focalRadius: groupPeek.homeR
+                        GradientStop {
+                            position: 0
+                            color: Qt.rgba(root.abyss.r, root.abyss.g, root.abyss.b, 0.25)
+                        }
+                        GradientStop {
+                            position: 0.18
+                            color: Qt.rgba(root.abyss.r, root.abyss.g, root.abyss.b, 0.75)
+                        }
+                        GradientStop {
+                            position: 1
+                            color: Qt.rgba(root.abyss.r, root.abyss.g, root.abyss.b, 0.94)
+                        }
+                    }
+                    PathRectangle {
+                        width: root.width
+                        height: root.height
+                    }
+                }
             }
         }
         // A click outside the bubble closes it
@@ -1589,6 +1673,8 @@ Item {
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.margins: 8
+            anchors.leftMargin: 8 + root.insetTop
+            anchors.rightMargin: 8 + root.insetTop
             scene: root
             view: root.view
             source: root.source

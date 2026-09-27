@@ -13,7 +13,10 @@
 
 .import "Mesh.js" as Mesh
 
-function frame(w, h, top) {
+// inset: {top, floor, caves}: how far in from each side things at the surface
+// and on the floor must stay (the desktop bowl narrows there; 0 elsewhere),
+// and how many caves sit on the floor (the fan keeps clear of their labels)
+function frame(w, h, top, inset) {
     const surfaceY = top;
     const floorY = h - Math.max(34, h * 0.09);
     const r = Math.max(26, Math.min(w, h) * 0.08);
@@ -23,6 +26,9 @@ function frame(w, h, top) {
         "h": h,
         "surfaceY": surfaceY,
         "floorY": floorY,
+        "insetTop": inset ? inset.top || 0 : 0,
+        "insetFloor": inset ? inset.floor || 0 : 0,
+        "caves": inset ? inset.caves || 0 : 0,
         "jelly": jelly,
         // The fan: an ellipse around the bell's rim; rho 0 is the rim, rho 1
         // the far ring, just above the resting peers
@@ -50,10 +56,16 @@ function ringOf(ms) {
     return ms < RING_MS[0] ? 0 : ms < RING_MS[1] ? 1 : 2;
 }
 
-// A point of the fan: angle in degrees (0 = right, 90 = straight down), rho 0..1
+// A point of the fan: angle in degrees (0 = right, 90 = straight down), rho 0..1.
+// The inner rings open wider than they are deep: near peers keep their
+// depth but use the sides instead of stacking in a column under you. Linear,
+// so the rings stay evenly apart at the sides too (room for a creature).
+function _wide(rho) {
+    return 0.28 + 0.72 * rho;
+}
 function fanPoint(frame, deg, rho) {
     const a = deg * Math.PI / 180, f = frame.fan;
-    return { "x": f.x + Math.cos(a) * f.rx * rho, "y": f.y + Math.sin(a) * f.ry * rho };
+    return { "x": f.x + Math.cos(a) * f.rx * _wide(rho), "y": f.y + Math.sin(a) * f.ry * rho };
 }
 
 // The widest part of the fan, in degrees either side of straight down
@@ -63,7 +75,7 @@ const LABEL_GAP = 104;
 
 // The angle between two neighbours on ring k: a label's width apart
 function ringStep(frame, k) {
-    const f = frame.fan, R = f.rings[k] * (f.rx + f.ry) / 2;
+    const f = frame.fan, R = (_wide(f.rings[k]) * f.rx + f.rings[k] * f.ry) / 2;
     return Math.min(38, LABEL_GAP / R * 180 / Math.PI);
 }
 function ringRoom(frame, k) {
@@ -108,15 +120,20 @@ function _clash(a, b, strict) {
 // The most important aims straight down, the next ones fan out either side;
 // each stays on its ring, and one that would touch a neighbour slides to the
 // nearest free direction. strict: no tentacle may pass behind another thing
-// either. Returns the placed things, or null if they cannot all get a place.
-function spread(f, rings, strict) {
+// either. prev: {id: angle} of the last layout, see _keepOrder.
+// Returns the placed things, or null if they cannot all get a place.
+function spread(f, rings, strict, prev) {
     const order = [];
     rings.forEach((ps, k) => ps.forEach(p => order.push({ "p": p, "k": k })));
     // back to importance order
     order.sort((a, b) => a.p._rank - b.p._rank);
     const n = order.length, S = spreadSpan(n);
-    const ideal = fanAngles(n, n > 1 ? S / (n - 1) : 0);
-    const placed = [];
+    const ideal = _keepOrder(order.map(o => o.p.id), fanAngles(n, n > 1 ? S / (n - 1) : 0), prev);
+    // The caves' labels are in the way too (never a tentacle clash: no ring)
+    const caves = [];
+    for (let c = 0; c < f.caves; c++)
+        caves.push({ "x": caveX(f, c), "y": f.floorY - 70, "ring": -1, "deg": 999 });
+    const placed = caves.slice();
     for (let i = 0; i < n; i++) {
         const k = order[i].k, rho = f.fan.rings[k];
         const tries = [];
@@ -128,24 +145,40 @@ function spread(f, rings, strict) {
             return null;
         placed.push(spot);
     }
-    return placed;
+    return placed.slice(caves.length);
+}
+
+// Traffic reorders things all the time (the busiest hangs in the middle): two
+// neighbours of about the same weight would swap sides at every change and
+// swim across the middle, and the fan would never settle. So the same even
+// angles are handed out in the last layout's left-to-right order: nothing
+// crosses, a newcomer takes the place its importance gives it among the
+// others. ids and angles in importance order; prev: {id: angle} or null.
+function _keepOrder(ids, angles, prev) {
+    if (!prev)
+        return angles;
+    const want = ids.map((id, i) => prev[id] !== undefined ? prev[id] : angles[i]);
+    const slots = angles.slice().sort((a, b) => a - b), out = [];
+    ids.map((id, i) => i).sort((a, b) => want[a] - want[b] || a - b).forEach((i, j) => out[i] = slots[j]);
+    return out;
 }
 
 // The crowded arrangement: each ring filled from the middle at a label's
 // width apart; nothing overlaps, but things may hang one below the other
-function pack(f, rings) {
+function pack(f, rings, prev) {
     const items = [];
     rings.forEach((ps, k) => {
-        const angles = fanAngles(ps.length, ringStep(f, k));
+        const angles = _keepOrder(ps.map(p => p.id), fanAngles(ps.length, ringStep(f, k)), prev);
         ps.forEach((p, i) => items.push(Object.assign({ "id": p.id, "deg": angles[i], "rho": f.fan.rings[k], "ring": k }, fanPoint(f, angles[i], f.fan.rings[k]))));
     });
     return items;
 }
 
 // peers: the things shown (layout order = importance).
-// Returns { frame, peers: {id: {x, y, floor}}, relays: {name: {x, y}} }
-function layout(peers, w, h, top) {
-    const f = frame(w, h, top);
+// prev: {id: angle} of the previous layout (its peers' `deg`), or null.
+// Returns { frame, peers: {id: {x, y, floor, ring, deg}}, relays: {name: {x, y}} }
+function layout(peers, w, h, top, inset, prev) {
+    const f = frame(w, h, top, inset);
     const out = { "frame": f, "peers": {}, "relays": {} };
     const live = peers.filter(p => p.online).map((p, i) => Object.assign({}, p, { "_rank": i }));
     const rest = peers.filter(p => !p.online);
@@ -159,8 +192,8 @@ function layout(peers, w, h, top) {
         rings[k !== undefined ? k : [0, 1, 2].sort((a, b) => (rings[a].length - room[a]) - (rings[b].length - room[b]))[0]].push(p);
     });
     // Roomy with clear tentacles if possible, else roomy, else squeezed
-    const items = spread(f, rings, true) || spread(f, rings, false) || pack(f, rings);
-    items.forEach(it => out.peers[it.id] = { "x": it.x, "y": it.y, "floor": false, "ring": it.ring });
+    const items = spread(f, rings, true, prev) || spread(f, rings, false, prev) || pack(f, rings, prev);
+    items.forEach(it => out.peers[it.id] = { "x": it.x, "y": it.y, "floor": false, "ring": it.ring, "deg": it.deg });
     // Relays: a lantern on the way to the peers it carries, at their mean angle
     const groups = {};
     items.forEach(it => {
@@ -178,7 +211,7 @@ function layout(peers, w, h, top) {
     // with nobody online (disconnected) they use the whole floor, and a crowd
     // rests on two rows
     const m = rest.length;
-    const fx0 = live.length ? w * 0.56 : 60, fx1 = w - 60;
+    const fx0 = live.length ? w * 0.56 : f.insetFloor + 60, fx1 = w - f.insetFloor - 60;
     const twoRows = m > 1 && (fx1 - fx0) / (m - 1) < 70;
     rest.forEach((p, i) => {
         out.peers[p.id] = {
@@ -196,7 +229,7 @@ function layout(peers, w, h, top) {
 const CAVE_TOP = 96;
 
 function caveX(frame, i) {
-    return 64 + i * Math.max(96, frame.w * 0.16);
+    return frame.insetFloor + 64 + i * Math.max(96, (frame.w - 2 * frame.insetFloor) * 0.16);
 }
 
 // A tentacle from the jellyfish rim to a peer, optionally through a relay:

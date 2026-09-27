@@ -3,14 +3,15 @@ import "Bowl.js" as Bowl
 import "ReefPlan.js" as Plan
 
 // The desktop fishbowl around the deep, in two layers: "back" (its shadow on
-// the desk, the far glass, the water and the colourful gravel) under the
+// the desk, the far glass, the water and its bed of sand) under the
 // scene, "front" (the near edge of the surface, the glass and its rim, the
 // reflections) over it. All colours come from the theme. Painted once per
 // size or theme; nothing here moves.
 Canvas {
     id: bowl
 
-    // "back" or "front"
+    // "back", "shade" (the water in the deep's darkest colour: faded in over
+    // the back while a group is open, only its opacity changes) or "front"
     property string part: "back"
     // Bowl.build() for this size
     property var b
@@ -51,7 +52,11 @@ Canvas {
         ctx.lineCap = "round";
         if (part === "back")
             _back(ctx);
-        else
+        else if (part === "shade") {
+            _path(ctx, b.water);
+            ctx.fillStyle = Qt.darker(abyss, 1.4);
+            ctx.fill();
+        } else
             _front(ctx);
     }
 
@@ -90,35 +95,102 @@ Canvas {
         _gravel(ctx);
     }
 
-    // Colourful gravel heaped a little in the middle, pebbles in the theme's
-    // accents, darker towards the back; the same pebbles every time
+    // Mixes two colours (t = 0: a, 1: b)
+    function _mix(a, c, t) {
+        return Qt.rgba(a.r + (c.r - a.r) * t, a.g + (c.g - a.g) * t, a.b + (c.b - a.b) * t, 1);
+    }
+
+    // A bed of deep sand, heaped a little in the middle, in the deep's own
+    // tones: seen through the glass as a layer with faint strata and a fine
+    // grain, its lit top rippled, a few smooth stones half sunk in it (barely
+    // tinted with the theme's accents). Quiet, so the scene above stays the
+    // subject; the same bed every time.
     function _gravel(ctx) {
         ctx.save();
         _path(ctx, b.water);
         ctx.clip();
-        const r = Plan.rng(11), top = x => b.gravelY - 10 * Math.cos((x - b.cx) / b.rx * Math.PI / 2);
-        ctx.fillStyle = Qt.darker(abyss, 1.8);
+        const r = Plan.rng(11), left = b.cx - b.rx, right = b.cx + b.rx;
+        // The back and the front edge of the sand's top, seen from a little above
+        const back = x => b.gravelY - 12 * Math.cos((x - b.cx) / b.rx * Math.PI / 2);
+        const front = x => back(x) + 9 * Math.cos((x - b.cx) / b.rx * Math.PI / 2);
+        const sand = _mix(abyss, shallow, 0.5), lit = _mix(sand, ink, 0.1);
+        const edge = (f, from, to) => {
+            for (let x = from; to > from ? x <= to : x >= to; x += to > from ? 6 : -6)
+                ctx.lineTo(x, f(x));
+        };
+        // The layer through the glass: lighter at the top, dark at the base
         ctx.beginPath();
-        ctx.moveTo(b.cx - b.rx, b.baseY);
-        for (let x = b.cx - b.rx; x <= b.cx + b.rx; x += 8)
-            ctx.lineTo(x, top(x));
-        ctx.lineTo(b.cx + b.rx, b.baseY + 2);
+        ctx.moveTo(left, b.baseY + 2);
+        edge(front, left, right);
+        ctx.lineTo(right, b.baseY + 2);
         ctx.closePath();
+        const layer = ctx.createLinearGradient(0, b.gravelY, 0, b.baseY);
+        layer.addColorStop(0, sand);
+        layer.addColorStop(1, Qt.darker(abyss, 1.6));
+        ctx.fillStyle = layer;
         ctx.fill();
-        const n = Math.round(b.rx * (b.baseY - b.gravelY) / 14);
-        const colours = tints.length ? tints : [ink];
+        // Faint strata following the bowl's curve
+        [0.3, 0.55, 0.78].forEach((k, i) => {
+            ctx.beginPath();
+            for (let x = left; x <= right; x += 6) {
+                const y = front(x) + (b.baseY - front(x)) * k + Math.sin(x * 0.03 + i * 2) * 2;
+                x === left ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+            }
+            ctx.strokeStyle = _rgba(ink, 0.05 - i * 0.012);
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        });
+        // The lit top of the bed
+        ctx.beginPath();
+        ctx.moveTo(left, back(left));
+        edge(back, left, right);
+        edge(front, right, left);
+        ctx.closePath();
+        const top = ctx.createLinearGradient(0, b.gravelY - 12, 0, b.gravelY);
+        top.addColorStop(0, _mix(lit, abyss, 0.35));
+        top.addColorStop(1, lit);
+        ctx.fillStyle = top;
+        ctx.fill();
+        // Soft ripples on it
+        for (let i = 1; i <= 3; i++) {
+            const k = i / 4;
+            ctx.beginPath();
+            for (let x = left; x <= right; x += 5) {
+                const y = back(x) + (front(x) - back(x)) * k + Math.sin(x * 0.09 + i) * 0.8;
+                x === left ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+            }
+            ctx.strokeStyle = _rgba(ink, 0.06);
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        }
+        // Its front edge catches the light
+        ctx.beginPath();
+        edge(front, left, right);
+        ctx.strokeStyle = _rgba(ink, 0.14);
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        // A fine grain, only a texture
+        const grains = Math.round(b.rx * (b.baseY - b.gravelY) / 18);
+        for (let i = 0; i < grains; i++) {
+            const x = left + r() * 2 * b.rx, y = front(x) + r() * (b.baseY - front(x));
+            ctx.fillStyle = _rgba(ink, 0.03 + r() * 0.06);
+            ctx.fillRect(x, y, 1.2, 1.2);
+        }
+        // A few smooth stones half sunk in the top, spread along it
+        const colours = tints.length ? tints : [ink], n = Math.max(4, Math.round(b.rx / 38));
         for (let i = 0; i < n; i++) {
-            const x = b.cx - b.rx + r() * 2 * b.rx, y0 = top(x);
-            const y = y0 + Math.pow(r(), 0.8) * (b.baseY - y0), s = 2.6 + r() * 2.6;
-            const back = 1 - (y - y0) / Math.max(1, b.baseY - y0);
-            const c = colours[Math.floor(r() * colours.length)];
+            const x = b.cx + ((i + 0.2 + r() * 0.6) / n * 2 - 1) * b.rx * 0.86;
+            const y = (back(x) + front(x)) / 2 + r() * 3, s = 3.5 + r() * 4.5;
+            const c = _mix(sand, colours[i % colours.length], 0.28);
             ctx.save();
             ctx.translate(x, y);
-            ctx.rotate(r() * Math.PI);
-            ctx.scale(1, 0.62);
+            ctx.scale(1, 0.6);
             ctx.beginPath();
             ctx.arc(0, 0, s, 0, 2 * Math.PI);
-            ctx.fillStyle = _rgba(Qt.darker(c, 1 + back * 0.9), 0.95);
+            const g = ctx.createRadialGradient(-s * 0.35, -s * 0.45, 0, 0, 0, s);
+            g.addColorStop(0, Qt.lighter(c, 1.35));
+            g.addColorStop(1, Qt.darker(c, 1.3));
+            ctx.fillStyle = g;
             ctx.fill();
             ctx.restore();
         }

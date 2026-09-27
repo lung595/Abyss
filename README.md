@@ -35,7 +35,9 @@ You are the giant jellyfish. Every peer is a creature floating at the depth of i
 
 - **Bar**: a small jellyfish with the number of peers online. Click opens the deep, right click connects or disconnects.
 - **Control Center**: a NetBird tile (toggle) with the deep underneath.
-- **Desktop**: a round fishbowl on your wallpaper, with gravel, glass and a water line; the deep lives inside it. It stays still until the pointer is over it.
+- **Desktop**: a round fishbowl on your wallpaper, with a sandy bed, glass and a water line; the deep lives inside it. It stays still until the pointer is over it.
+
+![The fishbowl desktop widget, with a made-up mesh](screenshots/desk.png)
 
 ![Control Center](screenshots/connected-cc.png)
 
@@ -98,7 +100,10 @@ scripts/preview/render.sh connected "$PWD/out.png"   # offscreen renders from th
 - Thinner traffic tentacles (a thread when idle, a ribbon when busy) and calmer motion.
 - The jellyfish now has loose threads of light; each linked peer takes one over. Its bell fades smoothly between asleep and awake.
 - Caves (routed networks) always glow a little, and burn when on. Their thread to the gateway only shows while you hover them, and leaves from above the name.
-- **The desktop widget is a fishbowl**: round glass with a rim, highlights and a soft shadow on your wallpaper, water tinted by your theme and gravel at the bottom. The top bar only shows while you use it. A group opening inside the bowl melts into the water at its edges.
+- **The desktop widget is a fishbowl**: round glass with a rim, highlights and a soft shadow on your wallpaper, water tinted by your theme and a bed of sand at the bottom. The deep fills the whole belly of the bowl without spilling past the glass. The top bar only shows while you use it. A group opening inside the bowl melts into the water at its edges.
+- **Inside a group**: the rest of the deep darkens and fades around it, and the group's ring grows into a lit pool, its home. The opening animation is unchanged.
+- **Steadier fan**: devices keep their side when their traffic changes, instead of swimming across the view; caves keep clear of them.
+- **The top consumer label stops flickering**: its filled, coloured label only moves to another device when that one is clearly busier (30 % more).
 - Fixed: a traffic spike each time the view opened; grabbing moved only the tentacle.
 - Still to come in 0.2.0: see the [Roadmap](#roadmap).
 

@@ -12,8 +12,17 @@ const f = lay.frame;
 ok("jellyfish below the surface", f.jelly.y - f.jelly.r > f.surfaceY);
 eq("jellyfish at the top centre", f.jelly.x, 280);
 ok("every peer placed", peers.every(q => lay.peers[q.id]));
-const far = id => Math.hypot((lay.peers[id].x - f.fan.x) / f.fan.rx, (lay.peers[id].y - f.fan.y) / f.fan.ry);
-ok("one ring per latency band: near, middle, far", Math.abs(far("a") - far("b")) < 1e-9 && far("b") < far("c") && far("c") < far("d"));
+const ring = id => lay.peers[id].ring;
+ok("one ring per latency band: near, middle, far", ring("a") === 0 && ring("b") === 0 && ring("c") === 1 && ring("d") === 2);
+// The rings open wider than deep: the near ring reaches further sideways
+// than down, so near peers spread instead of stacking under you
+const ring0 = [L.fanPoint(f, 0, f.fan.rings[0]), L.fanPoint(f, 90, f.fan.rings[0])];
+ok("the near ring spreads wider than it hangs deep", (ring0[0].x - f.fan.x) / f.fan.rx > (ring0[1].y - f.fan.y) / f.fan.ry);
+ok("rings stay nested in every direction", [0, 30, 60, 90, 120, 150, 180].every(d => {
+    const q = f.fan.rings.map(rho => L.fanPoint(f, d, rho));
+    const dist = q.map(p => Math.hypot(p.x - f.fan.x, p.y - f.fan.y));
+    return dist[0] < dist[1] && dist[1] < dist[2];
+}));
 eq("rings by latency", [L.ringOf(4), L.ringOf(14.9), L.ringOf(15), L.ringOf(79), L.ringOf(80), L.ringOf(300)], [0, 0, 1, 1, 2, 2]);
 ok("living peers hang between the bell and the floor", ["a", "b", "c", "d"].every(id => lay.peers[id].y > f.jelly.y && lay.peers[id].y < f.floorY - 40));
 ok("on its ring, the first thing hangs nearest the middle", Math.abs(lay.peers.a.x - f.jelly.x) <= Math.abs(lay.peers.b.x - f.jelly.x) + 1e-9);
@@ -30,8 +39,10 @@ ok("five: no tentacle hangs over another thing (other rings, other directions)",
 ok("peers inside the scene", peers.every(q => lay.peers[q.id].x < 560 && lay.peers[q.id].x > 0));
 eq("offline peers rest on the floor", [lay.peers.e.floor, lay.peers.f.floor, lay.peers.e.y], [true, true, f.floorY - 30]);
 ok("a relay lantern for relay-eu", !!lay.relays["relay-eu"]);
-const lf = Math.hypot((lay.relays["relay-eu"].x - f.fan.x) / f.fan.rx, (lay.relays["relay-eu"].y - f.fan.y) / f.fan.ry);
-ok("the lantern sits on the way to its peers", lf < far("c") && lf < far("d"));
+// Distance from the fan's centre (the lantern sits between you and its peers)
+const far = q => Math.hypot(q.x - f.fan.x, q.y - f.fan.y);
+const lf = far(lay.relays["relay-eu"]);
+ok("the lantern sits on the way to its peers", lf < far(lay.peers.c) && lf < far(lay.peers.d));
 eq("no lantern for unused relays", Object.keys(lay.relays), ["relay-eu"]);
 
 // The fan: the most important in the middle, the others alternately around it
@@ -137,5 +148,30 @@ ok("ribbons widen with traffic", L.ribbonWidth(0.5) > L.ribbonWidth(0.2) && L.ri
 // Everyday traffic (1 to 10 Mb/s) stays a thread; the heaviest only a few px
 ok("idle is a thread, full load stays thin", L.ribbonWidth(0) <= 1 && L.ribbonWidth(1) <= 5.5);
 ok("everyday traffic is fine", L.ribbonWidth(M.level(1e6)) < 1.5 && L.ribbonWidth(M.level(1e7)) < 3);
+
+// A reshuffle of importance keeps everyone on their side: nothing swims
+// across the middle, and the fan stays as evenly spread as before
+{
+    const five = ["v", "w", "x", "y", "z"].map((id, i) => p(id, [4, 30, 150][i % 3]));
+    const a = L.layout(five, 900, 560, 60);
+    const prev = {};
+    Object.keys(a.peers).forEach(id => prev[id] = a.peers[id].deg);
+    const b = L.layout(five.slice().reverse(), 900, 560, 60, null, prev);
+    ok("reordered things keep their places", five.every(q => Math.abs(b.peers[q.id].deg - a.peers[q.id].deg) < 0.01));
+    const c = L.layout(five.slice().reverse(), 900, 560, 60);
+    ok("without memory the order moves them", five.some(q => Math.abs(c.peers[q.id].deg - a.peers[q.id].deg) > 1));
+    const d = L.layout(five.concat([p("n", 4)]), 900, 560, 60, null, prev);
+    const order = ids => ids.slice().sort((i, j) => (d.peers[i] || a.peers[i]).deg - (d.peers[j] || a.peers[j]).deg);
+    const before = Object.keys(prev).sort((i, j) => prev[i] - prev[j]);
+    ok("a newcomer never makes the others swap sides", JSON.stringify(order(before)) === JSON.stringify(before));
+}
+
+// Nothing hangs on a cave's label (the caves sit on the floor, on the left)
+{
+    const six = ["a1", "a2", "a3", "a4"].map(id => p(id, 150));
+    const g = L.layout(six, 646, 420, 60, { "caves": 2 });
+    const clear = Object.keys(g.peers).every(id => [0, 1].every(c => Math.abs(g.peers[id].x - L.caveX(g.frame, c)) >= 88 || Math.abs(g.peers[id].y - (g.frame.floorY - 70)) >= 60));
+    ok("the fan keeps clear of the caves' labels", clear);
+}
 
 done("layout");
