@@ -553,7 +553,8 @@ Item {
             return;
         const home = spotOf(id), o = offsetOf(id), R = peekR;
         peekFrom = Qt.point(home.x + o.x, home.y + o.y);
-        peekCentre = Qt.point(Math.max(R + 12, Math.min(width - R - 12, home.x)), Math.max(topH + R + 34, Math.min(height - R - 12, home.y)));
+        // The camera brings the group to the middle of the deep (D133)
+        peekCentre = Qt.point(width / 2, Math.max(topH + R + 34, Math.min(height - R - 12, topH + (height - topH) / 2)));
         peekMembers = it.members.map(m => peerById[m]).filter(p => !!p).sort((a, b) => (b.online - a.online) || (b.down + b.up) - (a.down + a.up)).slice(0, peekMax).map(p => p.id);
         _dwellId = "";
         dwell.stop();
@@ -738,12 +739,23 @@ Item {
             duration: root.reduceMotion ? 0 : 300
         }
     }
-    property real blurMix: peekId !== "" ? 1 : 0
-    Behavior on blurMix {
+    // The camera, from the whole deep (0) to the open group (1): it glides
+    // and zooms towards the group as it opens, and back as it closes. Only
+    // one still, blurred picture of the deep moves (a brief transition).
+    property real camera: peekId !== "" ? 1 : 0
+    Behavior on camera {
         NumberAnimation {
-            duration: root.reduceMotion ? 0 : 320
-            easing.type: Easing.OutCubic
+            duration: root.reduceMotion ? 0 : root.peekId !== "" ? 520 : 440
+            easing.type: Easing.InOutCubic
         }
+    }
+    readonly property real blurMix: camera
+    // How much closer the camera gets, and how far the picture slides
+    // towards the middle (never so far that an edge of it shows)
+    readonly property real camZoom: 1 + 0.5 * camera
+    function _camShift(from, to, size) {
+        const k = camZoom - 1;
+        return Math.max(-k * (size - from), Math.min(k * from, (to - from) * camera));
     }
 
     // --- The clock ---------------------------------------------------------
@@ -1449,6 +1461,18 @@ Item {
             anchors.fill: parent
             source: worldShot
             visible: root.blurMix > 0
+            transform: [
+                Scale {
+                    origin.x: root.peekFrom.x
+                    origin.y: root.peekFrom.y
+                    xScale: root.camZoom
+                    yScale: root.camZoom
+                },
+                Translate {
+                    x: root._camShift(root.peekFrom.x, root.peekCentre.x, root.width)
+                    y: root._camShift(root.peekFrom.y, root.peekCentre.y, root.height)
+                }
+            ]
             autoPaddingEnabled: false
             blurEnabled: true
             blurMax: 32
