@@ -86,7 +86,7 @@ function _ms(p) {
 // still online (no flapping), else a direct one before a relayed one, then
 // the quickest. Returns the peer, or null when nobody in it is online.
 function pickExit(peers, memberIds, currentName) {
-    const live = peers.filter(p => p.online && memberIds.indexOf(p.id) >= 0);
+    const live = peers.filter(p => p.online && p.exit && memberIds.indexOf(p.id) >= 0);
     const cur = live.find(p => p.name === currentName);
     if (cur)
         return cur;

@@ -1040,6 +1040,13 @@ Item {
     // The carried light is over the middle of the open group: dropping it
     // there gives Internet to the whole group (GroupPeek shows what it will do)
     property bool aimAll: false
+    // While the light is carried, what cannot lend Internet steps back
+    function carryFade(peer) {
+        return _carrying && peer && !peer.exit ? 0.3 : 1;
+    }
+    function carryFadeGroup(it) {
+        return _carrying && it && !it.members.some(id => peerById[id] && peerById[id].exit) ? 0.3 : 1;
+    }
     property string query: ""
     property string omenHidden: ""
 
@@ -1181,6 +1188,14 @@ Item {
         const g = _groupAt(px, py);
         return g && g.mine ? { "group": g.mine, "name": g.label } : null;
     }
+    // Can the light's target lend Internet: the peer offers an exit, or
+    // some member of the group does
+    function _canLend(t) {
+        if (t.peer)
+            return !!t.peer.exit;
+        const g = t.group ? MyGroups.byId(prefs.groups, t.group) : itemById[t.keep];
+        return !!g && g.members.some(id => peerById[id] && peerById[id].exit);
+    }
     property string _sunDwellId: ""
     // "5 busy" -> "Busy": the name a shoal keeps when it becomes yours
     function _keepName(it) {
@@ -1220,7 +1235,9 @@ Item {
             sunDwell.restart();
         }
         const it = itemById[peekId];
-        if (t)
+        if (t && !_canLend(t))
+            dropHint = t.peer ? t.peer.name + " can't lend Internet" : "No one here can lend Internet";
+        else if (t)
             dropHint = "Internet through " + (t.peer ? t.peer.name : "all of " + t.name);
         else if (g && !g.asleep)
             dropHint = "Opening " + g.label + "…";
@@ -1242,6 +1259,9 @@ Item {
             focusId = "";
         // Let go inside a bubble, on nothing: keep what was there
         if (!t && inPool)
+            return;
+        // On what cannot lend: the light goes back where it was
+        if (t && !_canLend(t))
             return;
         if (t && t.keep) {
             // What you see in the bubble is what you keep (all of it when
@@ -1638,6 +1658,12 @@ Item {
                     spot: root.spotOf(modelData)
                     tint: root.groupColor
                     phase: index * 1.9
+                    opacity: root.carryFadeGroup(it)
+                    Behavior on opacity {
+                        NumberAnimation {
+                            duration: root.reduceMotion ? 0 : 150
+                        }
+                    }
                 }
             }
 
@@ -1649,6 +1675,12 @@ Item {
                     readonly property var it: root.itemById[modelData]
                     readonly property var p: it ? root.peerById[it.peerId] : null
                     visible: !!p
+                    opacity: root.carryFade(p)
+                    Behavior on opacity {
+                        NumberAnimation {
+                            duration: root.reduceMotion ? 0 : 150
+                        }
+                    }
                     scene: root
                     itemId: modelData
                     peer: p || ({

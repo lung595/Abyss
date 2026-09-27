@@ -101,7 +101,9 @@ function status(profile, now, up, counters, offline, relayDown) {
             "lastWireguardHandshake": online ? new Date(now - 40000).toISOString() : "0001-01-01T00:00:00Z",
             "transferReceived": c.rx,
             "transferSent": c.tx,
-            "latency": online ? ms * 1e6 : 0
+            "latency": online ? ms * 1e6 : 0,
+            // Machines that usually lend their Internet
+            "networks": /vps|server|nas/.test(name) ? ["0.0.0.0/0"] : []
         };
     });
     return {
