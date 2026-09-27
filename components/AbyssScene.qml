@@ -1530,9 +1530,11 @@ Item {
                 readonly property var exitPeer: root.source && root.source.exitNode ? root.view.peers.find(p => p.name === root.source.exitNode) : null
                 readonly property point at: exitPeer ? root.drawnOfPeer(exitPeer.id) : Qt.point(0, 0)
                 visible: !!exitPeer && exitPeer.online && root.connected && height > 20
+                // From the light, which hangs still above the peer's place
+                fromX: root.anchorOfPeer(exitPeer ? exitPeer.id : "").x
+                fromY: root.frame.surfaceY
                 toX: at.x
                 toY: at.y
-                fromY: root.frame.surfaceY
                 color: root.sunColor
             }
 
