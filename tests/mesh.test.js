@@ -62,7 +62,26 @@ eq("download rate from two reads", v2.peers[1].down, 1e6);
 eq("total down", v2.down, 1e6);
 eq("top consumer", v2.topId, "k-far");
 const v3 = M.parse("Connected", json(1000 + 125000 + 10), v2, t0 + 2000);
-eq("an idle mesh has no top consumer", v3.topId, "");
+ok("rates ease down instead of dropping", v3.down > 1e5 && v3.down < 1e6);
+let idle = v3;
+for (let i = 3; i <= 7; i++)
+    idle = M.parse("Connected", json(1000 + 125000 + 10), idle, t0 + i * 1000);
+eq("an idle mesh soon has no top consumer", idle.topId, "");
+// Opening the view: a read after a long pause, then one a few ms later,
+// measure nothing (the old spike: a second of bytes over a few ms)
+const back = M.parse("Connected", json(1000 + 125000 + 250000), v2, t0 + 60000);
+const quick = M.parse("Connected", json(1000 + 125000 + 500000), back, t0 + 60005);
+eq("no rate after a pause or a few ms apart", [back.down, quick.down], [v2.down, v2.down]);
+ok("the arrangement's traffic moves slowly", v3.peers[1].calm > 0.9e6);
+// Latency jitter: the steady value holds, a real change is followed
+const lat = (ms) => ({ peers: { details: [peer("j", "Connected", "P2P", ms, 0, 0)] } });
+let lv = M.parse("Connected", lat(10), null, t0);
+for (let i = 1; i <= 30; i++)
+    lv = M.parse("Connected", lat(i % 2 ? 7 : 13), lv, t0 + i * 1000);
+eq("latency jitter keeps its place", lv.peers[0].steadyMs, 10);
+for (let i = 31; i <= 90; i++)
+    lv = M.parse("Connected", lat(60), lv, t0 + i * 1000);
+ok("a lasting change of latency is followed", lv.peers[0].steadyMs > 40);
 const vd = M.parse("Idle", json(5000), v2, t0 + 3000);
 eq("no rates and no omens when disconnected", [vd.down, vd.omens.length], [0, 0]);
 const vs = M.parse("", null, null, t0);

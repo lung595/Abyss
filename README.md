@@ -85,6 +85,19 @@ scripts/preview/render.sh connected "$PWD/out.png"   # offscreen renders from th
 
 ## Changelog
 
+### 0.2.0 — in progress (branch `lens`, not released yet)
+
+- **Lens**: a soft magnetic lens follows the pointer and gently enlarges what it lights; the scroll wheel sets its strength. The pointer is a warm light in a darker, more immersive deep.
+- **Groups**: never more than 5 things on screen (3–10 in settings). Busy, struggling and favourite peers stay alone; the rest gather in automatic groups that open when you hover them. Type anywhere to find, and everything else blurs.
+- **Sonar fan**: the jellyfish sits at the top and peers fan out below it, farther when slower, with sonar rings in ms.
+- **Grab and release**: drag any creature; it springs back to its place, like Orbit.
+- **Peer card like Orbit**: the card rises and the creature flies up into it.
+- Thinner traffic tentacles (a thread when idle, a ribbon when busy) and calmer motion.
+- The jellyfish now has loose threads of light; each linked peer takes one over. Its bell fades smoothly between asleep and awake.
+- Caves (routed networks) always glow a little, and burn when on. Their thread to the gateway only shows while you hover them, and leaves from above the name.
+- Fixed: a traffic spike each time the view opened; grabbing moved only the tentacle.
+- Still to come in 0.2.0: see the [Roadmap](#roadmap).
+
 ### 0.1.0 — 2026-09-26
 
 - First preview: the whole deep (jellyfish, creatures by device type, traffic tentacles, relays, networks, exit node by drag, peer card, type to find) on a made-up demo mesh.
@@ -92,13 +105,43 @@ scripts/preview/render.sh connected "$PWD/out.png"   # offscreen renders from th
 
 ## Roadmap
 
-No promises, no dates.
+No promises, no dates. Everything here was asked for and is not in a release yet.
 
+### Finishing 0.2.0 (branch `lens`)
+
+- **Devices swim** to their new depth in their animal's gait instead of jumping (wired, being tuned).
+- **A wake-up wave**: when you connect, light spreads from the jellyfish to each device; switched on, everything floats gently; switched off, the deep sleeps, dimmer and stiller (wired, being tuned).
+- **Tentacles that hold their device**: the tip wraps around the creature, as if the jellyfish really held it.
+- **A pointer light that reveals the scenery**: a much softer glow, but under it you see the details of the floor (sand, rocks, coral, plants) instead of a white haze.
+- **A varied reef** (coral, sponges, anemones, kelp) with a small shoal of fish passing now and then.
+- **A new peer card**:
+  - on click it scales up and fades in, frosted glass over the blurred deep;
+  - the card comes first, then the creature flies into it, and both land together;
+  - the same compact height for every device, with no jump when you switch;
+  - the device icon sits in a fixed circle at the top;
+  - arrows (and <kbd>←</kbd> <kbd>→</kbd>) go to the previous or next device: the icon, the name and the status crossfade in place, and nothing moves or resizes.
+- **A group view**:
+  - hovering or clicking a group glides to it, centres it and zooms in until it fills most of the screen;
+  - the rest gets much blurrier and a little darker;
+  - the group's name and summary sit at the top centre; click the name to rename it, and a small ⚙ opens its settings.
+- **The jellyfish as the only on/off switch**: the extra toggle goes, and a small ON/OFF word sits by the jellyfish.
+- **Drop the Internet light into a group** to pick the exit node among its devices.
+- **A cleaner layout**: one sector per relay, so no tentacle or lantern ever hides a device or a label.
+- Measured CPU cost while a view is open, and fresh screenshots.
+
+### Later
+
+- **Smart search bar**: understands words and synonyms, not only names.
+- **Smart tags**: added automatically (from the name, services, machine type) or by hand.
+- **Use it from the launcher (Super+Space)**: `abyss >100ms`, `abyss proxmox`, `docker`… with a live preview.
 - **Read the real NetBird daemon** (`netbird status --json`, only while a view is open), connect, disconnect, sign in, networks and profiles through the `netbird` CLI.
 - Bar count kept fresh without polling while nothing is open.
-- Open the admin console, reconnect shortcut, daemon version.
+- Bar pill options: icon only, with peers online, or with the total rate.
+- Show online peers only, or all of them.
+- Ping a peer from its card, on demand only (never in the background).
+- Open the admin console, a reconnect shortcut, the daemon version.
 - A compact list for very large meshes (30+ peers).
-- Known limit: a relay lantern can be hidden behind a nearby label.
+- Maybe, if asked: a one-click debug bundle for support, and client settings (SSH server, Rosenpass, connect at startup).
 
 ## Credits
 

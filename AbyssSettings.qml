@@ -25,6 +25,15 @@ PluginSettings {
         text: "The deep"
     }
 
+    SliderSetting {
+        settingKey: "maxItems"
+        label: "Things on screen"
+        description: "Beyond this, peers gather in groups you can dive into"
+        defaultValue: 5
+        minimum: 3
+        maximum: 10
+    }
+
     ToggleSetting {
         settingKey: "showOffline"
         label: "Show offline peers"

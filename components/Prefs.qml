@@ -25,6 +25,8 @@ QtObject {
     readonly property string terminal: _get("terminal", "auto")
     // Desktop: keep the deep alive when the pointer is elsewhere
     readonly property bool desktopLive: _get("desktopLive", false)
+    // How many things the deep shows at once; more peers gather in groups
+    readonly property int maxItems: _get("maxItems", 5)
     // Peers the user muted (no notifications, drawn asleep): id -> name
     readonly property var muted: _get("muted", ({}))
     // Peers the user pinned (a star, listed first when searching): id -> name
