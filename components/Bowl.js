@@ -30,6 +30,16 @@ function _outline(b, from, n) {
     return pts;
 }
 
+// The back and the front edge of the sand's top at x, seen from a little
+// above: heaped a little in the middle. Below the front edge, down to the
+// base, the side of the bed shows through the glass.
+function sandBack(b, x) {
+    return b.gravelY - 12 * Math.cos((x - b.cx) / b.rx * Math.PI / 2);
+}
+function sandFront(b, x) {
+    return sandBack(b, x) + 9 * Math.cos((x - b.cx) / b.rx * Math.PI / 2);
+}
+
 // top: the scene's top bar height (it sits in the air over the water)
 function build(w, h, top) {
     const bw = Math.min(w, h * RATIO), bh = bw / RATIO;
