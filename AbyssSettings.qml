@@ -2,6 +2,7 @@ import QtQuick
 import qs.Common
 import qs.Widgets
 import qs.Modules.Plugins
+import "components"
 import "components/Terminal.js" as Terminal
 
 // Plugin settings. Everything works out of the box; each option says in one
@@ -9,6 +10,10 @@ import "components/Terminal.js" as Terminal
 PluginSettings {
     id: root
     pluginId: "abyss"
+
+    // Filled in by DMS when this page opens from Settings > Desktop Widgets
+    property string instanceId: ""
+    property var instanceData: null
 
     // Section title with air above it: hierarchy from size and weight only
     component Section: StyledText {
@@ -20,8 +25,28 @@ PluginSettings {
         color: Theme.surfaceText
     }
 
+    // Only shown once a jar sits on the desktop
     Section {
         topPadding: 0
+        text: "Desktop"
+        visible: desktopScreens.visible
+    }
+
+    DesktopScreens {
+        id: desktopScreens
+        instanceId: root.instanceId
+    }
+
+    ToggleSetting {
+        visible: desktopScreens.visible
+        settingKey: "desktopLive"
+        label: "Keep the desktop alive"
+        description: "Otherwise it only moves under the pointer · ⚡ Uses more battery"
+        defaultValue: false
+    }
+
+    Section {
+        topPadding: desktopScreens.visible ? Theme.spacingXL : 0
         text: "The deep"
     }
 
@@ -67,13 +92,6 @@ PluginSettings {
         label: "Light pulses"
         description: "Traffic running along the tentacles"
         defaultValue: true
-    }
-
-    ToggleSetting {
-        settingKey: "desktopLive"
-        label: "Keep the desktop alive"
-        description: "Otherwise it only moves under the pointer · ⚡ Uses more battery"
-        defaultValue: false
     }
 
     Section {

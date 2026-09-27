@@ -131,9 +131,11 @@ Item {
             third: (cr.hovered || cr.focused) && cr.live ? Math.round(cr.peer.latencyMs) + " ms · " + (cr.peer.relayed ? "via " + cr.peer.relay : "direct") : ""
             caption: cr.broken ? "RELAY DOWN" : cr.isTop ? "TOP CONSUMER" : ""
             captionInk: cr.broken ? Theme.warning : cr.tint
-            ink: cr.isTop ? cr.scene.abyss : cr.live ? cr.scene.ink : cr.scene.inkDim
-            subInk: cr.isTop ? Qt.rgba(cr.scene.abyss.r, cr.scene.abyss.g, cr.scene.abyss.b, 0.8) : cr.scene.inkDim
-            color: cr.isTop ? cr.tint : Qt.rgba(cr.scene.abyss.r, cr.scene.abyss.g, cr.scene.abyss.b, cr.detailed ? 0.8 : 0.4)
+            // The top consumer is told by its caption alone: its pill keeps
+            // the same colours as every other one
+            ink: cr.live ? cr.scene.ink : cr.scene.inkDim
+            subInk: cr.scene.inkDim
+            color: Qt.rgba(cr.scene.abyss.r, cr.scene.abyss.g, cr.scene.abyss.b, cr.detailed ? 0.8 : 0.4)
             opacity: cr.muted ? 0.7 : 1
         }
 

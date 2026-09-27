@@ -25,7 +25,7 @@ You are the giant jellyfish. Every peer is a creature floating at the depth of i
 
 **Click a creature** to open its card: live rates and a 60-second curve, copy its IP or name, SSH, open in the browser, use as exit node, favorite, mute, latency, connected since, last handshake, totals, networks it opens. <kbd>←</kbd> <kbd>→</kbd> (or the ‹ › arrows) step to the previous or next device without leaving the card.
 
-**Right-click** a creature or a group to make your own groups: add a peer to a group, start a new one, rename, ungroup, or keep an automatic group as yours. Your groups come first and keep their members.
+**Right-click** a creature or a group to make your own groups: add a peer to a group, start a new one, rename, ungroup, or keep an automatic group as yours. Your groups come first and keep their members. Right-click **the jellyfish** (you) to connect or disconnect, switch profile, or show and hide offline peers.
 
 **Internet through a whole group**: carry the light into a group and let it go in the middle. It stays there, tied by a tentacle to the member lending the Internet (NetBird uses one exit node at a time) and by dashed lines to the ones ready to take over: if that member goes offline, the next best one (direct first, then the lowest latency) takes over by itself. Drag the light out of the group to stop.
 
@@ -39,7 +39,7 @@ You are the giant jellyfish. Every peer is a creature floating at the depth of i
 
 - **Bar**: a small jellyfish with the number of peers online. Click opens the deep, right click connects or disconnects.
 - **Control Center**: a NetBird tile (toggle) with the deep underneath.
-- **Desktop**: a round fishbowl on your wallpaper, with a sandy bed, glass and a water line; the deep lives inside it. It stays still until the pointer is over it.
+- **Desktop**: a round fishbowl on your wallpaper, with a sandy bed, glass and a water line; the deep lives inside it. It stays still until the pointer is over it. Who is online and the live totals are scratched into its glass, in front of the sand; choose which screens show it in the settings.
 
 ![The fishbowl desktop widget, with a made-up mesh](screenshots/desk.png)
 
@@ -60,7 +60,7 @@ dms ipc call abyss demo <state>    # demo only: connected, disconnected, connect
 
 ## Settings
 
-How groups open (on hover and click by default, or only one of them; carrying the Internet light always opens them), offline peers on the floor, light pulses, keeping the desktop alive, notifications when a peer comes or goes (off by default; muted peers stay quiet), and the terminal used for SSH (automatic by default).
+Which screens show the desktop bowl (all by default), how groups open (on hover and click by default, or only one of them; carrying the Internet light always opens them), offline peers on the floor, light pulses, keeping the desktop alive, notifications when a peer comes or goes (off by default; muted peers stay quiet), and the terminal used for SSH (automatic by default).
 
 ## Lightweight
 
@@ -100,6 +100,10 @@ scripts/preview/render.sh connected "$PWD/out.png"   # offscreen renders from th
 - **Internet through a whole group**: drop the light in the middle of a group; it stays there, tied to the member lending the Internet, and the next best member takes over if that one goes offline. Drag it out of the group to stop. Also `dms ipc call abyss exit <group or peer>`.
 - **Carry the Internet into groups**: resting the light on a group opens it (the groups hold still meanwhile), you can then leave it on any member; carrying it out of the bubble closes it.
 - **Setting "Open groups"**: on hover and click (default), on hover only, or on click only.
+- **Choose the screens for the desktop bowl**: a "Desktop" section at the top of Abyss's settings (all displays, or pick them one by one), from the Plugins page or from Settings › Desktop Widgets.
+- **No bar over the bowl**: who is online and the live totals are scratched into the glass in front of the sand. Click the jellyfish to connect; right-click it to connect or disconnect, switch profile, or show and hide offline peers (everywhere, not just in the bowl). The bar stays in the bar popout and the Control Center.
+- **Card**: received and sent now sit either side of the creature's medallion, and the address and the name share one line, each with its copy button.
+- **TOP CONSUMER** is told by its caption alone; its label no longer changes colour.
 - **Fixed**: a click, or resting the pointer, opened a creature or a group a hand-width away; it now takes the pointer being on it (the lens still aims from afar).
 
 ### 0.2.0 — 2026-09-27

@@ -1266,6 +1266,17 @@ Item {
         naming = "";
         forceActiveFocus();
     }
+    // A click on you: the one step that moves the connection forward
+    function pressJelly() {
+        if (!source)
+            return;
+        if (view.state === "needsLogin")
+            source.login();
+        else if (view.state === "stopped")
+            source.startService();
+        else
+            source.toggle();
+    }
     function _menuPeer(id) {
         if (id.indexOf("m:") === 0)
             return peerById[id.slice(2)] || null;
@@ -1275,7 +1286,16 @@ Item {
     // [{ text, act, arg }] for the thing under the menu
     function menuActions(id, mine) {
         const out = [], p = _menuPeer(id), it = itemById[id];
-        if (p) {
+        if (id === "me") {
+            // You: what the top bar holds, for the bowl that has none
+            if (!source)
+                return out;
+            out.push({ "text": connected || view.state === "connecting" ? "Disconnect" : view.state === "needsLogin" ? "Sign in" : "Connect", "act": "toggle" });
+            const ps = source.profiles;
+            if (ps.length > 1)
+                out.push({ "text": "Profile: " + ps[(ps.indexOf(source.profile) + 1) % ps.length], "act": "profile" });
+            out.push({ "text": prefs.showOffline ? "Hide offline peers" : "Show offline peers", "act": "offline" });
+        } else if (p) {
             const g = MyGroups.groupOf(mine, p.id);
             mine.filter(x => x !== g).forEach(x => out.push({ "text": "Add to " + x.name, "act": "join", "arg": x.id }));
             out.push({ "text": "New group", "act": "create", "arg": p.id });
@@ -1304,7 +1324,14 @@ Item {
             naming = a.arg;
             return;
         }
-        if (a.act === "join")
+        if (a.act === "toggle")
+            pressJelly();
+        else if (a.act === "profile") {
+            const ps = source.profiles;
+            source.setProfile(ps[(ps.indexOf(source.profile) + 1) % ps.length]);
+        } else if (a.act === "offline")
+            prefs.set("showOffline", !prefs.showOffline);
+        else if (a.act === "join")
             prefs.set("groups", MyGroups.join(mine, a.arg, _menuPeer(menuId).id));
         else if (a.act === "leave")
             prefs.set("groups", MyGroups.leave(mine, a.arg));
@@ -1660,13 +1687,13 @@ Item {
                 width: root.frame.jelly.r * 2
                 height: root.frame.jelly.r * 2.6
                 cursorShape: Qt.PointingHandCursor
-                onClicked: {
-                    if (root.view.state === "needsLogin")
-                        root.source.login();
-                    else if (root.view.state === "stopped")
-                        root.source.startService();
-                    else if (root.source)
-                        root.source.toggle();
+                acceptedButtons: Qt.LeftButton | Qt.RightButton
+                onClicked: mouse => {
+                    if (mouse.button === Qt.RightButton) {
+                        root.openMenu("me", mapToItem(root, mouse.x, mouse.y));
+                        return;
+                    }
+                    root.pressJelly();
                 }
             }
 
@@ -1995,9 +2022,10 @@ Item {
             y: root.topH + 6
         }
 
+        // The desktop bowl has none: its totals are scratched into the glass
         TopBar {
             id: bar
-            opacity: root.chromeShown ? 1 : 0
+            opacity: root.chromeShown && !root.borderless ? 1 : 0
             visible: opacity > 0.01
             Behavior on opacity {
                 NumberAnimation {
