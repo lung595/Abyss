@@ -24,8 +24,13 @@ ok("the random numbers stay in [0, 1)", (() => {
 ok("the floor carries life", a.life.filter(it => !it.ledge).length >= 8);
 ok("at least four kinds of life", new Set(a.life.map(it => it.kind)).size >= 4);
 ok("two cliffs, one per side", a.cliffs.length === 2 && a.cliffs[0].side === 0 && a.cliffs[1].side === 1);
-ok("the far ridge stands above the middle one", Math.min(...a.far.map(q => q[1])) < Math.min(...a.mid.map(q => q[1])));
-ok("the ridges stay near the floor, clear of the peers", a.far.concat(a.mid).every(q => q[1] > f.floorY - 80));
+ok("the far range stands above the nearer hills", Math.min(...a.far.map(q => q[1])) < Math.min(...a.mid.map(q => q[1])));
+// The planes are painted in bands that start at floorY - 30% / 20% of h
+ok("the far range fits its band", a.far.every(q => q[1] >= f.floorY - f.h * 0.3));
+ok("the hills and spires fit theirs", a.mid.every(q => q[1] >= f.floorY - f.h * 0.2) && a.spires.every(s => f.floorY - f.h * 0.02 - s.h >= f.floorY - f.h * 0.2));
+ok("one arch among the spires", a.spires.filter(s => s.arch).length === 1);
+ok("small life far away, smaller than in front", a.farLife.length >= 6 && Math.max(...a.farLife.map(it => it.s)) < Math.min(...a.life.filter(it => !it.ledge).map(it => it.s)));
+ok("ripples open up as they come near", a.ripples.filter(r => r.near === 1).every(r => r.dy > Math.max(...a.ripples.filter(q => q.near === 0).map(q => q.dy))));
 
 // Caves keep their floor
 const span = R.caveSpan(f, 2);

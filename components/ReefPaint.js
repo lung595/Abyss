@@ -2,8 +2,10 @@
 
 // Paints a reef plan (ReefPlan.js) on Canvas 2D contexts, plane by plane or
 // one living thing at a time, in one of two moods: dark (silhouettes a shade
-// darker than the water, barely there) or lit (the theme's colours, muted,
-// as under a weak lamp). Both copies
+// darker than the water, barely there) or lit (the theme's colours, deep and
+// dark, as under a weak lamp). The farther a thing is, the more it melts
+// into the water (fog), in both moods: that is what gives the deep its
+// depth. Coral and anemone tips glow a little (bioluminescence). Both copies
 // use the same shapes: every random pick comes from the item's own seed, so
 // drawing never changes what is drawn.
 
@@ -14,16 +16,32 @@ function _css(c, a) {
     return "rgba(" + Math.round(c.r * 255) + "," + Math.round(c.g * 255) + "," + Math.round(c.b * 255) + "," + a + ")";
 }
 
-// p: { lit, ink, shadow, stone, sand, tints[4] }. Under the lamp things
-// stay muted: the lamp hints at the reef, it does not expose it.
+function _mix(a, b, k) {
+    return { "r": a.r + (b.r - a.r) * k, "g": a.g + (b.g - a.g) * k, "b": a.b + (b.b - a.b) * k };
+}
+// The same palette seen from farther away (fog 0 = in front, 1 = lost)
+function _far(p, fog) {
+    return Object.assign({}, p, { "fog": fog });
+}
+
+// p: { lit, ink, shadow, stone, sand, water, tints[4], fog }. Under the
+// lamp things stay deep and dark: the lamp hints at the reef, it does not
+// expose it.
 function _body(p, c, a) {
-    return p.lit ? _css(c, a * 0.55) : _css(p.shadow, 0.9);
+    const fog = p.fog || 0;
+    return p.lit ? _css(_mix(c, p.water, 0.4 + 0.55 * fog), a * 0.8) : _css(_mix(p.shadow, p.water, fog), 0.9);
 }
 function _shine(p, a) {
-    return _css(p.ink, p.lit ? a * 0.6 : a * 0.12);
+    const near = 1 - (p.fog || 0);
+    return _css(p.ink, (p.lit ? a * 0.45 : a * 0.08) * near);
 }
 function _rock(p, a) {
-    return p.lit ? _css(p.stone, a * 0.4) : _css(p.shadow, a);
+    const fog = p.fog || 0;
+    return p.lit ? _css(_mix(p.stone, p.water, 0.84 + 0.14 * fog), a) : _css(_mix(p.shadow, p.water, fog), a);
+}
+// Living light: faint in the dark, a little brighter under the lamp
+function _glow(p, c, a) {
+    return _css(c, (p.lit ? a : a * 0.5) * (1 - 0.7 * (p.fog || 0)));
 }
 
 // One plane of the reef, in scene coordinates (the Canvas translates)
@@ -31,10 +49,19 @@ function paintPart(part, ctx, frame, plan, p) {
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
     if (part === "far")
-        _ridge(ctx, frame, plan.far, p.lit ? _css(p.stone, 0.1) : _css(p.shadow, 0.22));
-    else if (part === "mid")
-        _ridge(ctx, frame, plan.mid, p.lit ? _css(p.stone, 0.22) : _css(p.shadow, 0.4));
-    else if (part === "cliffs") {
+        _ridge(ctx, frame, plan.far, _far(p, 0.7));
+    else if (part === "mid") {
+        const q = _far(p, 0.35);
+        plan.spires.forEach(sp => _spire(ctx, frame, sp, q));
+        _ridge(ctx, frame, plan.mid, q);
+        const tiny = _far(p, 0.4);
+        plan.farLife.forEach(it => {
+            ctx.save();
+            ctx.translate(it.x, it.y);
+            paintLife(ctx, it, tiny);
+            ctx.restore();
+        });
+    } else if (part === "cliffs") {
         plan.cliffs.forEach(c => _cliff(ctx, frame, c, p));
         plan.life.forEach(it => it.ledge && _ledge(ctx, it, p));
     } else if (part === "floor")
@@ -60,10 +87,12 @@ const _life = {
         }
         ctx.strokeStyle = _body(p, c, 0.8);
         branch(0, 0, -Math.PI / 2 + (r() - 0.5) * 0.4, 9 + r() * 4, 3.2, 2);
-        if (p.lit) {
-            ctx.fillStyle = _css(p.ink, 0.3);
-            tips.forEach(t => ctx.fillRect(t[0] - 0.8, t[1] - 0.8, 1.6, 1.6));
-        }
+        ctx.fillStyle = _glow(p, c, 0.7);
+        tips.forEach(t => {
+            ctx.beginPath();
+            ctx.ellipse(t[0] - 1, t[1] - 1, 2, 2);
+            ctx.fill();
+        });
     },
     // Tube sponges: a few rounded tubes, dark mouths, a lit rim
     "sponge": function (ctx, r, c, p) {
@@ -102,10 +131,8 @@ const _life = {
             ctx.moveTo(0, -7);
             ctx.quadraticCurveTo(ex * 0.4, ey - 4, ex, ey);
             ctx.stroke();
-            if (p.lit) {
-                ctx.fillStyle = _css(p.ink, 0.28);
-                ctx.fillRect(ex - 0.7, ey - 0.7, 1.4, 1.4);
-            }
+            ctx.fillStyle = _glow(p, c, 0.55);
+            ctx.fillRect(ex - 0.7, ey - 0.7, 1.4, 1.4);
         }
     },
     // Sea fan (gorgonian): a flat lace of fine branches
@@ -162,16 +189,64 @@ function paintLife(ctx, it, p) {
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
     ctx.scale(it.s, it.s);
+    // Thin lines stay visible once scaled down far away
+    ctx.lineWidth = 1;
     _life[it.kind](ctx, Plan.rng(it.seed), p.tints[it.tint % p.tints.length], p);
 }
 
-function _ridge(ctx, frame, pts, fill) {
+// A range of hills: smooth crests, darker towards its foot, and a faint
+// rim of light along the top
+function _ridge(ctx, frame, pts, p) {
+    const top = Math.min(...pts.map(q => q[1]));
     ctx.beginPath();
     ctx.moveTo(pts[0][0], frame.h);
-    pts.forEach(q => ctx.lineTo(q[0], q[1]));
+    ctx.lineTo(pts[0][0], pts[0][1]);
+    for (let i = 1; i < pts.length; i++) {
+        const a = pts[i - 1], b = pts[i];
+        ctx.quadraticCurveTo(a[0] + (b[0] - a[0]) * 0.5, Math.min(a[1], b[1]) - 4, b[0], b[1]);
+    }
     ctx.lineTo(pts[pts.length - 1][0], frame.h);
     ctx.closePath();
-    ctx.fillStyle = fill;
+    const g = ctx.createLinearGradient(0, top, 0, frame.floorY);
+    g.addColorStop(0, _rock(p, 0.55));
+    g.addColorStop(1, _rock(_far(p, Math.max(0, p.fog - 0.2)), 0.95));
+    ctx.fillStyle = g;
+    ctx.fill();
+    ctx.strokeStyle = _shine(p, 0.18);
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(pts[0][0], pts[0][1]);
+    for (let i = 1; i < pts.length; i++) {
+        const a = pts[i - 1], b = pts[i];
+        ctx.quadraticCurveTo(a[0] + (b[0] - a[0]) * 0.5, Math.min(a[1], b[1]) - 4, b[0], b[1]);
+    }
+    ctx.stroke();
+}
+
+// A rock spire (leaning, tapering) or an arch, standing on the hills
+function _spire(ctx, frame, sp, p) {
+    const base = frame.floorY - frame.h * 0.02;
+    ctx.fillStyle = _rock(p, 0.9);
+    ctx.strokeStyle = _rock(p, 0.9);
+    if (sp.arch) {
+        const r = sp.w / 2, top = base - sp.h + r;
+        ctx.lineWidth = sp.w * 0.3;
+        ctx.lineCap = "butt";
+        ctx.beginPath();
+        ctx.moveTo(sp.x - r, base);
+        ctx.lineTo(sp.x - r, top);
+        ctx.arc(sp.x, top, r, Math.PI, 0, false);
+        ctx.lineTo(sp.x + r, base);
+        ctx.stroke();
+        ctx.lineCap = "round";
+        return;
+    }
+    const lean = sp.w * 0.4;
+    ctx.beginPath();
+    ctx.moveTo(sp.x - sp.w / 2, base);
+    ctx.quadraticCurveTo(sp.x - sp.w * 0.3, base - sp.h * 0.5, sp.x + lean, base - sp.h);
+    ctx.quadraticCurveTo(sp.x + sp.w * 0.35, base - sp.h * 0.45, sp.x + sp.w / 2, base);
+    ctx.closePath();
     ctx.fill();
 }
 
@@ -212,23 +287,12 @@ function _ledge(ctx, it, p) {
 }
 
 function _floor(ctx, frame, plan, p) {
-    if (p.lit) {
-        const g = ctx.createLinearGradient(0, frame.floorY, 0, frame.h);
-        g.addColorStop(0, _css(p.sand, 0.2));
-        g.addColorStop(1, _css(p.sand, 0.06));
-        ctx.fillStyle = g;
-        ctx.beginPath();
-        ctx.moveTo(0, frame.h);
-        for (let x = 0; x <= frame.w; x += 24)
-            ctx.lineTo(x, Lay.floorAt(frame, x));
-        ctx.lineTo(frame.w, frame.h);
-        ctx.closePath();
-        ctx.fill();
-    }
-    ctx.strokeStyle = _shine(p, 0.2);
-    ctx.lineWidth = 1;
+    // Under the lamp the sand is not a lighter slab: only its ripples and
+    // pebbles catch the light
     plan.ripples.forEach(r => {
         const y = Lay.floorAt(frame, r.x) + r.dy;
+        ctx.strokeStyle = _shine(_far(p, 0.6 * (1 - r.near)), 0.2);
+        ctx.lineWidth = 0.6 + r.near * 0.8;
         ctx.beginPath();
         ctx.moveTo(r.x, y);
         ctx.bezierCurveTo(r.x + r.len * 0.3, y - 2.5, r.x + r.len * 0.6, y + 2.5, r.x + r.len, y);

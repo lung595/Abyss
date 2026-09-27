@@ -6,7 +6,7 @@ import "../../components"
 // Offscreen renders from the demo mesh (fictional names and addresses).
 // Usage: see render.sh. Modes: connected, disconnected, connecting,
 // needsLogin, stopped, card, relay, find, exit, nets, work, crowd, lens,
-// peek, search (these four on the 30-peer crowd mesh), grab, fly / unfly (the card
+// peek, search (these four on the 30-peer crowd mesh), grab, reef (the lamp on the floor), fly / unfly (the card
 // opening / closing, as frames out-0.png ... out-11.png), step (the open card
 // stepping to the next peer, same frames, 35 ms apart); a "-light" suffix uses a light theme's accents, "-cc" the Control Center size.
 Window {
@@ -62,7 +62,7 @@ Window {
             flight.start();
             return;
         }
-        shot.interval = mode === "peek" ? 3000 : mode === "lens" || mode === "grab" ? 2600 : 1600;
+        shot.interval = mode === "peek" ? 3000 : mode === "lens" || mode === "reef" || mode === "grab" ? 2600 : 1600;
         shot.start();
     }
 
@@ -77,7 +77,7 @@ Window {
     // After the first reads: aim the lens at a peer, or rest it on a group
     // until its bubble opens by itself, then on one of its members
     Timer {
-        running: win.mode === "lens" || win.mode === "peek" || win.mode === "grab"
+        running: win.mode === "lens" || win.mode === "reef" || win.mode === "peek" || win.mode === "grab"
         interval: 700
         // The lens keeps aiming (the demo traffic reshuffles the groups)
         repeat: win.mode !== "grab"
@@ -87,6 +87,9 @@ Window {
                 const p = scene.arr.items.find(i => i.type === "peer");
                 if (p)
                     scene.grab(p.id, 110, -70);
+            } else if (win.mode === "reef") {
+                // The lamp on the floor, right of the caves: the scenery it reveals
+                scene.pinnedPointer = Qt.point(scene.width * 0.6, scene.frame.floorY - 30);
             } else if (win.mode === "lens") {
                 const p = scene.arr.items.find(i => i.type === "peer");
                 const at = p ? scene.lay.peers[p.id] : null;

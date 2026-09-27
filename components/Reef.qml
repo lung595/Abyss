@@ -19,6 +19,8 @@ Item {
     property color shadow
     property color stone
     property color sand
+    // The water around, which far things melt into
+    property color water
     property var tints: []
     // How many caves sit on the left of the floor (kept clear)
     property int caves: 0
@@ -36,6 +38,7 @@ Item {
             "shadow": shadow,
             "stone": stone,
             "sand": sand,
+            "water": water,
             "tints": tints
         })
     readonly property real cliffW: Math.max(16, f.w * 0.04) + 26
@@ -44,10 +47,10 @@ Item {
 
     ReefPlane {
         part: "far"
-        depth: 4
-        baseX: -20
-        baseY: reef.f.floorY - 80
-        width: reef.f.w + 40
+        depth: 3
+        baseX: -40
+        baseY: reef.f.floorY - reef.f.h * 0.3
+        width: reef.f.w + 80
         height: reef.f.h - baseY
         frame: reef.frame
         plan: reef.plan
@@ -56,9 +59,9 @@ Item {
     }
     ReefPlane {
         part: "mid"
-        depth: 8
-        baseX: -20
-        baseY: reef.f.floorY - 44
+        depth: 7
+        baseX: -30
+        baseY: reef.f.floorY - reef.f.h * 0.2
         width: reef.f.w + 40
         height: reef.f.h - baseY
         frame: reef.frame

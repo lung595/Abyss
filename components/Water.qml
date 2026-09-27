@@ -42,6 +42,23 @@ Canvas {
         sea.addColorStop(1, Qt.darker(abyss, 1.5));
         ctx.fillStyle = sea;
         ctx.fillRect(0, sy, w, h - sy);
+        // The deep haze: a faint glow far off above the floor, behind the
+        // reef's hills. Nothing lights the abyss, yet the distance glows a
+        // little (like marine snow seen through kilometres of water), and
+        // each plane of the reef reads as a darker cut-out against it.
+        const hy = f.floorY - h * 0.14;
+        [[0.28, 0.1], [0.72, 0.13]].forEach(([k, a]) => {
+            ctx.save();
+            ctx.translate(w * k, hy);
+            ctx.scale(1, 0.32);
+            const r = w * 0.42, g = ctx.createRadialGradient(0, 0, 0, 0, 0, r);
+            g.addColorStop(0, _rgba(ink, a));
+            g.addColorStop(0.5, _rgba(ink, a * 0.4));
+            g.addColorStop(1, _rgba(ink, 0));
+            ctx.fillStyle = g;
+            ctx.fillRect(-r, -r, 2 * r, 2 * r);
+            ctx.restore();
+        });
         // The surface itself, barely there
         ctx.strokeStyle = _rgba(ink, 0.12);
         ctx.lineWidth = 1;
