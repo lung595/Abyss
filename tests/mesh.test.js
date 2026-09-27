@@ -126,4 +126,9 @@ eq("short", [M.fmtShort(9.2e6), M.fmtShort(310000)], ["9.2M", "310k"]);
 eq("bytes", [M.fmtBytes(512), M.fmtBytes(3.2e9)], ["512 B", "3.2 GB"]);
 eq("ago", [M.fmtAgo(12000), M.fmtAgo(125 * 60000)], ["12 s", "2 h 05"]);
 
+// Which peers can lend Internet: they serve 0.0.0.0/0 (an exit node)
+eq("a peer serving 0.0.0.0/0 can lend", M.peerOf(peer("x", "Connected", "P2P", 5, 0, 0, { networks: ["10.0.0.0/8", "0.0.0.0/0"] })).exit, true);
+eq("older clients call them routes", M.peerOf(peer("x", "Connected", "P2P", 5, 0, 0, { routes: ["0.0.0.0/0"] })).exit, true);
+eq("no such route: cannot lend", M.peerOf(peer("x", "Connected", "P2P", 5, 0, 0, { networks: ["192.168.1.0/24"] })).exit, false);
+
 done("mesh");

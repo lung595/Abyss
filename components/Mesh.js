@@ -95,6 +95,9 @@ function peerOf(d) {
         "down": 0,
         "up": 0,
         "calm": 0,
+        // It offers the whole Internet (a 0.0.0.0/0 route: an exit node).
+        // Newer clients list what a peer serves as "networks", older ones as "routes"
+        "exit": (d.networks || d.routes || []).indexOf("0.0.0.0/0") >= 0,
         "since": _time(d.statusSince),
         "handshake": _time(d.lastWireguardHandshake)
     };

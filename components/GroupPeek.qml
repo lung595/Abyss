@@ -159,7 +159,7 @@ Item {
             c.lineJoin = "round";
             gp.members.forEach(id => {
                 const p = gp.scene.peerById[id];
-                if (!p || !p.online)
+                if (!p || !p.online || !p.exit)
                     return;
                 const q = gp.memberPose(id), dx = q.x - gp.cx, dy = q.y - gp.cy, L = Math.hypot(dx, dy) || 1;
                 // From the light's rim to just short of the creature
@@ -247,6 +247,13 @@ Item {
             readonly property bool above: spot.y < -4
 
             visible: !!p
+            // Steps back while the light is carried if it cannot lend Internet
+            opacity: gp.scene.carryFade(p)
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: gp.scene.reduceMotion ? 0 : 150
+                }
+            }
             x: gp.cx + spot.x * gp.grow + pose.x
             y: gp.cy + spot.y * gp.grow + pose.y
             z: focused ? 2 : 0

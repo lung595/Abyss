@@ -96,6 +96,7 @@ scripts/preview/render.sh connected "$PWD/out.png"   # offscreen renders from th
 ### Unreleased (0.3.0)
 
 - **Livelier animals**: between trips every creature now has its own life — the fish beats its tail and wanders, the manta flaps its wings, the squid squeezes and jets upward, the seahorse sways upright, the turtle paddles, the whale and the nautilus roll slowly — and now and then the ones that can turn look the other way. Inside an open group the members live too (they were still). Calmer asleep, still with *Reduce motion*, and nothing runs while nobody looks: it rides the scene's existing clock, moving the shapes without repainting them (idle CPU unchanged: 3.7 % vs 3.6 % of one core, same session).
+- **Only what can lend Internet**: while you carry the light, the peers that can lend it (they offer an exit node) stay bright and the others step back; over one that cannot, the light says so and dropping it changes nothing. A group only ever lends through such a member. In a peer's card, "Use for Internet" appears only when it can.
 - **See what "the whole group" means before letting go**: carrying the light over the middle of an open group shows a ring where it will rest and faint tentacles to every member; once dropped, a bead of light runs out to each of them, once.
 - **Your own groups**: right-click a creature or a group to add it to a group, start one, rename, ungroup, or keep an automatic group. They come first and never reshuffle.
 - **Internet through a whole group**: drop the light in the middle of a group; it stays there, tied to the member lending the Internet, and the next best member takes over if that one goes offline. Drag it out of the group to stop. Also `dms ipc call abyss exit <group or peer>`.
@@ -150,10 +151,11 @@ Sending your Internet through a peer (a NetBird exit node) should explain itself
 
 **Choosing a peer**
 - Hovering the light says what it does: "Drag onto a device to go out through it".
-- While you carry it, the peers that can lend Internet (they offer an exit node) glow softly and the others dim, so you only aim at what works; dropping on one that cannot says why.
+- ✓ While you carry it, the peers that can lend Internet (they offer an exit node) stay bright and the others dim, so you only aim at what works; dropping on one that cannot says why.
 - ✓ Drop it on a peer: "Internet through X".
 - Click the light (no dragging needed): a short list of the peers and groups that can lend it, and "Stop".
-- A peer's card and its right-click menu: "Use for Internet" / "Stop using for Internet".
+- ✓ A peer's card: "Use for Internet" / "Lends you Internet ✓", only on a peer that can.
+- The same in a peer's right-click menu.
 - Escape while carrying puts the light back where it was.
 
 **Choosing a group**

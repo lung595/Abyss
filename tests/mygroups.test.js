@@ -25,18 +25,26 @@ eq("the old list is never changed", gs.length, 2);
 
 // Internet through a group: its best member, and no flapping
 const peers = [
-    { id: "a", name: "a", online: true, relayed: true, latencyMs: 5 },
-    { id: "b", name: "b", online: true, relayed: false, latencyMs: 40 },
-    { id: "c", name: "c", online: true, relayed: false, latencyMs: 12 },
-    { id: "d", name: "d", online: false, relayed: false, latencyMs: 1 }
+    { id: "a", name: "a", online: true, relayed: true, latencyMs: 5, exit: true },
+    { id: "b", name: "b", online: true, relayed: false, latencyMs: 40, exit: true },
+    { id: "c", name: "c", online: true, relayed: false, latencyMs: 12, exit: true },
+    { id: "d", name: "d", online: false, relayed: false, latencyMs: 1, exit: true }
 ];
 eq("direct first, then the quickest", M.pickExit(peers, ["a", "b", "c", "d"], "").name, "c");
 eq("the current one stays while online", M.pickExit(peers, ["a", "b", "c"], "b").name, "b");
 eq("an offline current one is replaced", M.pickExit(peers, ["b", "d"], "d").name, "b");
 eq("steady latency wins over a jittery read", M.pickExit([
-    { id: "x", name: "x", online: true, relayed: false, latencyMs: 3, steadyMs: 50 },
-    { id: "y", name: "y", online: true, relayed: false, latencyMs: 30, steadyMs: 20 }
+    { id: "x", name: "x", online: true, relayed: false, latencyMs: 3, steadyMs: 50, exit: true },
+    { id: "y", name: "y", online: true, relayed: false, latencyMs: 30, steadyMs: 20, exit: true }
 ], ["x", "y"], "").name, "y");
 eq("nobody online: no exit", M.pickExit(peers, ["d"], ""), null);
+// Only a member offering an exit node can lend Internet
+const mixed = [
+    { id: "p", name: "p", online: true, relayed: false, latencyMs: 2, exit: false },
+    { id: "q", name: "q", online: true, relayed: false, latencyMs: 30, exit: true }
+];
+eq("the quickest that can lend, not the quickest", M.pickExit(mixed, ["p", "q"], "").name, "q");
+eq("a current one that cannot lend is replaced", M.pickExit(mixed, ["p", "q"], "p").name, "q");
+eq("nobody can lend: no exit", M.pickExit(mixed, ["p"], ""), null);
 
 done("mygroups");

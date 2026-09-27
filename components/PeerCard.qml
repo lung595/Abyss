@@ -316,13 +316,16 @@ Item {
                     ink: card.ink
                     onClicked: card.scene.openWeb(card.peer)
                 }
+                // Only for a peer that offers an exit node; through the scene so
+                // a group chosen before is let go too
                 ActionChip {
+                    visible: !!card.peer && !!card.peer.exit
                     icon: "public"
-                    text: card.isExit ? "Internet exit ✓" : "Internet exit"
+                    text: card.isExit ? "Lends you Internet ✓" : "Use for Internet"
                     checked: card.isExit
                     accent: card.scene.sunColor
                     ink: card.ink
-                    onClicked: card.source && card.source.setExitNode(card.isExit ? "" : card.peer.name)
+                    onClicked: card.scene.setExit(card.isExit ? "" : card.peer.name, "")
                 }
                 ActionChip {
                     icon: "star"
