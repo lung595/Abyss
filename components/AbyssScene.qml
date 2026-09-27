@@ -1319,9 +1319,20 @@ Item {
     property point menuAt: Qt.point(0, 0)
     // The group being named (just made, or "Rename")
     property string naming: ""
+    // The light's menu: which groups are unfolded (SunTree). It opens on the
+    // group Internet goes through, or the one holding the peer it goes through
+    property var sunOpen: []
+    function foldSun(groupId) {
+        const i = sunOpen.indexOf(groupId);
+        sunOpen = i >= 0 ? sunOpen.filter(g => g !== groupId) : sunOpen.concat([groupId]);
+    }
     function openMenu(id, at) {
         menuId = id;
         menuAt = at;
+        if (id === "sun") {
+            const g = exitMine || (exitPeer ? MyGroups.groupOf(prefs.groups, exitPeer.id) : null);
+            sunOpen = g ? [g.id] : [];
+        }
         naming = "";
         netsOpen = false;
         forceActiveFocus();
@@ -1351,26 +1362,6 @@ Item {
     // [{ text, act, arg }] for the thing under the menu
     function menuActions(id, mine) {
         const out = [], p = _menuPeer(id), it = itemById[id];
-        if (id === "sun") {
-            // The light, clicked: where Internet can go, without dragging.
-            // Your groups first, then the quickest peers that can lend it
-            const using = source ? source.exitNode : "";
-            if (using)
-                out.push({ "text": "Stop · go out directly", "act": "use", "arg": { "peer": "", "group": "" } });
-            mine.filter(g => g.members.some(m => peerById[m] && peerById[m].online && peerById[m].exit)).forEach(g => out.push({
-                "text": (prefs.exitGroup === g.id ? "✓ " : "") + "All of " + g.name,
-                "act": "use",
-                "arg": { "peer": "", "group": g.id }
-            }));
-            view.peers.filter(q => q.online && q.exit).slice().sort((a, b) => a.latencyMs - b.latencyMs).slice(0, 6).forEach(q => out.push({
-                "text": (q.name === using && !prefs.exitGroup ? "✓ " : "") + q.name + " · " + Math.round(q.latencyMs) + " ms",
-                "act": "use",
-                "arg": { "peer": q.name, "group": "" }
-            }));
-            if (!out.length)
-                out.push({ "text": "No peer can lend Internet", "act": "none" });
-            return out;
-        }
         if (id === "me") {
             // You: what the top bar holds, for the bowl that has none
             if (!source)
@@ -1608,7 +1599,8 @@ Item {
                 readonly property point at: exitPeer ? root.drawnOfPeer(exitPeer.id) : Qt.point(0, 0)
                 visible: !!exitPeer && exitPeer.online && root.connected && height > 20
                 // From the light, which hangs still above the peer's place
-                fromX: root.anchorOfPeer(exitPeer ? exitPeer.id : "").x
+                // (or glides there, just picked)
+                fromX: surfaceSun.gliding ? surfaceSun.shown.x : root.anchorOfPeer(exitPeer ? exitPeer.id : "").x
                 fromY: root.frame.surfaceY
                 toX: at.x
                 toY: at.y
@@ -2097,6 +2089,9 @@ Item {
         // carried over a group, the group opens, and the light can be left on
         // one of its members, or in the middle of a group of mine for all of it
         SurfaceSun {
+            id: surfaceSun
+            objectName: "surfaceSun"
+            reduceMotion: root.reduceMotion
             visible: root.connected && !!root.source && (dragging || root.cardId === "" && (root.peekId === "" || groupPeek.lit))
             z: 22
             scene: root
@@ -2250,15 +2245,15 @@ Item {
             id: menu
             readonly property var acts: root.menuId !== "" ? root.menuActions(root.menuId, root.prefs.groups) : []
             readonly property var named: MyGroups.byId(root.prefs.groups, root.naming)
-            visible: root.menuId !== "" && (acts.length > 0 || !!named)
+            visible: root.menuId !== "" && (acts.length > 0 || !!named || root.menuId === "sun")
             z: 40
-            width: 200
+            width: root.menuId === "sun" ? 240 : 200
             height: menuCol.implicitHeight + 12
             // Opens at the pointer, kept inside the view
             x: Math.max(6, Math.min(root.width - width - 6, root.menuAt.x + 4))
             y: Math.max(6, Math.min(root.height - height - 6, root.menuAt.y + 4))
             radius: 12
-            color: Qt.rgba(root.abyss.r, root.abyss.g, root.abyss.b, 0.94)
+            color: Qt.rgba(root.abyss.r, root.abyss.g, root.abyss.b, 0.98)
             border.width: 1
             border.color: Qt.rgba(root.ink.r, root.ink.g, root.ink.b, 0.14)
 
@@ -2308,6 +2303,11 @@ Item {
                     text: "Enter to keep the name"
                     font.pixelSize: 10
                     color: root.inkDim
+                }
+                SunTree {
+                    visible: root.menuId === "sun"
+                    width: parent.width
+                    scene: root
                 }
                 Repeater {
                     model: menu.named ? [] : menu.acts

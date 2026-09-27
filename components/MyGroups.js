@@ -93,3 +93,36 @@ function pickExit(peers, memberIds, currentName) {
     live.sort((a, b) => (a.relayed - b.relayed) || (_ms(a) - _ms(b)));
     return live[0] || null;
 }
+
+// The rows of the light's menu, as a small file tree: each group of mine
+// with someone able to lend Internet is a folder (pick it whole, or open it
+// to pick one of its peers), then the lenders in no group, quickest first.
+// `open` lists the unfolded groups. Rows:
+//   { kind: "group", id, name, count, open, on, dim }
+//   { kind: "peer", name, ms, online, on, serving, depth, last }
+// `on` is the current choice; `serving` the member a chosen group goes out
+// through. Offline lenders show dimmed inside a group, and not at all outside.
+function exitTree(groups, peers, open, exitNode, exitGroup) {
+    const rows = [], grouped = {};
+    const byMs = (a, b) => (b.online - a.online) || (_ms(a) - _ms(b));
+    groups.forEach(g => {
+        g.members.forEach(id => grouped[id] = true);
+        const lenders = peers.filter(p => p.exit && g.members.indexOf(p.id) >= 0).sort(byMs);
+        if (!lenders.length)
+            return;
+        const unfolded = open.indexOf(g.id) >= 0, count = lenders.filter(p => p.online).length;
+        rows.push({ "kind": "group", "id": g.id, "name": g.name, "count": count, "open": unfolded, "on": exitGroup === g.id, "dim": !count });
+        if (unfolded)
+            lenders.forEach((p, i) => rows.push({
+                "kind": "peer", "name": p.name, "ms": Math.round(_ms(p)), "online": p.online, "depth": 1,
+                "last": i === lenders.length - 1,
+                "on": !exitGroup && exitNode === p.name,
+                "serving": exitGroup === g.id && exitNode === p.name
+            }));
+    });
+    peers.filter(p => p.exit && p.online && !grouped[p.id]).sort(byMs).forEach(p => rows.push({
+        "kind": "peer", "name": p.name, "ms": Math.round(_ms(p)), "online": true, "depth": 0, "last": false,
+        "on": !exitGroup && exitNode === p.name, "serving": false
+    }));
+    return rows;
+}

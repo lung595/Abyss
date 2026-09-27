@@ -47,4 +47,25 @@ eq("the quickest that can lend, not the quickest", M.pickExit(mixed, ["p", "q"],
 eq("a current one that cannot lend is replaced", M.pickExit(mixed, ["p", "q"], "p").name, "q");
 eq("nobody can lend: no exit", M.pickExit(mixed, ["p"], ""), null);
 
+// The light's menu, as a tree
+const lend = [
+    { id: "s1", name: "atlas", online: true, relayed: false, latencyMs: 9, exit: true },
+    { id: "s2", name: "vega", online: true, relayed: false, latencyMs: 4, exit: true },
+    { id: "s3", name: "orion", online: false, relayed: false, latencyMs: 2, exit: true },
+    { id: "s4", name: "lyra", online: true, relayed: false, latencyMs: 30, exit: true },
+    { id: "s5", name: "laptop", online: true, relayed: false, latencyMs: 1, exit: false }
+];
+const tg = [{ id: "u1", name: "Busy", members: ["s1", "s2", "s3", "s5"] }, { id: "u2", name: "Idle", members: ["s5"] }];
+let rows = M.exitTree(tg, lend, [], "", "");
+eq("folded: one folder, then the lender in no group", rows.map(r => r.name).join(","), "Busy,lyra");
+eq("the folder counts who can lend now", rows[0].count, 2);
+rows = M.exitTree(tg, lend, ["u1"], "vega", "u1");
+eq("unfolded: quickest online first, offline last", rows.slice(1, 4).map(r => r.name).join(","), "vega,atlas,orion");
+ok("the chosen group is on, its member serving", rows[0].on && rows[1].serving && !rows[1].on);
+ok("the last member closes the branch", rows[3].last && !rows[2].last);
+ok("a group nobody in it can lend is left out", !rows.some(r => r.name === "Idle"));
+rows = M.exitTree(tg, lend, ["u1"], "atlas", "");
+ok("a peer picked alone is on, the group is not", rows.find(r => r.name === "atlas").on && !rows[0].on);
+eq("nobody can lend: no rows", M.exitTree([], [lend[4]], [], "", "").length, 0);
+
 done("mygroups");
