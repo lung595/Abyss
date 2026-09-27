@@ -5,7 +5,7 @@ import qs.Widgets
 import "Mesh.js" as Mesh
 
 // Everything about one peer, opened by a click on its creature: live rates
-// and the last minute, its addresses to copy, and what you can do with it.
+// (either side of its medallion) and the last minute, its addresses to copy, and what you can do with it.
 // Its creature is not drawn here: CardHero flies it onto the top edge, in a
 // medallion that breaks out of the frame (topPad leaves room for it).
 // Frosted glass over a still, blurred picture of the deep; always the same
@@ -120,7 +120,6 @@ Item {
     component CopyRow: Rectangle {
         property string value
         property string what
-        width: parent ? parent.width : 0
         height: 32
         radius: 9
         color: Qt.rgba(card.ink.r, card.ink.g, card.ink.b, 0.06)
@@ -135,6 +134,8 @@ Item {
             font.family: Theme.monoFontFamily
             color: card.ink
             wrapMode: Text.NoWrap
+            // A long name keeps its start and its domain
+            elide: Text.ElideMiddle
         }
         ActionChip {
             id: copyBtn
@@ -143,7 +144,7 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             height: 26
             icon: "content_copy"
-            text: "Copy"
+            tip: "Copy"
             ink: card.ink
             onClicked: card.scene.copy(parent.value, parent.what)
         }
@@ -158,6 +159,36 @@ Item {
         icon: "arrow_back"
         ink: card.ink
         onClicked: card.closed()
+    }
+
+    // Live rates on either side of the creature's medallion: received on
+    // the left (flowing to you), sent on the right. Under the back button,
+    // level with the medallion's lower half.
+    component Rate: StyledText {
+        property real rate
+        y: card.topPad - height - 2
+        width: card.width / 2 - card.scene.medallion / 2 - 22
+        height: 22
+        verticalAlignment: Text.AlignVCenter
+        font.pixelSize: 15
+        font.weight: Font.Bold
+        font.family: Theme.monoFontFamily
+        // A narrow card shrinks the figure rather than cutting it
+        fontSizeMode: Text.HorizontalFit
+        minimumPixelSize: 10
+        wrapMode: Text.NoWrap
+        color: card.ink
+        opacity: 0.4 + 0.6 * card.swap
+    }
+    Rate {
+        x: 12
+        horizontalAlignment: Text.AlignRight
+        text: "↓ " + Mesh.fmtRate(card.live ? card.peer.down : 0)
+    }
+    Rate {
+        x: card.width - width - 12
+        horizontalAlignment: Text.AlignLeft
+        text: "↑ " + Mesh.fmtRate(card.live ? card.peer.up : 0)
     }
 
     // Who it is, fixed under its creature; the peer before fades out in the
@@ -223,39 +254,6 @@ Item {
             width: parent.width
             spacing: 9
 
-            Row {
-                width: parent.width
-                spacing: 8
-                Repeater {
-                    model: [["Received", card.peer.down], ["Sent", card.peer.up]]
-                    Rectangle {
-                        required property var modelData
-                        width: (col.width - 8) / 2
-                        height: 46
-                        radius: 10
-                        color: Qt.rgba(card.ink.r, card.ink.g, card.ink.b, 0.06)
-                        Column {
-                            anchors.left: parent.left
-                            anchors.leftMargin: 10
-                            anchors.verticalCenter: parent.verticalCenter
-                            StyledText {
-                                text: modelData[0]
-                                font.pixelSize: 10
-                                color: card.scene.inkDim
-                            }
-                            StyledText {
-                                text: (modelData[0] === "Received" ? "↓ " : "↑ ") + Mesh.fmtRate(card.live ? modelData[1] : 0)
-                                font.pixelSize: 15
-                                font.weight: Font.Bold
-                                font.family: Theme.monoFontFamily
-                                color: card.ink
-                                wrapMode: Text.NoWrap
-                            }
-                        }
-                    }
-                }
-            }
-
             Sparkline {
                 width: parent.width
                 height: 40
@@ -264,14 +262,21 @@ Item {
                 ink: card.ink
             }
 
-            CopyRow {
-                value: card.peer.ip
-                what: "IP of " + card.peer.name
-            }
-            CopyRow {
-                visible: card.peer.fqdn !== ""
-                value: card.peer.fqdn
-                what: "Name of " + card.peer.name
+            // Address on the left, name on the right: one line, one copy each
+            Row {
+                width: parent.width
+                spacing: 8
+                CopyRow {
+                    width: card.peer.fqdn !== "" ? (col.width - 8) * 0.42 : col.width
+                    value: card.peer.ip
+                    what: "IP of " + card.peer.name
+                }
+                CopyRow {
+                    visible: card.peer.fqdn !== ""
+                    width: (col.width - 8) * 0.58
+                    value: card.peer.fqdn
+                    what: "Name of " + card.peer.name
+                }
             }
 
             Flow {

@@ -145,6 +145,11 @@ Window {
         part: "front"; b: win.bowl; opacity: 1 - 0.8 * scene.cardMix
         ink: scene.ink; shallow: scene.shallow; abyss: scene.abyss; tints: scene.reefTints
     }
+    Item {
+        visible: win.desk
+        x: 50; y: 30; width: win.width - 100; height: win.height - 60
+        GlassEngraving { b: win.bowl; scene: scene }
+    }
 
     // After the first reads: aim the lens at a peer, or rest it on a group
     // until its bubble opens by itself, then on one of its members

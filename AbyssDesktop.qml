@@ -107,4 +107,11 @@ DesktopPluginComponent {
         abyss: scene.abyss
         tints: scene.reefTints
     }
+
+    // Who is online and the live totals, scratched into the glass in front
+    // of the sand: the bowl has no bar over the water
+    GlassEngraving {
+        b: root.bowl
+        scene: scene
+    }
 }
