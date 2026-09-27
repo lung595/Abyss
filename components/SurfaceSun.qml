@@ -68,7 +68,8 @@ Item {
         hoverEnabled: true
         cursorShape: drag.active ? Qt.ClosedHandCursor : Qt.OpenHandCursor
         drag.target: sun
-        drag.threshold: 3
+        // Heavy to lift: a brush or a click never carries it away
+        drag.threshold: 16
         onPositionChanged: {
             if (drag.active)
                 sun.scene.dragOver(sun.x + sun.width / 2, sun.y + sun.height / 2);
