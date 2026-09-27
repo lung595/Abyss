@@ -65,27 +65,8 @@ Item {
         strength: 0.2
         opacity: gp._g
     }
-    // Its rim: a soft band and a fine line, the medallion's own
-    Rectangle {
-        width: gp.homeR * 2 + 6
-        height: width
-        radius: width / 2
-        x: gp.cx - width / 2
-        y: gp.cy - height / 2
-        color: "transparent"
-        border.width: 4
-        border.color: Qt.rgba(gp.tint.r, gp.tint.g, gp.tint.b, 0.07 * gp._g)
-    }
-    Rectangle {
-        width: gp.homeR * 2
-        height: width
-        radius: width / 2
-        x: gp.cx - width / 2
-        y: gp.cy - height / 2
-        color: "transparent"
-        border.width: 1.2
-        border.color: Qt.rgba(gp.tint.r, gp.tint.g, gp.tint.b, 0.24 + 0.22 * gp._g)
-    }
+    // No drawn rim: the scene bends the water round the pool instead
+    // (AbyssScene, poolRing)
 
     // Where a member's creature is drawn, in scene coordinates (the card's
     // flight leaves from here)
