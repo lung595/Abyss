@@ -3,8 +3,10 @@ import qs.Common
 import qs.Widgets
 
 // Internet, as the light at the surface. Drag it onto a peer: all your
-// Internet traffic then goes out through that peer (its exit node). Drag it
-// back to the surface, or anywhere empty, to stop.
+// Internet traffic then goes out through that peer (its exit node). Rest it
+// on a shoal and the group opens (scene.dragOver); leave it on a member, or
+// in the middle of a group of yours for the whole group. Drag it back to the
+// surface, or anywhere empty, to stop.
 Item {
     id: sun
 
@@ -53,7 +55,7 @@ Item {
         anchors.top: parent.bottom
         anchors.horizontalCenter: parent.horizontalCenter
         visible: sun.dragging
-        text: sun.scene.dropName ? "Internet through " + sun.scene.dropName : "Drop on a peer"
+        text: sun.scene.dropHint
         wrapMode: Text.NoWrap
         font.pixelSize: 11
         font.weight: Font.Bold

@@ -85,4 +85,18 @@ ok("approximate name: hrbr finds harbor-vps", hrbr.name && hrbr.test({ name: "ha
 const slow = Q.parse("slow")[0];
 ok("slow = online and > 100 ms", slow.test({ online: true, latencyMs: 140 }) && !slow.test({ online: false, latencyMs: 0 }));
 
+// The user's own groups: first, whole, and the count still holds
+{
+    const peers = mesh(30), mine = [{ id: "u1", name: "Home", members: ["k0", "k1", "k6", "k2"] }];
+    const r = G.arrange(peers, 5, { mine: mine });
+    const home = r.items[0];
+    ok("my group comes first", home.id === "g:u:u1" && home.label === "Home" && home.mine === "u1");
+    eq("only its online members gather there (k6 sleeps)", home.members.join(","), "k0,k1,k2");
+    ok("still never more than max", r.items.length <= 5);
+    const count = r.items.reduce((a, it) => a + (it.type === "group" ? it.members.length : 1), 0);
+    eq("every peer is shown once", count, 30);
+    ok("a small mesh keeps my group too", G.arrange(mesh(4), 8, { mine: [{ id: "u2", name: "Pair", members: ["k0", "k1"] }] }).items[0].id === "g:u:u2");
+    ok("a group with nobody online is not drawn", G.arrange(peers, 5, { mine: [{ id: "u3", name: "Gone", members: ["k6"] }] }).items.every(i => i.id !== "g:u:u3"));
+}
+
 done("groups + query");

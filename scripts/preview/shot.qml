@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Window
 import qs.Common
+import qs.Services
 import "../../components"
 import "../../components/Bowl.js" as Bowl
 
@@ -11,7 +12,7 @@ import "../../components/Bowl.js" as Bowl
 // opening / closing, as frames out-0.png ... out-11.png), step (the open card
 // stepping to the next peer, same frames, 35 ms apart), zoom (the camera
 // gliding to a group and back, frames), desk (the frameless desktop view on a
-// made-up wallpaper; desk-hover with the pointer over it, desk-sleep awake then left just before the shot, desk-zoom a group opening in the bowl); life / life-peek (frames of the deep, or an open group, left alone); a "-light" suffix uses a light theme's accents, "-cc" the Control Center size.
+// made-up wallpaper; desk-hover with the pointer over it, desk-sleep awake then left just before the shot, desk-zoom a group opening in the bowl); life / life-peek (frames of the deep, or an open group, left alone); mine, menu, menu-name, carry, carry-crowd, carry-mid (groups of mine, the Internet light carried into a group, left on a member or in the middle); a "-light" suffix uses a light theme's accents, "-cc" the Control Center size.
 Window {
     id: win
     readonly property var args: Qt.application.arguments
@@ -64,6 +65,12 @@ Window {
             scene.cardId = "demo-harbor-vps";
         if (mode === "zoom" || mode === "desk-zoom") {
             cam.start();
+            return;
+        }
+        if (["mine", "menu", "menu-name", "carry", "carry-crowd", "carry-mid"].indexOf(mode) >= 0) {
+            if (mode === "carry-crowd")
+                demo.setProfile("crowd");
+            mine.start();
             return;
         }
         if (mode === "life" || mode === "life-peek") {
@@ -223,6 +230,72 @@ Window {
             const path = win.out.replace(/\.png$/, "-" + n + ".png");
             win.contentItem.grabToImage(r => r.saveToFile(path));
         }
+    }
+
+    // Groups of mine (right-click menu) and the Internet light carried into
+    // a group. mine: a group of mine carrying the exit; menu: the menu on a
+    // peer; menu-name: naming a new group; carry / carry-crowd: the light
+    // rests on a shoal, the group opens, the light is left on a member.
+    // What happened is printed ("carry: …"), then the last state is shot.
+    Timer {
+        id: mine
+        property int step: 0
+        interval: 1600
+        repeat: true
+        onTriggered: {
+            const live = demo.view.peers.filter(p => p.online);
+            if (win.mode === "mine") {
+                const ids = live.slice(1, 4).map(p => p.id);
+                SettingsData.pluginSettings = Object.assign({}, SettingsData.pluginSettings, { "groups": [{ "id": "u1", "name": "Homelab", "members": ids }], "exitGroup": "u1" });
+                PluginService.pluginDataChanged("abyss");
+                demo.setExitNode(live[2].name);
+                win.grabLater();
+                stop();
+            } else if (win.mode === "menu" || win.mode === "menu-name") {
+                const it = scene.arr.items.find(i => i.type === "peer");
+                const at = scene.spotOf(it.id);
+                scene.openMenu(it.id, Qt.point(at.x + 10, at.y));
+                if (win.mode === "menu-name")
+                    scene.doMenu(scene.menuActions(it.id, scene.prefs.groups).find(a => a.act === "create"));
+                console.log("menu: " + scene.menuActions(it.id, scene.prefs.groups).map(a => a.text).join(" | ") + " · groups " + JSON.stringify(scene.prefs.groups));
+                win.grabLater();
+                stop();
+            } else {
+                const g = scene.arr.items.find(i => i.type === "group" && !i.asleep && !i.fog);
+                if (step === 0) {
+                    const at = scene.spotOf(g.id);
+                    scene.dragOver(at.x, at.y);
+                    console.log("carry: over " + g.label + " -> " + scene.dropHint);
+                    interval = win.mode === "carry-mid" ? 1500 : 700;
+                } else if (step === 1 && win.mode === "carry-mid") {
+                    console.log("carry: group open " + (scene.peekId === g.id));
+                    const c = scene.peekCentre;
+                    scene.dragOver(c.x, c.y);
+                    console.log("carry: in the middle -> " + scene.dropHint);
+                    scene.dropSun(c.x, c.y);
+                    console.log("carry: exit " + demo.exitNode + " · group " + scene.prefs.exitGroup + " · open " + scene.peekId + " · groups " + JSON.stringify(scene.prefs.groups));
+                    scene.pinnedPointer = Qt.point(c.x + 40, c.y + 60);
+                    win.grabLater();
+                    stop();
+                } else if (step === 1) {
+                    console.log("carry: group open " + (scene.peekId === g.id));
+                    const id = scene.peekMembers.find(m => scene.peerById[m].online);
+                    const q = scene.peerPose(id);
+                    scene.dragOver(q.x, q.y);
+                    console.log("carry: on a member -> " + scene.dropHint + " (focus " + scene.focusId + ")");
+                    scene.dropSun(q.x, q.y);
+                    console.log("carry: exit is now " + demo.exitNode + ", expected " + scene.peerById[id].name);
+                    scene.pinnedPointer = scene.peekCentre;
+                    win.grabLater();
+                    stop();
+                }
+                step++;
+            }
+        }
+    }
+    function grabLater() {
+        shot.interval = 900;
+        shot.start();
     }
 
     // Life at rest, frame by frame: the deep (or an open group) left alone,

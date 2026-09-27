@@ -34,6 +34,27 @@ PluginSettings {
         maximum: 10
     }
 
+    SelectionSetting {
+        settingKey: "groupOpen"
+        label: "Open groups"
+        description: "Carrying the Internet light, resting on a group always opens it"
+        options: [
+            {
+                "label": "On hover and click",
+                "value": "both"
+            },
+            {
+                "label": "On hover",
+                "value": "hover"
+            },
+            {
+                "label": "On click",
+                "value": "click"
+            }
+        ]
+        defaultValue: "both"
+    }
+
     ToggleSetting {
         settingKey: "showOffline"
         label: "Show offline peers"
