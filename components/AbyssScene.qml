@@ -2075,6 +2075,7 @@ Item {
         }
         GroupPeek {
             id: groupPeek
+            objectName: "groupPeek"
             z: 20
             scene: root
             open: root.peekId !== ""
@@ -2092,12 +2093,15 @@ Item {
             id: surfaceSun
             objectName: "surfaceSun"
             reduceMotion: root.reduceMotion
-            visible: root.connected && !!root.source && (dragging || root.cardId === "" && (root.peekId === "" || groupPeek.lit))
+            // In an open group that lends through one member only, the light
+            // rests above that member: seen, and taken up again from there
+            readonly property bool onMember: root.peekId !== "" && !groupPeek.lit && !!root.exitPeer && root.peekMembers.indexOf(root.exitPeer.id) >= 0
+            visible: root.connected && !!root.source && (dragging || root.cardId === "" && (root.peekId === "" || groupPeek.lit || onMember))
             z: 22
             scene: root
             // In the open group it carries: in the middle, tied to its members
-            home: groupPeek.lit ? Qt.point(groupPeek.cx, groupPeek.cy) : root.exitPeer ? Qt.point(root.anchorOfPeer(root.exitPeer.id).x, root.frame.surfaceY) : Qt.point(root.width - root.insetTop - 58, root.frame.surfaceY)
-            label: groupPeek.lit ? "" : root.exitMine && root.exitPeer ? "Internet via " + root.exitMine.name + " · " + root.exitPeer.name : root.exitPeer ? "Internet via " + root.exitPeer.name : "Internet"
+            home: groupPeek.lit ? Qt.point(groupPeek.cx, groupPeek.cy) : onMember ? Qt.point(groupPeek.memberPose(root.exitPeer.id).x, groupPeek.memberPose(root.exitPeer.id).y - 46) : root.exitPeer ? Qt.point(root.anchorOfPeer(root.exitPeer.id).x, root.frame.surfaceY) : Qt.point(root.width - root.insetTop - 58, root.frame.surfaceY)
+            label: groupPeek.lit || onMember ? "" : root.exitMine && root.exitPeer ? "Internet via " + root.exitMine.name + " · " + root.exitPeer.name : root.exitPeer ? "Internet via " + root.exitPeer.name : "Internet"
             onDropped: (px, py) => root.dropSun(px, py)
         }
         // The open group's name (click to rename) and its settings, at the top

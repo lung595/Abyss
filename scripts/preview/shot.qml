@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Window
+import QtTest
 import qs.Common
 import qs.Services
 import "../../components"
@@ -13,7 +14,7 @@ import "../../components/MyGroups.js" as MyGroups
 // opening / closing, as frames out-0.png ... out-11.png), step (the open card
 // stepping to the next peer, same frames, 35 ms apart), zoom (the camera
 // gliding to a group and back, frames), desk (the frameless desktop view on a
-// made-up wallpaper; desk-hover with the pointer over it, desk-sleep awake then left just before the shot, desk-zoom a group opening in the bowl); life / life-peek (frames of the deep, or an open group, left alone); mine, menu, menu-name, carry, carry-crowd, carry-mid, carry-aim, carry-pulse, carry-fade, sun-menu, sun-glide, carry-reopen (groups of mine, the Internet light carried into a group, left on a member or in the middle; held over the middle; just dropped there); a "-light" suffix uses a light theme's accents, "-cc" the Control Center size.
+// made-up wallpaper; desk-hover with the pointer over it, desk-sleep awake then left just before the shot, desk-zoom a group opening in the bowl); life / life-peek (frames of the deep, or an open group, left alone); mine, menu, menu-name, carry, carry-crowd, carry-mid, carry-aim, carry-pulse, carry-fade, sun-menu, sun-glide, carry-reopen, sun-regive (groups of mine, the Internet light carried into a group, left on a member or in the middle; held over the middle; just dropped there); a "-light" suffix uses a light theme's accents, "-cc" the Control Center size.
 Window {
     id: win
     readonly property var args: Qt.application.arguments
@@ -30,6 +31,22 @@ Window {
 
     DemoSource {
         id: demo
+    }
+    // sun-regive: a real mouse (press, move, release) on the window
+    TestCase {
+        id: mouse
+        when: false
+        optional: true
+    }
+    QtObject {
+        id: regive
+        property string target
+    }
+    function find(o, name) {
+        return o.objectName === name ? o : (o.children || []).reduce((f, c) => f || find(c, name), null);
+    }
+    function groupPeek() {
+        return find(scene, "groupPeek");
     }
     // sun-glide: where the light is, every 100 ms of its trip
     Timer {
@@ -90,7 +107,7 @@ Window {
             cam.start();
             return;
         }
-        if (["mine", "menu", "menu-name", "carry", "carry-crowd", "carry-mid", "carry-aim", "carry-pulse", "carry-fade", "sun-menu", "sun-glide", "carry-reopen"].indexOf(mode) >= 0) {
+        if (["mine", "menu", "menu-name", "carry", "carry-crowd", "carry-mid", "carry-aim", "carry-pulse", "carry-fade", "sun-menu", "sun-glide", "carry-reopen", "sun-regive"].indexOf(mode) >= 0) {
             if (mode === "carry-crowd")
                 demo.setProfile("crowd");
             mine.start();
@@ -349,7 +366,7 @@ Window {
                     const at = scene.spotOf(g.id);
                     scene.dragOver(at.x, at.y);
                     console.log("carry: over " + g.label + " -> " + scene.dropHint);
-                    interval = win.mode.indexOf("carry-") === 0 && win.mode !== "carry-crowd" ? 1500 : 700;
+                    interval = (win.mode.indexOf("carry-") === 0 || win.mode === "sun-regive") && win.mode !== "carry-crowd" ? 1500 : 700;
                 } else if (step === 1 && win.mode === "carry-aim") {
                     // Held over the middle, not dropped: the ring and the faint tentacles
                     const c = scene.peekCentre;
@@ -368,6 +385,46 @@ Window {
                     shot.interval = 300;
                     shot.start();
                     stop();
+                } else if (win.mode === "sun-regive") {
+                    // Left in the middle of a group, then taken up again with
+                    // a real mouse and dropped on one member of it
+                    const c = scene.peekCentre;
+                    if (step === 1) {
+                        scene.dragOver(c.x, c.y);
+                        scene.dropSun(c.x, c.y);
+                        scene.pinnedPointer = Qt.point(c.x, c.y);
+                        console.log("regive: whole group " + scene.prefs.exitGroup + " via " + demo.exitNode + ", lit " + groupPeek().lit);
+                        interval = 900;
+                    } else if (step === 2) {
+                        const sun = find(scene, "surfaceSun");
+                        const at = sun.mapToItem(win.contentItem, sun.width / 2, sun.height / 2);
+                        const id = scene.peekMembers.find(m => scene.peerById[m].online && scene.peerById[m].exit && scene.peerById[m].name !== demo.exitNode);
+                        const q = scene.mapToItem(win.contentItem, scene.peerPose(id).x, scene.peerPose(id).y);
+                        regive.target = scene.peerById[id].name;
+                        console.log("regive: sun at " + Math.round(at.x) + "," + Math.round(at.y) + " visible " + sun.visible + "; member " + regive.target + " at " + Math.round(q.x) + "," + Math.round(q.y));
+                        mouse.mousePress(win.contentItem, at.x, at.y);
+                        for (let i = 1; i <= 12; i++)
+                            mouse.mouseMove(win.contentItem, at.x + (q.x - at.x) * i / 12, at.y + (q.y - at.y) * i / 12, 20);
+                        console.log("regive: carrying " + scene._carrying + " hint '" + scene.dropHint + "' peek " + scene.peekId);
+                        mouse.mouseRelease(win.contentItem, q.x, q.y);
+                        console.log("regive: after the drop exit " + demo.exitNode + " (wanted " + regive.target + ") group '" + scene.prefs.exitGroup + "' peek " + scene.peekId);
+                        interval = 900;
+                    } else if (step === 3 && win.args.indexOf("back") >= 0) {
+                        // And from that member back to the middle: all of it again
+                        const sun = find(scene, "surfaceSun");
+                        const at = sun.mapToItem(win.contentItem, sun.width / 2, sun.height / 2);
+                        const m = scene.mapToItem(win.contentItem, c.x, c.y);
+                        console.log("regive: sun visible " + sun.visible + " above " + regive.target + " at " + Math.round(at.x) + "," + Math.round(at.y));
+                        mouse.mousePress(win.contentItem, at.x, at.y);
+                        for (let i = 1; i <= 12; i++)
+                            mouse.mouseMove(win.contentItem, at.x + (m.x - at.x) * i / 12, at.y + (m.y - at.y) * i / 12, 20);
+                        mouse.mouseRelease(win.contentItem, m.x, m.y);
+                        console.log("regive: back in the middle, group '" + scene.prefs.exitGroup + "' via " + demo.exitNode + ", lit " + groupPeek().lit);
+                        interval = 900;
+                    } else {
+                        win.grabLater();
+                        stop();
+                    }
                 } else if (win.mode === "carry-reopen") {
                     const c = scene.peekCentre;
                     if (step === 1) {
@@ -405,7 +462,7 @@ Window {
                     stop();
                 } else if (step === 1) {
                     console.log("carry: group open " + (scene.peekId === g.id));
-                    const id = scene.peekMembers.find(m => scene.peerById[m].online);
+                    const id = scene.peekMembers.find(m => scene.peerById[m].online && scene.peerById[m].exit);
                     const q = scene.peerPose(id);
                     scene.dragOver(q.x, q.y);
                     console.log("carry: on a member -> " + scene.dropHint + " (focus " + scene.focusId + ")");
