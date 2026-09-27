@@ -108,6 +108,7 @@ scripts/preview/render.sh connected "$PWD/out.png"   # offscreen renders from th
 - **Card**: received and sent now sit either side of the creature's medallion, on small cards in their own colours (received in the peer's colour, sent in yours, as the curve below), and the address and the name share one line, each with its copy button.
 - **The light that lends Internet**: a soft beam now falls from it onto the peer (it was a hard rectangle). The light holds still while you look around the deep, follows that peer when you drag it, and takes a deliberate pull to lift, so a click or a brush no longer carries it away.
 - **TOP CONSUMER** is told by its caption alone; its label no longer changes colour.
+- **Fixed**: a group could close again at once when reopened (the camera carries it to the middle, away from the pointer, which then counted as having left); leaving now only counts once the pointer has been inside, or has clearly moved on.
 - **Fixed**: a click, or resting the pointer, opened a creature or a group a hand-width away; it now takes the pointer being on it (the lens still aims from afar).
 
 ### 0.2.0 — 2026-09-27

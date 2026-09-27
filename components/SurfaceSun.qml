@@ -76,6 +76,7 @@ Item {
         id: area
         anchors.fill: parent
         hoverEnabled: true
+        onContainsMouseChanged: sun.scene.sunHovered = containsMouse
         cursorShape: drag.active ? Qt.ClosedHandCursor : Qt.OpenHandCursor
         drag.target: cancelled ? null : sun
         // Heavy to lift: a brush or a click never carries it away

@@ -381,7 +381,7 @@ Item {
             aimedId = "";
             dwell.stop();
             // While the light is carried, dragOver alone says when it leaves
-            if (peekId !== "" && cardId === "" && pinnedPointer.x < 0 && !_carrying)
+            if (peekId !== "" && cardId === "" && pinnedPointer.x < 0 && !_carrying && !sunHovered)
                 peekLeave.start();
         }
         const swinging = _stepPoses(homes, dt);
@@ -634,6 +634,10 @@ Item {
     property point _dwellAt: Qt.point(0, 0)
     // Closed with Esc or a click outside: not again until the pointer leaves it
     property string _peekBlock: ""
+    property bool _peekInside: false
+    property point _peekOpenAt: Qt.point(0, 0)
+    // The pointer is on the Internet light (its own hover takes it from the scene)
+    property bool sunHovered: false
 
     function openPeek(id) {
         const it = itemById[id];
@@ -648,6 +652,10 @@ Item {
         dwell.stop();
         peekLeave.stop();
         _poolEntered = false;
+        // The camera carries the group away from the pointer: leaving only
+        // counts once the pointer has been inside, or has clearly moved on
+        _peekInside = false;
+        _peekOpenAt = Qt.point(-1, -1);
         focusId = "";
         peekId = id;
         cardId = "";
@@ -673,7 +681,12 @@ Item {
             return;
         if (peekId !== "") {
             const out = Math.hypot(at.x - peekCentre.x, at.y - peekCentre.y) > peekR + 24;
-            if (out && cardId === "") {
+            if (_peekOpenAt.x < 0)
+                _peekOpenAt = Qt.point(at.x, at.y);
+            if (!out)
+                _peekInside = true;
+            const left = out && (_peekInside || Math.hypot(at.x - _peekOpenAt.x, at.y - _peekOpenAt.y) > 40);
+            if (left && cardId === "") {
                 if (!peekLeave.running)
                     peekLeave.start();
             } else {
