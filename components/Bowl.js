@@ -51,7 +51,20 @@ function build(w, h, top) {
     // (Layout.frame puts the floor max(34, 9 %) above its bottom)
     const y = b.surfaceY - top, room = b.gravelY + 8 - y;
     const sh = Math.max(room + 34, room / 0.91);
-    const half = Math.min(halfAt(b, y + sh), b.surface.rx) * 0.96;
-    b.scene = { "x": b.cx - half, "y": y, "w": 2 * half, "h": sh };
+    // As wide as the bowl's belly, where the fan of peers spreads (the bowl
+    // is round: much wider there than at the surface or on the gravel).
+    // What sits at the surface (the top bar, the sun) or on the gravel (caves,
+    // sleepers) keeps an inset, so it stays behind the glass too. The scene's
+    // corners fall outside the glass: nothing is drawn there, and the scene
+    // does not clip in the bowl.
+    const half = b.rx * 0.95;
+    b.scene = {
+        "x": b.cx - half,
+        "y": y,
+        "w": 2 * half,
+        "h": sh,
+        "insetTop": half - b.surface.rx * 0.97,
+        "insetFloor": half - halfAt(b, b.gravelY + 16) * 0.97
+    };
     return b;
 }

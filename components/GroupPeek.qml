@@ -4,7 +4,8 @@ import qs.Widgets
 import "Mesh.js" as Mesh
 
 // An open group: its members spread out large over the blurred deep, on
-// rings with the busiest at the top; no frame, just the zoom. The camera
+// rings with the busiest at the top, inside their shoal's ring grown into a
+// lit pool (their home). The camera
 // glides to it and it blooms out of the shoal into the middle, and folds
 // back into it (brief transitions, instant with Reduce motion). The pointer's lamp and lens work here as in the deep; a
 // click opens a member's card, a click near them opens the one the lens is on.
@@ -45,6 +46,46 @@ Item {
     }, 0) : 0
 
     visible: grow > 0.01
+
+    // Their home: the shoal's ring (School.qml, 22 px) grows with the zoom
+    // into a pool round the members, so you are inside the circle you
+    // clicked; the deep outside it is darkened by the scene (see its vignette)
+    readonly property real homeR: 22 + (radius + 34 - 22) * _g
+    readonly property real _fullR: radius + 34
+
+    // The pool's water, lit in the group's colour: painted once at full
+    // size, then only scaled (no repaint while the camera moves)
+    Halo {
+        width: gp._fullR * 2.3
+        height: width
+        x: gp.cx - width / 2
+        y: gp.cy - height / 2
+        scale: gp.homeR / gp._fullR
+        color: gp.tint
+        strength: 0.2
+        opacity: gp._g
+    }
+    // Its rim: a soft band and a fine line, the medallion's own
+    Rectangle {
+        width: gp.homeR * 2 + 6
+        height: width
+        radius: width / 2
+        x: gp.cx - width / 2
+        y: gp.cy - height / 2
+        color: "transparent"
+        border.width: 4
+        border.color: Qt.rgba(gp.tint.r, gp.tint.g, gp.tint.b, 0.07 * gp._g)
+    }
+    Rectangle {
+        width: gp.homeR * 2
+        height: width
+        radius: width / 2
+        x: gp.cx - width / 2
+        y: gp.cy - height / 2
+        color: "transparent"
+        border.width: 1.2
+        border.color: Qt.rgba(gp.tint.r, gp.tint.g, gp.tint.b, 0.24 + 0.22 * gp._g)
+    }
 
     // Where a member's creature is drawn, in scene coordinates (the card's
     // flight leaves from here)

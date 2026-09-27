@@ -11,7 +11,7 @@ import "../../components/Bowl.js" as Bowl
 // opening / closing, as frames out-0.png ... out-11.png), step (the open card
 // stepping to the next peer, same frames, 35 ms apart), zoom (the camera
 // gliding to a group and back, frames), desk (the frameless desktop view on a
-// made-up wallpaper; desk-hover with the pointer over it); a "-light" suffix uses a light theme's accents, "-cc" the Control Center size.
+// made-up wallpaper; desk-hover with the pointer over it, desk-sleep awake then left just before the shot, desk-zoom a group opening in the bowl); a "-light" suffix uses a light theme's accents, "-cc" the Control Center size.
 Window {
     id: win
     readonly property var args: Qt.application.arguments
@@ -74,6 +74,15 @@ Window {
         shot.start();
     }
 
+    // desk-sleep: awake while the demo reshuffles, then the pointer leaves
+    // just before the shot (nothing may stay frozen half-way)
+    property bool dozed: false
+    Timer {
+        running: win.mode === "desk-sleep"
+        interval: 1300
+        onTriggered: win.dozed = true
+    }
+
     // A made-up wallpaper (soft colour blobs) behind the desktop view
     Rectangle {
         anchors.fill: parent
@@ -97,6 +106,12 @@ Window {
         part: "back"; b: win.bowl
         ink: scene.ink; shallow: scene.shallow; abyss: scene.abyss; tints: scene.reefTints
     }
+    FishBowl {
+        visible: win.desk && opacity > 0.01
+        x: 50; y: 30; width: win.width - 100; height: win.height - 60
+        part: "shade"; b: win.bowl; abyss: scene.abyss
+        opacity: 0.85 * scene.blurMix
+    }
     AbyssScene {
         id: scene
         x: win.desk ? 50 + win.bowl.scene.x : 0
@@ -104,7 +119,11 @@ Window {
         width: win.desk ? win.bowl.scene.w : win.width
         height: win.desk ? win.bowl.scene.h : win.height
         borderless: win.desk
-        interacting: win.mode !== "desk"
+        insetTop: win.desk ? win.bowl.scene.insetTop : 0
+        insetFloor: win.desk ? win.bowl.scene.insetFloor : 0
+        // Like the real widget: still while nobody hovers it
+        freezeWhenIdle: win.desk
+        interacting: win.mode !== "desk" && !win.dozed
         source: demo
         compact: win.cc
         cornerRadius: 16

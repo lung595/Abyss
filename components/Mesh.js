@@ -168,6 +168,10 @@ function follow(p, b, dt, live) {
 
 // Below this a peer is idle, not "the top consumer"
 const TOP_MIN_BPS = 50000;
+// The crown only changes hands when a rival clearly outpaces the holder,
+// otherwise two peers with close traffic swap it every read (the label
+// flickered between the tint and the plain look)
+const TOP_KEEP = 1.3;
 // A WireGuard handshake happens every 2 minutes on a live tunnel
 const SILENT_MS = 5 * 60000;
 
@@ -193,6 +197,10 @@ function parse(daemonStatus, json, prev, now) {
                 top = p;
         }
     });
+    const held = prev && prev.topId ? list.find(p => p.id === prev.topId) : null;
+    if (top && held && held !== top && held.online && held.down + held.up >= TOP_MIN_BPS
+            && top.down + top.up < (held.down + held.up) * TOP_KEEP)
+        top = held;
     const relays = ((s.relays || {}).details || []).map(r => ({
         "name": relayName(r.uri),
         "available": r.available !== false

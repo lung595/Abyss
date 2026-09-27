@@ -72,6 +72,25 @@ eq("an idle mesh soon has no top consumer", idle.topId, "");
 const back = M.parse("Connected", json(1000 + 125000 + 250000), v2, t0 + 60000);
 const quick = M.parse("Connected", json(1000 + 125000 + 500000), back, t0 + 60005);
 eq("no rate after a pause or a few ms apart", [back.down, quick.down], [v2.down, v2.down]);
+// Two peers with close traffic: the crown stays put instead of flickering
+const duo = (a, b) => ({ peers: { details: [
+    peer("a", "Connected", "P2P", 4, a, 0), peer("b", "Connected", "P2P", 5, b, 0)] } });
+let crown = M.parse("Connected", duo(0, 0), null, t0);
+crown = M.parse("Connected", duo(200000, 190000), crown, t0 + 1000);
+const holder = crown.topId;
+let swaps = 0;
+for (let i = 2; i <= 12; i++) {
+    const a = 200000 * i + (i % 2 ? 30000 : 0), b = 190000 * i + (i % 2 ? 0 : 60000);
+    const next = M.parse("Connected", duo(a, b), crown, t0 + i * 1000);
+    if (next.topId !== crown.topId) swaps++;
+    crown = next;
+}
+eq("close traffic keeps the same top consumer", [holder, swaps], ["k-a", 0]);
+// A clear rival takes it over
+let rival = crown;
+for (let i = 13; i <= 20; i++)
+    rival = M.parse("Connected", duo(200000 * 12 + 30000, 190000 * 12 + 60000 + 900000 * (i - 12)), rival, t0 + i * 1000);
+eq("a clearly busier peer takes the crown", rival.topId, "k-b");
 ok("the arrangement's traffic moves slowly", v3.peers[1].calm > 0.9e6);
 // Latency jitter: the steady value holds, a real change is followed
 const lat = (ms) => ({ peers: { details: [peer("j", "Connected", "P2P", ms, 0, 0)] } });

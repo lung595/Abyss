@@ -113,9 +113,11 @@ Canvas {
                 d === 90 + Lay.HALF_SPAN + 8 ? ctx.moveTo(q.x, q.y) : ctx.lineTo(q.x, q.y);
             }
             ctx.stroke();
+            // Past the arc's end, beyond the creatures; the rings are close
+            // at the sides, so their labels step down one under the other
             const end = Lay.fanPoint(f, 90 - Lay.HALF_SPAN - 8, rho);
             ctx.fillStyle = _rgba(ink, 0.3);
-            ctx.fillText(labels[k], Math.min(w - 44, end.x + 6), end.y + 3);
+            ctx.fillText(labels[k], Math.min(w - 44, end.x + 6), end.y + 3 + (k - 1) * 10);
         });
     }
 }
