@@ -226,6 +226,8 @@ Item {
     // (breathing, bobbing, a shoal turning), and simply stops otherwise
     property real swim: 0
     readonly property bool floating: awake && !reduceMotion && peekId === ""
+    // Inside a group only its members live: the deep behind is a still picture
+    readonly property bool peekLive: awake && !reduceMotion && peekId !== ""
     function wakeAt(x, y) {
         const j = frame.jelly, d = Math.min(1, Math.hypot(x - j.x, y - j.y) / Math.max(200, height * 0.9));
         return Math.max(0, Math.min(1, power * 1.8 - d * 0.8));
@@ -828,7 +830,7 @@ Item {
         // 60 Hz while the lens or a grabbed item follows the hand, 30 Hz for the flow alone
         interval: root._lensMoving || root._springing || root._swimming ? 16 : 33
         repeat: true
-        running: root.awake && (root.flowing || root.floating || root._lensMoving || root._springing || root._swimming || Math.abs(root.ext - (root.connected ? 1 : 0)) > 0.001 || Math.abs(root.power - (root.connected ? 1 : 0)) > 0.001)
+        running: root.awake && (root.flowing || root.floating || root.peekLive || root._lensMoving || root._springing || root._swimming || Math.abs(root.ext - (root.connected ? 1 : 0)) > 0.001 || Math.abs(root.power - (root.connected ? 1 : 0)) > 0.001)
         onRunningChanged: {
             root._last = Date.now();
             if (!running)
@@ -858,7 +860,7 @@ Item {
         if (power !== target)
             power = reduceMotion ? target : target > power ? Math.min(1, power + dt / 1.8) : Math.max(0, power - dt / 1.3);
         // Floating: slower asleep, so the deep seems to sleep
-        if (floating)
+        if (floating || peekLive)
             swim += dt * (0.35 + 0.65 * power);
         // Grabbed things first, then the lens; tentacles rebuilt once (not
         // while a bubble hides the deep)

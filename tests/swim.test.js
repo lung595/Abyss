@@ -47,4 +47,40 @@ ok("the side picks the bend", up.y * down.y < 0);
 const rise = S.plan([0, 200], [300, 0], "laptop", 0, 1, 1);
 ok("rising, the nose tilts up", S.at(rise, rise.dur / 2).a < -3);
 
+// Life at rest: bounded, smooth, calmer asleep, and a look round now and then
+const KINDS = ["laptop", "server", "vps", "nas", "phone", "pi", "desktop", "shoal"];
+KINDS.forEach(kind => {
+    const sd = S.seed("p:" + kind);
+    let worst = 0, worstA = 0, big = 0, prev = S.idle(kind, 0, sd, 1);
+    for (let s = 1 / 60; s < 60; s += 1 / 60) {
+        const q = S.idle(kind, s, sd, 1);
+        worst = Math.max(worst, Math.abs(q.dx - prev.dx), Math.abs(q.dy - prev.dy), Math.abs(q.f - prev.f) * 20);
+        worstA = Math.max(worstA, Math.abs(q.a - prev.a));
+        big = Math.max(big, Math.abs(q.dx), Math.abs(q.dy), Math.abs(q.sx - 1) * 40, Math.abs(q.sy - 1) * 40, Math.abs(q.a));
+        prev = q;
+    }
+    ok(kind + ": idles without jumps", worst < 1.5 && worstA < 1.5);
+    ok(kind + ": stays near its place (" + big.toFixed(1) + ")", big < 8);
+    ok(kind + ": moves at all", big > 1);
+});
+const calm = (w) => {
+    let m = 0;
+    for (let s = 0; s < 20; s += 0.05)
+        m = Math.max(m, Math.abs(S.idle("phone", s, 0.3, w).a));
+    return m;
+};
+ok("asleep, it moves less", calm(0) < calm(1) * 0.5);
+let flips = 0, f0 = S.idle("laptop", 0, 0.4, 1).f;
+for (let s = 0; s < 120; s += 0.1) {
+    const f = S.idle("laptop", s, 0.4, 1).f;
+    if (Math.abs(f) === 1 && f !== f0) {
+        flips++;
+        f0 = f;
+    }
+}
+ok("the fish looks round now and then (" + flips + " in 2 min)", flips >= 4 && flips <= 12);
+ok("the manta never looks round", S.idle("server", 37.3, 0.4, 1).f === 1);
+ok("neighbours move out of step", S.seed("p:a") !== S.seed("p:b"));
+ok("REST is still", S.REST.dx === 0 && S.REST.f === 1);
+
 done("swim");

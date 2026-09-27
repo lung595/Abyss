@@ -2,6 +2,7 @@ import QtQuick
 import qs.Common
 import qs.Widgets
 import "Mesh.js" as Mesh
+import "Swim.js" as Swim
 
 // One peer in the deep: its creature, its glow (traffic) and its label with
 // live rates. The item's origin is the creature's centre.
@@ -37,6 +38,9 @@ Item {
     readonly property bool live: peer.online && wake > 0.05
     readonly property real glow: scene.glowOf(peer, wake)
     // Floats while someone watches, barely asleep; an offset on a child, never animated
+    // Its own life between trips (tail, wings, a look round): Swim.idle
+    readonly property real seed: Swim.seed(itemId)
+    readonly property var life: onFloor || !scene.floating ? Swim.REST : Swim.idle(peer.kind, scene.swim, seed, wake)
     readonly property real bob: onFloor || !scene.floating ? 0 : Math.sin(scene.swim * 0.9 + phase) * (0.8 + 2.4 * wake)
 
     x: spot.x
@@ -56,7 +60,8 @@ Item {
 
         Item {
             id: body
-            y: cr.bob
+            x: cr.life.dx
+            y: cr.bob + cr.life.dy
 
             Halo {
                 width: 110
@@ -92,12 +97,13 @@ Item {
                     Scale {
                         origin.x: 48
                         origin.y: 48
-                        xScale: cr.pose.f
+                        xScale: cr.pose.f * cr.life.f * cr.life.sx
+                        yScale: cr.life.sy
                     },
                     Rotation {
                         origin.x: 48
                         origin.y: 48
-                        angle: cr.pose.a
+                        angle: cr.pose.a + cr.life.a
                     }
                 ]
             }

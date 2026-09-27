@@ -2,6 +2,7 @@ import QtQuick
 import qs.Common
 import qs.Widgets
 import "Mesh.js" as Mesh
+import "Swim.js" as Swim
 
 // An open group: its members spread out large over the blurred deep, on
 // rings with the busiest at the top, inside their shoal's ring grown into a
@@ -134,6 +135,8 @@ Item {
             readonly property real s: pose.s * (0.35 + (gp.memberScale - 0.35) * gp._g)
             // Names stay readable: all of them for a few members, else the
             // busiest three and the one the lens is on
+            // Alive while the group is open (Swim.idle), calmer when asleep
+            readonly property var life: gp.scene.peekLive && p ? Swim.idle(p.kind, gp.scene.swim, Swim.seed(modelData), live ? 1 : 0) : Swim.REST
             readonly property bool named: gp.members.length <= 8 || index < 3 || focused
             // Labels sit outward: above for the upper half, below for the lower
             readonly property bool above: spot.y < -4
@@ -157,12 +160,25 @@ Item {
                     opacity: m.glow
                 }
                 CreatureShape {
-                    x: -48
-                    y: -48
+                    x: -48 + m.life.dx
+                    y: -48 + m.life.dy
                     kind: m.p ? m.p.kind : "desktop"
                     color: m.live ? Qt.lighter(m.tint, 1.25) : gp.scene.sleepColor
                     glow: m.glow
                     asleep: !m.live
+                    transform: [
+                        Scale {
+                            origin.x: 48
+                            origin.y: 48
+                            xScale: m.life.f * m.life.sx
+                            yScale: m.life.sy
+                        },
+                        Rotation {
+                            origin.x: 48
+                            origin.y: 48
+                            angle: m.life.a
+                        }
+                    ]
                 }
             }
 

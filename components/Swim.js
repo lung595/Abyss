@@ -107,3 +107,96 @@ function at(p, t) {
     }
     return { "x": q[0], "y": q[1], "b": b, "f": f, "a": a, "done": false };
 }
+
+// --- Life at rest ----------------------------------------------------------
+// Between trips an animal should never look pinned: the fish beats its tail
+// and wanders, the manta flaps, the squid pulses and rises, the seahorse
+// sways upright, and now and then the ones that turn look the other way.
+// Driven by the scene's swim phase s (seconds, slower asleep), so it only
+// moves while someone watches and needs no clock of its own. Transforms
+// only (offset, tilt, squash, facing): the shapes are never repainted.
+
+// Nothing moves: what a still creature uses (Reduce motion, nobody watching)
+const REST = { "dx": 0, "dy": 0, "a": 0, "sx": 1, "sy": 1, "f": 1 };
+// A look round: every `every` seconds (plus up to `spread`), taking `take` seconds
+const LOOK = { "every": 11, "spread": 9, "take": 0.7 };
+
+// A stable 0..1 number per id, so neighbours never move in step
+function seed(id) {
+    let h = 2166136261;
+    const s = String(id);
+    for (let i = 0; i < s.length; i++)
+        h = Math.imul(h ^ s.charCodeAt(i), 16777619);
+    return (h >>> 0) / 4294967296;
+}
+
+function _wave(hz, s, ph) {
+    return Math.sin(2 * Math.PI * (hz * s + ph));
+}
+
+// Facing +1 or -1, flipping through 0 now and then (only for animals that turn)
+function _look(s, sd) {
+    const period = LOOK.every + LOOK.spread * sd, u = s + sd * period;
+    const k = Math.floor(u / period), inTurn = u - k * period;
+    const was = k % 2 === 0 ? 1 : -1;
+    return inTurn >= LOOK.take ? -was : -was * -Math.cos(Math.PI * inTurn / LOOK.take);
+}
+
+// Where the animal is in its idle life: dx, dy (px), a (degrees), sx, sy
+// (squash, around 1) and f (facing, -1..1). wake (0..1) calms it down asleep.
+function idle(kind, s, sd, wake) {
+    const amp = 0.35 + 0.65 * Math.max(0, Math.min(1, wake));
+    const w = (hz, ph) => _wave(hz, s, sd + (ph || 0));
+    const g = gait(kind);
+    let dx = 0, dy = 0, a = 0, sx = 0, sy = 0;
+    switch (kind) {
+    case "laptop": // fish: quick tail beat, a slow wander
+        sx = 0.05 * w(2.2);
+        sy = -0.03 * w(2.2);
+        a = 4 * w(0.23, 0.3);
+        dx = 4 * w(0.11, 0.6);
+        break;
+    case "server": // manta: slow wing flaps, lifting on each stroke
+        sy = 0.14 * w(0.55);
+        dy = -2.5 * w(0.55, 0.25);
+        a = 2.5 * w(0.09, 0.4);
+        break;
+    case "vps": // whale: a heavy roll and a breath
+        a = 4 * w(0.12);
+        dy = 3 * w(0.19, 0.2);
+        sx = 0.025 * w(0.19, 0.45);
+        break;
+    case "nas": // turtle: paddles, rocking a little
+        a = 3.5 * w(0.28);
+        sy = 0.04 * w(0.56, 0.1);
+        dx = 2.5 * w(0.09, 0.5);
+        break;
+    case "phone": // seahorse: upright sway, bobbing on its fin
+        a = 7 * w(0.3);
+        dy = 4 * w(0.5, 0.15);
+        break;
+    case "pi": { // squid: squeeze, then a jet upward, then sink back
+        const u = (s * 0.45 + sd) % 1, push = Math.pow(Math.max(0, Math.sin(2 * Math.PI * u)), 2);
+        sx = -0.08 * push;
+        sy = 0.06 * push;
+        dy = 5 * Math.cos(2 * Math.PI * u);
+        a = 3 * w(0.07, 0.3);
+        break;
+    }
+    case "desktop": // nautilus: a slow tilt, drifting in its shell
+        a = 6 * w(0.14);
+        dy = 2.5 * w(0.21, 0.35);
+        break;
+    default: // a shoal turns about a little
+        a = 3 * w(0.17);
+        dx = 3 * w(0.13, 0.4);
+    }
+    return {
+        "dx": dx * amp,
+        "dy": dy * amp,
+        "a": a * amp,
+        "sx": 1 + sx * amp,
+        "sy": 1 + sy * amp,
+        "f": g.turn ? _look(s, sd) : 1
+    };
+}
