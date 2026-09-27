@@ -4,7 +4,7 @@ Your [NetBird](https://netbird.io) mesh as a glowing deep sea, for [DankMaterial
 
 You are the giant jellyfish. Every peer is a creature floating at the depth of its latency, tied to you by a tentacle that carries its live traffic: the more it uses, the thicker and brighter the tentacle, with pulses of light running toward you (download) or toward it (upload). Who uses the most is marked at a glance, and every creature shows its ↓/↑ rate. No clicks needed to read your network.
 
-> **New in 0.2.0:** a magnetic lens, automatic groups you dive into, a sonar fan, creatures you can grab, a frosted card like Orbit, a living reef under the pointer light, and a fishbowl desktop widget. Still on a **made-up demo mesh**; reading the real NetBird daemon comes next.
+> **New in 0.3.0:** your own groups, Internet through a peer or a whole group by carrying the light of the surface (or picking it from a small tree), livelier animals, a launcher entry (Super+Space, `abyss`), a borderless fishbowl, and a guide to every option below. Anything you cannot do now says why. Still on a **made-up demo mesh**; reading the real NetBird daemon comes next.
 
 ![The deep, connected](screenshots/connected.png)
 
@@ -169,7 +169,7 @@ scripts/preview/gif.sh gif-sun "$PWD/out.gif" 80      # the README GIFs, frame b
 
 ## Changelog
 
-### Unreleased (0.3.0)
+### 0.3.0 — 2026-09-27
 
 - **Never refused in silence**: drop the light on a peer that cannot lend Internet and it bounces home, with a short note saying why and what to do, and a GitHub mark that opens the right part of this README. While you carry it, such peers step further back and the hint under the light starts with ⊘.
 - **How to use**: this README now explains every option, with pictures and GIFs.
