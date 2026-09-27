@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Effects
+import QtQuick.Shapes
 import qs.Common
 import qs.Services
 import qs.Widgets
@@ -713,6 +714,15 @@ Item {
     // The lamp fades in when the pointer comes over the deep (or an open
     // group); the blur when a group opens (brief transitions)
     property real lampMix: lensOn ? 1 : 0
+    // The disc the lamp lights, and the reef's colours (dark and lit copies)
+    readonly property real lampR: lensR * 1.25
+    readonly property color reefShadow: Qt.darker(abyss, 1.7)
+    readonly property color reefStone: mix(Theme.secondary, abyss, 0.5)
+    readonly property color reefSand: mix(Theme.secondary, ink, 0.45)
+    readonly property var reefTints: [Theme.tertiary, Theme.secondary, Theme.primary, Theme.success]
+    readonly property int reefCaves: source ? source.networks.length : 0
+    // Where the lens is across the deep (-1 left, 1 right): the reef's parallax
+    readonly property real reefDrift: width > 0 ? Math.max(-1, Math.min(1, (lensX - width / 2) / (width / 2))) : 0
     Behavior on lampMix {
         NumberAnimation {
             duration: root.reduceMotion ? 0 : 300
@@ -989,15 +999,88 @@ Item {
             Reef {
                 anchors.fill: parent
                 frame: root.frame
-                abyss: root.abyss
                 ink: root.ink
-                caves: root.source ? root.source.networks.length : 0
-            }
-            ReefFish {
-                anchors.fill: parent
-                frame: root.frame
+                shadow: root.reefShadow
+                stone: root.reefStone
+                sand: root.reefSand
+                tints: root.reefTints
+                caves: root.reefCaves
                 t: root.t
                 live: root.flowing
+                drift: root.reefDrift
+            }
+            // The lamp reveals the reef: the lit copy, seen only in a soft
+            // disc around the lens. Only that disc is redrawn as it moves.
+            Reef {
+                id: litReef
+                anchors.fill: parent
+                lit: true
+                frame: root.frame
+                ink: root.ink
+                shadow: root.reefShadow
+                stone: root.reefStone
+                sand: root.reefSand
+                tints: root.reefTints
+                caves: root.reefCaves
+                t: root.t
+                // Only moves while the lamp shows it
+                live: root.flowing && root.lampMix > 0.01
+                drift: root.reefDrift
+            }
+            ShaderEffectSource {
+                id: litSpot
+                width: root.lampR * 2
+                height: root.lampR * 2
+                visible: false
+                sourceItem: litReef
+                hideSource: true
+                live: root.lampMix > 0.01
+                sourceRect: Qt.rect(root.lensX - root.lampR, root.lensY - root.lampR, root.lampR * 2, root.lampR * 2)
+            }
+            // The disc's soft edge (a scene-graph shape: unlike a Canvas, it
+            // renders into its layer while hidden)
+            Shape {
+                id: lampMask
+                width: root.lampR * 2
+                height: root.lampR * 2
+                visible: false
+                layer.enabled: true
+                ShapePath {
+                    strokeWidth: -1
+                    fillGradient: RadialGradient {
+                        centerX: root.lampR
+                        centerY: root.lampR
+                        centerRadius: root.lampR
+                        focalX: root.lampR
+                        focalY: root.lampR
+                        GradientStop {
+                            position: 0.62
+                            color: "white"
+                        }
+                        GradientStop {
+                            position: 1
+                            color: "transparent"
+                        }
+                    }
+                    PathRectangle {
+                        width: root.lampR * 2
+                        height: root.lampR * 2
+                    }
+                }
+            }
+            MultiEffect {
+                x: root.lensX - root.lampR
+                y: root.lensY - root.lampR
+                width: root.lampR * 2
+                height: root.lampR * 2
+                opacity: root.lampMix
+                visible: opacity > 0.01
+                source: litSpot
+                autoPaddingEnabled: false
+                maskEnabled: true
+                maskSource: lampMask
+                maskThresholdMin: 0.5
+                maskSpreadAtMin: 1
             }
 
             // The lens aims for you: a click anywhere opens what it focuses
@@ -1028,36 +1111,19 @@ Item {
                 }
             }
 
-            // The pointer's lamp: the only light in the dark water besides the
-            // creatures. A wide wash scattered by the water, tinted by the
-            // theme, and a bright core where it points (both painted once, only
-            // moved; a brief fade in and out)
-            Item {
-                id: lamp
-                readonly property color light: root.mix(root.ink, Theme.primary, 0.3)
+            // The pointer's lamp: what it shows is the lit reef above; this
+            // is only a faint glow in the water around it (painted once,
+            // only moved; a brief fade in and out)
+            Halo {
+                readonly property real reach: root.lensR * 1.4
                 visible: opacity > 0.01
                 opacity: root.lampMix
-                x: root.lensX
-                y: root.lensY
-
-                Halo {
-                    readonly property real reach: root.lensR * 1.7
-                    width: reach * 2
-                    height: reach * 2
-                    x: -reach
-                    y: -reach
-                    color: lamp.light
-                    strength: 0.2
-                }
-                Halo {
-                    readonly property real reach: root.lensR * 0.62
-                    width: reach * 2
-                    height: reach * 2
-                    x: -reach
-                    y: -reach
-                    color: Qt.lighter(lamp.light, 1.25)
-                    strength: 0.3
-                }
+                width: reach * 2
+                height: reach * 2
+                x: root.lensX - reach
+                y: root.lensY - reach
+                color: root.mix(root.ink, Theme.primary, 0.3)
+                strength: 0.06
             }
 
             // Internet exit: a shaft of light from the surface to the exit peer
@@ -1603,8 +1669,9 @@ Item {
         // The creature flies from its place in the water onto the card's top edge
         CardHero {
             id: cardHero
-            // Only while a card is open: nothing to follow otherwise
-            readonly property var home: open ? root.peerPose(peerId) : ({
+            // Only while it is out of the water (open, or swimming back home):
+            // nothing to follow otherwise
+            readonly property var home: open || visible ? root.peerPose(peerId) : ({
                     "x": 0,
                     "y": 0,
                     "s": 1
@@ -1615,7 +1682,10 @@ Item {
             // From where its creature is drawn: alone, in its shoal or in the bubble
             from: Qt.point(home.x, home.y)
             fromScale: home.s
-            to: Qt.point(root.width / 2, peerCard.openY + root.medallion * 0.1)
+            // As in Orbit, it aims at the card's current top edge, not where the
+            // card will land: it dives toward the rising card and rides up with
+            // it. On close it lets the card sink and swims straight home.
+            to: Qt.point(root.width / 2, (open ? peerCard.y : peerCard.openY) + root.medallion * 0.1)
             diameter: root.medallion
         }
     }

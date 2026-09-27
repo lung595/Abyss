@@ -39,6 +39,11 @@ function frame(w, h, top) {
     };
 }
 
+// The sea floor's gentle line at x (Water.qml draws it, the reef grows on it)
+function floorAt(frame, x) {
+    return frame.floorY + 4 + Math.sin(x * 0.021) * 6 + Math.sin(x * 0.08) * 2;
+}
+
 // The sonar rings: the latency limits of the near and middle rings (ms)
 const RING_MS = [15, 80];
 function ringOf(ms) {

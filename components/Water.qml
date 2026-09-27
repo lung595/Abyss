@@ -64,7 +64,7 @@ Canvas {
         ctx.moveTo(0, h);
         ctx.lineTo(0, f.floorY + 4);
         for (let x = 0; x <= w; x += 24)
-            ctx.lineTo(x, f.floorY + 4 + Math.sin(x * 0.021) * 6 + Math.sin(x * 0.08) * 2);
+            ctx.lineTo(x, Lay.floorAt(f, x));
         ctx.lineTo(w, h);
         ctx.closePath();
         ctx.fill();
@@ -72,7 +72,7 @@ Canvas {
         ctx.strokeStyle = _rgba(ink, 0.07);
         ctx.beginPath();
         for (let x = 0; x <= w; x += 24)
-            x ? ctx.lineTo(x, f.floorY + 4 + Math.sin(x * 0.021) * 6 + Math.sin(x * 0.08) * 2) : ctx.moveTo(x, f.floorY + 4);
+            x ? ctx.lineTo(x, Lay.floorAt(f, x)) : ctx.moveTo(x, f.floorY + 4);
         ctx.stroke();
         // Sonar rings: faint arcs under you, each labelled with its latency
         // band at its right end

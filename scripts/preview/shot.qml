@@ -6,8 +6,8 @@ import "../../components"
 // Offscreen renders from the demo mesh (fictional names and addresses).
 // Usage: see render.sh. Modes: connected, disconnected, connecting,
 // needsLogin, stopped, card, relay, find, exit, nets, work, crowd, lens,
-// peek, search (these four on the 30-peer crowd mesh), grab; a "-light"
-// suffix uses a light theme's accents, "-cc" the Control Center size.
+// peek, search (these four on the 30-peer crowd mesh), grab, fly / unfly (the card
+// opening / closing, as frames out-0.png ... out-11.png); a "-light" suffix uses a light theme's accents, "-cc" the Control Center size.
 Window {
     id: win
     readonly property var args: Qt.application.arguments
@@ -55,6 +55,12 @@ Window {
             demo.setProfile("crowd");
         if (mode === "search")
             scene.query = "nas";
+        if (mode === "unfly")
+            scene.cardId = "demo-harbor-vps";
+        if (mode === "fly" || mode === "unfly") {
+            flight.start();
+            return;
+        }
         shot.interval = mode === "peek" ? 3000 : mode === "lens" || mode === "grab" ? 2600 : 1600;
         shot.start();
     }
@@ -93,6 +99,28 @@ Window {
                 const q = scene.peekSpots[1] || scene.peekSpots[0];
                 scene.pinnedPointer = Qt.point(scene.peekCentre.x + q.x + 6, scene.peekCentre.y + q.y + 4);
             }
+        }
+    }
+
+    // The card opening (or closing), frame by frame: once the deep has settled,
+    // then grab every 70 ms (the whole flight takes about 700 ms)
+    Timer {
+        id: flight
+        property int frame: -1
+        interval: frame < 0 ? 1600 : 70
+        repeat: true
+        onTriggered: {
+            if (frame < 0)
+                scene.cardId = win.mode === "fly" ? "demo-harbor-vps" : "";
+            const n = ++frame;
+            // One tick more than frames, so the last grab is written
+            if (n === 12) {
+                stop();
+                Qt.quit();
+                return;
+            }
+            const path = win.out.replace(/\.png$/, "-" + n + ".png");
+            win.contentItem.grabToImage(r => r.saveToFile(path));
         }
     }
 
