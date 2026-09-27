@@ -15,9 +15,13 @@ Canvas {
     property color abyss
     property color ink
     property color kelp
+    // Desktop: the fishbowl draws the water, the surface and the gravel;
+    // only the sonar rings are left here
+    property bool open: false
 
     onFrameChanged: requestPaint()
     onShallowChanged: requestPaint()
+    onOpenChanged: requestPaint()
     onWidthChanged: requestPaint()
     onHeightChanged: requestPaint()
 
@@ -34,20 +38,22 @@ Canvas {
         ctx.reset();
         // Above the surface (behind the top bar) and the water column: both
         // dark, the deep going to black
-        ctx.fillStyle = shallow;
-        ctx.fillRect(0, 0, w, sy);
-        const sea = ctx.createLinearGradient(0, sy, 0, h);
-        sea.addColorStop(0, shallow);
-        sea.addColorStop(0.35, abyss);
-        sea.addColorStop(1, Qt.darker(abyss, 1.5));
-        ctx.fillStyle = sea;
-        ctx.fillRect(0, sy, w, h - sy);
+        if (!open) {
+            ctx.fillStyle = shallow;
+            ctx.fillRect(0, 0, w, sy);
+            const sea = ctx.createLinearGradient(0, sy, 0, h);
+            sea.addColorStop(0, shallow);
+            sea.addColorStop(0.35, abyss);
+            sea.addColorStop(1, Qt.darker(abyss, 1.5));
+            ctx.fillStyle = sea;
+            ctx.fillRect(0, sy, w, h - sy);
+        }
         // The deep haze: a faint glow far off above the floor, behind the
         // reef's hills. Nothing lights the abyss, yet the distance glows a
         // little (like marine snow seen through kilometres of water), and
         // each plane of the reef reads as a darker cut-out against it.
         const hy = f.floorY - h * 0.14;
-        [[0.28, 0.1], [0.72, 0.13]].forEach(([k, a]) => {
+        (open ? [] : [[0.28, 0.1], [0.72, 0.13]]).forEach(([k, a]) => {
             ctx.save();
             ctx.translate(w * k, hy);
             ctx.scale(1, 0.32);
@@ -59,38 +65,40 @@ Canvas {
             ctx.fillRect(-r, -r, 2 * r, 2 * r);
             ctx.restore();
         });
-        // The surface itself, barely there
-        ctx.strokeStyle = _rgba(ink, 0.12);
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        for (let x = 0; x <= w; x += 10)
-            x ? ctx.lineTo(x, sy + Math.sin(x * 0.045) * 1.6) : ctx.moveTo(x, sy);
-        ctx.stroke();
-        // Kelp, then the floor in front of it
-        for (let k = 0; k < Math.floor(w / 46); k++) {
-            const kx = 18 + k * 46 + (k % 3) * 9, kh = 26 + (k * 37) % 52;
+        if (!open) {
+            // The surface itself, barely there
+            ctx.strokeStyle = _rgba(ink, 0.12);
+            ctx.lineWidth = 1;
             ctx.beginPath();
-            ctx.moveTo(kx, f.floorY + 8);
-            ctx.quadraticCurveTo(kx + 7 - (k % 2) * 14, f.floorY - kh / 2, kx + 2, f.floorY - kh);
-            ctx.strokeStyle = _rgba(kelp, 0.5);
-            ctx.lineWidth = 2.5;
+            for (let x = 0; x <= w; x += 10)
+                x ? ctx.lineTo(x, sy + Math.sin(x * 0.045) * 1.6) : ctx.moveTo(x, sy);
+            ctx.stroke();
+            // Kelp, then the floor in front of it
+            for (let k = 0; k < Math.floor(w / 46); k++) {
+                const kx = 18 + k * 46 + (k % 3) * 9, kh = 26 + (k * 37) % 52;
+                ctx.beginPath();
+                ctx.moveTo(kx, f.floorY + 8);
+                ctx.quadraticCurveTo(kx + 7 - (k % 2) * 14, f.floorY - kh / 2, kx + 2, f.floorY - kh);
+                ctx.strokeStyle = _rgba(kelp, 0.5);
+                ctx.lineWidth = 2.5;
+                ctx.stroke();
+            }
+            ctx.fillStyle = Qt.darker(abyss, 2.2);
+            ctx.beginPath();
+            ctx.moveTo(0, h);
+            ctx.lineTo(0, f.floorY + 4);
+            for (let x = 0; x <= w; x += 24)
+                ctx.lineTo(x, Lay.floorAt(f, x));
+            ctx.lineTo(w, h);
+            ctx.closePath();
+            ctx.fill();
+            // A faint ridge line: the floor still reads against the black water
+            ctx.strokeStyle = _rgba(ink, 0.07);
+            ctx.beginPath();
+            for (let x = 0; x <= w; x += 24)
+                x ? ctx.lineTo(x, Lay.floorAt(f, x)) : ctx.moveTo(x, f.floorY + 4);
             ctx.stroke();
         }
-        ctx.fillStyle = Qt.darker(abyss, 2.2);
-        ctx.beginPath();
-        ctx.moveTo(0, h);
-        ctx.lineTo(0, f.floorY + 4);
-        for (let x = 0; x <= w; x += 24)
-            ctx.lineTo(x, Lay.floorAt(f, x));
-        ctx.lineTo(w, h);
-        ctx.closePath();
-        ctx.fill();
-        // A faint ridge line: the floor still reads against the black water
-        ctx.strokeStyle = _rgba(ink, 0.07);
-        ctx.beginPath();
-        for (let x = 0; x <= w; x += 24)
-            x ? ctx.lineTo(x, Lay.floorAt(f, x)) : ctx.moveTo(x, f.floorY + 4);
-        ctx.stroke();
         // Sonar rings: faint arcs under you, each labelled with its latency
         // band at its right end
         const labels = ["< " + Lay.RING_MS[0] + " ms", "< " + Lay.RING_MS[1] + " ms", Lay.RING_MS[1] + " ms +"];

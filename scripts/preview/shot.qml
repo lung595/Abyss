@@ -2,13 +2,16 @@ import QtQuick
 import QtQuick.Window
 import qs.Common
 import "../../components"
+import "../../components/Bowl.js" as Bowl
 
 // Offscreen renders from the demo mesh (fictional names and addresses).
 // Usage: see render.sh. Modes: connected, disconnected, connecting,
 // needsLogin, stopped, card, relay, find, exit, nets, work, crowd, lens,
 // peek, search (these four on the 30-peer crowd mesh), grab, reef (the lamp on the floor), fly / unfly (the card
 // opening / closing, as frames out-0.png ... out-11.png), step (the open card
-// stepping to the next peer, same frames, 35 ms apart); a "-light" suffix uses a light theme's accents, "-cc" the Control Center size.
+// stepping to the next peer, same frames, 35 ms apart), zoom (the camera
+// gliding to a group and back, frames), desk (the frameless desktop view on a
+// made-up wallpaper; desk-hover with the pointer over it); a "-light" suffix uses a light theme's accents, "-cc" the Control Center size.
 Window {
     id: win
     readonly property var args: Qt.application.arguments
@@ -17,8 +20,9 @@ Window {
     readonly property bool cc: rawMode.indexOf("-cc") >= 0
     readonly property string mode: rawMode.replace(/-light|-cc/g, "")
     readonly property string out: args[args.length - 1]
-    width: cc ? 560 : 580
-    height: cc ? 360 : 480
+    readonly property bool desk: mode.indexOf("desk") === 0
+    width: cc ? 560 : desk ? 780 : 580
+    height: cc ? 360 : desk ? 620 : 480
     visible: true
     color: "#141218"
 
@@ -58,7 +62,7 @@ Window {
             scene.query = "nas";
         if (mode === "unfly" || mode === "step")
             scene.cardId = "demo-harbor-vps";
-        if (mode === "zoom") {
+        if (mode === "zoom" || mode === "desk-zoom") {
             cam.start();
             return;
         }
@@ -70,12 +74,46 @@ Window {
         shot.start();
     }
 
+    // A made-up wallpaper (soft colour blobs) behind the desktop view
+    Rectangle {
+        anchors.fill: parent
+        visible: win.desk
+        gradient: Gradient {
+            GradientStop { position: 0; color: "#3b5b7a" }
+            GradientStop { position: 0.55; color: "#7a5a8c" }
+            GradientStop { position: 1; color: "#d9a07a" }
+        }
+        Rectangle {
+            width: 420; height: 420; radius: 210; x: -90; y: 300
+            color: "#e8c38a"; opacity: 0.45
+        }
+    }
+
+    // The desktop fishbowl, as AbyssDesktop.qml lays it out
+    readonly property var bowl: Bowl.build(width - 100, height - 60, 54)
+    FishBowl {
+        visible: win.desk
+        x: 50; y: 30; width: win.width - 100; height: win.height - 60
+        part: "back"; b: win.bowl
+        ink: scene.ink; shallow: scene.shallow; abyss: scene.abyss; tints: scene.reefTints
+    }
     AbyssScene {
         id: scene
-        anchors.fill: parent
+        x: win.desk ? 50 + win.bowl.scene.x : 0
+        y: win.desk ? 30 + win.bowl.scene.y : 0
+        width: win.desk ? win.bowl.scene.w : win.width
+        height: win.desk ? win.bowl.scene.h : win.height
+        borderless: win.desk
+        interacting: win.mode !== "desk"
         source: demo
         compact: win.cc
         cornerRadius: 16
+    }
+    FishBowl {
+        visible: win.desk
+        x: 50; y: 30; width: win.width - 100; height: win.height - 60
+        part: "front"; b: win.bowl
+        ink: scene.ink; shallow: scene.shallow; abyss: scene.abyss; tints: scene.reefTints
     }
 
     // After the first reads: aim the lens at a peer, or rest it on a group

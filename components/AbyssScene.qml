@@ -39,6 +39,11 @@ Item {
     property bool interacting: true
     // Control Center: a smaller top bar
     property bool compact: false
+    // Desktop: the deep lives in a fishbowl drawn around it (FishBowl), so
+    // it has no frame, water, reef or floor of its own; the top bar only
+    // shows while the pointer is over it
+    property bool borderless: false
+    readonly property bool chromeShown: !borderless || interacting || netsOpen || query !== ""
 
     readonly property Prefs prefs: Prefs {}
     readonly property var view: source ? source.view : Mesh.parse("", null, null, 0)
@@ -1012,14 +1017,15 @@ Item {
 
     // --- Layers ------------------------------------------------------------
     layer.enabled: false
-    clip: true
+    // In the fishbowl the water is wider than the scene: glows spill over
+    clip: !borderless
 
     Rectangle {
         id: shape
         anchors.fill: parent
-        radius: root.cornerRadius
-        color: root.abyss
-        clip: true
+        radius: root.borderless ? 0 : root.cornerRadius
+        color: root.borderless ? "transparent" : root.abyss
+        clip: !root.borderless
 
         // Everything that lives in the water; behind an open bubble it is
         // replaced by one blurred picture of itself (worldShot)
@@ -1035,9 +1041,11 @@ Item {
                 shallow: root.shallow
                 abyss: root.abyss
                 ink: root.ink
+                open: root.borderless
             }
             Reef {
                 anchors.fill: parent
+                visible: !root.borderless
                 frame: root.frame
                 ink: root.ink
                 shadow: root.reefShadow
@@ -1055,6 +1063,7 @@ Item {
             Reef {
                 id: litReef
                 anchors.fill: parent
+                visible: !root.borderless
                 lit: true
                 frame: root.frame
                 ink: root.ink
@@ -1076,7 +1085,7 @@ Item {
                 visible: false
                 sourceItem: litReef
                 hideSource: true
-                live: root.lampMix > 0.01
+                live: root.lampMix > 0.01 && !root.borderless
                 sourceRect: Qt.rect(root.lensX - root.lampR, root.lensY - root.lampR, root.lampR * 2, root.lampR * 2)
             }
             // The disc's soft edge (a scene-graph shape: unlike a Canvas, it
@@ -1116,7 +1125,7 @@ Item {
                 width: root.lampR * 2
                 height: root.lampR * 2
                 opacity: root.lampMix
-                visible: opacity > 0.01
+                visible: opacity > 0.01 && !root.borderless
                 source: litSpot
                 autoPaddingEnabled: false
                 maskEnabled: true
@@ -1432,8 +1441,10 @@ Item {
             anchors.fill: parent
             sourceItem: world
             live: false
-            hideSource: visible
-            visible: root.blurMix > 0
+            // Only a source for the blurred copy below, never shown itself:
+            // in the fishbowl nothing opaque would cover it
+            hideSource: root.blurMix > 0
+            visible: false
         }
         // The deep behind the open card, for its glass: one still picture
         // taken as the card opens and blurred once; the card cuts its shape
@@ -1457,28 +1468,82 @@ Item {
             blur: 1
             brightness: -0.12
         }
-        MultiEffect {
+        // In the fishbowl the scene has no frame, so the zoomed copy's edges
+        // would show as a box: it melts away towards them instead (an oval
+        // mask, only there)
+        Item {
+            id: camMask
             anchors.fill: parent
-            source: worldShot
-            visible: root.blurMix > 0
-            transform: [
-                Scale {
-                    origin.x: root.peekFrom.x
-                    origin.y: root.peekFrom.y
-                    xScale: root.camZoom
-                    yScale: root.camZoom
-                },
-                Translate {
-                    x: root._camShift(root.peekFrom.x, root.peekCentre.x, root.width)
-                    y: root._camShift(root.peekFrom.y, root.peekCentre.y, root.height)
+            visible: false
+            layer.enabled: root.borderless
+            // A round glow, squashed to the scene's shape (a scene-graph
+            // shape: unlike a Canvas, it renders into its layer while hidden)
+            Shape {
+                width: parent.width
+                height: parent.width
+                transform: Scale {
+                    yScale: camMask.width > 0 ? camMask.height / camMask.width : 1
                 }
-            ]
-            autoPaddingEnabled: false
-            blurEnabled: true
-            blurMax: 32
-            blur: 0.85 * root.blurMix
-            brightness: -0.3 * root.blurMix
-            saturation: -0.25 * root.blurMix
+                ShapePath {
+                    strokeWidth: -1
+                    fillGradient: RadialGradient {
+                        centerX: camMask.width / 2
+                        centerY: camMask.width / 2
+                        centerRadius: camMask.width / 2
+                        focalX: camMask.width / 2
+                        focalY: camMask.width / 2
+                        GradientStop {
+                            position: 0.72
+                            color: "white"
+                        }
+                        GradientStop {
+                            position: 1
+                            color: "transparent"
+                        }
+                    }
+                    PathRectangle {
+                        width: camMask.width
+                        height: camMask.width
+                    }
+                }
+            }
+        }
+        // The zoomed copy is larger than the scene: keep it inside, even in
+        // the fishbowl where the scene itself does not clip
+        Item {
+            anchors.fill: parent
+            clip: true
+            visible: root.blurMix > 0
+            layer.enabled: root.borderless && visible
+            layer.effect: MultiEffect {
+                maskEnabled: true
+                maskSource: camMask
+                // With a spread of 1, a threshold of 0.5 follows the mask's alpha
+                maskThresholdMin: 0.5
+                maskSpreadAtMin: 1
+            }
+            MultiEffect {
+                anchors.fill: parent
+                source: worldShot
+                transform: [
+                    Scale {
+                        origin.x: root.peekFrom.x
+                        origin.y: root.peekFrom.y
+                        xScale: root.camZoom
+                        yScale: root.camZoom
+                    },
+                    Translate {
+                        x: root._camShift(root.peekFrom.x, root.peekCentre.x, root.width)
+                        y: root._camShift(root.peekFrom.y, root.peekCentre.y, root.height)
+                    }
+                ]
+                autoPaddingEnabled: false
+                blurEnabled: true
+                blurMax: 32
+                blur: 0.85 * root.blurMix
+                brightness: -0.3 * root.blurMix
+                saturation: -0.25 * root.blurMix
+            }
         }
         // A click outside the bubble closes it
         MouseArea {
@@ -1513,6 +1578,13 @@ Item {
 
         TopBar {
             id: bar
+            opacity: root.chromeShown ? 1 : 0
+            visible: opacity > 0.01
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: root.reduceMotion ? 0 : 200
+                }
+            }
             anchors.top: parent.top
             anchors.left: parent.left
             anchors.right: parent.right
