@@ -39,6 +39,7 @@ You are the giant jellyfish. Every peer is a creature floating at the depth of i
 
 - **Bar**: a small jellyfish with the number of peers online. Click opens the deep, right click connects or disconnects.
 - **Control Center**: a NetBird tile (toggle) with the deep underneath.
+- **Launcher** (Super+Space, type `abyss`): "Open Abyss" opens the deep from the bar; below it, the quick steps — connect, where Internet goes out (a sun marks the one in use), and, as you type a name (`abyss vega`), copy its address or SSH to it.
 - **Desktop**: a round fishbowl on your wallpaper, with a sandy bed, glass and a water line; the deep lives inside it. It stays still until the pointer is over it. Who is online and the live totals are written in its sand, in a fine line of coloured sand; choose which screens show it in the settings.
 
 ![The fishbowl desktop widget, with a made-up mesh](screenshots/desk.png)
@@ -48,6 +49,7 @@ You are the giant jellyfish. Every peer is a creature floating at the depth of i
 ## Keyboard and scripts
 
 ```sh
+dms ipc call abyss open            # opens the deep from the bar
 dms ipc call abyss status          # "connected · 8/10 online"
 dms ipc call abyss toggle          # or connect / disconnect
 dms ipc call abyss copy <peer>     # copies the peer's IP
@@ -95,6 +97,7 @@ scripts/preview/render.sh connected "$PWD/out.png"   # offscreen renders from th
 
 ### Unreleased (0.3.0)
 
+- **From the launcher**: Super+Space, type `abyss` — open the deep, connect, choose where Internet goes out, copy an address or SSH to a peer, without leaving the keyboard. Nothing runs between two uses; it reads NetBird once when you open it.
 - **Livelier animals**: between trips every creature now has its own life — the fish beats its tail and wanders, the manta flaps its wings, the squid squeezes and jets upward, the seahorse sways upright, the turtle paddles, the whale and the nautilus roll slowly — and now and then the ones that can turn look the other way. Inside an open group the members live too (they were still). Calmer asleep, still with *Reduce motion*, and nothing runs while nobody looks: it rides the scene's existing clock, moving the shapes without repainting them (idle CPU unchanged: 3.7 % vs 3.6 % of one core, same session).
 - **Click the light** for where Internet can go, as a small file tree: each of your groups is a folder — click its name for the whole group, or its arrow to unfold it and pick one of its peers — then the peers in no group, quickest first, and "Stop". What is in use wears a small turning sun (still with *Reduce motion*). No dragging needed. Picked from there or dropped, the light now **glides** to its new place in 0.6 s instead of jumping, and the beam follows it; **Escape** while carrying puts it back; a peer's right-click menu has "Use for Internet" too.
 - **From the whole group to one member, and back**: with a group open, take the light up from the middle and drop it on one member — it now rests above that member (it used to vanish), and goes back to the middle for the whole group.
@@ -203,7 +206,7 @@ Sending your Internet through a peer (a NetBird exit node) should explain itself
 
 - **Smart search bar**: understands words and synonyms, not only names.
 - **Smart tags**: added automatically (from the name, services, machine type) or by hand.
-- **Use it from the launcher (Super+Space)**: `abyss >100ms`, `abyss proxmox`, `docker`… with a live preview.
+- **Search the launcher by speed or tags**: `abyss >100ms`, `abyss proxmox`, `docker`… (the launcher shows rows, not the live scene: "Open Abyss" opens it).
 - **Read the real NetBird daemon** (`netbird status --json`, only while a view is open), connect, disconnect, sign in, networks and profiles through the `netbird` CLI.
 - Bar count kept fresh without polling while nothing is open.
 - Bar pill options: icon only, with peers online, or with the total rate.
