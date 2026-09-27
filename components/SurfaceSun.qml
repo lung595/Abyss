@@ -6,7 +6,8 @@ import qs.Widgets
 // Internet traffic then goes out through that peer (its exit node). Rest it
 // on a shoal and the group opens (scene.dragOver); leave it on a member, or
 // in the middle of a group of yours for the whole group. Drag it back to the
-// surface, or anywhere empty, to stop.
+// surface, or anywhere empty, to stop. A click lists where it can go;
+// Escape while carrying puts it back.
 Item {
     id: sun
 
@@ -62,20 +63,34 @@ Item {
         color: sun.scene.sunColor
     }
 
+    Connections {
+        target: sun.scene
+        function onCarryCancelled() {
+            area.cancelled = true;
+            sun.x = Qt.binding(() => sun.home.x - sun.width / 2);
+            sun.y = Qt.binding(() => sun.home.y - sun.height / 2);
+        }
+    }
+
     MouseArea {
         id: area
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: drag.active ? Qt.ClosedHandCursor : Qt.OpenHandCursor
-        drag.target: sun
+        drag.target: cancelled ? null : sun
         // Heavy to lift: a brush or a click never carries it away
         drag.threshold: 16
+        // Escape (AbyssScene.cancelCarry): let go without dropping
+        property bool cancelled: false
+        onPressed: cancelled = false
+        // A click, no drag: where Internet can go, as a list
+        onClicked: sun.scene.openMenu("sun", Qt.point(sun.x - 160, sun.y + sun.height))
         onPositionChanged: {
-            if (drag.active)
+            if (drag.active && !cancelled)
                 sun.scene.dragOver(sun.x + sun.width / 2, sun.y + sun.height / 2);
         }
         onReleased: {
-            if (drag.active)
+            if (drag.active && !cancelled)
                 sun.dropped(sun.x + sun.width / 2, sun.y + sun.height / 2);
             sun.x = Qt.binding(() => sun.home.x - sun.width / 2);
             sun.y = Qt.binding(() => sun.home.y - sun.height / 2);
