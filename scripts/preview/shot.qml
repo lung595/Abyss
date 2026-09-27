@@ -12,7 +12,7 @@ import "../../components/Bowl.js" as Bowl
 // opening / closing, as frames out-0.png ... out-11.png), step (the open card
 // stepping to the next peer, same frames, 35 ms apart), zoom (the camera
 // gliding to a group and back, frames), desk (the frameless desktop view on a
-// made-up wallpaper; desk-hover with the pointer over it, desk-sleep awake then left just before the shot, desk-zoom a group opening in the bowl); life / life-peek (frames of the deep, or an open group, left alone); mine, menu, menu-name, carry, carry-crowd, carry-mid, carry-aim, carry-pulse, carry-fade (groups of mine, the Internet light carried into a group, left on a member or in the middle; held over the middle; just dropped there); a "-light" suffix uses a light theme's accents, "-cc" the Control Center size.
+// made-up wallpaper; desk-hover with the pointer over it, desk-sleep awake then left just before the shot, desk-zoom a group opening in the bowl); life / life-peek (frames of the deep, or an open group, left alone); mine, menu, menu-name, carry, carry-crowd, carry-mid, carry-aim, carry-pulse, carry-fade, sun-menu (groups of mine, the Internet light carried into a group, left on a member or in the middle; held over the middle; just dropped there); a "-light" suffix uses a light theme's accents, "-cc" the Control Center size.
 Window {
     id: win
     readonly property var args: Qt.application.arguments
@@ -67,7 +67,7 @@ Window {
             cam.start();
             return;
         }
-        if (["mine", "menu", "menu-name", "carry", "carry-crowd", "carry-mid", "carry-aim", "carry-pulse", "carry-fade"].indexOf(mode) >= 0) {
+        if (["mine", "menu", "menu-name", "carry", "carry-crowd", "carry-mid", "carry-aim", "carry-pulse", "carry-fade", "sun-menu"].indexOf(mode) >= 0) {
             if (mode === "carry-crowd")
                 demo.setProfile("crowd");
             mine.start();
@@ -267,6 +267,22 @@ Window {
                 stop();
             } else {
                 const g = scene.arr.items.find(i => i.type === "group" && !i.asleep && !i.fog);
+                if (win.mode === "sun-menu") {
+                    // A click on the light: where Internet can go
+                    scene.openMenu("sun", Qt.point(scene.width - 220, 70));
+                    console.log("sun: " + scene.menuActions("sun", scene.prefs.groups).map(a => a.text).join(" | "));
+                    const q = demo.view.peers.find(p => p.online && p.exit);
+                    const it = scene.arr.items.find(i => i.type === "peer" && i.peerId === q.id);
+                    if (it)
+                        console.log("peer menu: " + scene.menuActions(it.id, scene.prefs.groups).map(a => a.text).join(" | "));
+                    scene.dragOver(100, 100);
+                    scene.cancelCarry();
+                    console.log("escape: carrying " + scene._carrying + " · exit '" + demo.exitNode + "'");
+                    shot.interval = 400;
+                    shot.start();
+                    stop();
+                    return;
+                }
                 if (win.mode === "carry-fade") {
                     // Carried over open water: what cannot lend Internet steps back;
                     // on such a peer, the light says so and a drop changes nothing

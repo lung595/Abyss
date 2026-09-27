@@ -1246,6 +1246,19 @@ Item {
         else
             dropHint = it && it.mine ? "Drop on a peer, or here for all" : "Drop on a peer";
     }
+    // Escape while carrying: the light goes back, nothing changes
+    signal carryCancelled
+    function cancelCarry() {
+        _carrying = false;
+        dropName = "";
+        aimAll = false;
+        dropHint = "Drop on a peer";
+        sunDwell.stop();
+        _sunDwellId = "";
+        if (peekId !== "")
+            focusId = "";
+        carryCancelled();
+    }
     function dropSun(px, py) {
         const t = _sunTarget(px, py);
         const inPool = peekId !== "" && Math.hypot(px - peekCentre.x, py - peekCentre.y) <= peekR + 24;
@@ -1325,6 +1338,26 @@ Item {
     // [{ text, act, arg }] for the thing under the menu
     function menuActions(id, mine) {
         const out = [], p = _menuPeer(id), it = itemById[id];
+        if (id === "sun") {
+            // The light, clicked: where Internet can go, without dragging.
+            // Your groups first, then the quickest peers that can lend it
+            const using = source ? source.exitNode : "";
+            if (using)
+                out.push({ "text": "Stop · go out directly", "act": "use", "arg": { "peer": "", "group": "" } });
+            mine.filter(g => g.members.some(m => peerById[m] && peerById[m].online && peerById[m].exit)).forEach(g => out.push({
+                "text": (prefs.exitGroup === g.id ? "✓ " : "") + "All of " + g.name,
+                "act": "use",
+                "arg": { "peer": "", "group": g.id }
+            }));
+            view.peers.filter(q => q.online && q.exit).slice().sort((a, b) => a.latencyMs - b.latencyMs).slice(0, 6).forEach(q => out.push({
+                "text": (q.name === using && !prefs.exitGroup ? "✓ " : "") + q.name + " · " + Math.round(q.latencyMs) + " ms",
+                "act": "use",
+                "arg": { "peer": q.name, "group": "" }
+            }));
+            if (!out.length)
+                out.push({ "text": "No peer can lend Internet", "act": "none" });
+            return out;
+        }
         if (id === "me") {
             // You: what the top bar holds, for the bowl that has none
             if (!source)
@@ -1336,6 +1369,10 @@ Item {
             out.push({ "text": prefs.showOffline ? "Hide offline peers" : "Show offline peers", "act": "offline" });
         } else if (p) {
             const g = MyGroups.groupOf(mine, p.id);
+            if (p.exit && p.online) {
+                const on = !!source && source.exitNode === p.name && !prefs.exitGroup;
+                out.push({ "text": on ? "Stop using for Internet" : "Use for Internet", "act": "use", "arg": { "peer": on ? "" : p.name, "group": "" } });
+            }
             mine.filter(x => x !== g).forEach(x => out.push({ "text": "Add to " + x.name, "act": "join", "arg": x.id }));
             out.push({ "text": "New group", "act": "create", "arg": p.id });
             if (g)
@@ -1381,6 +1418,8 @@ Item {
             prefs.set("groups", MyGroups.remove(mine, a.arg));
         } else if (a.act === "exit")
             setExit("", prefs.exitGroup === a.arg ? "" : a.arg);
+        else if (a.act === "use")
+            setExit(a.arg.peer, a.arg.group);
         closeMenu();
     }
     function nameGroup(id, name) {
@@ -2444,7 +2483,9 @@ Item {
     focus: true
     Keys.onPressed: event => {
         if (event.key === Qt.Key_Escape) {
-            if (menuId !== "")
+            if (_carrying)
+                cancelCarry();
+            else if (menuId !== "")
                 closeMenu();
             else if (query !== "")
                 query = "";
