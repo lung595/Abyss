@@ -1,7 +1,7 @@
 .pragma library
 
-// What grows in the deep and where: cliffs on both sides, two far ridges, a
-// rippled sandy floor with pebbles, and life on it (corals,
+// What grows in the deep and where: cliffs on both sides, a far range and
+// nearer hills, a rippled sandy floor with pebbles, and life on it (corals,
 // sponges, anemones, sea fans, leafy algae). Pure data, drawn by
 // ReefPaint.js. The same seed always gives the same reef, so the dark copy
 // (always shown) and the lit copy (shown only under the pointer's lamp) line
@@ -67,30 +67,42 @@ function _living(r, kind, x, y, s, extra) {
     return Object.assign(it, extra || {});
 }
 
-// The reef in three planes, far to near. The far ridge hides in the haze,
-// the middle one and the cliffs are rock, the floor carries the life. Each
-// plane slides a little with the lens (parallax), the far one least.
+// The reef in three planes, far to near, so the floor reads as a seabed
+// stretching away behind the peers: a far mountain range lost in the haze,
+// nearer hills with spires and an arch and a row of small far life, then
+// the floor coming towards you (ripples and pebbles grow as they come near)
+// with the life that sways. Each plane slides a little with the lens
+// (parallax), the far one least.
 function build(frame, caves, seed) {
-    const r = rng(seed || 7), w = frame.w;
+    const r = rng(seed || 7), w = frame.w, h = frame.h;
     const span = caveSpan(frame, caves);
-    const plan = { "far": [], "mid": [], "cliffs": [], "ripples": [], "pebbles": [], "life": [] };
-    // Far then middle ridge: the farther one taller, with pointed peaks
-    ["far", "mid"].forEach((plane, k) => {
-        const pts = [];
-        for (let x = -30; x <= w + 40; x += (k ? 26 : 38) + r() * 14)
-            pts.push([x, frame.floorY - (k ? 14 : 36) - r() * (k ? 16 : 34)]);
-        plan[plane] = pts;
-    });
+    const plan = { "far": [], "mid": [], "spires": [], "farLife": [], "cliffs": [], "ripples": [], "pebbles": [], "life": [] };
+    // Far range: broad peaks and valleys, well above the floor
+    for (let x = -40; x <= w + 60; x += 46 + r() * 40)
+        plan.far.push([x, frame.floorY - h * (0.14 + r() * 0.14)]);
+    // Nearer hills: lower, rounder
+    for (let x = -30; x <= w + 40; x += 30 + r() * 24)
+        plan.mid.push([x, frame.floorY - h * (0.04 + r() * 0.07)]);
+    // A few rock spires rising from the hills, and one arch
+    for (let k = 0; k < 3; k++)
+        plan.spires.push({ "x": w * (0.12 + 0.3 * k + r() * 0.16), "w": 8 + r() * 10, "h": h * (0.08 + r() * 0.08), "arch": false });
+    plan.spires.push({ "x": w * (0.55 + r() * 0.3), "w": 46 + r() * 30, "h": h * (0.07 + r() * 0.04), "arch": true });
+    // Small life far away, on the hills' foot: it does not sway (too far to see)
+    for (let x = 10 + r() * 20; x < w - 10; x += 26 + r() * 40)
+        plan.farLife.push(_living(r, KINDS[Math.floor(r() * KINDS.length)], x, frame.floorY - h * (0.02 + r() * 0.02), 0.35 + r() * 0.15));
     [0, 1].forEach(side => plan.cliffs.push(_cliff(frame, r, side, plan.life)));
-    // Ripples in the sand: short wavy strokes in rows under the floor line
-    for (let row = 0; row < 4; row++) {
-        for (let x = r() * 30; x < w; x += 40 + r() * 34)
-            plan.ripples.push({ "x": x, "dy": 8 + row * 8 + r() * 3, "len": 18 + r() * 22 });
+    // Ripples in the sand, in rows that open up as they come near
+    for (let row = 0; row < 5; row++) {
+        const near = row / 4;
+        for (let x = r() * 30; x < w; x += (26 + r() * 20) * (1 + near))
+            plan.ripples.push({ "x": x, "dy": 5 + Math.pow(row, 1.5) * 5 + r() * 2, "len": (12 + r() * 14) * (1 + near), "near": near });
     }
-    // Pebbles on the floor line
+    // Pebbles, bigger in front
     for (let x = 8 + r() * 20; x < w; x += 14 + r() * 30)
-        if (_clearOfCaves(span, x, 6))
-            plan.pebbles.push({ "x": x, "dy": 1 + r() * 7, "rx": 1.6 + r() * 3.2, "ry": 1.2 + r() * 1.8 });
+        if (_clearOfCaves(span, x, 6)) {
+            const near = r();
+            plan.pebbles.push({ "x": x, "dy": 1 + near * 16, "rx": (1.2 + r() * 2) * (1 + near * 1.5), "ry": (0.9 + r() * 1.2) * (1 + near) });
+        }
     // Life along the floor, every 22 to 48 px, never over a cave
     for (let x = 14 + r() * 16; x < w - 10; x += 22 + r() * 26) {
         const it = _living(r, KINDS[Math.floor(r() * KINDS.length)], x, Lay.floorAt(frame, x) + 2, 0.7 + r() * 0.6);

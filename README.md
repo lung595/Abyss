@@ -94,7 +94,7 @@ scripts/preview/render.sh connected "$PWD/out.png"   # offscreen renders from th
 - **Peer card like Orbit**: the card rises and the creature dives toward it and rides up with it; on close it swims straight home.
 - **Frosted glass card**: the deep shows through, blurred once as the card opens (nothing is re-blurred while it stays open). Every device gets the same compact height; the details scroll inside.
 - **Step through devices** with ‹ › or <kbd>←</kbd> <kbd>→</kbd>: the circle stays still while the creature, the name and the status crossfade in place, and the previous creature fades back home.
-- **The pointer light reveals the scenery** instead of glowing: a soft disc under the lens uncovers a reef in three planes (far ridge, cliffs, floor) with a little parallax, swaying kelp and gorgonians, sponges, anemones and a small shoal of fish passing now and then. Muted on purpose; it costs nothing measurable.
+- **The pointer light reveals the scenery** instead of glowing: a soft disc under the lens uncovers a reef in depth (far hills in a faint distant haze, rock spires and an arch, cliffs, the floor) with a little parallax, glowing coral tips, swaying kelp and gorgonians, sponges, anemones and a small shoal of fish passing now and then. Muted on purpose; it costs nothing measurable.
 - Thinner traffic tentacles (a thread when idle, a ribbon when busy) and calmer motion.
 - The jellyfish now has loose threads of light; each linked peer takes one over. Its bell fades smoothly between asleep and awake.
 - Caves (routed networks) always glow a little, and burn when on. Their thread to the gateway only shows while you hover them, and leaves from above the name.

@@ -726,6 +726,9 @@ Item {
     readonly property color reefShadow: Qt.darker(abyss, 1.7)
     readonly property color reefStone: mix(Theme.secondary, abyss, 0.5)
     readonly property color reefSand: mix(Theme.secondary, ink, 0.45)
+    // The water down by the floor (Water.qml darkens towards the bottom):
+    // what far rock melts into, so it never shows lighter than the sea
+    readonly property color reefWater: Qt.darker(abyss, 1.4)
     readonly property var reefTints: [Theme.tertiary, Theme.secondary, Theme.primary, Theme.success]
     readonly property int reefCaves: source ? source.networks.length : 0
     // Where the lens is across the deep (-1 left, 1 right): the reef's parallax
@@ -1028,6 +1031,7 @@ Item {
                 shadow: root.reefShadow
                 stone: root.reefStone
                 sand: root.reefSand
+                water: root.reefWater
                 tints: root.reefTints
                 caves: root.reefCaves
                 t: root.t
@@ -1045,6 +1049,7 @@ Item {
                 shadow: root.reefShadow
                 stone: root.reefStone
                 sand: root.reefSand
+                water: root.reefWater
                 tints: root.reefTints
                 caves: root.reefCaves
                 t: root.t
