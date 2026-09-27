@@ -4,7 +4,7 @@ Your [NetBird](https://netbird.io) mesh as a glowing deep sea, for [DankMaterial
 
 You are the giant jellyfish. Every peer is a creature floating at the depth of its latency, tied to you by a tentacle that carries its live traffic: the more it uses, the thicker and brighter the tentacle, with pulses of light running toward you (download) or toward it (upload). Who uses the most is marked at a glance, and every creature shows its ↓/↑ rate. No clicks needed to read your network.
 
-> **New in 0.1.0:** first preview. The interface is complete but runs on a **made-up demo mesh**; reading the real NetBird daemon comes next.
+> **New in 0.2.0:** a magnetic lens, automatic groups you dive into, a sonar fan, creatures you can grab, a frosted card like Orbit, a living reef under the pointer light, and a fishbowl desktop widget. Still on a **made-up demo mesh**; reading the real NetBird daemon comes next.
 
 ![The deep, connected](screenshots/connected.png)
 
@@ -87,7 +87,7 @@ scripts/preview/render.sh connected "$PWD/out.png"   # offscreen renders from th
 
 ## Changelog
 
-### 0.2.0 — in progress (branch `lens`, not released yet)
+### 0.2.0 — 2026-09-27
 
 - **Lens**: a soft magnetic lens follows the pointer and gently enlarges what it lights; the scroll wheel sets its strength. The pointer is a warm light in a darker, more immersive deep.
 - **Groups**: never more than 5 things on screen (3–10 in settings). Busy, struggling and favourite peers stay alone; the rest gather in automatic groups. Rest the pointer on one and the camera glides and zooms towards it until it opens in the middle of the view; move away and it glides back. Type anywhere to find, and everything else blurs.
@@ -102,11 +102,11 @@ scripts/preview/render.sh connected "$PWD/out.png"   # offscreen renders from th
 - Caves (routed networks) always glow a little, and burn when on. Their thread to the gateway only shows while you hover them, and leaves from above the name.
 - **The desktop widget is a fishbowl**: round glass with a rim, highlights and a soft shadow on your wallpaper, water tinted by your theme and a bed of sand at the bottom. The deep fills the whole belly of the bowl without spilling past the glass. The top bar only shows while you use it. A group opening inside the bowl melts into the water at its edges.
 - **A readable card in the bowl**: opening a device darkens the bowl's water and fades its glass behind the card, instead of a dark box spilling past the glass.
-- **Inside a group**: the rest of the deep darkens and fades around it, and the group's ring grows into a lit pool, its home. The opening animation is unchanged.
+- **Inside a group**: the rest of the deep darkens and fades around it, and the group sits in a lit pool, its home; round it the water bends like a lens instead of a drawn circle. The opening animation is unchanged.
 - **Steadier fan**: devices keep their side when their traffic changes, instead of swimming across the view; caves keep clear of them.
 - **The top consumer label stops flickering**: its filled, coloured label only moves to another device when that one is clearly busier (30 % more).
 - Fixed: a traffic spike each time the view opened; grabbing moved only the tentacle.
-- Still to come in 0.2.0: see the [Roadmap](#roadmap).
+- Still to come: see the [Roadmap](#roadmap).
 
 ### 0.1.0 — 2026-09-26
 
@@ -117,20 +117,14 @@ scripts/preview/render.sh connected "$PWD/out.png"   # offscreen renders from th
 
 No promises, no dates. Everything here was asked for and is not in a release yet.
 
-### Finishing 0.2.0 (branch `lens`)
+### Next
 
-- **Devices swim** to their new depth in their animal's gait instead of jumping (wired, being tuned).
-- **A wake-up wave**: when you connect, light spreads from the jellyfish to each device; switched on, everything floats gently; switched off, the deep sleeps, dimmer and stiller (wired, being tuned).
 - **Tentacles that hold their device**: the tip wraps around the creature, as if the jellyfish really held it.
 - **The card first, then the creature**: both finish landing at the same moment.
-- **A group view**:
-  - hovering or clicking a group glides to it, centres it and zooms in until it fills most of the screen;
-  - the rest gets much blurrier and a little darker;
-  - the group's name and summary sit at the top centre; click the name to rename it, and a small ⚙ opens its settings.
+- **Rename a group**: click its name at the top of the group view; a small ⚙ opens its settings.
 - **The jellyfish as the only on/off switch**: the extra toggle goes, and a small ON/OFF word sits by the jellyfish.
 - **Drop the Internet light into a group** to pick the exit node among its devices.
 - **A cleaner layout**: one sector per relay, so no tentacle or lantern ever hides a device or a label.
-- **Inside a group, you feel you entered its world**: clearer that you are in a group, with its own surroundings.
 - **Shoals**: the creatures of a group swim together like a real school of fish (only while you watch).
 - **A goldfish companion** in every view (bar popout, Control Center, desktop): it waves when you click it and lives its life, eats, sleeps with little *z z z*, and cleans the bowl now and then. Still while nobody looks.
 - Measured CPU cost while a view is open, and fresh screenshots.

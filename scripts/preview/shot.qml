@@ -110,7 +110,7 @@ Window {
         visible: win.desk && opacity > 0.01
         x: 50; y: 30; width: win.width - 100; height: win.height - 60
         part: "shade"; b: win.bowl; abyss: scene.abyss
-        opacity: 0.85 * Math.max(scene.blurMix, scene.cardMix)
+        opacity: Math.max(scene.blurMix, 0.85 * scene.cardMix)
     }
     AbyssScene {
         id: scene

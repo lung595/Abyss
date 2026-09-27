@@ -1566,6 +1566,43 @@ Item {
                 }
             }
         }
+        // The ring where the water bends round an open group's pool: clear
+        // inside and outside, full on the pool's edge (see the bent copy)
+        Item {
+            id: poolRing
+            anchors.fill: parent
+            visible: false
+            layer.enabled: root.blurMix > 0
+            Shape {
+                anchors.fill: parent
+                ShapePath {
+                    strokeWidth: -1
+                    fillGradient: RadialGradient {
+                        centerX: groupPeek.cx
+                        centerY: groupPeek.cy
+                        centerRadius: groupPeek.homeR * 1.4
+                        focalX: groupPeek.cx
+                        focalY: groupPeek.cy
+                        GradientStop {
+                            position: 0.5
+                            color: "transparent"
+                        }
+                        GradientStop {
+                            position: 0.72
+                            color: "white"
+                        }
+                        GradientStop {
+                            position: 1
+                            color: "transparent"
+                        }
+                    }
+                    PathRectangle {
+                        width: poolRing.width
+                        height: poolRing.height
+                    }
+                }
+            }
+        }
         // The zoomed copy is larger than the scene: keep it inside, even in
         // the fishbowl where the scene itself does not clip
         Item {
@@ -1599,8 +1636,51 @@ Item {
                 blurEnabled: true
                 blurMax: 32
                 blur: 0.85 * root.blurMix
-                brightness: -0.45 * root.blurMix
+                brightness: -0.675 * root.blurMix
                 saturation: -0.5 * root.blurMix
+            }
+            // Round the pool the water bends like a lens: the same picture,
+            // a little magnified about the pool and less blurred, seen
+            // through a soft ring, no line drawn. Only while a group is open
+            Item {
+                anchors.fill: parent
+                visible: root.blurMix > 0
+                opacity: root.blurMix
+                layer.enabled: visible
+                layer.effect: MultiEffect {
+                    maskEnabled: true
+                    maskSource: poolRing
+                    maskThresholdMin: 0.5
+                    maskSpreadAtMin: 1
+                }
+                MultiEffect {
+                    anchors.fill: parent
+                    source: worldShot
+                    transform: [
+                        Scale {
+                            origin.x: root.peekFrom.x
+                            origin.y: root.peekFrom.y
+                            xScale: root.camZoom
+                            yScale: root.camZoom
+                        },
+                        Translate {
+                            x: root._camShift(root.peekFrom.x, root.peekCentre.x, root.width)
+                            y: root._camShift(root.peekFrom.y, root.peekCentre.y, root.height)
+                        },
+                        Scale {
+                            origin.x: groupPeek.cx
+                            origin.y: groupPeek.cy
+                            xScale: 1.12
+                            yScale: 1.12
+                        }
+                    ]
+                    autoPaddingEnabled: false
+                    blurEnabled: true
+                    blurMax: 32
+                    blur: 0.4 * root.blurMix
+                    brightness: -0.375 * root.blurMix
+                    saturation: -0.3 * root.blurMix
+                }
             }
             // Outside the open group's pool the deep falls away into the dark:
             // clear round the pool, near black at the edges (a gradient over
@@ -1619,15 +1699,15 @@ Item {
                         focalRadius: groupPeek.homeR
                         GradientStop {
                             position: 0
-                            color: Qt.rgba(root.abyss.r, root.abyss.g, root.abyss.b, 0.25)
+                            color: Qt.rgba(root.abyss.r, root.abyss.g, root.abyss.b, 0.38)
                         }
                         GradientStop {
                             position: 0.18
-                            color: Qt.rgba(root.abyss.r, root.abyss.g, root.abyss.b, 0.75)
+                            color: Qt.rgba(root.abyss.r, root.abyss.g, root.abyss.b, 0.97)
                         }
                         GradientStop {
                             position: 1
-                            color: Qt.rgba(root.abyss.r, root.abyss.g, root.abyss.b, 0.94)
+                            color: Qt.rgba(root.abyss.r, root.abyss.g, root.abyss.b, 0.98)
                         }
                     }
                     PathRectangle {

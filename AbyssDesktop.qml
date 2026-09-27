@@ -76,7 +76,7 @@ DesktopPluginComponent {
         part: "shade"
         b: root.bowl
         abyss: scene.abyss
-        opacity: 0.85 * Math.max(scene.blurMix, scene.cardMix)
+        opacity: Math.max(scene.blurMix, 0.85 * scene.cardMix)
         visible: opacity > 0.01
     }
     AbyssScene {
