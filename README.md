@@ -97,6 +97,7 @@ scripts/preview/render.sh connected "$PWD/out.png"   # offscreen renders from th
 
 - **Livelier animals**: between trips every creature now has its own life — the fish beats its tail and wanders, the manta flaps its wings, the squid squeezes and jets upward, the seahorse sways upright, the turtle paddles, the whale and the nautilus roll slowly — and now and then the ones that can turn look the other way. Inside an open group the members live too (they were still). Calmer asleep, still with *Reduce motion*, and nothing runs while nobody looks: it rides the scene's existing clock, moving the shapes without repainting them (idle CPU unchanged: 3.7 % vs 3.6 % of one core, same session).
 - **Click the light** for where Internet can go, as a small file tree: each of your groups is a folder — click its name for the whole group, or its arrow to unfold it and pick one of its peers — then the peers in no group, quickest first, and "Stop". What is in use wears a small turning sun (still with *Reduce motion*). No dragging needed. Picked from there or dropped, the light now **glides** to its new place in 0.6 s instead of jumping, and the beam follows it; **Escape** while carrying puts it back; a peer's right-click menu has "Use for Internet" too.
+- **From the whole group to one member, and back**: with a group open, take the light up from the middle and drop it on one member — it now rests above that member (it used to vanish), and goes back to the middle for the whole group.
 - **Only what can lend Internet**: while you carry the light, the peers that can lend it (they offer an exit node) stay bright and the others step back; over one that cannot, the light says so and dropping it changes nothing. A group only ever lends through such a member. In a peer's card, "Use for Internet" appears only when it can.
 - **See what "the whole group" means before letting go**: carrying the light over the middle of an open group shows a ring where it will rest and faint tentacles to every member; once dropped, a bead of light runs out to each of them, once.
 - **Your own groups**: right-click a creature or a group to add it to a group, start one, rename, ungroup, or keep an automatic group. They come first and never reshuffle.
@@ -162,7 +163,7 @@ Sending your Internet through a peer (a NetBird exit node) should explain itself
 - ✓ Escape while carrying puts the light back where it was.
 
 **Choosing a group**
-- ✓ Carrying the light over a shoal opens it; drop on a member for that one only.
+- ✓ Carrying the light over a shoal opens it; drop on a member for that one only. The light then rests just above that member, so you see who lends it, and you can take it up from there: onto another member, or back to the middle for the whole group.
 - ✓ Drop it in the middle of the group for the whole group: the group lends its best member online, and switches by itself when that one goes offline.
 - ✓ **While you carry it over the middle**, a ring appears where it will rest, faint tentacles reach out to every member, and the light says "Internet through all of Homelab": you see what dropping will do before you let go.
 - ✓ **Once dropped**, the light settles in the middle and a bead of light runs once along the tentacles; the member that lends it is lit, the others wait on dotted lines.
