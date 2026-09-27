@@ -111,8 +111,7 @@ Canvas {
         ctx.clip();
         const r = Plan.rng(11), left = b.cx - b.rx, right = b.cx + b.rx;
         // The back and the front edge of the sand's top, seen from a little above
-        const back = x => b.gravelY - 12 * Math.cos((x - b.cx) / b.rx * Math.PI / 2);
-        const front = x => back(x) + 9 * Math.cos((x - b.cx) / b.rx * Math.PI / 2);
+        const back = x => Bowl.sandBack(b, x), front = x => Bowl.sandFront(b, x);
         const sand = _mix(abyss, shallow, 0.5), lit = _mix(sand, ink, 0.1);
         const edge = (f, from, to) => {
             for (let x = from; to > from ? x <= to : x >= to; x += to > from ? 6 : -6)

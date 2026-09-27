@@ -39,7 +39,7 @@ You are the giant jellyfish. Every peer is a creature floating at the depth of i
 
 - **Bar**: a small jellyfish with the number of peers online. Click opens the deep, right click connects or disconnects.
 - **Control Center**: a NetBird tile (toggle) with the deep underneath.
-- **Desktop**: a round fishbowl on your wallpaper, with a sandy bed, glass and a water line; the deep lives inside it. It stays still until the pointer is over it. Who is online and the live totals are scratched into its glass, in front of the sand; choose which screens show it in the settings.
+- **Desktop**: a round fishbowl on your wallpaper, with a sandy bed, glass and a water line; the deep lives inside it. It stays still until the pointer is over it. Who is online and the live totals are written in its sand, in a fine line of coloured sand; choose which screens show it in the settings.
 
 ![The fishbowl desktop widget, with a made-up mesh](screenshots/desk.png)
 
@@ -101,7 +101,7 @@ scripts/preview/render.sh connected "$PWD/out.png"   # offscreen renders from th
 - **Carry the Internet into groups**: resting the light on a group opens it (the groups hold still meanwhile), you can then leave it on any member; carrying it out of the bubble closes it.
 - **Setting "Open groups"**: on hover and click (default), on hover only, or on click only.
 - **Choose the screens for the desktop bowl**: a "Desktop" section at the top of Abyss's settings (all displays, or pick them one by one), from the Plugins page or from Settings › Desktop Widgets.
-- **No bar over the bowl**: who is online and the live totals are cut into the glass in front of the sand, like an engraving (lit lower edge, shadowed upper edge, a few scratches). Click the jellyfish to connect; right-click it to connect or disconnect, switch profile, or show and hide offline peers (everywhere, not just in the bowl). The bar stays in the bar popout and the Control Center.
+- **No bar over the bowl**: who is online and the live totals are written in the bed of sand, a fine line of your theme's accent colour poured against the glass, like a sand bottle, following the bowl's curve. Click the jellyfish to connect; right-click it to connect or disconnect, switch profile, or show and hide offline peers (everywhere, not just in the bowl). The bar stays in the bar popout and the Control Center.
 - **Card**: received and sent now sit either side of the creature's medallion, on small cards in their own colours (received in the peer's colour, sent in yours, as the curve below), and the address and the name share one line, each with its copy button.
 - **TOP CONSUMER** is told by its caption alone; its label no longer changes colour.
 - **Fixed**: a click, or resting the pointer, opened a creature or a group a hand-width away; it now takes the pointer being on it (the lens still aims from afar).

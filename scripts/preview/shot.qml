@@ -123,6 +123,11 @@ Window {
         part: "shade"; b: win.bowl; abyss: scene.abyss
         opacity: Math.max(scene.blurMix, 0.85 * scene.cardMix)
     }
+    Item {
+        visible: win.desk
+        x: 50; y: 30; width: win.width - 100; height: win.height - 60
+        SandLetters { b: win.bowl; scene: scene }
+    }
     AbyssScene {
         id: scene
         x: win.desk ? 50 + win.bowl.scene.x : 0
@@ -144,11 +149,6 @@ Window {
         x: 50; y: 30; width: win.width - 100; height: win.height - 60
         part: "front"; b: win.bowl; opacity: 1 - 0.8 * scene.cardMix
         ink: scene.ink; shallow: scene.shallow; abyss: scene.abyss; tints: scene.reefTints
-    }
-    Item {
-        visible: win.desk
-        x: 50; y: 30; width: win.width - 100; height: win.height - 60
-        GlassEngraving { b: win.bowl; scene: scene }
     }
 
     // After the first reads: aim the lens at a peer, or rest it on a group

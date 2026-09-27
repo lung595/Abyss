@@ -79,6 +79,12 @@ DesktopPluginComponent {
         opacity: Math.max(scene.blurMix, 0.85 * scene.cardMix)
         visible: opacity > 0.01
     }
+    // Who is online and the live totals, in coloured sand in the bed: the
+    // bowl has no bar over the water
+    SandLetters {
+        b: root.bowl
+        scene: scene
+    }
     AbyssScene {
         id: scene
         x: root.bowl.scene.x
@@ -106,12 +112,5 @@ DesktopPluginComponent {
         shallow: scene.shallow
         abyss: scene.abyss
         tints: scene.reefTints
-    }
-
-    // Who is online and the live totals, scratched into the glass in front
-    // of the sand: the bowl has no bar over the water
-    GlassEngraving {
-        b: root.bowl
-        scene: scene
     }
 }
