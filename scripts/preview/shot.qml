@@ -107,10 +107,14 @@ Window {
             cam.start();
             return;
         }
-        if (["mine", "menu", "menu-name", "carry", "carry-crowd", "carry-mid", "carry-aim", "carry-pulse", "carry-fade", "sun-menu", "sun-glide", "carry-reopen", "sun-regive"].indexOf(mode) >= 0) {
+        if (["mine", "menu", "menu-name", "carry", "carry-crowd", "carry-mid", "carry-aim", "carry-pulse", "carry-fade", "sun-menu", "sun-glide", "carry-reopen", "sun-regive", "refuse"].indexOf(mode) >= 0) {
             if (mode === "carry-crowd")
                 demo.setProfile("crowd");
             mine.start();
+            return;
+        }
+        if (mode === "gif-sun" || mode === "gif-refuse") {
+            reel.start();
             return;
         }
         if (mode === "life" || mode === "life-peek") {
@@ -247,6 +251,60 @@ Window {
         }
     }
 
+    // README GIFs, with a real mouse, one step and one grab every 80 ms:
+    // gif-sun carries the light onto a peer that can lend Internet;
+    // gif-refuse onto one that cannot (it steps back, the light bounces
+    // home and a note explains). Frames out-0.png ... out-<n>.png.
+    Timer {
+        id: reel
+        property int frame: -1
+        property var path: []
+        interval: frame < 0 ? 1600 : 80
+        repeat: true
+        onTriggered: {
+            if (frame < 0) {
+                const sun = find(scene, "surfaceSun");
+                const from = sun.mapToItem(win.contentItem, sun.width / 2, sun.height / 2);
+                const it = scene.arr.items.find(i => i.type === "peer" && (win.mode === "gif-sun") === !!scene.peerById[i.peerId].exit);
+                // The demo reshuffles: wait for such a peer to swim out alone
+                if (!it)
+                    return;
+                const to = scene.mapToItem(win.contentItem, scene.spotOf(it.id).x, scene.spotOf(it.id).y);
+                // Hold still, lift, carry (eased), hold over it, let go, watch
+                const p = [];
+                for (let i = 0; i < 3; i++)
+                    p.push({ "at": from });
+                p.push({ "at": from, "press": true });
+                for (let i = 1; i <= 16; i++) {
+                    const k = i / 16, e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+                    p.push({ "at": Qt.point(from.x + (to.x - from.x) * e, from.y + (to.y - from.y) * e) });
+                }
+                for (let i = 0; i < 6; i++)
+                    p.push({ "at": to });
+                p.push({ "at": to, "release": true });
+                for (let i = 0; i < 18; i++)
+                    p.push({ "at": to, "idle": true });
+                path = p;
+            }
+            const n = ++frame;
+            if (n > path.length) {
+                stop();
+                Qt.quit();
+                return;
+            }
+            const s = path[n - 1];
+            if (!s)
+                return;
+            if (s.press)
+                mouse.mousePress(win.contentItem, s.at.x, s.at.y);
+            else if (s.release)
+                mouse.mouseRelease(win.contentItem, s.at.x, s.at.y);
+            else if (!s.idle)
+                mouse.mouseMove(win.contentItem, s.at.x, s.at.y, 0);
+            win.contentItem.grabToImage(r => r.saveToFile(win.out.replace(/\.png$/, "-" + (n - 1) + ".png")));
+        }
+    }
+
     // The camera gliding to a group and back, frame by frame: open the first
     // awake group once the deep has settled, grab every 70 ms, then close it
     Timer {
@@ -342,6 +400,19 @@ Window {
                     scene.dragOver(100, 100);
                     scene.cancelCarry();
                     console.log("escape: carrying " + scene._carrying + " · exit '" + demo.exitNode + "'");
+                    shot.interval = 400;
+                    shot.start();
+                    stop();
+                    return;
+                }
+                if (win.mode === "refuse") {
+                    // Dropped on a peer that cannot lend Internet: the light
+                    // goes back and a note says why, with the README link
+                    const it = scene.arr.items.find(i => i.type === "peer" && !scene.peerById[i.peerId].exit);
+                    const at = scene.spotOf(it.id);
+                    scene.dragOver(at.x, at.y);
+                    scene.dropSun(at.x, at.y);
+                    console.log("refuse: note '" + (scene.note ? scene.note.title : "none") + "'");
                     shot.interval = 400;
                     shot.start();
                     stop();
