@@ -809,12 +809,22 @@ Item {
         tents = live.map((p, i) => {
             const it = byId[p.id], tr = trafficOf(it), via = p.relayed ? lay.relays[p.relay] : null;
             const start = slots ? Lay.legPoint(j, slots[i]) : Lay.rimPoint(j, i, live.length);
-            const line = Lay.tentacle(start, at[p.id], via ? [via.x, via.y] : null);
+            // The tentacle grips what it reaches: the free ribbon lets go on
+            // the body (stop 0), then the wrap goes round it and closes
+            // under the belly (Grips.js)
+            const at0 = at[p.id], o = offsetOf(p.id);
+            const own = it.type === "peer";
+            const peer = own ? peerById[it.peerId] : null;
+            const kind = peer ? peer.kind : "shoal";
+            const s = o.s * (peer ? creatureScale(peer, wakeOf(p.id)) * o.b : 1);
+            const grip = Grips.hold(kind, s, at0[0], at0[1], via ? [via.x, via.y] : [j.x, j.y], peer ? wakeOf(p.id) : power);
+            const line = Lay.tentacle(start, grip[0], via ? [via.x, via.y] : null, 0).concat(grip.slice(1));
             pts[p.id] = line;
             const lv = Mesh.level(tr.down + tr.up);
             return {
                 "id": p.id,
                 "pts": line,
+                "tail": Grips.tailCount(grip.length),
                 "len": Lay.length(line),
                 "color": tintOfItem(it),
                 "level": lv,
@@ -1955,6 +1965,14 @@ Item {
                     highlighted: root.cardId === peer.id || (root.dropName !== "" && root.dropName === peer.name)
                     phase: index * 1.37
                 }
+            }
+
+            // The closing tail of each grip, in front of the bodies it holds
+            Grip {
+                anchors.fill: parent
+                scene: root
+                tents: root.tents
+                ext: root.ext
             }
 
             Jellyfish {

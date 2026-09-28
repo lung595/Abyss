@@ -22,7 +22,15 @@ function load(rel) {
         values.push(load(dir + file));
         return "";
     });
-    const exported = [...src.matchAll(/^(?:function\s+(\w+)|const\s+(\w+))/mg)].map(m => m[1] || m[2]);
+    // Every top-level name a test may read: the functions, and every name a
+    // const declares ("const A = 1, B = 2" exports A and B, not only A)
+    const exported = [
+        ...[...src.matchAll(/^function\s+(\w+)/mg)].map(m => m[1]),
+        ...[...src.matchAll(/^const\s+(.+)$/mg)]
+            .flatMap(m => m[1].split(","))
+            .map(n => n.split("=")[0].trim())
+            .filter(n => /^\w+$/.test(n))
+    ];
     const body = src + "\nreturn {" + exported.join(", ") + "};";
     return new Function(...names, body)(...values);
 }

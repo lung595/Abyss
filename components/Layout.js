@@ -259,12 +259,15 @@ function _hang(a, b, stop, n) {
     return _bez(a, [a[0], a[1] + L * 0.4], [e[0] - dx * 0.3, e[1] - dy * 0.3], e, n);
 }
 
-function tentacle(start, end, via) {
+// stop: how far short of its end the ribbon lets go. A tentacle that grips
+// its creature passes 0 and lets Grips.hold take over at the body.
+function tentacle(start, end, via, stop) {
+    const s = stop === undefined ? 18 : stop;
     if (via) {
         const a = _hang(start, via, 0, 14);
-        return a.concat(_hang(via, end, 18, 14).slice(1));
+        return a.concat(_hang(via, end, s, 14).slice(1));
     }
-    return _hang(start, end, 18, 24);
+    return _hang(start, end, s, 24);
 }
 
 // A cave's thread up to the peer that opens it: it rises straight out of

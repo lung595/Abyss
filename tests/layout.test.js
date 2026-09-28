@@ -3,6 +3,7 @@ imports.searchPath.unshift(imports.gi.GLib.path_get_dirname(imports.system.progr
 const { load, eq, ok, done } = imports.load;
 const L = load("components/Layout.js");
 const M = load("components/Mesh.js");
+const Gr = load("components/Grips.js");
 
 const p = (id, ms, relay) => ({ id, name: id, online: ms > 0, latencyMs: ms, relayed: !!relay, relay: relay || "" });
 const peers = [p("a", 4), p("b", 12), p("c", 40, "relay-eu"), p("d", 150, "relay-eu"), p("e", 0), p("f", 0)];
@@ -237,7 +238,8 @@ function _scene(profile, maxItems, mine) {
 }
 
 // The tentacles as the scene draws them: a loose leg under each direction,
-// then the path down to the creature, through its relay when it has one
+// then the path down to the creature, through its relay when it has one,
+// and the wrap that grips the body (Grips.js) at the size the scene uses
 function _paths(l, items) {
     const j = l.frame.jelly;
     const live = items.filter(p => l.peers[p.id] && l.peers[p.id].deg !== undefined);
@@ -246,13 +248,53 @@ function _paths(l, items) {
     return live.map((p, i) => {
         const q = l.peers[p.id], via = p.relayed ? l.relays[p.relay] : null;
         const start = slots ? L.legPoint(j, slots[i]) : L.rimPoint(j, i, live.length);
-        return { "id": p.id, "relay": via ? p.relay : "", "pts": L.tentacle(start, [q.x, q.y], via ? [via.x, via.y] : null) };
+        // A grip at the largest size a creature is drawn at (AbyssScene's
+        // creatureScale tops out at 0.6 + 0.24, without the lens on it), the
+        // worst case for anything in the way. A shoal is drawn at scene size.
+        const shoal = !p.kind, s = shoal ? 1 : 0.84;
+        const grip = Gr.hold(shoal ? "shoal" : p.kind, s, q.x, q.y, via ? [via.x, via.y] : [j.x, j.y], 1);
+        return { "id": p.id, "relay": via ? p.relay : "", "pts": L.tentacle(start, grip[0], via ? [via.x, via.y] : null, 0).concat(grip.slice(1)) };
     });
 }
 
-function _inBox(pts, x, y, w, h) {
-    return pts.some(q => Math.abs(q[0] - x) < w / 2 && Math.abs(q[1] - y) < h / 2);
+// A point list crossing the box [x, y + cy] of half size hw x hh
+function _inBody(pts, x, y, b) {
+    return pts.some(q => Math.abs(q[0] - x) < b.hw && Math.abs(q[1] - y - b.cy) < b.hh);
 }
+// A point list crossing the name under it (Creature.qml, School.qml)
+function _inLabel(pts, x, y, b) {
+    return pts.some(q => Math.abs(q[0] - x) < b.labelW / 2 && Math.abs(q[1] - y - b.labelDY) < b.labelH / 2);
+}
+// How far the deepest point of a path cuts into a box, in px (0 = clear)
+function _depth(pts, x, y, hw, hh, cy) {
+    let worst = 0;
+    pts.forEach(q => {
+        const dx = hw - Math.abs(q[0] - x), dy = hh - Math.abs(q[1] - y - cy);
+        if (dx > 0 && dy > 0)
+            worst = Math.max(worst, Math.min(dx, dy));
+    });
+    return worst;
+}
+
+// The guard can fail: a point inside a body is caught, a point far from it is
+// not. Written first on purpose (P61: the first version of this test read
+// boxes from names Layout.js never had, compared against NaN and could not
+// fail on anything, and its "0 crossing" proved nothing).
+{
+    const b = Gr.print("server", 0.84), at = [300, 200];
+    ok("the guard sees a tentacle across a body", _inBody([[300, 200 + b.cy]], at[0], at[1], b));
+    ok("…and leaves a tentacle that misses it alone", !_inBody([[300 + b.hw + 4, 200]], at[0], at[1], b));
+    ok("…and one across the name", _inLabel([[300, 200 + b.labelDY]], at[0], at[1], b));
+    ok("…and leaves a name no tentacle touches", !_inLabel([[300, 200 - 60]], at[0], at[1], b));
+    ok("the boxes are real numbers, not undefined", [b.hw, b.hh, b.labelW, Gr.hubPrint().hw].every(v => typeof v === "number" && v > 0));
+}
+
+// How deep a tentacle may cut into what it passes. Measured on the meshes
+// below: 16 px into a body, 23 px into a name; a name is drawn over the
+// ribbons (Creature.qml), so it is never hidden by one — these bounds keep a
+// ribbon from being swallowed, and they are a guard, not a promise of zero
+// (P60, D140: the sectors that would reach zero cost more than they give).
+const BODY_CUT = 20, LABEL_CUT = 26;
 
 // size: the popout (580x480), the Control Center (440x420) and the bowl
 // (646x420, two caves). max: the setting "Things on screen" (3, 5, 10).
@@ -270,30 +312,42 @@ const LAB = [1, 2, 12, 60, 120].flatMap(n => [3, 5, 10].map(max => ["lab:" + n, 
     const s = _scene(m[0], m[5], MINE), l = L.layout(s.items, m[1], m[2], m[3], m[4]);
     const paths = _paths(l, s.items);
     const ids = Object.keys(l.peers).filter(id => l.peers[id].deg !== undefined);
+    const byKind = {};
+    s.items.forEach(it => {
+        byKind[it.id] = { "kind": it.kind, "shoal": !it.kind };
+    });
+    const print = id => Gr.print(byKind[id].shoal ? "shoal" : byKind[id].kind, byKind[id].shoal ? 1 : 0.84);
+    const label = m[0] + " " + m[1] + "x" + m[2] + " max " + m[5];
     const over = [];
     paths.forEach(p => ids.forEach(id => {
         const q = l.peers[id];
         if (id === p.id)
             return;
-        if (_inBox(p.pts, q.x, q.y, L.BODY_W, L.BODY_H))
-            over.push(p.id + " over the body of " + id);
-        else if (_inBox(p.pts, q.x, q.y + L.LABEL_DY, L.LABEL_W, L.LABEL_H))
-            over.push(p.id + " over the name of " + id);
+        const b = print(id);
+        const d = _depth(p.pts, q.x, q.y, b.hw, b.hh, b.cy);
+        const lbl = _depth(p.pts, q.x, q.y, b.labelW / 2, b.labelH / 2, b.labelDY);
+        if (d > BODY_CUT)
+            over.push(p.id + " " + d.toFixed(0) + " px into the body of " + id);
+        else if (lbl > LABEL_CUT)
+            over.push(p.id + " " + lbl.toFixed(0) + " px into the name of " + id);
     }));
-    // A tentacle goes through its own relay on purpose, and through nothing else
+    // A tentacle goes through its own relay on purpose, and through nothing
+    // else. Only the coral counts: a lantern's name is drawn while it is down,
+    // and a relay going down is a moment, not the shape of the deep.
+    const hub = Gr.hubPrint();
     Object.keys(l.relays).forEach(n => paths.forEach(p => {
-        if (n !== p.relay && _inBox(p.pts, l.relays[n].x, l.relays[n].y, L.HUB_W, L.HUB_H))
+        if (n === p.relay)
+            return;
+        if (_inBody(p.pts, l.relays[n].x, l.relays[n].y, hub))
             over.push(p.id + " over the lantern " + n);
     }));
-    ok(c[0] + " " + m[1] + "x" + m[2] + " max " + m[5] + ": nothing in the way of a tentacle ("
-        + over.length + (over.length ? ": " + over.join(", ") : "") + ")", over.length === 0);
+    ok(label + ": nothing swallowed by a tentacle (" + over.length + (over.length ? ": " + over.join(", ") : "") + ")", over.length === 0);
     const sat = [];
     Object.keys(l.relays).forEach(n => ids.forEach(id => {
-        if (_inBox([[l.relays[n].x, l.relays[n].y]], l.peers[id].x, l.peers[id].y, L.BODY_W, L.BODY_H))
+        if (_inBody([[l.relays[n].x, l.relays[n].y]], l.peers[id].x, l.peers[id].y, print(id)))
             sat.push(n + " on " + id);
     }));
-    ok(c[0] + " " + m[1] + "x" + m[2] + " max " + m[5] + ": no lantern on a creature ("
-        + sat.length + (sat.length ? ": " + sat.join(", ") : "") + ")", sat.length === 0);
+    ok(label + ": no lantern on a creature (" + sat.length + (sat.length ? ": " + sat.join(", ") : "") + ")", sat.length === 0);
 });
 
 // Dozing peers (lazy connections) float above the floor; asleep ones rest on it
