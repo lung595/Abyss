@@ -94,6 +94,25 @@ const t = L.tentacle([10, 10], [300, 200], null);
 eq("starts at the rim", t[0], [10, 10]);
 ok("ends just before the peer", Math.abs(Math.hypot(300 - t[t.length - 1][0], 200 - t[t.length - 1][1]) - 18) < 1e-6);
 ok("leaves hanging down", t[1][1] - t[0][1] > Math.abs(t[1][0] - t[0][0]));
+// How far a tentacle strays from the straight line between its two ends, as a
+// share of that line: a tentacle hangs, it does not wander across the fan.
+// Measured at 21 % for the worst lane (a far off-axis target); the bound keeps
+// a future change from turning the curve into a sweep (P60, P60's lesson).
+function _offLane(pts, a, b) {
+    const len = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
+    let worst = 0;
+    for (let i = 0; i < pts.length; i++) {
+        const u = i / (pts.length - 1);
+        worst = Math.max(worst, Math.hypot(pts[i][0] - (a[0] + (b[0] - a[0]) * u), pts[i][1] - (a[1] + (b[1] - a[1]) * u)));
+    }
+    return worst / len;
+}
+[[[290, 126], [460, 250]], [[290, 126], [120, 250]], [[290, 126], [290, 330]],
+    [[290, 126], [520, 180]], [[290, 126], [60, 180]]].forEach(c => {
+    ok("a tentacle hangs near its own line (" + c[0] + " to " + c[1] + "): "
+        + (_offLane(L.tentacle(c[0], c[1], null), c[0], c[1]) * 100).toFixed(1) + " %",
+    _offLane(L.tentacle(c[0], c[1], null), c[0], c[1]) <= 0.22);
+});
 const tv = L.tentacle([10, 10], [300, 200], [150, 120]);
 ok("goes through the relay", tv.some(q => q[0] === 150 && q[1] === 120));
 eq("point at 0", L.pointAt([[0, 0], [10, 0]], 0), [0, 0]);
@@ -173,5 +192,100 @@ ok("everyday traffic is fine", L.ribbonWidth(M.level(1e6)) < 1.5 && L.ribbonWidt
     const clear = Object.keys(g.peers).every(id => [0, 1].every(c => Math.abs(g.peers[id].x - L.caveX(g.frame, c)) >= 88 || Math.abs(g.peers[id].y - (g.frame.floorY - 70)) >= 60));
     ok("the fan keeps clear of the caves' labels", clear);
 }
+
+// Nothing in the way (P60)("components/DemoMesh.js");
+const G = load("components/Groups.js");
+const T0 = 1700000000000;
+const D = load("components/DemoMesh.js");
+// The user's own groups, as they are in the settings today
+const MINE = [
+    { "id": "u1", "name": "Busy", "members": ["demo-atlas-server", "demo-nook-nas", "demo-juniper-laptop"] },
+    { "id": "u2", "name": "Quiet", "members": ["demo-kestrel-phone", "demo-tern-vps", "demo-pi-garden"] }
+];
+
+// A mesh read twice, ten seconds apart, so the traffic (and with it the order
+// of importance) is the demo's usual one
+function _counters(profile, t) {
+    const c = {};
+    D.status(profile, T0, true, {}, {}, null).peers.details.forEach(d => {
+        const name = d.fqdn.split(".")[0], rate = D.baseRate(profile, name) * 1e6;
+        c[name] = { "rx": Math.round(rate * 0.62 * t), "tx": Math.round(rate * 0.38 * t) };
+    });
+    return c;
+}
+
+function _view(profile) {
+    const first = M.parse("Connected", D.status(profile, T0, true, _counters(profile, 0), {}, null), null, null, T0);
+    return M.parse("Connected", D.status(profile, T0 + 10000, true, _counters(profile, 10), {}, null), first, T0 + 10000);
+}
+
+// The scene's own path to the layout: what you see is grouped first, then
+// each item becomes a peer for the fan (a shoal floats at the median depth of
+// its members, behind a relay only when all of them share it)
+function _scene(profile, maxItems, mine) {
+    const view = _view(profile);
+    const arr = G.view(view.peers, maxItems, [], { "favorites": {}, "mine": mine || [], "broken": [], "memo": {} });
+    const items = arr.items.map(it => {
+        if (it.type === "peer")
+            return Object.assign({}, view.peers.find(p => p.id === it.peerId), { "id": it.id });
+        const ms = it.members.map(id => view.peers.find(p => p.id === id)).filter(p => p && p.online);
+        const lat = ms.map(p => p.latencyMs).sort((a, b) => a - b);
+        const via = ms.length && ms.every(p => p.relayed && p.relay === ms[0].relay) ? ms[0].relay : "";
+        return { "id": it.id, "online": !it.asleep && !it.fog && ms.length > 0, "latencyMs": lat.length ? lat[lat.length >> 1] : 0, "relayed": via !== "", "relay": via };
+    });
+    return { "view": view, "items": items, "arr": arr };
+}
+
+// The tentacles as the scene draws them: a loose leg under each direction,
+// then the path down to the creature, through its relay when it has one
+function _paths(l, items) {
+    const j = l.frame.jelly;
+    const live = items.filter(p => l.peers[p.id] && l.peers[p.id].deg !== undefined);
+    live.sort((a, b) => Math.atan2(l.peers[b.id].y - j.y, l.peers[b.id].x - j.x) - Math.atan2(l.peers[a.id].y - j.y, l.peers[a.id].x - j.x));
+    const slots = L.legSlots(j, live.map(p => l.peers[p.id].x));
+    return live.map((p, i) => {
+        const q = l.peers[p.id], via = p.relayed ? l.relays[p.relay] : null;
+        const start = slots ? L.legPoint(j, slots[i]) : L.rimPoint(j, i, live.length);
+        return { "id": p.id, "relay": via ? p.relay : "", "pts": L.tentacle(start, [q.x, q.y], via ? [via.x, via.y] : null) };
+    });
+}
+
+function _inBox(pts, x, y, w, h) {
+    return pts.some(q => Math.abs(q[0] - x) < w / 2 && Math.abs(q[1] - y) < h / 2);
+}
+
+// size: the popout (580x480), the Control Center (440x420) and the bowl
+// (646x420, two caves). max: the setting "Things on screen" (3, 5, 10).
+[["home", 580, 480, 54, null, 5], ["work", 580, 480, 54, null, 5], ["crowd", 580, 480, 54, null, 5],
+    ["home", 440, 420, 50, null, 5], ["crowd", 646, 420, 60, { "caves": 2 }, 5],
+    ["crowd", 580, 480, 54, null, 10], ["crowd", 580, 480, 54, null, 3]].forEach(m => {
+    const s = _scene(m[0], m[5], MINE), l = L.layout(s.items, m[1], m[2], m[3], m[4]);
+    const paths = _paths(l, s.items);
+    const ids = Object.keys(l.peers).filter(id => l.peers[id].deg !== undefined);
+    const over = [];
+    paths.forEach(p => ids.forEach(id => {
+        const q = l.peers[id];
+        if (id === p.id)
+            return;
+        if (_inBox(p.pts, q.x, q.y, L.BODY_W, L.BODY_H))
+            over.push(p.id + " over the body of " + id);
+        else if (_inBox(p.pts, q.x, q.y + L.LABEL_DY, L.LABEL_W, L.LABEL_H))
+            over.push(p.id + " over the name of " + id);
+    }));
+    // A tentacle goes through its own relay on purpose, and through nothing else
+    Object.keys(l.relays).forEach(n => paths.forEach(p => {
+        if (n !== p.relay && _inBox(p.pts, l.relays[n].x, l.relays[n].y, L.HUB_W, L.HUB_H))
+            over.push(p.id + " over the lantern " + n);
+    }));
+    ok(m[0] + " " + m[1] + "x" + m[2] + " max " + m[5] + ": nothing in the way of a tentacle ("
+        + over.length + (over.length ? ": " + over.join(", ") : "") + ")", over.length === 0);
+    const sat = [];
+    Object.keys(l.relays).forEach(n => ids.forEach(id => {
+        if (_inBox([[l.relays[n].x, l.relays[n].y]], l.peers[id].x, l.peers[id].y, L.BODY_W, L.BODY_H))
+            sat.push(n + " on " + id);
+    }));
+    ok(m[0] + " " + m[1] + "x" + m[2] + " max " + m[5] + ": no lantern on a creature ("
+        + sat.length + (sat.length ? ": " + sat.join(", ") : "") + ")", sat.length === 0);
+});
 
 done("layout");
