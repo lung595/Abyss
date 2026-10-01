@@ -4,7 +4,7 @@ Your [NetBird](https://netbird.io) mesh as a glowing deep sea, for [DankMaterial
 
 You are the giant jellyfish. Every peer is a creature floating at the depth of its latency, tied to you by a tentacle that carries its live traffic: the more it uses, the thicker and brighter the tentacle, with pulses of light running toward you (download) or toward it (upload). Who uses the most is marked at a glance, and every creature shows its ↓/↑ rate. No clicks needed to read your network.
 
-> **New in 0.3.0:** your own groups, Internet through a peer or a whole group by carrying the light of the surface (or picking it from a small tree), livelier animals, a launcher entry (Super+Space, `abyss`), a borderless fishbowl, and a guide to every option below. Anything you cannot do now says why. Still on a **made-up demo mesh**; reading the real NetBird daemon comes next.
+> **New in 0.3.0:** your own groups, Internet through a peer or a whole group by carrying the light of the surface (or picking it from a small tree), livelier animals, a launcher entry (Super+Space, `abyss`), a borderless fishbowl, and a guide to every option below. Anything you cannot do now says why. **Next release:** Abyss reads your real NetBird daemon (`netbird` CLI) when it is installed, and keeps the made-up demo mesh otherwise ([Mesh source](#settings)).
 
 ![The deep, connected](screenshots/connected.png)
 
@@ -111,6 +111,7 @@ Add Abyss in Settings › Desktop Widgets: a round fishbowl on your wallpaper, t
 - **Things on screen**: how many creatures and groups the deep shows before it gathers the rest into shoals (3 to 10, 5 by default).
 - **Notifications**: when a peer comes or goes (off by default; muted peers stay quiet).
 - **Terminal for SSH**: the one used for SSH (automatic by default).
+- **Mesh source**: your NetBird daemon, or a made-up demo mesh to try Abyss. Automatic (default) reads NetBird when the `netbird` command is installed.
 
 ## Surfaces
 
@@ -147,7 +148,7 @@ Measured numbers will be added here before the first stable release.
 
 ## Privacy
 
-- The plugin never talks to the network itself and has no telemetry.
+- The plugin never talks to the network itself and has no telemetry. It reads NetBird through its local `netbird` command, only while a view is open, and never through a shell (no name or address can run anything).
 - Peers, addresses and traffic stay in memory for the session; nothing is written to disk except your settings (favorites, muted peers, your groups and the group carrying the Internet included).
 - Copy uses DMS's clipboard, SSH opens your own terminal.
 
@@ -162,12 +163,26 @@ Then enable **Abyss** in DMS Settings → Plugins, and add it to the bar, the Co
 ## Development
 
 ```sh
-gjs tests/mesh.test.js && gjs tests/layout.test.js && gjs tests/terminal.test.js
+tests/run.sh                                          # every test (see below)
 scripts/preview/render.sh connected "$PWD/out.png"   # offscreen renders from the demo mesh
 scripts/preview/gif.sh gif-sun "$PWD/out.gif" 80      # the README GIFs, frame by frame (needs ffmpeg)
 ```
 
+- **Unit tests** (`tests/*.test.js`, need `gjs`): every pure JavaScript file in `components/`.
+- **Integration tests** (`tests/qml/`, need PySide6: `pip install PySide6-Essentials`): the NetBird source, the command runner and the daemon, through real processes, against a fake `netbird` (`tests/qml/fake-netbird`) whose answers follow the NetBird client's code. Skipped when PySide6 is missing.
+- CI runs both on every push (`.github/workflows/tests.yml`).
+- `NOTES.md` logs every bug found in review and how it was fixed.
+
 ## Changelog
+
+### Unreleased
+
+- **Your real NetBird mesh**: peers, traffic, relays, networks, profiles and the Internet light now come from the NetBird daemon, through its `netbird` command, only while a view is open. Connect, disconnect, sign in, start the service, switch profile, turn networks on or off and pick where Internet goes out all run the matching `netbird` command; anything that fails says why. New **Mesh source** setting (automatic, NetBird, demo).
+- **Internet through a peer, the NetBird way**: a peer can lend Internet when one of NetBird's exit routes (`0.0.0.0/0`) goes through it. NetBird does not say which peer serves a route until it is used, so a route is matched to the peer it is named after ("exit-atlas") or the one seen carrying it; dropping the light on a peer whose route cannot be found says to name the route after it.
+- **Safer SSH**: a peer whose name looks like an option (`-o…`) is refused, and `--` always ends ssh's options.
+- **Commands pick the right peer**: `dms ipc call abyss ssh a` no longer picks whoever comes first when several peers start with "a"; it names them.
+- Fixes: creatures guessed from letters inside other words (`chair-pc` drawn as a laptop), two peers with the same short name mixed up, "connected for" empty with the real daemon, a failing Internet switch retried every 2 s.
+- Tests: QML integration tests and CI; see [Development](#development).
 
 ### 0.3.0 — 2026-09-27
 
@@ -283,7 +298,9 @@ Sending your Internet through a peer (a NetBird exit node) should explain itself
 - **Smart search bar**: understands words and synonyms, not only names.
 - **Smart tags**: added automatically (from the name, services, machine type) or by hand.
 - **Search the launcher by speed or tags**: `abyss >100ms`, `abyss proxmox`, `docker`… (the launcher shows rows, not the live scene: "Open Abyss" opens it).
-- **Read the real NetBird daemon** (`netbird status --json`, only while a view is open), connect, disconnect, sign in, networks and profiles through the `netbird` CLI.
+- ✓ **Read the real NetBird daemon** (unreleased, see the changelog).
+- Exit routes named after no peer: list them in the light's menu by name, or tie one to a peer once.
+- Peers kept idle by NetBird's lazy connections: drawn as reachable rather than asleep.
 - Bar count kept fresh without polling while nothing is open.
 - Bar pill options: icon only, with peers online, or with the total rate.
 - Show online peers only, or all of them.
