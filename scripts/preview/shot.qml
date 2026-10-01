@@ -8,7 +8,8 @@ import "../../components/Bowl.js" as Bowl
 import "../../components/MyGroups.js" as MyGroups
 
 // Offscreen renders from the demo mesh (fictional names and addresses).
-// Usage: see render.sh. Modes: lab (the test lab), connected, disconnected, connecting,
+// Usage: see render.sh. Modes: lab (the test lab), switching, asleep,
+// dropped (Internet when something goes wrong), connected, disconnected, connecting,
 // needsLogin, stopped, card, relay, find, exit, nets, work, crowd, lens,
 // peek, search (these four on the 30-peer crowd mesh), grab, reef (the lamp on the floor), fly / unfly (the card
 // opening / closing, as frames out-0.png ... out-11.png), step (the open card
@@ -60,7 +61,7 @@ Window {
             console.log("glide: " + n * 100 + " ms x " + Math.round(sun.shown.x) + " (from " + Math.round(from.x) + " to " + Math.round(sun.home.x) + ") gliding " + sun.gliding);
             if (++n > 8) {
                 // Near the left edge its words go to its right
-                const words = sun.children.find(c => c.text !== undefined && c.text === sun.label);
+                const words = sun.children.find(c => c.objectName === "sunWords");
                 const x0 = sun.x;
                 sun.x = 20;
                 console.log("glide: label at the edge x " + Math.round(words.x) + ", in the open x " + (sun.x = 300, Math.round(words.x)));
@@ -89,6 +90,23 @@ Window {
             demo.setState("relayDown");
         if (mode === "exit")
             demo.setExitNode("harbor-vps");
+        // switching: NetBird still at it, under the light
+        if (mode === "switching") {
+            demo._switch.interval = 60000;
+            demo.setExitNode("harbor-vps");
+        }
+        // asleep: disconnected, the dim light clicked ("Connect first")
+        if (mode === "asleep") {
+            demo.setState("disconnected");
+            later.task = () => win.find(scene, "surfaceSun").children.find(c => c.drag !== undefined).clicked(null);
+            later.start();
+        }
+        // dropped: the peer lending Internet goes offline, the next best named
+        if (mode === "dropped") {
+            demo.setExitNode("atlas-server");
+            later.task = () => demo.flap("atlas-server");
+            later.start();
+        }
         if (mode === "work")
             demo.setProfile("work");
         if (mode === "nets")
@@ -591,6 +609,12 @@ Window {
         }
     }
 
+    Timer {
+        id: later
+        property var task
+        interval: 900
+        onTriggered: task()
+    }
     // Let a few clock ticks run so pulses and tentacles are in place
     Timer {
         id: shot

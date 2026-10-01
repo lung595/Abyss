@@ -18,6 +18,8 @@ PluginComponent {
     readonly property string meshState: view ? view.state : "stopped"
     readonly property bool connected: meshState === "connected"
 
+    // Internet goes out through a peer: a small still sun in the pill
+    readonly property bool lending: connected && !!source && source.exitNode !== ""
     readonly property color stateColor: connected ? Theme.primary : (meshState === "needsLogin" || meshState === "stopped") ? Theme.warning : meshState === "connecting" ? Theme.withAlpha(Theme.primary, 0.7) : Theme.surfaceVariantText
 
     // --- Control Center -------------------------------------------------------
@@ -68,6 +70,13 @@ PluginComponent {
                 font.pixelSize: Theme.fontSizeSmall
                 anchors.verticalCenter: parent.verticalCenter
             }
+            // Never turns here: the bar stays still
+            SunGlyph {
+                visible: root.lending
+                spinning: false
+                color: Theme.primary
+                anchors.verticalCenter: parent.verticalCenter
+            }
         }
     }
 
@@ -87,6 +96,13 @@ PluginComponent {
                 text: root.view ? root.view.online : ""
                 color: Theme.primary
                 font.pixelSize: Theme.fontSizeSmall
+                anchors.horizontalCenter: parent.horizontalCenter
+            }
+            // Never turns here: the bar stays still
+            SunGlyph {
+                visible: root.lending
+                spinning: false
+                color: Theme.primary
                 anchors.horizontalCenter: parent.horizontalCenter
             }
         }
