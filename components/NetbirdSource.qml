@@ -38,6 +38,8 @@ QtObject {
     property string error: ""
     // An action is running (the light can say "Switching…" meanwhile)
     readonly property bool busy: _acting
+    // An exit was asked for and NetBird has not confirmed it yet
+    readonly property bool switching: _wantExit !== ""
 
     // A peer's name went online or offline (for notifications)
     signal peerEvent(string name, bool online)

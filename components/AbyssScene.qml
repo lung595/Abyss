@@ -1159,15 +1159,42 @@ Item {
     property string dropHint: "Drop on a peer"
     // Said under the light for a moment after each change of exit, so the
     // change is confirmed where the eye already is: "Direct", "Through studio"
+    // ("Switching…" while NetBird is still at it)
     property string sunWord: ""
+    readonly property bool switching: !!source && !!source.switching
+    function _confirmExit() {
+        if (!root.active || root.switching)
+            return;
+        root.sunWord = root.source.exitNode ? "Through " + root.source.exitNode : "Direct";
+        sunWordTimer.restart();
+    }
     Connections {
         target: root.source
         ignoreUnknownSignals: true
         function onExitNodeChanged() {
-            if (!root.active)
+            root._confirmExit();
+        }
+        function onSwitchingChanged() {
+            root._confirmExit();
+        }
+    }
+    // The peer lending Internet went offline (not one of a group of mine:
+    // the group hands over by itself): say so, and name the next best
+    property string _lentBy: ""
+    Connections {
+        target: root
+        function onViewChanged() {
+            const p = root.exitPeer;
+            if (!root._lentBy || !p || p.id !== root._lentBy || p.online || !root.connected) {
+                if (p && p.online)
+                    root._lentBy = p.id;
                 return;
-            root.sunWord = root.source.exitNode ? "Through " + root.source.exitNode : "Direct";
-            sunWordTimer.restart();
+            }
+            root._lentBy = "";
+            if (!root.active || root.exitMine)
+                return;
+            const next = MyGroups.pickExit(root.view.peers, root.view.peers.map(q => q.id), "");
+            root.explain(p.name + " went offline", next ? "Next best: " + next.name + ", drop the light on it" : "No other peer can lend Internet now", "internet-through-a-peer", surfaceSun.x + surfaceSun.width / 2, surfaceSun.y + surfaceSun.height + 26);
         }
     }
     Timer {
@@ -2140,7 +2167,9 @@ Item {
             // In an open group that lends through one member only, the light
             // rests above that member: seen, and taken up again from there
             readonly property bool onMember: root.peekId !== "" && !groupPeek.lit && !!root.exitPeer && root.peekMembers.indexOf(root.exitPeer.id) >= 0
-            visible: root.connected && !!root.source && (dragging || root.cardId === "" && (root.peekId === "" || groupPeek.lit || onMember))
+            // Disconnected it stays, dim: where Internet would be chosen
+            asleep: !root.connected
+            visible: !!root.source && (dragging || root.cardId === "" && (root.peekId === "" || groupPeek.lit || onMember))
             z: 22
             scene: root
             // In the open group it carries: in the middle, tied to its members

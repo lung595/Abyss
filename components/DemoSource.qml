@@ -165,8 +165,12 @@ QtObject {
         view = Mesh.parse(daemonStatus, null, null, Date.now());
         refresh();
     }
+    // NetBird takes a moment to switch; the demo pretends to, briefly
+    property bool switching: false
     function setExitNode(name) {
         exitNode = name || "";
+        switching = true;
+        _switch.restart();
     }
     function toggleNetwork(id) {
         networks = networks.map(n => n.id === id ? Object.assign({}, n, { "on": !n.on }) : n);
@@ -241,6 +245,10 @@ QtObject {
         running: src._watchers > 0 && src.daemonStatus === "Connected"
         triggeredOnStart: true
         onTriggered: src._step(Date.now())
+    }
+    property Timer _switch: Timer {
+        interval: 700
+        onTriggered: src.switching = false
     }
     property Timer _settle: Timer {
         interval: 1400
