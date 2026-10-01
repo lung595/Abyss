@@ -9,7 +9,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 - **Your real NetBird mesh**: peers, traffic, relays, networks, profiles and the Internet light come from the NetBird daemon through its `netbird` command: one read when the shell starts, then every 2 s only while a view is open. Connect, disconnect, sign in, start the service, switch profile, turn networks on or off and choose where Internet goes out all run the matching command; anything that fails says why.
 - **Setting "Mesh source"**: automatic (NetBird when installed, else the test lab), NetBird, or test lab.
-- **Test lab** in the settings, shown while it is the mesh source: a mesh of 1 to 120 made-up peers (or the home, work and crowd meshes), latency added to every peer, a trouble to try (a peer that stops answering, a peer that keeps dropping out, a relay or the management server down, signed out, service stopped) and calm, normal or rush-hour traffic. A one-line summary and *Reset* under its title. In memory only; NetBird is never touched.
+- **Test lab** in the settings, shown while it is the mesh source: a mesh of 1 to 120 made-up peers (or the home, work and crowd meshes), latency added to every peer, a trouble to try (a peer that stops answering, a peer that keeps dropping out, a relay or the management server down, signed out, service stopped) and calm, normal or rush-hour traffic. A one-line summary and *Reset* under its title. In memory only; NetBird is never touched. While the lab is the source, the profile chip wears a flask and the bowl's sand line starts with "test lab", so a made-up mesh is never taken for yours.
 - **Tests**: QML integration tests through real processes against a fake `netbird`, `tests/run.sh` to run every test, and CI on every push. The tentacle layout check (P60) also runs on the test lab's meshes, from 1 to 120 peers.
 
 ### Changed
@@ -20,6 +20,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ### Fixed
 
+- **SSH with no terminal installed** did nothing, without a word: the terminal is now looked up first, and a missing one is said (the chosen one by name, or that none was found), with where to pick another.
+- Copying an address from a peer's card showed two toasts.
 - **SSH to a peer whose name looks like an option** (`-oProxyCommand=…`) could run a command on this machine; such names are refused, and `--` always ends ssh's options.
 - Creatures were guessed from letters inside other words (`chair-pc` drawn as a laptop, `banana` as a NAS).
 - Two peers with the same short name could be mixed up.

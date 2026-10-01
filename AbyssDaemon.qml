@@ -73,23 +73,34 @@ Item {
     }
 
     // --- Actions (called by the scene's buttons and by the IPC) -------------
-    function copy(text) {
+    // what: what was copied ("IP"), for the toast; one toast either way
+    function copy(text, what) {
         if (!text)
             return;
         Quickshell.execDetached(["dms", "cl", "copy", String(text)]);
-        ToastService.showInfo("Copied " + text);
+        if (what)
+            ToastService.showInfo(what + " copied", String(text));
+        else
+            ToastService.showInfo("Copied " + text);
     }
 
-    // False when the host is not one ssh can safely be handed (says why)
+    // False when the host is not one ssh can safely be handed (says why).
+    // The terminal is looked up first, so a missing one is said too
     function ssh(host, terminal) {
         if (!host)
             return false;
-        const cmd = Terminal.sshCommand(terminal || prefs.terminal, String(host));
-        if (!cmd) {
-            ToastService.showInfo("Abyss", "Not opening SSH: \"" + host + "\" is not a plain host name or address");
+        const h = String(host), want = terminal || prefs.terminal;
+        if (!Terminal.validHost(h)) {
+            ToastService.showInfo("Abyss", "Not opening SSH: \"" + h + "\" is not a plain host name or address");
             return false;
         }
-        Quickshell.execDetached(cmd);
+        lookup.run(Terminal.lookupCommand(want), (out, err, code) => {
+            const found = String(out).trim();
+            if (code !== 0 || !found)
+                ToastService.showInfo("Abyss", Terminal.missingText(want));
+            else
+                Quickshell.execDetached(Terminal.sshCommand(found, h));
+        });
         return true;
     }
 

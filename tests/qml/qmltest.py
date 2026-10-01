@@ -134,6 +134,8 @@ def main():
     bin_dir = os.path.join(os.environ["FAKE_NB"], "bin")
     os.mkdir(bin_dir)
     os.symlink(os.path.join(HERE, "fake-netbird"), os.path.join(bin_dir, "netbird"))
+    # A terminal for SSH: Abyss looks one up before opening it
+    os.symlink(shutil.which("true"), os.path.join(bin_dir, "kitty"))
     os.environ["QML_XHR_ALLOW_FILE_READ"] = "1"
     os.environ["PATH"] = bin_dir + os.pathsep + os.environ.get("PATH", "")
     qmlRegisterType(Process, "Quickshell.Io", 1, 0, "Process")

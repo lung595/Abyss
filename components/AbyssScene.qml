@@ -1125,8 +1125,9 @@ Item {
     }
     function copy(text, what) {
         if (actions)
-            actions.copy(text);
-        ToastService.showInfo(what + " copied", text);
+            actions.copy(text, what);
+        else
+            ToastService.showInfo(what + " copied", text);
     }
     function ssh(peer) {
         if (actions)
