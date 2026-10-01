@@ -114,6 +114,36 @@ function peerOf(d) {
     };
 }
 
+// Names are what the scene, the exit node and commands go by, so two peers
+// never share one: "pc" and "pc" become "pc.home" and "pc.work" (as many
+// labels of their fqdn as it takes), or their full fqdn / address
+function _unique(list) {
+    const count = {};
+    list.forEach(p => count[p.name] = (count[p.name] || 0) + 1);
+    const clash = list.filter(p => count[p.name] > 1);
+    if (!clash.length)
+        return list;
+    const taken = {};
+    list.forEach(p => {
+        if (count[p.name] === 1)
+            taken[p.name] = true;
+    });
+    clash.forEach(p => {
+        const labels = p.fqdn ? p.fqdn.split(".") : [];
+        let name = "";
+        for (let n = 2; n <= labels.length && !name; n++) {
+            const c = labels.slice(0, n).join(".");
+            if (!taken[c] && clash.filter(q => q.fqdn.split(".").slice(0, n).join(".") === c).length === 1)
+                name = c;
+        }
+        if (!name)
+            name = !taken[p.ip] && p.ip ? p.ip : p.name + "~" + p.id.slice(0, 6);
+        p.name = name;
+        taken[name] = true;
+    });
+    return list;
+}
+
 // Online first, then by steady latency (closest first), then by name, so the
 // order (and every layout built from it) is stable from one read to the next
 function _order(a, b) {
@@ -193,7 +223,7 @@ function parse(daemonStatus, json, prev, now) {
     const state = stateOf(daemonStatus);
     const s = json || {};
     now = now || Date.now();
-    const list = ((s.peers || {}).details || []).map(peerOf);
+    const list = _unique(((s.peers || {}).details || []).map(peerOf));
     const before = {};
     if (prev && prev.peers && prev.at)
         prev.peers.forEach(p => before[p.id] = p);
