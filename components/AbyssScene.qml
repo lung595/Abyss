@@ -2216,6 +2216,7 @@ Item {
         }
         // The open group's name (click to rename) and its settings, at the top
         GroupTitle {
+            objectName: "groupTitle"
             z: 21
             scene: root
             item: groupPeek._shown || null
