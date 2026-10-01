@@ -13,6 +13,9 @@ tied to you by a tentacle lit by its live traffic.
 
 </div>
 
+> [!TIP]
+> **New in 0.4.0**: your real NetBird mesh, a test lab in the settings, the whole Internet journey (where it goes out, what goes wrong, exit routes named after no peer), lazy connections, shoals, and Darwin the goldfish. See the [changelog](CHANGELOG.md).
+
 > [!NOTE]
 > **Abyss reads your real NetBird daemon** through the `netbird` command when it is installed, and opens its test lab, a made-up mesh, otherwise. Choose with the **Mesh source** [setting](#settings).
 
