@@ -8,7 +8,7 @@ No promises, no dates. Everything here was asked for and is not in a release yet
 
 ## Later
 
-- **Smart search**: synonyms and tags (the launcher already takes `abyss >100ms`).
+- **Tags**: your own words on a peer, searched like a kind.
 - Bar count kept fresh without polling.
 - Maybe: a debug bundle and client settings.
 

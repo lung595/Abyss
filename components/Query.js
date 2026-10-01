@@ -25,19 +25,21 @@ function subseq(q, s) {
 }
 
 const WORDS = [
-    { "w": ["phone", "telephone", "tel", "mobile"], "label": "phones", "test": p => p.kind === "phone" },
-    { "w": ["server", "serveur", "srv"], "label": "servers", "test": p => p.kind === "server" },
-    { "w": ["vps", "cloud"], "label": "VPS", "test": p => p.kind === "vps" },
-    { "w": ["nas", "storage", "stockage"], "label": "NAS", "test": p => p.kind === "nas" },
+    { "w": ["phone", "telephone", "tel", "mobile", "smartphone", "android", "iphone", "tablet", "ipad", "pixel"], "label": "phones", "test": p => p.kind === "phone" },
+    { "w": ["server", "serveur", "srv", "homelab", "proxmox", "docker", "router", "routeur", "gateway", "nuc"], "label": "servers", "test": p => p.kind === "server" },
+    { "w": ["vps", "cloud", "droplet", "hetzner", "aws", "vultr", "linode"], "label": "VPS", "test": p => p.kind === "vps" },
+    { "w": ["nas", "storage", "stockage", "synology", "truenas", "qnap", "backup", "sauvegarde"], "label": "NAS", "test": p => p.kind === "nas" },
     { "w": ["pi", "raspberry", "rpi"], "label": "Raspberry Pi", "test": p => p.kind === "pi" },
-    { "w": ["laptop", "portable"], "label": "laptops", "test": p => p.kind === "laptop" },
-    { "w": ["desktop", "pc", "fixe"], "label": "desktops", "test": p => p.kind === "desktop" },
+    { "w": ["laptop", "portable", "macbook", "mac", "chromebook", "thinkpad", "notebook"], "label": "laptops", "test": p => p.kind === "laptop" },
+    { "w": ["desktop", "pc", "fixe", "workstation", "tower", "tour"], "label": "desktops", "test": p => p.kind === "desktop" },
     { "w": ["offline", "off", "asleep", "sleeping", "dort", "eteint"], "label": "offline", "test": p => !p.online },
     { "w": ["online", "on", "up", "connecte"], "label": "online", "test": p => p.online },
     { "w": ["relay", "relayed", "relais", "relaye", "via"], "label": "through a relay", "test": p => p.online && p.relayed },
     { "w": ["direct", "p2p"], "label": "direct", "test": p => p.online && !p.relayed },
     { "w": ["busy", "big", "heavy", "top", "gros", "actif"], "label": "heavy traffic", "test": p => p.online && Groups.total(p) > 1e6 },
     { "w": ["quiet", "idle", "calme", "inactif"], "label": "almost idle", "test": p => p.online && Groups.total(p) < 1e5 },
+    { "w": ["exit", "lender", "sortie"], "label": "can lend Internet", "test": p => !!p.exit },
+    { "w": ["new", "recent", "nouveau", "recemment"], "label": "online for under an hour", "test": p => p.online && p.since > 0 && Date.now() - p.since < 3600000 },
     { "w": ["slow", "far", "lent", "loin"], "label": "latency > 100 ms", "test": p => p.online && p.latencyMs > 100 },
     { "w": ["fast", "near", "close", "rapide", "proche"], "label": "latency < 20 ms", "test": p => p.online && p.latencyMs < 20 }
 ];
