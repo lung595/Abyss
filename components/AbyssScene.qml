@@ -1855,6 +1855,23 @@ Item {
                 }
             }
 
+            // The jellyfish is the switch: ON/OFF, small, under "you"
+            StyledText {
+                readonly property string word: ({
+                        "connected": "ON",
+                        "connecting": "…"
+                    })[root.view.state] || "OFF"
+                x: root.frame.jelly.x - root.frame.jelly.r * 1.25 - 14 - implicitWidth / 2
+                y: root.frame.jelly.y + 16
+                visible: !!root.source
+                text: word
+                font.pixelSize: 9
+                font.weight: Font.Bold
+                font.letterSpacing: 1.2
+                color: root.connected ? Theme.tertiary : root.inkDim
+                opacity: jellyArea.containsMouse ? 1 : 0.8
+            }
+
             // When not connected: what is going on, and the one action that helps
             Column {
                 visible: !root.connected
