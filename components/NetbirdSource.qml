@@ -5,7 +5,8 @@ import "Netbird.js" as Netbird
 // The real mesh: reads the NetBird daemon through its CLI, with the same
 // view model and actions as DemoSource, so every surface works on either.
 //
-// Nothing runs while no view watches: no timer, no process. While one does,
+// One read at start (the bar shows the real state); after it, nothing runs
+// while no view watches: no timer, no process. While one does,
 // `netbird status --json` runs every 2 s, one read at a time (never piled
 // up); `netbird networks list` and `netbird profile list` only on opening,
 // after a change, and every 10th read for the networks.
@@ -292,4 +293,8 @@ QtObject {
 
     property CliRunner _reader: CliRunner {}
     property CliRunner _actor: CliRunner {}
+
+    // One read at start, so the bar and the launcher show the real state
+    // before any view opens (then nothing until one does)
+    Component.onCompleted: src._read(true, true)
 }
