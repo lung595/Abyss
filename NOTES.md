@@ -174,3 +174,10 @@ integration tests (`tests/qml/`, need PySide6) against a fake `netbird`
 - **Fix**: calls take a file lock; reads never save. `FAKE_NB_DELAY`
   slows every call down to try a slow machine: 6 runs out of 6 passed at
   0.3 s per call. CI actions moved to their Node 24 versions.
+
+### 13. `networks list` on every read when there is nothing to list
+- **Where**: `components/NetbirdSource.qml` (`_read`).
+- **Bug**: an empty list of networks (no routes, or a stopped daemon) made
+  every read (every 2 s) ask `netbird networks list` again: one process
+  too many each time.
+- **Fix**: asked once, then every 10th read and after each change.
