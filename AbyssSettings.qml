@@ -95,6 +95,13 @@ PluginSettings {
         defaultValue: true
     }
 
+    ToggleSetting {
+        settingKey: "companion"
+        label: "Companion"
+        description: "Darwin the goldfish: eats the traffic's crumbs, cleans the glass, waves when clicked"
+        defaultValue: true
+    }
+
     Section {
         text: "Peers"
     }

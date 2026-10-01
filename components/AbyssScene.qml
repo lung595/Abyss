@@ -12,6 +12,7 @@ import "Query.js" as Query
 import "Spring.js" as Spring
 import "Swim.js" as Swim
 import "Grips.js" as Grips
+import "Goldfish.js" as Fish
 
 // The deep, shared by the popout, the Control Center and the desktop.
 //
@@ -880,6 +881,31 @@ Item {
         return Math.max(-k * (size - from), Math.min(k * from, (to - from) * camera));
     }
 
+    // --- Darwin, the goldfish companion (setting "Companion") ---------------
+    // His life is Goldfish.js; the clock below moves him while someone
+    // watches, and nothing at all happens to him otherwise
+    readonly property bool companion: prefs.companion
+    property var fish: null
+    property int fishFrame: 0
+    // The water he may use: below the surface, above the floor, inside the
+    // bowl's narrowing
+    function _fishWater() {
+        const f = frame, side = Math.max(24, f.insetFloor + 24);
+        return { "l": side, "r": width - side, "top": f.surfaceY + 44, "bottom": f.floorY - 22 };
+    }
+    function _fishStep(dt) {
+        if (!companion || width < 200)
+            return;
+        if (!fish)
+            fish = Fish.create(_fishWater(), 7);
+        Fish.step(fish, dt, {
+            "b": _fishWater(),
+            "asleep": !connected,
+            "bits": view.down + view.up
+        });
+        fishFrame++;
+    }
+
     // --- The clock ---------------------------------------------------------
     property real t: 0
     property real ext: connected ? 1 : 0
@@ -927,6 +953,8 @@ Item {
         // Floating: slower asleep, so the deep seems to sleep
         if (floating || peekLive)
             swim += dt * (0.35 + 0.65 * power);
+        if (floating)
+            _fishStep(dt);
         // Grabbed things first, then the lens; tentacles rebuilt once (not
         // while a bubble hides the deep)
         const swam = _tripStep();
@@ -1767,6 +1795,13 @@ Item {
                 }
             }
 
+            // Behind every creature and label: he lives in the background
+            Goldfish {
+                scene: root
+                visible: root.companion && !!root.fish && root.peekId === ""
+                fish: root.fish
+                frame: root.fishFrame
+            }
             Repeater {
                 model: root.relayNames
                 Lantern {

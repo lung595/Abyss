@@ -114,6 +114,7 @@ In **Settings → Plugins**, turn **Abyss** on. The launcher entry works right a
 | | Open groups: hover and click, hover only, click only | Hover and click |
 | | Show offline peers | On |
 | | Light pulses | On |
+| | Companion: Darwin the goldfish | On |
 | Peers | Notifications when a peer comes or goes | Off |
 | | Terminal for SSH | Automatic |
 | Source | Mesh source: automatic, NetBird, test lab | Automatic (NetBird when installed) |
