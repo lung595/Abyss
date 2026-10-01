@@ -82,3 +82,58 @@ function sshTarget(host, link) {
         "options": l.port ? ["-p", l.port] : []
     };
 }
+
+// --- When it cannot open: say why, and how to fix it ------------------------
+
+// The port each way in listens on (a link's port wins for ssh and sftp)
+const PORTS = { "ssh": 22, "sftp": 22, "files": 22, "vnc": 5900, "rdp": 3389 };
+
+function portOf(kind, link) {
+    const l = cleanLink(link);
+    return (kind === "ssh" || kind === "sftp" || kind === "files") && l.port ? Number(l.port) : PORTS[kind] || 0;
+}
+
+// argv that exits 0 when host:port answers within 2 s. Both are arguments
+// of the script, never pasted into it; null for a refused host or port
+function probeCommand(host, port) {
+    if (!validHost(host) || !validPort(port))
+        return null;
+    const h = String(host).replace(/^\[|\]$/g, "");
+    return ["timeout", "2", "bash", "-c", ": </dev/tcp/\"$1\"/\"$2\"", "probe", h, String(port)];
+}
+
+// argv printing the package manager found here (pacman, apt…), or nothing
+function packageManagerCommand() {
+    return ["sh", "-c", "for p in pacman apt dnf zypper xbps-install; do command -v \"$p\" >/dev/null 2>&1 && { echo \"$p\"; exit 0; }; done; exit 1"];
+}
+
+// What to install for a way in, per package manager
+const PACKAGES = {
+    "vnc": { "pacman": "remmina libvncserver", "apt": "remmina remmina-plugin-vnc", "dnf": "remmina remmina-plugins-vnc", "zypper": "remmina", "xbps-install": "remmina" },
+    "rdp": { "pacman": "remmina freerdp", "apt": "remmina remmina-plugin-rdp", "dnf": "remmina remmina-plugins-rdp", "zypper": "remmina freerdp", "xbps-install": "remmina freerdp" },
+    "files": { "pacman": "gvfs", "apt": "gvfs-backends", "dnf": "gvfs-fuse", "zypper": "gvfs-backends", "xbps-install": "gvfs" }
+};
+const INSTALL = { "pacman": "sudo pacman -S --needed ", "apt": "sudo apt install ", "dnf": "sudo dnf install ", "zypper": "sudo zypper install ", "xbps-install": "sudo xbps-install " };
+
+// A missing viewer: { title, details, command } for a toast with a copy
+// button (command "" when the package manager is unknown)
+function installHelp(kind, pm) {
+    const pkg = (PACKAGES[kind] || {})[pm] || "";
+    const what = kind === "files" ? "file manager support for SFTP" : kind === "vnc" ? "VNC viewer" : "remote desktop (RDP) viewer";
+    return {
+        "title": "No " + what + " installed",
+        "details": pkg ? "Install it with this command, then click " + label(kind) + " again." : "Install Remmina (or " + (PROGRAMS[kind] || []).map(p => p[0]).join(", ") + ") from your software center, then try again.",
+        "command": pkg ? INSTALL[pm] + pkg : ""
+    };
+}
+
+// The device does not answer on that port: { title, details, command }
+function closedHelp(kind, name, isPhone, port) {
+    if (kind === "vnc")
+        return { "title": name + " is not sharing its screen", "details": "Turn on screen sharing (VNC) on " + name + ", port " + port + ". On Linux: install wayvnc or x11vnc and start it.", "command": "" };
+    if (kind === "rdp")
+        return { "title": name + " does not accept remote desktop", "details": "Turn on Remote Desktop on " + name + " (Windows: Settings › System › Remote Desktop; GNOME: Settings › Sharing).", "command": "" };
+    if (isPhone)
+        return { "title": name + " does not accept Terminal yet", "details": "On the phone: install Termux, run this once in it, then click \"Use 8022\" on its card here.", "command": "pkg install openssh && passwd && sshd" };
+    return { "title": name + " does not accept Terminal (port " + port + ")", "details": "Turn on its SSH server, on " + name + ":", "command": "sudo systemctl enable --now sshd" };
+}

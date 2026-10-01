@@ -13,6 +13,7 @@ import "Spring.js" as Spring
 import "Swim.js" as Swim
 import "Grips.js" as Grips
 import "Goldfish.js" as Fish
+import "Commands.js" as Commands
 
 // The deep, shared by the popout, the Control Center and the desktop.
 //
@@ -52,7 +53,7 @@ Item {
     // sun) and the floor (caves, sleepers) must stay, as the glass narrows
     property real insetTop: 0
     property real insetFloor: 0
-    readonly property bool chromeShown: !borderless || interacting || netsOpen || query !== ""
+    readonly property bool chromeShown: !borderless || interacting || netsOpen || query !== "" || searchFocus || addOpen
 
     readonly property Prefs prefs: Prefs {}
     readonly property var view: source ? source.view : Mesh.parse("", null, null, 0)
@@ -1103,6 +1104,59 @@ Item {
         return _carrying && it && !it.members.some(id => peerById[id] && peerById[id].exit) ? 0.15 : 1;
     }
     property string query: ""
+    // The search bar has the keyboard (its panel shows under it)
+    property bool searchFocus: false
+    // The commands the search finds ("add", "share", "disconnect"…)
+    readonly property var commands: Commands.match(query, {
+        "state": view.state,
+        "shareSsh": prefs.shareSsh,
+        "exit": !!source && source.exitNode !== "",
+        "console": !!view.me.console,
+        "lab": lab,
+        "offline": prefs.showOffline
+    }, 3)
+    // Enter in the search: the one device found, else the first command
+    function searchEnter() {
+        const hits = arr.items.filter(i => !i.fog);
+        if (query !== "" && arr.hits === 1 && hits.length === 1) {
+            activate(hits[0].id, true);
+            forceActiveFocus();
+        } else if (commands.length && !arr.hits)
+            runCommand(commands[0].act);
+    }
+    function runCommand(act) {
+        query = "";
+        forceActiveFocus();
+        if (act === "add")
+            openAdd();
+        else if (act === "connect" || act === "signin" || act === "start")
+            pressJelly();
+        else if (act === "disconnect")
+            source && source.disconnect();
+        else if (act === "share" || act === "unshare") {
+            if (actions)
+                actions.shareSsh(act === "share");
+            else
+                prefs.set("shareSsh", act === "share");
+        } else if (act === "direct")
+            setExit("", "");
+        else if (act === "offline")
+            prefs.set("showOffline", !prefs.showOffline);
+        else if (act === "console") {
+            if (actions)
+                actions.openUrl(view.me.console);
+        } else if (act === "leave")
+            source && source.logout();
+    }
+    // The "Add a device" sheet (AddDevice.qml)
+    property bool addOpen: false
+    function openAdd() {
+        cardId = "";
+        netsOpen = false;
+        listOpen = false;
+        query = "";
+        addOpen = true;
+    }
     property string omenHidden: ""
 
     // The open card, as in Orbit: it rises from the bottom while the water
@@ -1507,7 +1561,8 @@ Item {
             if (ps.length > 1)
                 out.push({ "text": "Profile: " + ps[(ps.indexOf(source.profile) + 1) % ps.length], "act": "profile" });
             out.push({ "text": prefs.showOffline ? "Hide offline peers" : "Show offline peers", "act": "offline" });
-            out.push({ "text": prefs.shareSsh ? "Stop peers SSH-ing in here" : "Let peers SSH in here", "act": "share" });
+            out.push({ "text": "Add a device…", "act": "add" });
+            out.push({ "text": prefs.shareSsh ? "Stop letting devices in" : "Let my devices in (SSH)", "act": "share" });
             if (view.me.console)
                 out.push({ "text": "Open the admin console", "act": "console" });
         } else if (p) {
@@ -1548,6 +1603,10 @@ Item {
         else if (a.act === "profile") {
             const ps = source.profiles;
             source.setProfile(ps[(ps.indexOf(source.profile) + 1) % ps.length]);
+        } else if (a.act === "add") {
+            closeMenu();
+            openAdd();
+            return;
         } else if (a.act === "share") {
             if (actions)
                 actions.shareSsh(!prefs.shareSsh);
@@ -2326,6 +2385,32 @@ Item {
             }
         }
 
+        // "Add a device": this computer or a phone, over everything but menus
+        AddDevice {
+            anchors.fill: parent
+            anchors.margins: 8
+            anchors.leftMargin: 8 + root.insetTop
+            anchors.rightMargin: 8 + root.insetTop
+            z: 70
+            scene: root
+            open: root.addOpen
+            onClosed: {
+                root.addOpen = false;
+                root.forceActiveFocus();
+            }
+        }
+
+        // Under the search bar: shortcuts while it is empty, the commands
+        // its words find while typing (Enter runs the first one)
+        SearchPanel {
+            scene: root
+            anchors.top: bar.bottom
+            anchors.topMargin: 6
+            x: bar.x + bar.searchX
+            width: Math.max(260, bar.searchW)
+            z: 60
+        }
+
         // Every peer, compactly (a big mesh): under the bar, over the deep
         PeerList {
             visible: root.listOpen && root.listWanted && root.cardId === ""
@@ -2585,7 +2670,7 @@ Item {
 
         // What the search understood, beside the bell (across from "you")
         Chip {
-            visible: root.query !== ""
+            visible: root.query !== "" && !(root.commands.length && !root.arr.hits)
             x: Math.min(root.width - width - 8, root.frame.jelly.x + root.frame.jelly.r * 1.25)
             y: root.frame.jelly.y - height / 2
             z: 26
@@ -2699,7 +2784,9 @@ Item {
     focus: true
     Keys.onPressed: event => {
         if (event.key === Qt.Key_Escape) {
-            if (_carrying)
+            if (addOpen)
+                addOpen = false;
+            else if (_carrying)
                 cancelCarry();
             else if (menuId !== "")
                 closeMenu();
@@ -2725,6 +2812,8 @@ Item {
             const hits = arr.items.filter(i => !i.fog);
             if (query !== "" && arr.hits === 1 && hits.length === 1)
                 activate(hits[0].id, true);
+            else if (query !== "" && !arr.hits && commands.length)
+                runCommand(commands[0].act);
             else if (focusId !== "")
                 activate(focusId, true);
             else

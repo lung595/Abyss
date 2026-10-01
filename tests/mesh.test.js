@@ -65,7 +65,7 @@ const json = (rx) => ({
 });
 const t0 = Date.parse("2026-09-26T12:01:00Z");
 const v1 = M.parse("Connected", json(1000), null, t0);
-eq("me", v1.me, { name: "wren", fqdn: "wren.mesh.example", ip: "100.92.0.1", version: "", console: "" });
+eq("me", v1.me, { name: "wren", fqdn: "wren.mesh.example", ip: "100.92.0.1", version: "", console: "", server: "" });
 eq("order: online by latency, then offline", v1.peers.map(p => p.name), ["near", "far", "gone"]);
 eq("counts", [v1.online, v1.total], [2, 3]);
 eq("relayed peer knows its relay", [v1.peers[1].relayed, v1.peers[1].relay], [true, "relay-eu"]);
@@ -173,5 +173,10 @@ eq("an address that is not a host says nothing", M.consoleUrl("https://100.64.0.
     const v = M.parse("Connected", { "daemonVersion": "0.60.1", "management": { "url": "https://api.netbird.io:443", "connected": true }, "peers": { "details": [] } }, null, 1000);
     ok("the view knows the version and the console", v.me.version === "0.60.1" && v.me.console === "https://app.netbird.io");
 }
+
+eq("NetBird Cloud needs no server for the apps", M.selfHosted("https://api.netbird.io:443"), "");
+eq("a self-hosted server, its default port dropped", M.selfHosted("https://NB.example.org:443/"), "https://nb.example.org");
+eq("another port is kept", M.selfHosted("https://nb.example.org:33073"), "https://nb.example.org:33073");
+eq("nothing is nothing", M.selfHosted(""), "");
 
 done("mesh");

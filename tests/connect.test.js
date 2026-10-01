@@ -23,4 +23,19 @@ ok("ports", C.validPort("8022") && C.validPort(22) && !C.validPort("0") && !C.va
 eq("only well-formed parts of a link stay", C.cleanLink({ "user": "-x", "port": "8022" }), { "user": "", "port": "8022" });
 eq("a link becomes user@host and -p", C.sshTarget("phone.mesh", { "user": "u0", "port": "8022" }), { "target": "u0@phone.mesh", "options": ["-p", "8022"] });
 
+// When it cannot open
+eq("ssh listens on 22", C.portOf("ssh", {}), 22);
+eq("a saved port wins for ssh", C.portOf("files", { "port": "8022" }), 8022);
+eq("vnc stays on 5900 whatever the link", C.portOf("vnc", { "port": "8022" }), 5900);
+eq("the probe hands host and port as arguments", C.probeCommand("vega.mesh", 22).slice(-3), ["probe", "vega.mesh", "22"]);
+ok("the probe script never holds the host", C.probeCommand("vega.mesh", 22)[4].indexOf("vega") < 0);
+eq("no probe for an option", C.probeCommand("-x", 22), null);
+eq("no probe for a bad port", C.probeCommand("h", "22; ls"), null);
+eq("an IPv6 host loses its brackets for bash", C.probeCommand("[fd00::1]", 22)[6], "fd00::1");
+eq("install help on Arch", C.installHelp("vnc", "pacman").command, "sudo pacman -S --needed remmina libvncserver");
+eq("install help on Debian", C.installHelp("rdp", "apt").command, "sudo apt install remmina remmina-plugin-rdp");
+eq("unknown package manager: no command", C.installHelp("rdp", "").command, "");
+ok("a phone gets the Termux line", C.closedHelp("ssh", "kestrel-phone", true, 22).command.indexOf("sshd") > 0);
+ok("a computer gets the sshd service", C.closedHelp("sftp", "atlas", false, 22).command === "sudo systemctl enable --now sshd");
+
 done("Connect.js");
