@@ -86,3 +86,30 @@ function parse(query, relays) {
     });
     return out;
 }
+
+// One peer for a word typed in a command (IPC, launcher): its exact name,
+// fqdn, address or id first, then the start of a name, but only when one
+// peer starts that way ("abyss ssh a" must not pick whoever comes first).
+// Returns { peer, many: [names] }: peer null with `many` listing the
+// candidates when the word fits several
+function lookup(peers, key) {
+    const k = String(key || "").trim().toLowerCase();
+    const none = { "peer": null, "many": [] };
+    if (!k)
+        return none;
+    const list = peers || [];
+    const exact = list.find(p => p.name.toLowerCase() === k || (p.fqdn || "").toLowerCase() === k || p.ip === k || p.id === key);
+    if (exact)
+        return { "peer": exact, "many": [] };
+    const starts = list.filter(p => p.name.toLowerCase().startsWith(k));
+    if (starts.length === 1)
+        return { "peer": starts[0], "many": [] };
+    return { "peer": null, "many": starts.map(p => p.name) };
+}
+
+// What to say when lookup found no single peer
+function lookupError(key, found) {
+    if (found.many.length)
+        return "Several peers start with " + key + ": " + found.many.join(", ");
+    return "No peer named " + key;
+}

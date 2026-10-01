@@ -5,6 +5,7 @@ import qs.Services
 import "components"
 import "components/Terminal.js" as Terminal
 import "components/MyGroups.js" as MyGroups
+import "components/Query.js" as Query
 
 // The one engine every surface shares: the mesh source, the actions that
 // leave the shell (copy, SSH, browser), notifications and the IPC.
@@ -75,10 +76,10 @@ Item {
         return false;
     }
 
-    // A peer by name, id or IP (for the IPC)
+    // A peer by name, fqdn, IP or id, or by the start of its name when only
+    // one peer starts that way (for the IPC and the launcher); null otherwise
     function findPeer(key) {
-        const k = String(key || "").toLowerCase();
-        return source.view.peers.find(p => p.name.toLowerCase() === k || p.id === k || p.ip === k) || source.view.peers.find(p => p.name.toLowerCase().startsWith(k)) || null;
+        return Query.lookup(source.view.peers, key).peer;
     }
 
     // --- Internet exit -------------------------------------------------------
@@ -170,18 +171,18 @@ Item {
 
         // Copies a peer's IP to the clipboard
         function copy(peer: string): string {
-            const p = root.findPeer(peer);
+            const found = Query.lookup(root.source.view.peers, peer), p = found.peer;
             if (!p)
-                return "No peer named " + peer;
+                return Query.lookupError(peer, found);
             root.copy(p.ip);
             return p.ip;
         }
 
         // Opens `ssh <peer>` in the terminal chosen in the settings
         function ssh(peer: string): string {
-            const p = root.findPeer(peer);
+            const found = Query.lookup(root.source.view.peers, peer), p = found.peer;
             if (!p)
-                return "No peer named " + peer;
+                return Query.lookupError(peer, found);
             return root.ssh(p.fqdn || p.ip) ? "OK" : "Refused: " + (p.fqdn || p.ip) + " is not a plain host name";
         }
 
@@ -197,9 +198,9 @@ Item {
                 root.setExit("", g.id);
                 return "Internet through " + g.name + (root.source.exitNode ? " (" + root.source.exitNode + ")" : ": nobody online");
             }
-            const p = root.findPeer(k);
+            const found = Query.lookup(root.source.view.peers, k), p = found.peer;
             if (!p)
-                return "No peer or group named " + target;
+                return found.many.length ? Query.lookupError(target, found) : "No peer or group named " + target;
             root.setExit(p.name, "");
             return "Internet through " + p.name;
         }
