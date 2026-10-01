@@ -91,6 +91,8 @@ function peerOf(d) {
     const online = d.status === "Connected";
     const relayed = String(d.connectionType || "").toLowerCase() === "relayed";
     const name = shortName(d.fqdn) || bareIp(d.netbirdIp);
+    const nets = (d.networks || d.routes || []).slice();
+    const exit = nets.some(n => n === "0.0.0.0/0" || n === "::/0");
     return {
         "id": d.publicKey || d.fqdn || d.netbirdIp || "",
         "name": name,
@@ -106,10 +108,15 @@ function peerOf(d) {
         "down": 0,
         "up": 0,
         "calm": 0,
-        // It offers the whole Internet (a 0.0.0.0/0 route: an exit node).
-        // Newer clients list what a peer serves as "networks", older ones as "routes"
-        "exit": (d.networks || d.routes || []).indexOf("0.0.0.0/0") >= 0,
-        "since": _time(d.statusSince),
+        // What goes through it right now ("networks" on newer clients,
+        // "routes" on older ones)
+        "networks": nets,
+        // The whole Internet goes through it now (a 0.0.0.0/0 route: an exit
+        // node). `exit` (it can lend Internet) starts the same; the NetBird
+        // source widens it to every peer with an exit route (Netbird.js)
+        "lending": online && exit,
+        "exit": exit,
+        "since": _time(d.lastStatusUpdate),
         "handshake": _time(d.lastWireguardHandshake)
     };
 }
