@@ -164,3 +164,13 @@ integration tests (`tests/qml/`, need PySide6) against a fake `netbird`
 - **Checked**: a step in `Daemon.test.qml`.
 - **Still open**: the bar count goes stale while no view is open (roadmap:
   "Bar count kept fresh without polling").
+
+### 12. The fake netbird lost changes made side by side (tests only)
+- **Where**: `tests/qml/fake-netbird`. Found by the first CI run: GitHub's
+  runner is slower than the machine the tests were written on.
+- **Bug**: each call loads, changes and saves its state; a test's `_set`
+  beside an action could be undone by it (the action saved what it had
+  loaded before), so "up" did not fail when told to.
+- **Fix**: calls take a file lock; reads never save. `FAKE_NB_DELAY`
+  slows every call down to try a slow machine: 6 runs out of 6 passed at
+  0.3 s per call. CI actions moved to their Node 24 versions.
