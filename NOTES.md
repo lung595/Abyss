@@ -54,3 +54,90 @@ Newest work at the bottom of each section.
   (`pc.home`, `pc.work`), else their address. Names that do not clash stay
   short.
 - **Checked**: 3 new cases in `tests/mesh.test.js`.
+
+### 5. "Connected since" would always be empty with the real daemon
+- **Where**: `components/Mesh.js` (`peerOf`).
+- **Bug**: the peer's time of its last state change was read from
+  `statusSince`, a key NetBird never prints; the client's JSON calls it
+  `lastStatusUpdate` (`client/status/status.go`). The demo mesh used the
+  same wrong key, so nothing showed it.
+- **Fix**: read `lastStatusUpdate`; the demo and the tests use it too.
+- **Checked**: `tests/netbird.test.js` parses a status shaped from the
+  client's own structs.
+
+### 6. "Can lend Internet" read from the wrong field
+- **Where**: `components/Mesh.js` (`exit`), and the whole Internet light.
+- **Bug**: a peer was taken as an exit node when its `networks` held
+  `0.0.0.0/0`. With the real daemon, a peer's `networks` only lists the
+  routes going through it *right now* (`AddPeerStateRoute` in the client's
+  route manager), so only the exit node already in use would have shown,
+  and the light could never be dropped anywhere else.
+- **Fix**: `Mesh.js` now tells both apart: `lending` (Internet goes through
+  it now) and `exit` (it can lend). The NetBird source widens `exit` from
+  `netbird networks list`: every `0.0.0.0/0` (or `::/0`) route belongs to
+  the peer seen carrying it, or the peer it is named after
+  (`Netbird.exitMap`).
+- **Limit, open**: NetBird's CLI never says which peer serves a route that
+  is not in use. A route named after nobody (e.g. "Office Exit") can only
+  be matched once it has been used; until then dropping the light on that
+  peer says to name the route after the peer. See "Open" below.
+
+### 7. The NetBird source (new)
+- **What**: `components/NetbirdSource.qml`, same interface as
+  `DemoSource`, picked by the new **Mesh source** setting (`auto` by
+  default: NetBird when `netbird` is installed, else the demo). Only the
+  source in use exists (a `Loader` in `AbyssDaemon.qml`).
+- **How**: `components/Netbird.js` (pure, tested) builds every command and
+  reads every answer; `components/CliRunner.qml` runs commands one at a
+  time. Reads (`status --json` every 2 s, `networks list` and `profile
+  list` when needed) and actions (`up`, `down`, `networks select`…) have
+  their own queues, so a sign-in waiting in the browser never stops the
+  reads. Nothing runs while no view is open.
+- **Privacy**: argv lists only, no shell; network ids go after `--`;
+  nothing written to disk; what is learned about exit routes stays in
+  memory.
+- **Errors**: every failed action says why in a toast (the same note at
+  most once per 30 s) and the light goes back where it was.
+
+### 8. CliRunner gave a command's output to another command's callback
+- **Where**: `components/CliRunner.qml` (found by the integration test
+  while writing it).
+- **Bug**: a callback that queued new commands started a process from
+  inside `_finish`, which then started another one over it: the output of
+  `networks list` reached the `profile list` callback, one run in two.
+- **Fix**: `_next` never starts a job while one runs or while it is
+  already starting one (`_starting`).
+- **Checked**: `tests/qml/CliRunner.test.qml` fails on the old code and
+  passes on the new; `NetbirdSource.test.qml` passed 4 runs out of 4.
+
+### 9. A view kept watching a source that was gone
+- **Where**: `components/AbyssScene.qml` (`_watch`).
+- **Bug**: when the source changed while a view was open, the old one was
+  never released and the new one never watched (it only mattered once the
+  source could change: the Mesh source setting).
+- **Fix**: the view keeps the object it watches and swaps it.
+
+## Tests
+
+`tests/run.sh` runs everything: the gjs unit tests, then the QML
+integration tests (`tests/qml/`, need PySide6) against a fake `netbird`
+(`tests/qml/fake-netbird`) whose outputs follow the real client's code:
+- `CliRunner.test.qml`: order, callbacks, skip, a missing program.
+- `NetbirdSource.test.qml`: reads, exit node moves (and refusals), caves,
+  connect / disconnect, a failed action in the middle, profiles, a stopped
+  daemon, and nothing running once no view watches.
+- `Daemon.test.qml`: the source chosen by the setting, the IPC.
+
+## Open
+
+- **Exit routes named after nobody** (see 6): a later step could list them
+  in the light's menu by route id, or let the user tie a route to a peer
+  once (kept in the settings).
+- **Lazy connections**: with NetBird's lazy connections on, idle peers are
+  reported `Idle` and drawn asleep although they are reachable.
+- **`netbird up` for a sign-in** opens the browser through the CLI; on a
+  machine where it cannot, the login URL is not shown in Abyss yet.
+- **Starting the service** uses `pkexec netbird service start`, which needs
+  a polkit agent (DMS has one).
+- Not tried against a live NetBird daemon from this environment: the
+  outputs come from the client's source code (cloned at 82e5428, 2026-09-30).

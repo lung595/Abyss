@@ -10,7 +10,8 @@ import "components/Query.js" as Query
 // The one engine every surface shares: the mesh source, the actions that
 // leave the shell (copy, SSH, browser), notifications and the IPC.
 // Surfaces find it with PluginService.pluginDaemonInstances["abyss"].
-// Nothing runs here on its own: the source only reads while a view watches.
+// Nothing runs here on its own: the source only reads while a view watches
+// (once at start, `command -v netbird` says whether NetBird is installed).
 // Privacy: peers and traffic stay in memory; nothing is written to disk
 // except the user's settings, and the plugin never talks to the network.
 Item {
@@ -19,14 +20,48 @@ Item {
     property var pluginService: null
     property string pluginId: "abyss"
 
-    // For now a made-up mesh; the NetBird source will take its place with
-    // the same interface (see components/DemoSource.qml)
-    readonly property alias source: demo
+    // The mesh every surface draws: the NetBird daemon, or a made-up mesh
+    // to try the plugin (setting "Mesh source"; "auto" takes NetBird when
+    // its CLI is installed). Both have the same interface; only the one in
+    // use exists. Null until the lookup below has answered.
+    readonly property var source: sourceLoader.item
+    readonly property bool useDemo: prefs.source === "demo" || (prefs.source === "auto" && !hasNetbird)
+    // The `netbird` CLI is installed (looked up once, at start)
+    property bool hasNetbird: false
+    property bool _looked: false
 
-    DemoSource {
-        id: demo
+    Loader {
+        id: sourceLoader
+        active: root._looked || root.prefs.source !== "auto"
+        sourceComponent: root.useDemo ? demoSource : netbirdSource
+    }
+    Component {
+        id: demoSource
+        DemoSource {}
+    }
+    Component {
+        id: netbirdSource
+        NetbirdSource {}
     }
 
+    CliRunner {
+        id: lookup
+        Component.onCompleted: run(["sh", "-c", "command -v netbird"], (out, err, code) => {
+            root.hasNetbird = code === 0;
+            root._looked = true;
+        })
+    }
+
+    // What the NetBird source could not do, said once
+    Connections {
+        target: root.source
+        ignoreUnknownSignals: true
+        function onNotice(text) {
+            ToastService.showInfo("Abyss", text);
+        }
+    }
+
+    readonly property alias prefs: prefs
     Prefs {
         id: prefs
     }
@@ -58,13 +93,16 @@ Item {
 
     // The jellyfish's click: the one step that moves the connection forward
     function pressJelly() {
-        const st = source.view.state;
+        const src = root.source;
+        if (!src)
+            return;
+        const st = src.view.state;
         if (st === "needsLogin")
-            source.login();
+            src.login();
         else if (st === "stopped")
-            source.startService();
+            src.startService();
         else
-            source.toggle();
+            src.toggle();
     }
 
     // The deep, in the bar's popout (the launcher, a keyboard shortcut).
@@ -79,19 +117,21 @@ Item {
     // A peer by name, fqdn, IP or id, or by the start of its name when only
     // one peer starts that way (for the IPC and the launcher); null otherwise
     function findPeer(key) {
-        return Query.lookup(source.view.peers, key).peer;
+        return root.source ? Query.lookup(root.source.view.peers, key).peer : null;
     }
 
     // --- Internet exit -------------------------------------------------------
     // Through one peer (its name), through a group of mine (its id: the
     // group lends its best member, MyGroups.pickExit), or "" to stop
     function setExit(peerName, groupId) {
+        if (!root.source)
+            return;
         _choosing = true;
         prefs.set("exitGroup", groupId || "");
         if (groupId)
             _followExitGroup(groupId);
         else
-            source.setExitNode(peerName || "");
+            root.source.setExitNode(peerName || "");
         _choosing = false;
     }
     property bool _choosing: false
@@ -101,12 +141,13 @@ Item {
         const g = MyGroups.byId(prefs.groups, id);
         if (!g)
             return;
-        const p = MyGroups.pickExit(source.view.peers, g.members, source.exitNode);
-        if (p && p.name !== source.exitNode)
-            source.setExitNode(p.name);
+        const src = root.source;
+        const p = MyGroups.pickExit(src.view.peers, g.members, src.exitNode);
+        if (p && p.name !== src.exitNode)
+            src.setExitNode(p.name);
     }
     Connections {
-        target: demo
+        target: root.source
         function onViewChanged() {
             if (prefs.exitGroup !== "")
                 root._followExitGroup(prefs.exitGroup);
@@ -116,7 +157,7 @@ Item {
         function onExitNodeChanged() {
             if (root._choosing || prefs.exitGroup === "")
                 return;
-            const g = MyGroups.byId(prefs.groups, prefs.exitGroup), p = root.findPeer(demo.exitNode);
+            const g = MyGroups.byId(prefs.groups, prefs.exitGroup), p = root.findPeer(root.source.exitNode);
             if (!g || !p || g.members.indexOf(p.id) < 0)
                 prefs.set("exitGroup", "");
         }
@@ -124,7 +165,7 @@ Item {
 
     // --- Notifications (off by default, never for a muted peer) -------------
     Connections {
-        target: demo
+        target: root.source
         function onPeerEvent(name, online) {
             if (!prefs.notifications)
                 return;
@@ -144,6 +185,8 @@ Item {
 
         // One line: state, then how many peers are online
         function status(): string {
+            if (!root.source)
+                return "Abyss is starting";
             const v = root.source.view;
             const on = v.peers.filter(p => p.online).length;
             return v.state + (v.state === "connected" ? " · " + on + "/" + v.peers.length + " online" : "");
@@ -155,22 +198,30 @@ Item {
         }
 
         function toggle(): string {
+            if (!root.source)
+                return "Abyss is starting";
             root.source.toggle();
             return "OK";
         }
 
         function connect(): string {
+            if (!root.source)
+                return "Abyss is starting";
             root.source.connect();
             return "OK";
         }
 
         function disconnect(): string {
+            if (!root.source)
+                return "Abyss is starting";
             root.source.disconnect();
             return "OK";
         }
 
         // Copies a peer's IP to the clipboard
         function copy(peer: string): string {
+            if (!root.source)
+                return "Abyss is starting";
             const found = Query.lookup(root.source.view.peers, peer), p = found.peer;
             if (!p)
                 return Query.lookupError(peer, found);
@@ -180,6 +231,8 @@ Item {
 
         // Opens `ssh <peer>` in the terminal chosen in the settings
         function ssh(peer: string): string {
+            if (!root.source)
+                return "Abyss is starting";
             const found = Query.lookup(root.source.view.peers, peer), p = found.peer;
             if (!p)
                 return Query.lookupError(peer, found);
@@ -188,6 +241,8 @@ Item {
 
         // Internet through a peer, a group of mine (by name), or "off"
         function exit(target: string): string {
+            if (!root.source)
+                return "Abyss is starting";
             const k = String(target || "").trim().toLowerCase();
             if (k === "" || k === "off" || k === "none") {
                 root.setExit("", "");
@@ -207,6 +262,8 @@ Item {
 
         // Jumps the demo mesh to a state, to try the interface
         function demo(state: string): string {
+            if (!root.source)
+                return "Abyss is starting";
             if (!root.source.demo)
                 return "Not in demo mode";
             root.source.setState(state);

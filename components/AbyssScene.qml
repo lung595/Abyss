@@ -1022,20 +1022,25 @@ Item {
     }
 
     // --- Watching: the source only reads NetBird while someone looks --------
-    property bool _watching: false
+    // The source this view watches (null for none). Kept so a source that
+    // changes (Mesh source setting) is released and the new one watched
+    property var _watched: null
     function _watch() {
-        const want = active && !!source;
-        if (want !== _watching && source) {
-            source.watch(want);
-            _watching = want;
-        }
+        const want = active && source ? source : null;
+        if (want === _watched)
+            return;
+        if (_watched)
+            _watched.watch(false);
+        _watched = want;
+        if (want)
+            want.watch(true);
     }
     onActiveChanged: _watch()
     onSourceChanged: _watch()
     Component.onCompleted: _watch()
     Component.onDestruction: {
-        if (_watching && source)
-            source.watch(false);
+        if (_watched)
+            _watched.watch(false);
     }
 
     // --- Actions -----------------------------------------------------------

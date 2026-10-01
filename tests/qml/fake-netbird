@@ -1,0 +1,131 @@
+#!/usr/bin/env python3
+# A stand-in for the `netbird` CLI, for the QML integration tests. It keeps
+# a small made-up mesh in $FAKE_NB/state.json, answers the commands Abyss
+# runs with outputs shaped like the real client's (client/status/status.go,
+# client/cmd/networks.go, profile.go), and logs every call to
+# $FAKE_NB/calls.log. Every name and key is fictional.
+import json, os, sys, time
+
+DIR = os.environ["FAKE_NB"]
+STATE = os.path.join(DIR, "state.json")
+DEFAULT = {
+    "daemon": "Connected",          # or "stopped": no daemon answers
+    "profile": "default",
+    "profiles": ["default", "work"],
+    "routes": [
+        {"id": "exit-atlas", "range": "0.0.0.0/0", "selected": False, "peer": "atlas"},
+        {"id": "exit-harbor", "range": "0.0.0.0/0", "selected": False, "peer": "harbor-vps"},
+        {"id": "home-lan", "range": "192.168.1.0/24", "selected": True, "peer": "nook-nas"},
+    ],
+    "fail": "",                     # a subcommand that fails ("up", "networks"…)
+}
+
+
+def load():
+    try:
+        with open(STATE) as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return json.loads(json.dumps(DEFAULT))
+
+
+def save(s):
+    # Atomic: the source reads while an action writes
+    tmp = STATE + ".%d" % os.getpid()
+    with open(tmp, "w") as f:
+        json.dump(s, f)
+    os.replace(tmp, STATE)
+
+
+def peer(name, ip, routes, connected=True, relayed=False):
+    t = time.time()
+    return {
+        "fqdn": name + ".netbird.cloud", "netbirdIp": ip, "publicKey": "key-" + name,
+        "status": "Connected" if connected else "Idle",
+        "lastStatusUpdate": "2026-09-30T08:00:00Z",
+        "connectionType": ("Relayed" if relayed else "P2P") if connected else "",
+        "iceCandidateType": {"local": "", "remote": ""}, "iceCandidateEndpoint": {"local": "", "remote": ""},
+        "relayAddress": "rels://relay-eu.netbird.io:443" if relayed else "",
+        "lastWireguardHandshake": "2026-09-30T09:59:00Z",
+        "transferReceived": int(t * 125000) if connected else 0,
+        "transferSent": int(t * 12500) if connected else 0,
+        "latency": 8000000 if connected else 0, "quantumResistance": False,
+        "networks": [r["range"] for r in routes if r["selected"] and r["peer"] == name],
+    }
+
+
+def status(s):
+    up = s["daemon"] == "Connected"
+    peers = [peer("atlas", "100.90.0.2", s["routes"]), peer("harbor-vps", "100.90.0.4", s["routes"], relayed=True),
+             peer("nook-nas", "100.90.0.3", s["routes"]), peer("lark-phone", "100.90.0.5", s["routes"], connected=False)] if up else []
+    return {
+        "peers": {"total": len(peers), "connected": sum(p["status"] == "Connected" for p in peers), "details": peers},
+        "cliVersion": "0.60.0", "daemonVersion": "0.60.0", "daemonStatus": s["daemon"],
+        "management": {"url": "https://api.netbird.io:443", "connected": up, "error": ""},
+        "signal": {"url": "https://signal.netbird.io:443", "connected": up, "error": ""},
+        "relays": {"total": 1, "available": 1, "details": [{"uri": "rels://relay-eu.netbird.io:443", "available": True, "error": ""}]},
+        "netbirdIp": "100.90.0.1/16", "publicKey": "key-wren", "usesKernelInterface": True,
+        "fqdn": "wren.netbird.cloud", "quantumResistance": False, "networks": [], "forwardingRules": 0,
+        "dnsServers": [], "events": [], "lazyConnectionEnabled": False, "profileName": s["profile"],
+    }
+
+
+def main(argv):
+    s = load()
+    if argv[:1] == ["_set"]:
+        # Test hook, not a NetBird command: _set <key> <json value>
+        s[argv[1]] = json.loads(argv[2])
+        save(s)
+        return 0
+    with open(os.path.join(DIR, "calls.log"), "a") as f:
+        f.write(" ".join(argv) + "\n")
+    if s["daemon"] == "stopped" and argv[:1] != ["service"]:
+        sys.stderr.write("Error: failed to connect to daemon error: context deadline exceeded\n"
+                         "If the daemon is not running please run: \nnetbird service install \nnetbird service start\n")
+        return 1
+    if argv and s["fail"] and argv[0] == s["fail"]:
+        sys.stderr.write("Error: " + argv[0] + " failed: made-up failure\n")
+        return 1
+    cmd = argv[0] if argv else ""
+    if cmd == "status":
+        print(json.dumps(status(s), indent=2))
+    elif cmd == "up":
+        s["daemon"] = "Connected"
+    elif cmd == "down":
+        s["daemon"] = "Idle"
+    elif cmd == "service" and argv[1:2] == ["start"]:
+        s["daemon"] = "Idle"
+    elif cmd == "networks" and argv[1] in ("list", "ls"):
+        if not s["routes"]:
+            print("No networks available.")
+        else:
+            print("Available Networks:")
+            for r in s["routes"]:
+                print("\n  - ID: %s\n    Network: %s\n    Status: %s" % (r["id"], r["range"], "Selected" if r["selected"] else "Not Selected"))
+    elif cmd == "networks" and argv[1] in ("select", "deselect"):
+        ids = [a for a in argv[2:] if a not in ("-a", "--append", "--")]
+        on = argv[1] == "select"
+        if on and "-a" not in argv:
+            for r in s["routes"]:
+                r["selected"] = False
+        for r in s["routes"]:
+            if r["id"] in ids or ids == ["all"]:
+                r["selected"] = on
+        print("Networks %sselected successfully." % ("" if on else "de"))
+    elif cmd == "profile" and argv[1] == "list":
+        print("NAME     ACTIVE")
+        for p in s["profiles"]:
+            print("%-8s %s" % (p, "✓" if p == s["profile"] else ""))
+    elif cmd == "profile" and argv[1] == "select":
+        s["profile"] = argv[2]
+        if s["daemon"] == "Connected":
+            s["daemon"] = "Idle"
+        print("Profile switched to: " + argv[2])
+    else:
+        sys.stderr.write("unknown command " + " ".join(argv) + "\n")
+        return 1
+    save(s)
+    return 0
+
+
+sys.exit(main(sys.argv[1:]))

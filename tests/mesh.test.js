@@ -51,7 +51,7 @@ const peer = (name, status, type, latMs, rx, tx, extra) => Object.assign({
     fqdn: name + ".mesh.example", netbirdIp: "100.92.0." + name.length, publicKey: "k-" + name,
     status, connectionType: type, latency: latMs * 1e6, transferReceived: rx, transferSent: tx,
     relayAddress: type === "Relayed" ? "rels://relay-eu.mesh.example:443" : "",
-    statusSince: "2026-09-26T10:00:00Z", lastWireguardHandshake: "2026-09-26T12:00:00Z"
+    lastStatusUpdate: "2026-09-26T10:00:00Z", lastWireguardHandshake: "2026-09-26T12:00:00Z"
 }, extra || {});
 const json = (rx) => ({
     fqdn: "wren.mesh.example", netbirdIp: "100.92.0.1/16",

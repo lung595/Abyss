@@ -1,0 +1,2 @@
+module qs.Common
+singleton SettingsData 1.0 SettingsData.qml
