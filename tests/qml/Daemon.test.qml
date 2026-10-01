@@ -36,7 +36,8 @@ Item {
             daemon.source.watch(true);
         },
         () => {
-            check("ipc status", test.ipc.status() === "connected · 3/4 online", test.ipc.status());
+            check("ipc status", test.ipc.status() === "connected · 3/4 online · Internet directly", test.ipc.status());
+            check("ipc exit alone says where Internet goes out", test.ipc.exit("") === "Internet goes out directly", test.ipc.exit(""));
             check("ipc copy", test.ipc.copy("nook") === "100.90.0.3" && JSON.stringify(Quickshell.launched[0]) === '["dms","cl","copy","100.90.0.3"]', Quickshell.launched);
             check("ipc copy, unknown peer", test.ipc.copy("zz") === "No peer named zz");
             check("ipc ssh answers at once", test.ipc.ssh("atlas") === "OK");
@@ -45,6 +46,7 @@ Item {
         () => {
             check("ipc ssh opens a terminal with the fqdn, once one is found", Quickshell.launched[1].slice(-1)[0] === "atlas.netbird.cloud", Quickshell.launched);
             check("the exit reached NetBird", daemon.source.exitNode === "harbor-vps" && daemon.source.view.peers.find(p => p.name === "harbor-vps").lending);
+            check("ipc exit alone names the peer", test.ipc.exit(" ") === "Internet goes out through harbor-vps", test.ipc.exit(" "));
             check("ipc exit off", test.ipc.exit("off") === "Internet exit off");
             check("ipc demo refuses on the real mesh", test.ipc.demo("needsLogin") === "Not in demo mode");
             PluginService.savePluginData("abyss", "source", "demo");

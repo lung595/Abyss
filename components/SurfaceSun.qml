@@ -15,6 +15,8 @@ Item {
     // Where it rests: above the exit peer, or at the right of the surface
     property point home
     property string label: ""
+    // What goes through the beam now ("↓ 9.5 Mb/s  ↑ 1.2 Mb/s"), "" when nothing
+    property string rates: ""
     readonly property bool dragging: area.drag.active
     property bool reduceMotion: false
     // Where it is drawn: `home`, but a new home (an exit picked from the
@@ -47,16 +49,33 @@ Item {
         anchors.centerIn: parent
         color: Qt.lighter(sun.scene.sunColor, 1.1)
     }
-    StyledText {
+    Column {
         // Left of the light, or right of it when the edge is too near
-        x: sun.x - implicitWidth - 2 < 4 ? sun.width + 2 : -implicitWidth - 2
-        anchors.verticalCenter: parent.verticalCenter
+        id: words
+        objectName: "sunWords"
+        readonly property bool onRight: sun.x - implicitWidth - 2 < 4
+        x: onRight ? sun.width + 2 : -implicitWidth - 2
+        // The name level with the light, the traffic hanging under it
+        y: (sun.height - title.implicitHeight) / 2
         visible: !sun.dragging && sun.label !== ""
-        text: sun.label
-        wrapMode: Text.NoWrap
-        font.pixelSize: 11
-        font.weight: Font.DemiBold
-        color: sun.scene.ink
+        StyledText {
+            id: title
+            x: words.onRight ? 0 : words.width - implicitWidth
+            text: sun.label
+            wrapMode: Text.NoWrap
+            font.pixelSize: 11
+            font.weight: Font.DemiBold
+            color: sun.scene.ink
+        }
+        StyledText {
+            x: words.onRight ? 0 : words.width - implicitWidth
+            visible: sun.rates !== ""
+            text: sun.rates
+            wrapMode: Text.NoWrap
+            font.pixelSize: 10
+            font.family: Theme.monoFontFamily
+            color: sun.scene.inkDim
+        }
     }
     StyledText {
         anchors.top: parent.bottom
