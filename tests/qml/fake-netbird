@@ -4,7 +4,7 @@
 # runs with outputs shaped like the real client's (client/status/status.go,
 # client/cmd/networks.go, profile.go), and logs every call to
 # $FAKE_NB/calls.log. Every name and key is fictional.
-import json, os, sys, time
+import fcntl, json, os, sys, time
 
 DIR = os.environ["FAKE_NB"]
 STATE = os.path.join(DIR, "state.json")
@@ -87,6 +87,16 @@ def read(s, argv):
 
 
 def main(argv):
+    # Changes are load-modify-save: one process at a time, or a change made
+    # beside another (a test's _set beside an action) would be lost
+    with open(os.path.join(DIR, "lock"), "w") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        return run(argv)
+
+
+def run(argv):
+    # FAKE_NB_DELAY=0.3: every command takes that long (a slow machine)
+    time.sleep(float(os.environ.get("FAKE_NB_DELAY", "0")))
     s = load()
     if argv[:1] == ["_set"]:
         # Test hook, not a NetBird command: _set <key> <json value>
