@@ -17,6 +17,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ### Changed
 
+- **The jellyfish is the only on/off switch**: the switch at the top left is gone; a small ON / OFF under "you" says the state, and a click on the jellyfish connects or disconnects.
 - Documentation split into `README.md`, `docs/GUIDE.md`, `CHANGELOG.md`, `ROADMAP.md` and `CONTRIBUTING.md`.
 - **Internet through a peer, the NetBird way**: a peer can lend Internet when one of NetBird's exit routes (`0.0.0.0/0`) goes through it. A route is matched to the peer seen carrying it, or the peer it is named after (`exit-atlas`); otherwise dropping the light there says to name the route after the peer.
 - **Commands pick the right peer**: `dms ipc call abyss ssh a` no longer picks whoever comes first when several peers start with "a"; it names them.
