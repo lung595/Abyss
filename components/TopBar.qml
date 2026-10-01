@@ -14,6 +14,10 @@ Rectangle {
     property var source
     property bool compact: false
 
+    // Where the search field sits, for the panel under it
+    readonly property real searchX: search.x
+    readonly property real searchW: search.width
+
     signal networksClicked
     signal listClicked
 
@@ -25,6 +29,7 @@ Rectangle {
 
 
     Row {
+        id: status
         anchors.left: parent.left
         anchors.leftMargin: 12
         anchors.verticalCenter: parent.verticalCenter
@@ -55,12 +60,128 @@ Rectangle {
         }
     }
 
+    // Search: always there, in the middle. Typing anywhere in the deep
+    // writes here too; it finds devices, and commands ("add", "share"…)
+    Rectangle {
+        id: search
+        anchors.left: status.right
+        anchors.leftMargin: 12
+        anchors.right: actions.left
+        anchors.rightMargin: 8
+        anchors.verticalCenter: parent.verticalCenter
+        height: 28
+        radius: 14
+        readonly property bool on: field.activeFocus
+        color: Qt.rgba(bar.scene.ink.r, bar.scene.ink.g, bar.scene.ink.b, on ? 0.12 : hover.containsMouse ? 0.09 : 0.06)
+        border.width: on ? 1.5 : 1
+        border.color: on ? bar.scene.sunColor : Qt.rgba(bar.scene.ink.r, bar.scene.ink.g, bar.scene.ink.b, 0.14)
+        Behavior on color {
+            ColorAnimation {
+                duration: 120
+            }
+        }
+        MouseArea {
+            id: hover
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.IBeamCursor
+            onClicked: field.forceActiveFocus()
+        }
+        DankIcon {
+            id: lens
+            x: 9
+            anchors.verticalCenter: parent.verticalCenter
+            name: "search"
+            size: 16
+            color: search.on ? bar.scene.sunColor : bar.scene.inkDim
+        }
+        TextInput {
+            id: field
+            anchors.left: lens.right
+            anchors.leftMargin: 6
+            anchors.right: clear.visible ? clear.left : parent.right
+            anchors.rightMargin: 6
+            anchors.verticalCenter: parent.verticalCenter
+            text: bar.scene.query
+            font.pixelSize: 12
+            color: bar.scene.ink
+            selectByMouse: true
+            clip: true
+            onTextEdited: bar.scene.query = text.toLowerCase()
+            onActiveFocusChanged: bar.scene.searchFocus = activeFocus
+            Keys.onPressed: event => {
+                if (event.key === Qt.Key_Escape) {
+                    if (bar.scene.query !== "")
+                        bar.scene.query = "";
+                    else
+                        bar.scene.forceActiveFocus();
+                    event.accepted = true;
+                } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                    bar.scene.searchEnter();
+                    event.accepted = true;
+                } else if (event.key === Qt.Key_Down && bar.scene.query === "") {
+                    bar.scene.forceActiveFocus();
+                    event.accepted = true;
+                }
+            }
+        }
+        StyledText {
+            anchors.left: field.left
+            anchors.right: parent.right
+            anchors.rightMargin: 8
+            anchors.verticalCenter: parent.verticalCenter
+            visible: field.text === ""
+            text: bar.compact || search.width < 190 ? "Search" : "Search devices or type a command"
+            font.pixelSize: 12
+            color: bar.scene.inkDim
+            elide: Text.ElideRight
+            wrapMode: Text.NoWrap
+        }
+        // How many it finds, and a way out
+        Row {
+            id: clear
+            visible: bar.scene.query !== ""
+            anchors.right: parent.right
+            anchors.rightMargin: 4
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: 4
+            StyledText {
+                anchors.verticalCenter: parent.verticalCenter
+                visible: search.width > 150
+                text: bar.scene.arr.hits ? bar.scene.arr.hits + "" : "0"
+                font.pixelSize: 11
+                font.weight: Font.Bold
+                color: bar.scene.arr.hits ? bar.scene.sunColor : Theme.warning
+            }
+            ActionChip {
+                height: 20
+                icon: "close"
+                ink: bar.scene.ink
+                tip: "Clear (Esc)"
+                onClicked: {
+                    bar.scene.query = "";
+                    field.forceActiveFocus();
+                }
+            }
+        }
+    }
+
     Row {
+        id: actions
         anchors.right: parent.right
         anchors.rightMargin: 6
         anchors.verticalCenter: parent.verticalCenter
         spacing: 6
 
+        // Add a device: this computer or a phone, step by step
+        ActionChip {
+            icon: "add"
+            primary: true
+            accent: bar.scene.sunColor
+            ink: bar.scene.ink
+            tip: "Add a device"
+            onClicked: bar.scene.openAdd()
+        }
         // In the test lab a flask, so a made-up mesh is never taken for yours
         ActionChip {
             readonly property bool lab: bar.scene.lab

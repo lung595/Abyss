@@ -113,26 +113,54 @@ Item {
 
     // Reaches a peer the way its card says: "ssh", "sftp" (a terminal),
     // "files" (the file manager), "vnc" or "rdp" (whichever viewer is
-    // installed). Says why when it cannot
+    // installed). First knocks on its port (2 s at most): a device that does
+    // not answer gets a toast saying how to turn that on, and a missing
+    // viewer one with the command that installs it (DMS adds a copy button)
     function reach(kind, peer) {
         if (!peer)
             return false;
         const host = peer.fqdn || peer.ip, link = prefs.linkOf(peer.id);
-        if (kind === "ssh" || kind === "sftp")
-            return root.ssh(host, prefs.terminal, link, kind);
-        const find = Connect.lookupCommand(kind);
-        if (!find || !Connect.validHost(host)) {
-            ToastService.showInfo("Abyss", "Not opening " + kind + " to \"" + host + "\"");
+        if (!Connect.validHost(host)) {
+            ToastService.showInfo("Abyss", "Not opening " + kind + ": \"" + host + "\" is not a plain host name or address");
             return false;
         }
-        lookup.run(find, (out, err, code) => {
-            const program = String(out).trim(), cmd = program ? Connect.command(kind, program, host) : null;
-            if (code !== 0 || !cmd)
-                ToastService.showInfo("Abyss", Connect.missingText(kind));
-            else
-                Quickshell.execDetached(cmd);
+        const probe = root.source && !root.source.demo ? Connect.probeCommand(peer.ip || host, Connect.portOf(kind, link)) : null;
+        if (!probe) {
+            root._open(kind, host, link);
+            return true;
+        }
+        prober.run(probe, (out, err, code) => {
+            if (code === 0) {
+                root._open(kind, host, link);
+                return;
+            }
+            const port = Connect.portOf(kind, link);
+            root._help(Connect.closedHelp(kind, peer.name, peer.kind === "phone", port));
         });
         return true;
+    }
+    function _open(kind, host, link) {
+        if (kind === "ssh" || kind === "sftp") {
+            root.ssh(host, prefs.terminal, link, kind);
+            return;
+        }
+        lookup.run(Connect.lookupCommand(kind), (out, err, code) => {
+            const program = String(out).trim(), cmd = program ? Connect.command(kind, program, host) : null;
+            if (code === 0 && cmd) {
+                Quickshell.execDetached(cmd);
+                return;
+            }
+            lookup.run(Connect.packageManagerCommand(), pm => root._help(Connect.installHelp(kind, String(pm).trim())));
+        });
+    }
+    // A toast with a title, a plain line and, when there is one, a command
+    // to copy (DMS's toast shows a copy button for it)
+    function _help(h) {
+        ToastService.showWarning(h.title, h.details, h.command, "abyss-help");
+    }
+    CliRunner {
+        id: prober
+        timeout: 4000
     }
 
     // Lets the other peers SSH into this device, or stops letting them. The

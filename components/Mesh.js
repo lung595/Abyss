@@ -241,6 +241,16 @@ function consoleUrl(managementUrl) {
     return m[1].toLowerCase() + "://" + host;
 }
 
+// A self-hosted management address, without its default port; "" for
+// NetBird Cloud or nothing
+function selfHosted(managementUrl) {
+    const m = String(managementUrl || "").match(/^(https?):\/\/([^\/:?#]+)(:\d+)?/i);
+    if (!m || m[2].toLowerCase() === "api.netbird.io")
+        return "";
+    const port = m[3] && !(m[1].toLowerCase() === "https" && m[3] === ":443") ? m[3] : "";
+    return m[1].toLowerCase() + "://" + m[2].toLowerCase() + port;
+}
+
 function parse(daemonStatus, json, prev, now) {
     const state = stateOf(daemonStatus);
     const s = json || {};
@@ -285,7 +295,10 @@ function parse(daemonStatus, json, prev, now) {
             "ip": bareIp(s.netbirdIp),
             // The client's own version, and where the admin console is
             "version": String(s.daemonVersion || ""),
-            "console": consoleUrl((s.management || {}).url)
+            "console": consoleUrl((s.management || {}).url),
+            // The management server, as the apps ask for it when self-hosted
+            // ("" on NetBird Cloud: the apps know it)
+            "server": selfHosted((s.management || {}).url)
         },
         "peers": list,
         "online": online,

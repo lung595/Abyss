@@ -47,6 +47,37 @@ Rectangle {
         }
     }
 
+    // The tip, after a short rest of the pointer: says what an icon does
+    Rectangle {
+        visible: btn.tip !== "" && tipTimer.shown
+        z: 100
+        anchors.top: parent.bottom
+        anchors.topMargin: 6
+        anchors.horizontalCenter: parent.horizontalCenter
+        width: tipText.implicitWidth + 16
+        height: 24
+        radius: 8
+        color: Qt.rgba(0.08, 0.07, 0.1, 0.95)
+        border.width: 1
+        border.color: Qt.rgba(btn.ink.r, btn.ink.g, btn.ink.b, 0.2)
+        StyledText {
+            id: tipText
+            anchors.centerIn: parent
+            text: btn.tip
+            font.pixelSize: 11
+            color: "#f2eef8"
+            wrapMode: Text.NoWrap
+        }
+    }
+    Timer {
+        id: tipTimer
+        property bool shown: false
+        interval: 450
+        running: area.containsMouse && btn.tip !== ""
+        onTriggered: shown = true
+        onRunningChanged: if (!running) shown = false
+    }
+
     MouseArea {
         id: area
         anchors.fill: parent
