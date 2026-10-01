@@ -385,7 +385,7 @@ PluginSettings {
                     Effect {
                         settingKey: "celebrate"
                         label: "Celebrations"
-                        description: "A burst of bubbles when a new device joins"
+                        description: "A burst of bubbles when a device you add shows up"
                         defaultValue: true
                         impact: "low"
                         cost: "A few seconds, once per new device"
