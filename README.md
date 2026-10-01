@@ -90,7 +90,7 @@ In **Settings → Plugins**, turn **Abyss** on. The launcher entry works right a
 | The light of the surface | Internet; drag it onto a peer to go out through it |
 | A shoal ("3 busy") | A group; hover or click to open it |
 
-**Find a peer**: just type its name. **Launcher**: Super+Space, `abyss`, then connect, choose where Internet goes out, or `abyss vega` to copy or SSH.
+**Find a peer**: just type its name. **Launcher**: Super+Space, `abyss`, then connect, choose where Internet goes out, or `abyss vega` to copy or SSH. The launcher understands the deep's search words too: `abyss >100ms`, `abyss ssh nas`, `abyss copy phones`, `abyss ssh direct <5ms`.
 
 ### Internet through a peer
 

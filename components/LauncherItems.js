@@ -1,5 +1,6 @@
 .pragma library
 .import "MyGroups.js" as MyGroups
+.import "Query.js" as Query
 
 // What typing "abyss" in the launcher (Super+Space) offers. First the deep
 // itself — the whole scene, with everything it can do — then the quick
@@ -66,6 +67,25 @@ function items(s, query) {
         const isPeer = i => i.action.indexOf("exit:peer:") === 0;
         const quickest = net.filter(i => isPeer(i) && !inUse(i)).sort((a, b) => parseInt(a.comment) - parseInt(b.comment)).slice(0, 3);
         return head.concat(net.filter(i => inUse(i) || !isPeer(i)), quickest).sort((a, b) => _rank(a) - _rank(b));
+    }
+    // Smart words (a speed like ">100ms", slow, direct, relay, a kind such
+    // as nas or phone…) pick the peers themselves, as in the deep's search:
+    // "abyss >100ms", "abyss ssh nas", "abyss copy phones"
+    const toks = q.split(/\s+/), verb = ["copy", "ssh"].indexOf(toks[0]) >= 0 ? toks[0] : "";
+    const filters = Query.parse((verb ? toks.slice(1) : toks).join(" "), s.relays);
+    const smart = filters.some(f => !f.name);
+    const rows = p => {
+        const out = [];
+        if (verb !== "ssh")
+            out.push(_item("Copy " + p.name + "'s address", "content_copy", p.ip, "copy:" + p.name));
+        if (verb !== "copy")
+            out.push(_item("SSH to " + p.name, "terminal", p.ip, "ssh:" + p.name));
+        return out;
+    };
+    if (smart) {
+        const found = [];
+        s.peers.filter(p => p.online && filters.every(f => f.test(p))).forEach(p => rows(p).forEach(r => found.push(r)));
+        return head.concat(net).filter(i => _match(i, q)).concat(found);
     }
     const peers = [];
     s.peers.filter(p => p.online).forEach(p => {

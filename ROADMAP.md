@@ -8,7 +8,7 @@ No promises, no dates. Everything here was asked for and is not in a release yet
 
 ## Later
 
-- **Smart search**: synonyms, tags, `abyss >100ms`.
+- **Smart search**: synonyms and tags (the launcher already takes `abyss >100ms`).
 - Bar count kept fresh without polling.
 - Ping a peer on demand.
 - A compact list for large meshes (30+ peers).
