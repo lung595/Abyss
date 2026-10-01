@@ -12,7 +12,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - **Test lab** in the settings, shown while it is the mesh source: a mesh of 1 to 120 made-up peers (or the home, work and crowd meshes), latency added to every peer, a trouble to try (a peer that stops answering, a peer that keeps dropping out, a relay or the management server down, signed out, service stopped) and calm, normal or rush-hour traffic. A one-line summary and *Reset* under its title. In memory only; NetBird is never touched. While the lab is the source, the profile chip wears a flask and the bowl's sand line starts with "test lab", so a made-up mesh is never taken for yours.
 - **Tests**: QML integration tests through real processes against a fake `netbird`, `tests/run.sh` to run every test, and CI on every push. The tentacle layout check (P60) also runs on the test lab's meshes, from 1 to 120 peers.
 
-- **Where Internet goes out, everywhere**: a small still sun in the bar pill while it goes out through a peer; the beam's traffic (↓ ↑) under the light's name; `dms ipc call abyss exit ""` says where it goes out, and `status` ends with it ("· Internet through studio").
+- **Where Internet goes out, everywhere**: a small still sun in the bar pill while it goes out through a peer; the beam's traffic (↓ ↑) under the light's name; `dms ipc call abyss exit ""` says where it goes out, and `status` ends with it ("· Internet through studio"). After each change a short word under the light confirms it for two seconds ("Direct", "Through studio").
 
 ### Changed
 
@@ -46,7 +46,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - **Choose the screens for the desktop bowl** from a "Desktop" section in the settings.
 - **How to use**: the docs explain every option, with pictures and GIFs.
 
-- **Where Internet goes out, everywhere**: a small still sun in the bar pill while it goes out through a peer; the beam's traffic (↓ ↑) under the light's name; `dms ipc call abyss exit ""` says where it goes out, and `status` ends with it ("· Internet through studio").
+- **Where Internet goes out, everywhere**: a small still sun in the bar pill while it goes out through a peer; the beam's traffic (↓ ↑) under the light's name; `dms ipc call abyss exit ""` says where it goes out, and `status` ends with it ("· Internet through studio"). After each change a short word under the light confirms it for two seconds ("Direct", "Through studio").
 
 ### Changed
 
@@ -76,7 +76,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - **The pointer light reveals the scenery**: a reef in depth with parallax, glowing coral tips, swaying kelp and a small shoal of fish passing now and then.
 - **The desktop widget is a fishbowl**: round glass with a rim, highlights and a soft shadow, water tinted by your theme and a bed of sand.
 
-- **Where Internet goes out, everywhere**: a small still sun in the bar pill while it goes out through a peer; the beam's traffic (↓ ↑) under the light's name; `dms ipc call abyss exit ""` says where it goes out, and `status` ends with it ("· Internet through studio").
+- **Where Internet goes out, everywhere**: a small still sun in the bar pill while it goes out through a peer; the beam's traffic (↓ ↑) under the light's name; `dms ipc call abyss exit ""` says where it goes out, and `status` ends with it ("· Internet through studio"). After each change a short word under the light confirms it for two seconds ("Direct", "Through studio").
 
 ### Changed
 

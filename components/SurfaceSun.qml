@@ -80,8 +80,9 @@ Item {
     StyledText {
         anchors.top: parent.bottom
         anchors.horizontalCenter: parent.horizontalCenter
-        visible: sun.dragging
-        text: sun.scene.dropHint
+        visible: sun.dragging || text !== ""
+        // While carried, where it would go; just after, where it went
+        text: sun.dragging ? sun.scene.dropHint : sun.scene.sunWord
         wrapMode: Text.NoWrap
         font.pixelSize: 11
         font.weight: Font.Bold
