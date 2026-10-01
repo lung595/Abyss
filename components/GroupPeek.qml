@@ -72,15 +72,19 @@ Item {
 
     // Where a member's creature is drawn, in scene coordinates (the card's
     // flight leaves from here)
+    // The school's own rhythm, so two groups never swim in step
+    readonly property real schoolSeed: item ? Swim.seed(item.id) : 0
     function memberPose(peerId) {
         const i = members.indexOf(peerId), q = spots[i] || {
             "x": 0,
             "y": 0
         };
         const o = scene.offsetOf("m:" + peerId);
+        const p = scene.peerById[peerId];
+        const sh = scene.peekLive && p && p.online && scene.connected ? Swim.shoal(scene.swim, schoolSeed, i) : Swim.REST;
         return {
-            "x": cx + q.x * grow + o.x,
-            "y": cy + q.y * grow + o.y,
+            "x": cx + q.x * grow + o.x + sh.dx * _g,
+            "y": cy + q.y * grow + o.y + sh.dy * _g,
             "s": o.s * (0.35 + (memberScale - 0.35) * _g)
         };
     }
@@ -242,6 +246,8 @@ Item {
             // busiest three and the one the lens is on
             // Alive while the group is open (Swim.idle), calmer when asleep
             readonly property var life: gp.scene.peekLive && p ? Swim.idle(p.kind, gp.scene.swim, Swim.seed(modelData), live ? 1 : 0) : Swim.REST
+            // Swimming together with the others (awake members only)
+            readonly property var school: gp.scene.peekLive && live ? Swim.shoal(gp.scene.swim, gp.schoolSeed, index) : Swim.REST
             readonly property bool named: gp.members.length <= 8 || index < 3 || focused
             // Labels sit outward: above for the upper half, below for the lower
             readonly property bool above: spot.y < -4
@@ -254,8 +260,8 @@ Item {
                     duration: gp.scene.reduceMotion ? 0 : 150
                 }
             }
-            x: gp.cx + spot.x * gp.grow + pose.x
-            y: gp.cy + spot.y * gp.grow + pose.y
+            x: gp.cx + spot.x * gp.grow + pose.x + school.dx * gp._g
+            y: gp.cy + spot.y * gp.grow + pose.y + school.dy * gp._g
             z: focused ? 2 : 0
 
             Item {
@@ -288,7 +294,7 @@ Item {
                         Rotation {
                             origin.x: 48
                             origin.y: 48
-                            angle: m.life.a
+                            angle: m.life.a + m.school.a
                         }
                     ]
                 }

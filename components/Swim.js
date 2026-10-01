@@ -200,3 +200,17 @@ function idle(kind, s, sd, wake) {
         "f": g.turn ? _look(s, sd) : 1
     };
 }
+
+// A shoal: the members of an open group drift together around their places,
+// one slow loop shared by all, each a little behind the one before (i of n),
+// so the group moves as one school instead of each on its own. Bounded by
+// SHOAL px; s is the deep's swimming clock, gs the group's seed (0..1).
+const SHOAL = { "x": 10, "y": 6, "lag": 0.04 };
+function shoal(s, gs, i) {
+    const ph = gs - i * SHOAL.lag;
+    const dx = SHOAL.x * _wave(0.045, s, ph), dy = SHOAL.y * _wave(0.07, s, ph + 0.25);
+    // Leaning into the way the school goes (its speed along y over x)
+    const vx = Math.cos(2 * Math.PI * (0.045 * s + ph)) * SHOAL.x * 0.045;
+    const vy = Math.cos(2 * Math.PI * (0.07 * s + ph + 0.25)) * SHOAL.y * 0.07;
+    return { "dx": dx, "dy": dy, "a": Math.max(-6, Math.min(6, vy / (Math.abs(vx) + 0.05) * 3)) };
+}
