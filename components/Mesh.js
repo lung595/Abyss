@@ -53,19 +53,30 @@ function relayName(uri) {
 
 // Guess what a peer is from its name, so the scene can pick a creature.
 // Only a hint: anything unknown is a desktop.
+// [kind, words that may sit anywhere in the name, words that must be a
+// whole word of it]. Short words only count whole ("air" in "chair", "nas"
+// in "banana" or "host" in "ghost" said nothing about the device)
 const KINDS = [
-    ["phone", /phone|pixel|iphone|android|galaxy|mobile|tablet|ipad/],
-    ["pi", /(^|[-_.])pi($|[-_.\d])|raspberry|rpi/],
-    ["nas", /nas|synology|truenas|qnap|storage|backup/],
-    ["vps", /vps|cloud|droplet|ec2|hetzner|ovh|linode|vultr|gcp|aws|azure/],
-    ["server", /server|srv|proxmox|docker|k8s|nuc|homelab|gw|gateway|router|host|node/],
-    ["laptop", /laptop|book|thinkpad|xps|air|latitude|zenbook|notebook/]
+    ["phone", ["phone", "pixel", "android", "galaxy", "mobile", "tablet", "ipad"], []],
+    ["pi", ["raspberry"], ["pi", "rpi"]],
+    ["nas", ["synology", "truenas", "qnap", "storage", "backup"], ["nas"]],
+    ["vps", ["vps", "droplet", "hetzner", "linode", "vultr", "azure"], ["cloud", "ec2", "ovh", "gcp", "aws"]],
+    ["server", ["server", "proxmox", "docker", "homelab", "gateway", "router"], ["srv", "k8s", "nuc", "gw", "host", "node", "pve"]],
+    ["laptop", ["laptop", "macbook", "chromebook", "thinkpad", "zenbook", "notebook", "latitude", "ideapad"], ["book", "xps", "air"]]
 ];
+
+// "rpi4-garden_01" -> ["rpi4", "garden", "01", "rpi"]: every word, and each
+// one without its trailing number
+function _words(n) {
+    const w = n.split(/[^a-z0-9]+/).filter(s => s);
+    return w.concat(w.map(s => s.replace(/\d+$/, "")).filter(s => s));
+}
 
 function kindOf(name) {
     const n = String(name || "").toLowerCase();
+    const words = _words(n);
     for (let i = 0; i < KINDS.length; i++)
-        if (KINDS[i][1].test(n))
+        if (KINDS[i][1].some(k => n.indexOf(k) >= 0) || KINDS[i][2].some(k => words.indexOf(k) >= 0))
             return KINDS[i][0];
     return "desktop";
 }
@@ -80,6 +91,8 @@ function peerOf(d) {
     const online = d.status === "Connected";
     const relayed = String(d.connectionType || "").toLowerCase() === "relayed";
     const name = shortName(d.fqdn) || bareIp(d.netbirdIp);
+    const nets = (d.networks || d.routes || []).slice();
+    const exit = nets.some(n => n === "0.0.0.0/0" || n === "::/0");
     return {
         "id": d.publicKey || d.fqdn || d.netbirdIp || "",
         "name": name,
@@ -95,12 +108,47 @@ function peerOf(d) {
         "down": 0,
         "up": 0,
         "calm": 0,
-        // It offers the whole Internet (a 0.0.0.0/0 route: an exit node).
-        // Newer clients list what a peer serves as "networks", older ones as "routes"
-        "exit": (d.networks || d.routes || []).indexOf("0.0.0.0/0") >= 0,
-        "since": _time(d.statusSince),
+        // What goes through it right now ("networks" on newer clients,
+        // "routes" on older ones)
+        "networks": nets,
+        // The whole Internet goes through it now (a 0.0.0.0/0 route: an exit
+        // node). `exit` (it can lend Internet) starts the same; the NetBird
+        // source widens it to every peer with an exit route (Netbird.js)
+        "lending": online && exit,
+        "exit": exit,
+        "since": _time(d.lastStatusUpdate),
         "handshake": _time(d.lastWireguardHandshake)
     };
+}
+
+// Names are what the scene, the exit node and commands go by, so two peers
+// never share one: "pc" and "pc" become "pc.home" and "pc.work" (as many
+// labels of their fqdn as it takes), or their full fqdn / address
+function _unique(list) {
+    const count = {};
+    list.forEach(p => count[p.name] = (count[p.name] || 0) + 1);
+    const clash = list.filter(p => count[p.name] > 1);
+    if (!clash.length)
+        return list;
+    const taken = {};
+    list.forEach(p => {
+        if (count[p.name] === 1)
+            taken[p.name] = true;
+    });
+    clash.forEach(p => {
+        const labels = p.fqdn ? p.fqdn.split(".") : [];
+        let name = "";
+        for (let n = 2; n <= labels.length && !name; n++) {
+            const c = labels.slice(0, n).join(".");
+            if (!taken[c] && clash.filter(q => q.fqdn.split(".").slice(0, n).join(".") === c).length === 1)
+                name = c;
+        }
+        if (!name)
+            name = !taken[p.ip] && p.ip ? p.ip : p.name + "~" + p.id.slice(0, 6);
+        p.name = name;
+        taken[name] = true;
+    });
+    return list;
 }
 
 // Online first, then by steady latency (closest first), then by name, so the
@@ -182,7 +230,7 @@ function parse(daemonStatus, json, prev, now) {
     const state = stateOf(daemonStatus);
     const s = json || {};
     now = now || Date.now();
-    const list = ((s.peers || {}).details || []).map(peerOf);
+    const list = _unique(((s.peers || {}).details || []).map(peerOf));
     const before = {};
     if (prev && prev.peers && prev.at)
         prev.peers.forEach(p => before[p.id] = p);

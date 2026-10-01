@@ -35,12 +35,22 @@ function options() {
             })));
 }
 
-// argv for Quickshell.execDetached. A known terminal runs directly; "auto"
-// (or anything unknown) asks sh to try each installed one in turn, with the
-// host handed over as $1.
+// A host ssh can only read as a host: a name or an address, never an
+// option. Peer names come from other people's machines, and a name such as
+// "-oProxyCommand=..." would run a command on this one.
+function validHost(host) {
+    return /^[A-Za-z0-9_.:%\[\]][A-Za-z0-9_.:%\[\]-]*$/.test(String(host || ""));
+}
+
+// argv for Quickshell.execDetached, or null for a host validHost refuses.
+// A known terminal runs directly; "auto" (or anything unknown) asks sh to
+// try each installed one in turn, with the host handed over as $1. "--"
+// ends ssh's options either way.
 function sshCommand(terminal, host) {
+    if (!validHost(host))
+        return null;
     if (RUN[terminal])
-        return [terminal].concat(RUN[terminal], ["ssh", host]);
-    const tries = TERMINALS.map(t => "command -v " + t + " >/dev/null && exec " + [t].concat(RUN[t]).join(" ") + " ssh \"$1\"");
+        return [terminal].concat(RUN[terminal], ["ssh", "--", host]);
+    const tries = TERMINALS.map(t => "command -v " + t + " >/dev/null && exec " + [t].concat(RUN[t]).join(" ") + " ssh -- \"$1\"");
     return ["sh", "-c", tries.join("; ") + "; exit 1", "sh", host];
 }

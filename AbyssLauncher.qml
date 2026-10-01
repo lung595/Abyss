@@ -23,13 +23,26 @@ Item {
         id: prefs
     }
 
-    // One fresh read per launcher session, not one per keystroke
+    // One fresh read per launcher session, not one per keystroke. The
+    // NetBird source answers later: the rows are asked for again once, when
+    // that read lands (never on the reads of an open view)
     property real _readAt: 0
+    property bool _waiting: false
     function _fresh() {
         const now = Date.now();
-        if (now - _readAt > 5000) {
-            source.refresh(now);
-            _readAt = now;
+        if (now - root._readAt > 5000) {
+            root.source.refresh(now);
+            root._readAt = now;
+            root._waiting = !root.source.demo;
+        }
+    }
+    Connections {
+        target: root.source
+        function onViewChanged() {
+            if (!root._waiting)
+                return;
+            root._waiting = false;
+            root.itemsChanged();
         }
     }
 

@@ -13,8 +13,8 @@ tied to you by a tentacle lit by its live traffic.
 
 </div>
 
-> [!WARNING]
-> **Preview: Abyss runs on a made-up demo mesh.** It does not read your real NetBird daemon yet; that comes next (see the [roadmap](ROADMAP.md)).
+> [!NOTE]
+> **Abyss reads your real NetBird daemon** through the `netbird` command when it is installed, and shows a made-up demo mesh otherwise. Choose with the **Mesh source** [setting](#settings).
 
 ## Getting started
 
@@ -23,6 +23,8 @@ tied to you by a tentacle lit by its live traffic.
 | Dependency | Version | Needed for |
 | --- | --- | --- |
 | DankMaterialShell | 1.6.0 or newer | Everything |
+| NetBird client (`netbird` command) | Any recent | Your real mesh; without it, Abyss shows a demo mesh |
+| A polkit agent | Any (DMS has one) | *Optional*: starting the NetBird service from Abyss |
 | A terminal emulator | Any | *Optional*: SSH to a peer |
 
 ### 1. Install
@@ -95,6 +97,8 @@ In **Settings → Plugins**, turn **Abyss** on. The launcher entry works right a
 
 > [!NOTE]
 > **Only a peer that offers an exit node can lend Internet** (NetBird's rule). Elsewhere, the light bounces back with a note. To turn a device into an exit node, in NetBird's dashboard: *Network Routes* › *Add route* › *Exit node*. See [NetBird's guide](https://docs.netbird.io/how-to/configuring-default-routes-for-internet-traffic).
+>
+> **Name the exit route after its peer** (for example `exit-atlas` for *atlas*): NetBird does not tell which peer serves a route until it is in use, so Abyss matches routes to peers by name.
 
 📖 Cards, groups, Internet through a whole group, networks and the desktop fishbowl are explained step by step, with GIFs, in the **[user guide](docs/GUIDE.md)**.
 
@@ -112,6 +116,7 @@ In **Settings → Plugins**, turn **Abyss** on. The launcher entry works right a
 | | Light pulses | On |
 | Peers | Notifications when a peer comes or goes | Off |
 | | Terminal for SSH | Automatic |
+| NetBird | Mesh source: automatic, NetBird, demo mesh | Automatic (NetBird when installed) |
 
 ## Command line and keybindings
 
@@ -133,13 +138,15 @@ Bind them in your compositor, for example in niri: `Mod+A { spawn "dms" "ipc" "c
 | Problem | Solution |
 | --- | --- |
 | Nothing changed after enabling | Add one of its widgets, see [Add a widget](#3-add-a-widget) |
-| The peers shown are not mine | Expected: Abyss is a preview on a demo mesh |
+| The peers shown are not mine | The demo mesh is shown: install the NetBird client, or set **Mesh source** to *NetBird* |
+| "Service stopped" while NetBird runs | The `netbird` command cannot reach the daemon: check `netbird status` in a terminal |
+| The light says to name the route after the peer | NetBird does not say which peer serves an unused exit route: name it after the peer in NetBird's dashboard, see [Internet through a peer](#internet-through-a-peer) |
 | The light bounces back from a peer | That peer is not an exit node, see [Internet through a peer](#internet-through-a-peer) |
 | A group stays "Group n" on the desktop | The desktop widget may not get keyboard focus: rename it from the bar popout |
 
 ## Privacy
 
-The plugin never talks to the network and has no telemetry. Peers and traffic stay in memory; only your settings (favorites, muted peers, groups) are saved by DMS. Details in the [user guide](docs/GUIDE.md#privacy).
+The plugin never talks to the network and has no telemetry. It reads NetBird through its local `netbird` command, never through a shell. Peers and traffic stay in memory; only your settings (favorites, muted peers, groups) are saved by DMS. Details in the [user guide](docs/GUIDE.md#privacy).
 
 ## Documentation
 

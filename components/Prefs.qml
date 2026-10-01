@@ -15,6 +15,9 @@ QtObject {
         return v === undefined || v === null ? def : v;
     }
 
+    // Where the mesh comes from: "auto" (NetBird when installed), "netbird"
+    // or "demo" (a made-up mesh)
+    readonly property string source: _get("source", "auto")
     // Offline peers resting on the sea floor (otherwise hidden)
     readonly property bool showOffline: _get("showOffline", true)
     // Light pulses running along the tentacles while a view is open

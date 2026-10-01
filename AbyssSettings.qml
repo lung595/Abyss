@@ -112,4 +112,29 @@ PluginSettings {
         options: Terminal.options()
         defaultValue: "auto"
     }
+
+    Section {
+        text: "NetBird"
+    }
+
+    SelectionSetting {
+        settingKey: "source"
+        label: "Mesh source"
+        description: "Automatic reads NetBird when it is installed, the demo mesh otherwise"
+        options: [
+            {
+                "label": "Automatic",
+                "value": "auto"
+            },
+            {
+                "label": "NetBird",
+                "value": "netbird"
+            },
+            {
+                "label": "Demo mesh",
+                "value": "demo"
+            }
+        ]
+        defaultValue: "auto"
+    }
 }
