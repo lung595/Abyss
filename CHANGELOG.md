@@ -1,0 +1,76 @@
+# Changelog
+
+All notable changes to Abyss are documented here.
+The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow [Semantic Versioning](https://semver.org/).
+
+## Unreleased
+
+### Changed
+
+- Documentation split into `README.md`, `docs/GUIDE.md`, `CHANGELOG.md`, `ROADMAP.md` and `CONTRIBUTING.md`.
+
+## 0.3.0 - 2026-09-27
+
+### Added
+
+- **Never refused in silence**: drop the light on a peer that cannot lend Internet and it bounces home, with a short note saying why and what to do, and a GitHub mark that opens the right part of the docs. While you carry it, such peers step further back and the hint under the light starts with ⊘.
+- **From the launcher**: Super+Space, type `abyss`: open the deep, connect, choose where Internet goes out, copy an address or SSH to a peer. Nothing runs between two uses; it reads NetBird once when you open it.
+- **Livelier animals**: between trips every creature has its own life (the fish beats its tail and wanders, the manta flaps its wings, the squid jets upward, the seahorse sways, the turtle paddles, the whale and the nautilus roll slowly). Inside an open group the members live too. Calmer asleep, still with *Reduce motion*; idle CPU unchanged (3.7 % vs 3.6 % of one core).
+- **Click the light** for where Internet can go, as a small file tree: your groups as folders, then the peers in no group, quickest first, and "Stop". What is in use wears a small turning sun.
+- **Your own groups**: right-click a creature or a group to add it to a group, start one, rename, ungroup, or keep an automatic group. They come first and never reshuffle.
+- **Internet through a whole group**: drop the light in the middle of a group; it stays there, tied to the member lending the Internet, and the next best member takes over if that one goes offline. Also `dms ipc call abyss exit <group or peer>`.
+- **Preview before dropping on a group**: a ring where the light will rest and faint tentacles to every member; once dropped, a bead of light runs out to each of them.
+- **Setting "Open groups"**: on hover and click (default), on hover only, or on click only.
+- **Choose the screens for the desktop bowl** from a "Desktop" section in the settings.
+- **How to use**: the docs explain every option, with pictures and GIFs.
+
+### Changed
+
+- The light **glides** to its new place in 0.6 s instead of jumping, and the beam follows it; **Escape** while carrying puts it back; a peer's right-click menu has "Use for Internet".
+- With a group open, the light can be taken from the middle and dropped on one member: it rests above that member, and goes back to the middle for the whole group.
+- While you carry the light, only the peers that can lend Internet stay bright. In a peer's card, "Use for Internet" appears only when it can.
+- Resting the light on a group opens it, so it can be left on any member; carrying it out of the bubble closes it.
+- **No bar over the bowl**: who is online and the live totals are written in the bed of sand. Click the jellyfish to connect; right-click it to switch profile or show and hide offline peers.
+- **Card**: received and sent sit either side of the creature's medallion; address and name share one line, each with its copy button.
+- **The light that lends Internet** casts a soft beam onto the peer, holds still while you look around, and takes a deliberate pull to lift.
+- **TOP CONSUMER** is told by its caption alone; its label no longer changes colour.
+
+### Fixed
+
+- A group could close again at once when reopened; leaving now only counts once the pointer has been inside, or has clearly moved on.
+- A click, or resting the pointer, opened a creature or a group a hand-width away; it now takes the pointer being on it.
+
+## 0.2.0 - 2026-09-27
+
+### Added
+
+- **Lens**: a soft magnetic lens follows the pointer and gently enlarges what it lights; the scroll wheel sets its strength.
+- **Groups**: never more than 5 things on screen (3–10 in settings). Busy, struggling and favourite peers stay alone; the rest gather in automatic groups that open as the camera glides toward them. Type anywhere to find.
+- **Sonar fan**: the jellyfish sits at the top and peers fan out below it, farther when slower, with sonar rings in ms.
+- **Grab and release**: drag any creature; it springs back to its place.
+- **Step through devices** with ‹ › or <kbd>←</kbd> <kbd>→</kbd> on the card.
+- **The pointer light reveals the scenery**: a reef in depth with parallax, glowing coral tips, swaying kelp and a small shoal of fish passing now and then.
+- **The desktop widget is a fishbowl**: round glass with a rim, highlights and a soft shadow, water tinted by your theme and a bed of sand.
+
+### Changed
+
+- **Peer card**: the card rises and the creature rides up with it; frosted glass, blurred once as it opens; the same compact height for every device.
+- Thinner traffic tentacles (a thread when idle, a ribbon when busy) and calmer motion.
+- The jellyfish has loose threads of light; its bell fades smoothly between asleep and awake.
+- Caves always glow a little and burn when on; their thread to the gateway only shows on hover.
+- A readable card in the bowl: the water darkens and the glass fades behind it.
+- Inside a group, the rest of the deep darkens and the water bends like a lens around it.
+- Devices keep their side when their traffic changes; caves keep clear of them.
+- The top consumer label only moves when another device is clearly busier (30 % more).
+
+### Fixed
+
+- A traffic spike each time the view opened.
+- Grabbing moved only the tentacle.
+
+## 0.1.0 - 2026-09-26
+
+### Added
+
+- First preview: the whole deep (jellyfish, creatures by device type, traffic tentacles, relays, networks, exit node by drag, peer card, type to find) on a made-up demo mesh.
+- Bar pill, Control Center tile and desktop widget; IPC; notifications; SSH in the terminal of your choice.
