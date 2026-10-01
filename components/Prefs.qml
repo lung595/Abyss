@@ -30,6 +30,8 @@ QtObject {
     readonly property bool desktopLive: _get("desktopLive", false)
     // How many things the deep shows at once; more peers gather in groups
     readonly property int maxItems: _get("maxItems", 5)
+    // Darwin, the goldfish companion (only moves while a view is open)
+    readonly property bool companion: _get("companion", true)
     // How a group opens: "both" (resting the pointer on it, or a click),
     // "hover" or "click"
     readonly property string groupOpen: _get("groupOpen", "both")

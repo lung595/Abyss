@@ -5,7 +5,6 @@ No promises, no dates. Everything here was asked for and is not in a release yet
 ## Next
 
 - **Shoals**: the members of a group swim together (only while you watch).
-- **A goldfish companion**: purely decorative, with a life of its own: it sleeps, cleans the bowl, eats, explores, waves when clicked. Still while nobody looks.
 - **The card first, then the creature**: both finish landing together.
 - Measured CPU cost while a view is open, and fresh screenshots.
 
