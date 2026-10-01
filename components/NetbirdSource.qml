@@ -39,12 +39,20 @@ QtObject {
     // An action is running (the light can say "Switching…" meanwhile)
     readonly property bool busy: _acting
     // An exit was asked for and NetBird has not confirmed it yet
-    readonly property bool switching: _wantExit !== ""
+    readonly property bool switching: _wantExit !== "" || _wantRoute !== ""
+    // Exit routes no peer is known for yet: [{ id, selected }] (the light's
+    // menu lists them by name)
+    property var looseExits: []
+    // Which peer each exit route goes through, as saved in the settings
+    // (route id -> peer id); bound by the daemon
+    property var savedTies: ({})
 
     // A peer's name went online or offline (for notifications)
     signal peerEvent(string name, bool online)
     // Something to tell the user: an action failed or was refused
     signal notice(string text)
+    // A route was seen going out through a peer: the whole map to keep
+    signal tiesLearned(var ties)
 
     function refresh() {
         src._read(src._reads % 10 === 0, false);
@@ -120,6 +128,19 @@ QtObject {
         src.exitNode = name;
         src._act(plan.cmds, name ? "Could not go out through " + name : "Could not stop going out through a peer");
     }
+
+    // Internet through an exit route no peer is known for, by its id. The
+    // next read shows who carries it, and that is learned
+    function setExitRoute(id) {
+        const plan = Netbird.routeCommands(src._nets, id);
+        if (plan.error) {
+            src._say(plan.error);
+            return;
+        }
+        src._wantRoute = id;
+        src._act(plan.cmds, "Could not go out through " + id);
+    }
+    property string _wantRoute: ""
 
     function toggleNetwork(id) {
         const n = src._nets.find(x => x.id === id);
@@ -212,12 +233,17 @@ QtObject {
     function _learnExits(peers) {
         const selected = Netbird.exitRoutes(src._nets).filter(r => r.selected);
         const lender = peers.find(p => p.lending);
-        if (selected.length && lender && selected.some(r => src._learned[r.id] !== lender.id)) {
+        const known = Object.assign({}, src.savedTies, src._learned);
+        if (selected.length && lender && selected.some(r => known[r.id] !== lender.id)) {
             const l = Object.assign({}, src._learned);
             selected.forEach(r => l[r.id] = lender.id);
             src._learned = l;
+            src.tiesLearned(Object.assign({}, src.savedTies, l));
         }
-        src._exitMap = Netbird.exitMap(src._nets, peers, src._learned);
+        src._exitMap = Netbird.exitMap(src._nets, peers, Object.assign({}, src.savedTies, src._learned));
+        src.looseExits = Netbird.looseRoutes(src._nets, src._exitMap);
+        if (!src._acting)
+            src._wantRoute = "";
     }
 
     function _remember(peers) {

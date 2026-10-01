@@ -165,6 +165,10 @@ QtObject {
         view = Mesh.parse(daemonStatus, null, null, Date.now());
         refresh();
     }
+    // Exit routes no peer is known for (the real source only)
+    readonly property var looseExits: []
+    function setExitRoute(id) {
+    }
     // NetBird takes a moment to switch; the demo pretends to, briefly
     property bool switching: false
     function setExitNode(name) {

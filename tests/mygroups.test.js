@@ -68,4 +68,9 @@ rows = M.exitTree(tg, lend, ["u1"], "atlas", "");
 ok("a peer picked alone is on, the group is not", rows.find(r => r.name === "atlas").on && !rows[0].on);
 eq("nobody can lend: no rows", M.exitTree([], [lend[4]], [], "", "").length, 0);
 
+// Exit routes no peer is known for come last, by name
+const withLoose = M.exitTree([], [], [], "", "", [{ "id": "office-gw", "selected": true }]);
+eq("a loose route is a row of its own", withLoose, [{ "kind": "route", "id": "office-gw", "name": "office-gw", "on": true, "online": true, "depth": 0, "last": false, "serving": false }]);
+eq("no loose routes, no rows", M.exitTree([], [], [], "", ""), []);
+
 done("mygroups");

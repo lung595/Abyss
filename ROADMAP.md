@@ -4,7 +4,6 @@ No promises, no dates. Everything here was asked for and is not in a release yet
 
 ## Next
 
-- **Exit routes named after no peer**: listed by name in the light's menu, or tied to a peer once.
 - **Lazy connections**: peers NetBird keeps idle are drawn as reachable, not asleep.
 - **Shoals**: the members of a group swim together (only while you watch).
 - **A goldfish companion**: purely decorative, with a life of its own: it sleeps, cleans the bowl, eats, explores, waves when clicked. Still while nobody looks.
@@ -23,7 +22,7 @@ No promises, no dates. Everything here was asked for and is not in a release yet
 ## Known limits
 
 - Naming a group needs keyboard focus, which the desktop widget may not get: rename it from the bar popout.
-- An exit route is matched to its peer by name until it has been used once.
+- An exit route named after no peer shows by its name, not on its peer, until it has been used once.
 - The bar count goes stale while no view is open.
 - When `netbird up` cannot open a browser, the sign-in address is not shown.
 - Starting the NetBird service needs a polkit agent.

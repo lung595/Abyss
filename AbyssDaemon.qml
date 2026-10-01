@@ -47,7 +47,10 @@ Item {
     }
     Component {
         id: netbirdSource
-        NetbirdSource {}
+        NetbirdSource {
+            savedTies: prefs.exitTies
+            onTiesLearned: ties => prefs.set("exitTies", ties)
+        }
     }
 
     CliRunner {
@@ -164,6 +167,14 @@ Item {
         _choosing = false;
     }
     property bool _choosing: false
+    // Through an exit route no peer is known for yet: the next read shows
+    // who carries it, and the source learns it (saved as exitTies)
+    function setExitRoute(id) {
+        if (!root.source)
+            return;
+        prefs.set("exitGroup", "");
+        root.source.setExitRoute(id);
+    }
     // A group of mine carries the exit: when its member goes offline, the
     // next best takes over. Runs on each read, never on its own.
     function _followExitGroup(id) {
@@ -286,8 +297,13 @@ Item {
                 return "Internet " + root.exitText();
             }
             const found = Query.lookup(root.source.view.peers, k), p = found.peer;
+            const route = root.source.looseExits.find(r => r.id.toLowerCase() === k);
+            if (!p && route) {
+                root.setExitRoute(route.id);
+                return "Internet through the route " + route.id;
+            }
             if (!p)
-                return found.many.length ? Query.lookupError(target, found) : "No peer or group named " + target;
+                return found.many.length ? Query.lookupError(target, found) : "No peer, group or exit route named " + target;
             root.setExit(p.name, "");
             return "Internet through " + p.name;
         }

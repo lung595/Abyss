@@ -62,7 +62,7 @@ The light at the surface is your Internet. **Drag it onto a peer** and all your 
 
 ![Carrying the light onto a peer](../screenshots/internet.gif)
 
-**Only a peer that offers an exit node can lend Internet** (NetBird's rule). NetBird does not say which peer serves an exit route until it is in use, so **name the route after its peer** (`exit-atlas` for *atlas*); a route already used once is remembered for the session. While you carry the light, the others step back and, over one of them, the light says so; drop it there anyway and it bounces home with a note. To let a device lend Internet, turn it into an exit node in NetBird's dashboard: *Network Routes* › *Add route* › *Exit node*, see [NetBird's guide](https://docs.netbird.io/how-to/configuring-default-routes-for-internet-traffic).
+**Only a peer that offers an exit node can lend Internet** (NetBird's rule). NetBird does not say which peer serves an exit route until it is in use, so **name the route after its peer** (`exit-atlas` for *atlas*); a route named after no peer is listed by its own name at the bottom of the light's menu: choose it once and Abyss remembers, in your settings, which peer carries it. While you carry the light, the others step back and, over one of them, the light says so; drop it there anyway and it bounces home with a note. To let a device lend Internet, turn it into an exit node in NetBird's dashboard: *Network Routes* › *Add route* › *Exit node*, see [NetBird's guide](https://docs.netbird.io/how-to/configuring-default-routes-for-internet-traffic).
 
 ![Dropping the light on a peer that cannot lend Internet](../screenshots/cant-lend.gif)
 
@@ -117,7 +117,7 @@ DMS's *Reduce motion* is respected: every movement stops.
 ## Privacy
 
 - **No network access by the plugin itself, no telemetry.** NetBird is read through its local `netbird` command, never through a shell: no peer name or address can run anything.
-- **Nothing written to disk except your settings** (favorites, muted peers, your groups and the group carrying the Internet). Peers, addresses and traffic stay in memory for the session.
+- **Nothing written to disk except your settings** (favorites, muted peers, your groups, the group carrying the Internet, and which peer carries each exit route once seen). Peers, addresses and traffic stay in memory for the session.
 - **Local tools only**: copy uses DMS's clipboard, SSH opens your own terminal. The GitHub mark in help notes opens the docs in your browser, on click only.
 
 ## Performance
