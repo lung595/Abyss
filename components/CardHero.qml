@@ -82,27 +82,36 @@ Item {
         onFinished: hero.prevId = ""
     }
 
+    // The card leads, the creature follows and both land together: the
+    // flight and the growth start a beat after the card and end with its
+    // slide (scene.cardLandMs)
+    readonly property int landMs: hero.scene ? hero.scene.cardLandMs : 480
     ParallelAnimation {
         id: flyIn
-        NumberAnimation {
-            target: hero
-            property: "flight"
-            to: 1
-            duration: 560 * hero._ms
-            easing.type: Easing.OutBack
-            easing.overshoot: 0.7
+        SequentialAnimation {
+            PauseAnimation {
+                duration: 80 * hero._ms
+            }
+            NumberAnimation {
+                target: hero
+                property: "flight"
+                to: 1
+                duration: (hero.landMs - 80) * hero._ms
+                easing.type: Easing.OutBack
+                easing.overshoot: 0.5
+            }
         }
         SequentialAnimation {
             PauseAnimation {
-                duration: 140 * hero._ms
+                duration: 120 * hero._ms
             }
             NumberAnimation {
                 target: hero
                 property: "grow"
                 to: 1
-                duration: 520 * hero._ms
+                duration: (hero.landMs - 120) * hero._ms
                 easing.type: Easing.OutBack
-                easing.overshoot: 1.1
+                easing.overshoot: 0.9
             }
         }
     }
