@@ -53,19 +53,30 @@ function relayName(uri) {
 
 // Guess what a peer is from its name, so the scene can pick a creature.
 // Only a hint: anything unknown is a desktop.
+// [kind, words that may sit anywhere in the name, words that must be a
+// whole word of it]. Short words only count whole ("air" in "chair", "nas"
+// in "banana" or "host" in "ghost" said nothing about the device)
 const KINDS = [
-    ["phone", /phone|pixel|iphone|android|galaxy|mobile|tablet|ipad/],
-    ["pi", /(^|[-_.])pi($|[-_.\d])|raspberry|rpi/],
-    ["nas", /nas|synology|truenas|qnap|storage|backup/],
-    ["vps", /vps|cloud|droplet|ec2|hetzner|ovh|linode|vultr|gcp|aws|azure/],
-    ["server", /server|srv|proxmox|docker|k8s|nuc|homelab|gw|gateway|router|host|node/],
-    ["laptop", /laptop|book|thinkpad|xps|air|latitude|zenbook|notebook/]
+    ["phone", ["phone", "pixel", "android", "galaxy", "mobile", "tablet", "ipad"], []],
+    ["pi", ["raspberry"], ["pi", "rpi"]],
+    ["nas", ["synology", "truenas", "qnap", "storage", "backup"], ["nas"]],
+    ["vps", ["vps", "droplet", "hetzner", "linode", "vultr", "azure"], ["cloud", "ec2", "ovh", "gcp", "aws"]],
+    ["server", ["server", "proxmox", "docker", "homelab", "gateway", "router"], ["srv", "k8s", "nuc", "gw", "host", "node", "pve"]],
+    ["laptop", ["laptop", "macbook", "chromebook", "thinkpad", "zenbook", "notebook", "latitude", "ideapad"], ["book", "xps", "air"]]
 ];
+
+// "rpi4-garden_01" -> ["rpi4", "garden", "01", "rpi"]: every word, and each
+// one without its trailing number
+function _words(n) {
+    const w = n.split(/[^a-z0-9]+/).filter(s => s);
+    return w.concat(w.map(s => s.replace(/\d+$/, "")).filter(s => s));
+}
 
 function kindOf(name) {
     const n = String(name || "").toLowerCase();
+    const words = _words(n);
     for (let i = 0; i < KINDS.length; i++)
-        if (KINDS[i][1].test(n))
+        if (KINDS[i][1].some(k => n.indexOf(k) >= 0) || KINDS[i][2].some(k => words.indexOf(k) >= 0))
             return KINDS[i][0];
     return "desktop";
 }

@@ -26,6 +26,20 @@ eq("vps", M.kindOf("harbor-vps"), "vps");
 eq("server", M.kindOf("proxmox01"), "server");
 eq("laptop", M.kindOf("thinkpad"), "laptop");
 eq("default desktop", M.kindOf("studio"), "desktop");
+// Short words only count as a whole word
+eq("air inside chair is no laptop", M.kindOf("chair-pc"), "desktop");
+eq("air inside hairdresser is no laptop", M.kindOf("hairdresser"), "desktop");
+eq("nas inside banana is no nas", M.kindOf("banana"), "desktop");
+eq("host inside ghost is no server", M.kindOf("ghost"), "desktop");
+eq("node inside nodejs is no server", M.kindOf("nodejs-dev"), "desktop");
+eq("macbook-air is a laptop", M.kindOf("macbook-air"), "laptop");
+eq("macbookair is a laptop", M.kindOf("macbookair"), "laptop");
+eq("rpi4 is a pi", M.kindOf("rpi4"), "pi");
+eq("pi_garden is a pi", M.kindOf("pi_garden"), "pi");
+eq("k8s-node2 is a server", M.kindOf("k8s-node2"), "server");
+eq("my-iphone is a phone", M.kindOf("my-iphone"), "phone");
+eq("aws-bastion is a vps", M.kindOf("aws-bastion"), "vps");
+eq("nas01 is a nas", M.kindOf("nas01"), "nas");
 
 // Rates
 eq("rate", M.rate(2000, 1000, 1), 8000);
