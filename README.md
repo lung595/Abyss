@@ -28,7 +28,8 @@ tied to you by a tentacle lit by its live traffic.
 | DankMaterialShell | 1.6.0 or newer | Everything |
 | NetBird client (`netbird` command) | Any recent | Your real mesh; without it, Abyss shows its test lab |
 | A polkit agent | Any (DMS has one) | *Optional*: starting the NetBird service from Abyss |
-| A terminal emulator | Any | *Optional*: SSH to a peer |
+| A terminal emulator | Any | *Optional*: Terminal (SSH) and SFTP to a device |
+| Remmina, vncviewer, FreeRDP or KRDC | Any | *Optional*: Screen (VNC) and Desktop (RDP); Abyss says what to install when one is missing |
 
 ### 1. Install
 
@@ -59,7 +60,10 @@ In **Settings → Plugins**, turn **Abyss** on. The launcher entry works right a
 
 1. **Open the deep** from the widget you added.
 2. **Click the jellyfish** (you) to connect or disconnect.
-3. **Click a creature** to open its card; **drag the light of the surface** onto a peer to send your Internet through it.
+3. **Click a creature** to open its card: **Terminal**, **Files**, **Screen** or **Desktop** in one click.
+4. **Click the +** at the top to add a device: this computer with a setup key, or your phone with a QR code.
+5. **Type anywhere** to search, or to run a command (`add`, `share`, `disconnect`…).
+6. **Drag the light of the surface** onto a peer to send your Internet through it.
 
 ## Features
 
@@ -71,10 +75,14 @@ In **Settings → Plugins**, turn **Abyss** on. The launcher entry works right a
 - **A creature per device type**: manta = server, whale = VPS, fish = laptop, nautilus = desktop, seahorse = phone, squid = Raspberry Pi, turtle = NAS.
 - **Internet through a peer or a whole group**, by carrying the light of the surface.
 - **Your own groups**, plus automatic shoals that keep the view uncluttered.
-- **Peer cards**: live rates, copy, SSH, open in the browser.
+- **Connect, not only look**: each card opens Terminal (SSH), Files (SFTP), Screen (VNC) or Desktop (RDP), with the right user and port per device.
+- **Add a device in a minute**: this computer with a setup key, your phone with QR codes; it is spotted and celebrated as it joins.
+- **Let your devices in**: one switch turns on NetBird's SSH server on this computer.
+- **Search and commands**: a search bar with shortcuts, that also runs actions.
+- **Peer cards**: live rates, copy, open in the browser, ping.
 - **Everywhere**: bar, Control Center, desktop fishbowl and launcher.
-- **Never refused in silence**: every refusal says why and links to the docs.
-- **Lightweight and private**: nothing runs while no view is open.
+- **Never refused in silence**: every refusal says why, and how to fix it (with the command to copy).
+- **Lightweight and private**: nothing runs while no view is open; every effect shows its battery cost and can be turned off.
 
 ## Usage
 
@@ -89,6 +97,8 @@ In **Settings → Plugins**, turn **Abyss** on. The launcher entry works right a
 | Caves on the floor | Networks and routes; click one to turn it on or off |
 | The light of the surface | Internet; drag it onto a peer to go out through it |
 | A shoal ("3 busy") | A group; hover or click to open it |
+
+**Search**: the field at the top (or just type anywhere). Empty, it offers one-click shortcuts (Online, Phones, Slow, Can lend Internet…); it also understands commands: `add`, `share`, `disconnect`, `console`… (Enter runs the first). **Add a device**: the **+** at the top: this computer (paste a setup key) or your phone (QR codes for the NetBird app, click one to enlarge it); the new device is spotted and celebrated the moment it joins. **Open a device**: its card has four doors, **Terminal** (SSH), **Files** (SFTP), **Screen** (VNC) and **Desktop** (RDP); a device that does not answer, or a viewer that is missing, gets a note saying how to fix it, with the command to copy. **Bar**: hover the jellyfish for a summary, middle-click to connect or disconnect; a coloured dot tells the state. **Control Center**: your starred devices along the bottom, one click from their terminal or files.
 
 **Find a peer**: just type its name. **A big mesh** (12 peers or more): the list icon in the top bar shows everyone as one line each. **Launcher**: Super+Space, `abyss`, then connect, choose where Internet goes out, or `abyss vega` to copy or SSH. The launcher understands the deep's search words too: `abyss >100ms`, `abyss ssh nas`, `abyss copy phones`, `abyss ssh direct <5ms`.
 
@@ -107,28 +117,19 @@ In **Settings → Plugins**, turn **Abyss** on. The launcher entry works right a
 
 ## Settings
 
-**Settings → Plugins → Abyss** (the *Desktop* section is also in **Settings → Desktop Widgets**).
+**Settings → Plugins → Abyss**: one tab per subject, a title and one plain line under every option. Everything works out of the box.
 
-| Section | Setting | Default |
-| --- | --- | --- |
-| Desktop | Screens showing the fishbowl | All |
-| | Keep the desktop alive | Off |
-| The deep | Things on screen (3 to 10) | 5 |
-| | Open groups: hover and click, hover only, click only | Hover and click |
-| | Show offline peers | On |
-| | Light pulses | On |
-| | Companion: Darwin the goldfish | On |
-| Peers | Bar pill: peers online, total traffic, icon only | Peers online |
-| | Notifications when a peer comes or goes | Off |
-| | Terminal for SSH | Automatic |
-| Source | Mesh source: automatic, NetBird, test lab | Automatic (NetBird when installed) |
-| Test lab | Mesh: home (10), work (5), crowd (30) or a custom size (1 to 120 peers) | Home |
-| | Added latency (0 to 400 ms) | 0 ms |
-| | Trouble: a peer stops answering, a peer keeps dropping out, a relay or the management server down, signed out, service stopped | None |
-| | Traffic: calm, normal, rush hour | Normal |
-| | Lazy connections | Off |
+| Tab | What is there |
+| --- | --- |
+| **Connect** | Add this computer with a setup key (self-hosted server optional) · Let my devices into this computer (SSH) · Terminal · Saved logins (user and port per device, forget them here) |
+| **The deep** | Things on screen (3 to 10) · Open groups · Show offline devices · Search suggestions |
+| **Effects & battery** | Smooth motion (60 fps) · Creatures drift · Light pulses · Darwin the goldfish · Celebrations · Keep the desktop fishbowl alive. Each says its battery use (⚡ high, some, light) right under it |
+| **Bar & alerts** | Beside the jellyfish: devices online, total traffic or nothing · Status dot · Middle-click connects · Notifications |
+| **Desktop** | Screens showing the fishbowl |
+| **Source & lab** | Mesh source: automatic, NetBird, test lab · the test lab's mesh, latency, trouble, traffic, lazy connections |
+| **Help** | The whole of Abyss in six lines, and the user guide |
 
-The **Test lab** section only shows while the test lab is the mesh source. It lives in memory and never touches NetBird; its title sums it up in one line and *Reset* brings back the quiet home mesh.
+The test lab lives in memory and never touches NetBird; its title sums it up in one line and *Reset* brings back the quiet home mesh.
 
 ## Command line and keybindings
 
@@ -138,6 +139,10 @@ dms ipc call abyss status          # "connected · 8/10 online · Internet throu
 dms ipc call abyss toggle          # or connect / disconnect
 dms ipc call abyss copy <peer>     # copy the peer's IP
 dms ipc call abyss ssh <peer>      # SSH in your terminal
+dms ipc call abyss sftp|files|vnc|rdp <peer>   # files in a terminal or the file manager, a remote desktop
+dms ipc call abyss link <peer> <user|-> <port|->  # how to SSH to it (Termux: user u0_a…, port 8022)
+dms ipc call abyss join <setup key> [url|-]    # join a mesh (netbird up --setup-key); leave signs out
+dms ipc call abyss share on|off    # let the other peers SSH into this device
 dms ipc call abyss ping <peer>     # three echoes to a peer (only when asked), the answer as a toast
 dms ipc call abyss exit <target>   # Internet through a peer or one of your groups; "off" to stop
 dms ipc call abyss exit ""         # where Internet goes out now
@@ -155,6 +160,8 @@ Bind them in your compositor, for example in niri: `Mod+A { spawn "dms" "ipc" "c
 | The peers shown are not mine | The test lab is shown: install the NetBird client, or set **Mesh source** to *NetBird* |
 | "Service stopped" while NetBird runs | The `netbird` command cannot reach the daemon: check `netbird status` in a terminal |
 | The light says to name the route after the peer | NetBird does not say which peer serves an unused exit route: choose the route by its name in the light's menu once (Abyss then remembers it), or name it after the peer in NetBird's dashboard, see [Internet through a peer](#internet-through-a-peer) |
+| Terminal says the device does not accept it | Turn on SSH there (`sudo systemctl enable --now sshd`); a phone: Termux, `pkg install openssh && passwd && sshd`, then *Use 8022* on its card |
+| Screen or Desktop says nothing is installed | Copy the command in the note (Remmina or FreeRDP for your distribution) |
 | The light bounces back from a peer | That peer is not an exit node, see [Internet through a peer](#internet-through-a-peer) |
 | A group stays "Group n" on the desktop | The desktop widget may not get keyboard focus: rename it from the bar popout |
 

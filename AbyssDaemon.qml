@@ -4,6 +4,7 @@ import Quickshell.Io
 import qs.Services
 import "components"
 import "components/Terminal.js" as Terminal
+import "components/Connect.js" as Connect
 import "components/MyGroups.js" as MyGroups
 import "components/Query.js" as Query
 import "components/Ping.js" as Ping
@@ -90,13 +91,14 @@ Item {
     }
 
     // False when the host is not one ssh can safely be handed (says why).
-    // The terminal is looked up first, so a missing one is said too
-    function ssh(host, terminal) {
+    // The terminal is looked up first, so a missing one is said too.
+    // prog: "ssh" (default) or "sftp"; link: { user, port } for this peer
+    function ssh(host, terminal, link, prog) {
         if (!host)
             return false;
-        const h = String(host), want = terminal || prefs.terminal;
+        const h = String(host), want = terminal || prefs.terminal, p = prog || "ssh";
         if (!Terminal.validHost(h)) {
-            ToastService.showInfo("Abyss", "Not opening SSH: \"" + h + "\" is not a plain host name or address");
+            ToastService.showInfo("Abyss", "Not opening " + p.toUpperCase() + ": \"" + h + "\" is not a plain host name or address");
             return false;
         }
         lookup.run(Terminal.lookupCommand(want), (out, err, code) => {
@@ -104,9 +106,75 @@ Item {
             if (code !== 0 || !found)
                 ToastService.showInfo("Abyss", Terminal.missingText(want));
             else
-                Quickshell.execDetached(Terminal.sshCommand(found, h));
+                Quickshell.execDetached(p === "sftp" ? Terminal.sftpCommand(found, h, link) : Terminal.sshCommand(found, h, link));
         });
         return true;
+    }
+
+    // Reaches a peer the way its card says: "ssh", "sftp" (a terminal),
+    // "files" (the file manager), "vnc" or "rdp" (whichever viewer is
+    // installed). First knocks on its port (2 s at most): a device that does
+    // not answer gets a toast saying how to turn that on, and a missing
+    // viewer one with the command that installs it (DMS adds a copy button)
+    function reach(kind, peer) {
+        if (!peer)
+            return false;
+        const host = peer.fqdn || peer.ip, link = prefs.linkOf(peer.id);
+        if (!Connect.validHost(host)) {
+            ToastService.showInfo("Abyss", "Not opening " + kind + ": \"" + host + "\" is not a plain host name or address");
+            return false;
+        }
+        const probe = root.source && !root.source.demo ? Connect.probeCommand(peer.ip || host, Connect.portOf(kind, link)) : null;
+        if (!probe) {
+            root._open(kind, host, link);
+            return true;
+        }
+        prober.run(probe, (out, err, code) => {
+            if (code === 0) {
+                root._open(kind, host, link);
+                return;
+            }
+            const port = Connect.portOf(kind, link);
+            root._help(Connect.closedHelp(kind, peer.name, peer.kind === "phone", port));
+        });
+        return true;
+    }
+    function _open(kind, host, link) {
+        if (kind === "ssh" || kind === "sftp") {
+            root.ssh(host, prefs.terminal, link, kind);
+            return;
+        }
+        lookup.run(Connect.lookupCommand(kind), (out, err, code) => {
+            const program = String(out).trim(), cmd = program ? Connect.command(kind, program, host) : null;
+            if (code === 0 && cmd) {
+                Quickshell.execDetached(cmd);
+                return;
+            }
+            lookup.run(Connect.packageManagerCommand(), pm => root._help(Connect.installHelp(kind, String(pm).trim())));
+        });
+    }
+    // A toast with a title, a plain line and, when there is one, a command
+    // to copy (DMS's toast shows a copy button for it)
+    function _help(h) {
+        ToastService.showWarning(h.title, h.details, h.command, "abyss-help");
+    }
+    CliRunner {
+        id: prober
+        timeout: 4000
+    }
+
+    // Lets the other peers SSH into this device, or stops letting them. The
+    // setting is the switch (here, the menu, the IPC or Settings): NetBird
+    // follows each change of it, never at start
+    function shareSsh(on) {
+        prefs.set("shareSsh", !!on);
+    }
+    Connections {
+        target: prefs
+        function onShareSshChanged() {
+            if (root.source)
+                root.source.shareSsh(prefs.shareSsh);
+        }
     }
 
     // Three echoes to a peer, when asked (never on its own); the answer
@@ -242,8 +310,26 @@ Item {
         }
     }
 
+    // The IPC's way to a peer: "user@peer" or "peer"
+    function _reachIpc(kind, key) {
+        if (!root.source)
+            return "Abyss is starting";
+        const at = String(key || "").indexOf("@"), user = at > 0 ? key.slice(0, at) : "", name = at > 0 ? key.slice(at + 1) : key;
+        const found = Query.lookup(root.source.view.peers, name), p = found.peer;
+        if (!p)
+            return Query.lookupError(name, found);
+        if (user && !Connect.validUser(user))
+            return "Refused: " + user + " is not a user name";
+        if (user && (kind === "ssh" || kind === "sftp")) {
+            const host = p.fqdn || p.ip;
+            return root.ssh(host, prefs.terminal, { "user": user, "port": prefs.linkOf(p.id).port }, kind) ? "OK" : "Refused: " + host + " is not a plain host name";
+        }
+        return root.reach(kind, p) ? "OK" : "Refused: " + (p.fqdn || p.ip) + " is not a plain host name";
+    }
+
     // dms ipc call abyss open | status | toggle | connect | disconnect
-    // dms ipc call abyss copy <peer> | ssh <peer>
+    // dms ipc call abyss copy <peer> | ssh <peer | user@peer> | sftp | files | vnc | rdp <peer>
+    // dms ipc call abyss link <peer> <user|-> <port|-> | join <setup key> <url|-> | leave | share on|off
     // dms ipc call abyss exit <peer | group of mine | off>
     // dms ipc call abyss demo connected | disconnected | connecting | needsLogin | stopped | relayDown | relayUp
     IpcHandler {
@@ -307,14 +393,66 @@ Item {
             return root.ping(p) ? "Pinging " + p.name : "Refused";
         }
 
-        // Opens `ssh <peer>` in the terminal chosen in the settings
+        // Opens `ssh <peer>` in the terminal chosen in the settings; "user@peer"
+        // logs in as that user (the user and port saved by `link` otherwise)
         function ssh(peer: string): string {
+            return root._reachIpc("ssh", peer);
+        }
+        // Files over SFTP in a terminal, or in the file manager
+        function sftp(peer: string): string {
+            return root._reachIpc("sftp", peer);
+        }
+        function files(peer: string): string {
+            return root._reachIpc("files", peer);
+        }
+        // A remote desktop to the peer, in whichever viewer is installed
+        function vnc(peer: string): string {
+            return root._reachIpc("vnc", peer);
+        }
+        function rdp(peer: string): string {
+            return root._reachIpc("rdp", peer);
+        }
+
+        // Remembers how to SSH to a peer: user and port ("-" for none), as a
+        // phone running Termux wants (`link phone u0_a123 8022`)
+        function link(peer: string, user: string, port: string): string {
             if (!root.source)
                 return "Abyss is starting";
             const found = Query.lookup(root.source.view.peers, peer), p = found.peer;
             if (!p)
                 return Query.lookupError(peer, found);
-            return root.ssh(p.fqdn || p.ip) ? "OK" : "Refused: " + (p.fqdn || p.ip) + " is not a plain host name";
+            const u = user === "-" ? "" : user, n = port === "-" ? "" : port;
+            if (u && !Connect.validUser(u))
+                return "Refused: " + u + " is not a user name";
+            if (n && !Connect.validPort(n))
+                return "Refused: " + n + " is not a port";
+            prefs.setLink(p.id, u, n);
+            return u || n ? p.name + ": " + (u ? u + "@" : "") + "…" + (n ? " port " + n : "") : p.name + ": forgotten";
+        }
+
+        // Joins this device to a mesh with a setup key (the dashboard's
+        // Setup Keys); `url` is the management server when self-hosted
+        function join(key: string, url: string): string {
+            if (!root.source)
+                return "Abyss is starting";
+            return root.source.join(key, url === "-" ? "" : url, "") ? "Joining" : "Refused: not a setup key, or its address is not http(s)";
+        }
+        function leave(): string {
+            if (!root.source)
+                return "Abyss is starting";
+            root.source.logout();
+            return "OK";
+        }
+
+        // Lets the other peers SSH into this device: on | off
+        function share(state: string): string {
+            if (!root.source)
+                return "Abyss is starting";
+            const k = String(state || "").trim().toLowerCase();
+            if (k !== "on" && k !== "off")
+                return "Shared with SSH: " + (prefs.shareSsh ? "on" : "off");
+            root.shareSsh(k === "on");
+            return "SSH in this device: " + k;
         }
 
         // Internet through a peer, a group of mine (by name), or "off";

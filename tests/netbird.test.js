@@ -47,7 +47,7 @@ eq("nothing printed is an error", N.readStatus("", 0).error, "NetBird printed no
 // --- The view from a real-shaped status -----------------------------------
 const view = M.parse(st.daemonStatus, st.json, null, Date.parse("2026-09-30T10:00:00Z"));
 eq("connected", view.state, "connected");
-eq("me", view.me, { "name": "wren", "fqdn": "wren.netbird.cloud", "ip": "100.90.0.1", "version": "0.60.0", "console": "https://app.netbird.io" });
+eq("me", view.me, { "name": "wren", "fqdn": "wren.netbird.cloud", "ip": "100.90.0.1", "version": "0.60.0", "console": "https://app.netbird.io", "server": "" });
 eq("online count (Idle is not online)", view.online, 3);
 const atlas = view.peers.find(p => p.name === "atlas");
 eq("since comes from lastStatusUpdate", atlas.since, Date.parse("2026-09-30T08:00:00Z"));
@@ -127,5 +127,17 @@ eq("loose: none once each is known", N.looseRoutes(R, { "exit-atlas": "c", "offi
 eq("a loose route is chosen by its id", N.routeCommands(R, "exit-atlas").cmds, [["netbird", "networks", "deselect", "--", "office-gw"], ["netbird", "networks", "select", "-a", "--", "exit-atlas"]]);
 eq("choosing the selected one only selects it again", N.routeCommands(R, "office-gw").cmds, [["netbird", "networks", "select", "-a", "--", "office-gw"]]);
 ok("an unknown route is refused", N.routeCommands(R, "nope").error !== "" && N.routeCommands(R, "lan").error !== "");
+
+// Joining a mesh, signing out, letting peers SSH in
+eq("join with a setup key", N.joinCmd("A1B2C3D4-E5F6-47A8", "", ""), ["netbird", "up", "--setup-key", "A1B2C3D4-E5F6-47A8"]);
+eq("join a self-hosted server under a name", N.joinCmd("A1B2C3D4-E5F6-47A8", "https://nb.example.org:33073", "wren"), ["netbird", "up", "--setup-key", "A1B2C3D4-E5F6-47A8", "--management-url", "https://nb.example.org:33073", "--hostname", "wren"]);
+eq("a key is trimmed", N.joinCmd("  A1B2C3D4-E5F6-47A8\n", "", ""), ["netbird", "up", "--setup-key", "A1B2C3D4-E5F6-47A8"]);
+eq("a key that looks like an option is refused", N.joinCmd("--management-url=evil", "", ""), null);
+eq("a short key is refused", N.joinCmd("abc", "", ""), null);
+eq("an address that is not http(s) is refused", N.joinCmd("A1B2C3D4-E5F6-47A8", "file:///etc/passwd", ""), null);
+eq("a bad host name is refused", N.joinCmd("A1B2C3D4-E5F6-47A8", "", "a b"), null);
+eq("sign out", N.logoutCmd(), ["netbird", "logout"]);
+eq("let peers SSH in", N.shareSshCmd(true), ["netbird", "up", "--allow-server-ssh=true"]);
+eq("stop letting them", N.shareSshCmd(false), ["netbird", "up", "--allow-server-ssh=false"]);
 
 done("netbird");

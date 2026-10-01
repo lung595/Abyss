@@ -118,8 +118,36 @@ Window {
             scene.netsOpen = true;
         if (mode === "card" || mode === "desk-card")
             scene.cardId = "demo-harbor-vps";
+        // card-phone: a phone's card, with the Termux hint ready to accept
+        if (mode === "card-phone")
+            scene.cardId = "demo-kestrel-phone";
         if (mode === "find")
             scene.query = "pi";
+        // hints / cmd: the search bar's panel, empty (shortcuts) or with a command typed
+        if (mode === "hints")
+            scene.searchFocus = true;
+        // fav: Control Center with two starred devices (use with -cc)
+        if (mode === "fav") {
+            scene.prefs.set("favorites", { "demo-atlas-server": "atlas-server", "demo-kestrel-phone": "kestrel-phone" });
+        }
+        if (mode === "cmd")
+            scene.query = "sha";
+        // add / add-phone / add-pc / add-zoom / add-done: the Add a device sheet
+        if (mode.indexOf("add") === 0) {
+            scene.openAdd();
+            const sheet = win.find(scene, "addSheet");
+            if (mode === "add-phone" || mode === "add-zoom" || mode === "add-done")
+                sheet.step = "phone";
+            if (mode === "add-pc")
+                sheet.step = "computer";
+            if (mode === "add-zoom")
+                sheet.zoom(sheet.playUrl, "NetBird for Android");
+            if (mode === "add-done") {
+                const k = Object.assign({}, sheet.known);
+                delete k["demo-kestrel-phone"];
+                sheet.known = k;
+            }
+        }
         // lab: the test lab's custom mesh (60 peers, +40 ms, a peer silent),
         // flagged as such
         if (mode === "lab") {

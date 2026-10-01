@@ -152,6 +152,248 @@ Item {
         }
     }
 
+
+    // One way in: a big tile, icon over its name, the protocol small below
+    component ConnectTile: Rectangle {
+        id: tile
+        property string icon
+        property string label
+        property string sub
+        property string help
+        property bool primary: false
+        signal clicked
+        readonly property bool hot: tileArea.containsMouse && card.live
+        width: (doors.width - doors.spacing * 3) / 4
+        height: 58
+        radius: 12
+        opacity: card.live ? 1 : 0.4
+        color: primary ? Qt.rgba(card.tint.r, card.tint.g, card.tint.b, hot ? 0.38 : 0.26) : Qt.rgba(card.ink.r, card.ink.g, card.ink.b, hot ? 0.13 : 0.06)
+        border.width: 1
+        border.color: primary || hot ? Qt.rgba(card.tint.r, card.tint.g, card.tint.b, 0.8) : Qt.rgba(card.ink.r, card.ink.g, card.ink.b, 0.14)
+        scale: tileArea.pressed && card.live ? 0.96 : 1
+        Behavior on scale {
+            NumberAnimation {
+                duration: 90
+            }
+        }
+        Behavior on color {
+            ColorAnimation {
+                duration: 120
+            }
+        }
+        Column {
+            anchors.centerIn: parent
+            spacing: 1
+            DankIcon {
+                anchors.horizontalCenter: parent.horizontalCenter
+                name: tile.icon
+                size: 20
+                color: tile.primary ? card.tint : card.ink
+            }
+            StyledText {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: tile.label
+                font.pixelSize: 12
+                font.weight: Font.Bold
+                color: card.ink
+                wrapMode: Text.NoWrap
+            }
+            StyledText {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: tile.sub
+                font.pixelSize: 9
+                font.family: Theme.monoFontFamily
+                color: card.scene.inkDim
+                wrapMode: Text.NoWrap
+            }
+        }
+        MouseArea {
+            id: tileArea
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: card.live ? Qt.PointingHandCursor : Qt.ArrowCursor
+            onContainsMouseChanged: doors.hint = containsMouse ? tile.help : ""
+            onClicked: {
+                if (card.live)
+                    tile.clicked();
+            }
+        }
+    }
+
+    // A small text field in the card's colours
+    component Field: Rectangle {
+        property alias text: input.text
+        property string placeholder
+        property alias validator: input.validator
+        property alias input: input
+        height: 30
+        radius: 8
+        color: Qt.rgba(card.ink.r, card.ink.g, card.ink.b, 0.08)
+        border.width: 1
+        border.color: input.activeFocus ? card.tint : Qt.rgba(card.ink.r, card.ink.g, card.ink.b, 0.18)
+        TextInput {
+            id: input
+            anchors.fill: parent
+            anchors.leftMargin: 9
+            anchors.rightMargin: 9
+            verticalAlignment: TextInput.AlignVCenter
+            font.pixelSize: 12
+            font.family: Theme.monoFontFamily
+            color: card.ink
+            selectByMouse: true
+            clip: true
+        }
+        StyledText {
+            anchors.left: parent.left
+            anchors.leftMargin: 9
+            anchors.verticalCenter: parent.verticalCenter
+            visible: input.text === ""
+            text: parent.placeholder
+            font.pixelSize: 12
+            color: card.scene.inkDim
+            opacity: 0.7
+        }
+    }
+
+    // "Logs in as you, port 22 · Change": one line; Change opens two
+    // fields in place. A phone gets the Termux hint ready to accept
+    component LoginRow: Rectangle {
+        id: login
+        readonly property var link: card.scene.prefs.linkOf(card.peer.id)
+        readonly property bool phone: card.peer.kind === "phone"
+        readonly property bool custom: !!(link.user || link.port)
+        property bool editing: false
+        implicitHeight: editing ? 76 : 34
+        height: implicitHeight
+        radius: 10
+        color: Qt.rgba(card.ink.r, card.ink.g, card.ink.b, 0.05)
+        border.width: 1
+        border.color: Qt.rgba(card.ink.r, card.ink.g, card.ink.b, 0.1)
+        clip: true
+        Behavior on implicitHeight {
+            NumberAnimation {
+                duration: card.scene.reduceMotion ? 0 : 160
+                easing.type: Easing.OutCubic
+            }
+        }
+        // A new peer: close the editor
+        Connections {
+            target: card
+            function onPeerChanged() {
+                login.editing = false;
+            }
+        }
+
+        Row {
+            visible: !login.editing
+            anchors.left: parent.left
+            anchors.leftMargin: 10
+            anchors.right: changeBtn.left
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: 6
+            DankIcon {
+                anchors.verticalCenter: parent.verticalCenter
+                name: "key"
+                size: 15
+                color: card.scene.inkDim
+            }
+            StyledText {
+                anchors.verticalCenter: parent.verticalCenter
+                width: parent.width - 21
+                text: login.custom ? "Logs in as " + (login.link.user || "you") + (login.link.port ? " · port " + login.link.port : "") : login.phone ? "A phone? Termux listens on port 8022" : "Logs in as you, on the usual port"
+                font.pixelSize: 11
+                color: login.custom ? card.ink : card.scene.inkDim
+                elide: Text.ElideRight
+                wrapMode: Text.NoWrap
+            }
+        }
+        ActionChip {
+            id: changeBtn
+            visible: !login.editing
+            anchors.right: parent.right
+            anchors.rightMargin: 4
+            anchors.verticalCenter: parent.verticalCenter
+            height: 26
+            text: login.phone && !login.custom ? "Use 8022" : "Change"
+            accent: card.tint
+            primary: login.phone && !login.custom
+            ink: card.ink
+            onClicked: {
+                if (login.phone && !login.custom) {
+                    card.scene.prefs.setLink(card.peer.id, "", "8022");
+                    return;
+                }
+                userField.text = login.link.user || "";
+                portField.text = login.link.port || "";
+                login.editing = true;
+                userField.input.forceActiveFocus();
+            }
+        }
+
+        Column {
+            visible: login.editing
+            anchors.fill: parent
+            anchors.margins: 6
+            spacing: 6
+            Row {
+                width: parent.width
+                spacing: 6
+                Field {
+                    id: userField
+                    width: parent.width * 0.62 - 3
+                    placeholder: "user (empty: you)"
+                    validator: RegularExpressionValidator {
+                        regularExpression: /[A-Za-z0-9_][A-Za-z0-9_.-]{0,63}/
+                    }
+                    input.onAccepted: login.save()
+                }
+                Field {
+                    id: portField
+                    width: parent.width * 0.38 - 3
+                    placeholder: "port (22)"
+                    validator: IntValidator {
+                        bottom: 1
+                        top: 65535
+                    }
+                    input.onAccepted: login.save()
+                }
+            }
+            Row {
+                anchors.right: parent.right
+                spacing: 6
+                ActionChip {
+                    height: 26
+                    visible: login.custom
+                    text: "Forget"
+                    ink: card.ink
+                    onClicked: {
+                        card.scene.prefs.setLink(card.peer.id, "", "");
+                        login.editing = false;
+                    }
+                }
+                ActionChip {
+                    height: 26
+                    text: "Cancel"
+                    ink: card.ink
+                    onClicked: login.editing = false
+                }
+                ActionChip {
+                    height: 26
+                    primary: true
+                    accent: card.tint
+                    icon: "check"
+                    text: "Save"
+                    ink: card.ink
+                    onClicked: login.save()
+                }
+            }
+        }
+        function save() {
+            card.scene.prefs.setLink(card.peer.id, userField.text.trim(), portField.text.trim());
+            login.editing = false;
+        }
+    }
+
     // Back, top left (as in Orbit); Esc or a click outside also closes
     ActionChip {
         x: 10
@@ -299,17 +541,61 @@ Item {
                 }
             }
 
+            // How to get in: four big doors, the usual one first. Pointing
+            // at one says what it opens, in plain words, on the line below
+            Row {
+                id: doors
+                width: parent.width
+                spacing: 6
+                property string hint: ""
+                ConnectTile {
+                    primary: true
+                    icon: "terminal"
+                    label: "Terminal"
+                    sub: "SSH"
+                    help: "A command line on " + card.peer.name + ", in your terminal"
+                    onClicked: card.scene.ssh(card.peer)
+                }
+                ConnectTile {
+                    icon: "folder_open"
+                    label: "Files"
+                    sub: "SFTP"
+                    help: "Browse and drop files on " + card.peer.name + " in your file manager"
+                    onClicked: card.scene.reach("files", card.peer)
+                }
+                ConnectTile {
+                    icon: "screen_share"
+                    label: "Screen"
+                    sub: "VNC"
+                    help: "See and control " + card.peer.name + "'s screen (it must share it over VNC)"
+                    onClicked: card.scene.reach("vnc", card.peer)
+                }
+                ConnectTile {
+                    icon: "desktop_windows"
+                    label: "Desktop"
+                    sub: "RDP"
+                    help: "A Windows-style remote desktop on " + card.peer.name
+                    onClicked: card.scene.reach("rdp", card.peer)
+                }
+            }
+            StyledText {
+                width: parent.width
+                text: !card.live ? card.peer.name + " is offline: these open once it is back" : doors.hint || "Tap a door to reach " + card.peer.name + " through the mesh"
+                font.pixelSize: 11
+                color: card.live ? card.scene.inkDim : Theme.warning
+                wrapMode: Text.NoWrap
+                elide: Text.ElideRight
+                horizontalAlignment: Text.AlignHCenter
+            }
+
+            // Who you log in as, and on which port: said plainly, changed in place
+            LoginRow {
+                width: parent.width
+            }
+
             Flow {
                 width: parent.width
                 spacing: 6
-                ActionChip {
-                    primary: true
-                    icon: "terminal"
-                    text: "SSH"
-                    accent: card.tint
-                    ink: card.ink
-                    onClicked: card.scene.ssh(card.peer)
-                }
                 ActionChip {
                     icon: "open_in_browser"
                     text: "Browser"

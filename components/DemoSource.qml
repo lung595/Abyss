@@ -152,6 +152,19 @@ QtObject {
     function login() {
         connect();
     }
+    // The real source runs `netbird up --setup-key`: here the made-up mesh
+    // just comes up (a key is still checked, like the real one)
+    function join(key, url, hostname) {
+        if (!/^[A-Za-z0-9][A-Za-z0-9_.=-]{7,}$/.test(String(key || "").trim()))
+            return false;
+        connect();
+        return true;
+    }
+    function logout() {
+        disconnect();
+    }
+    function shareSsh(on) {
+    }
     // The real source asks systemd to start the service
     function startService() {
         daemonStatus = "Idle";
