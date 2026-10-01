@@ -209,6 +209,25 @@ function exitCommands(networks, map, peerId) {
     return { "cmds": cmds, "error": "" };
 }
 
+// The exit routes no peer is known for yet: [{ id, selected }]. The light's
+// menu lists them by name; once one is used, the peer seen carrying it is
+// learned (and kept in the settings)
+function looseRoutes(networks, map) {
+    return exitRoutes(networks).filter(r => !map[r.id]).map(r => ({ "id": r.id, "selected": r.selected }));
+}
+
+// Internet through one exit route, by its id: the other selected exit
+// routes are deselected first. Returns { cmds, error }
+function routeCommands(networks, routeId) {
+    const routes = exitRoutes(networks);
+    if (!routes.some(r => r.id === routeId))
+        return { "cmds": [], "error": "No exit route named " + routeId };
+    const drop = routes.filter(r => r.selected && r.id !== routeId).map(r => r.id);
+    const cmds = drop.length ? [deselectNetworksCmd(drop)] : [];
+    cmds.push(selectNetworksCmd([routeId], true));
+    return { "cmds": cmds, "error": "" };
+}
+
 // --- The view the scene draws ----------------------------------------------
 
 // The caves on the floor: every network but the exit ones (the light at the

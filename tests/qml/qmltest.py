@@ -136,6 +136,8 @@ def main():
     os.symlink(os.path.join(HERE, "fake-netbird"), os.path.join(bin_dir, "netbird"))
     # A terminal for SSH: Abyss looks one up before opening it
     os.symlink(shutil.which("true"), os.path.join(bin_dir, "kitty"))
+    # ping answers nothing (exit 0, no output): "no answer"
+    os.symlink(shutil.which("true"), os.path.join(bin_dir, "ping"))
     os.environ["QML_XHR_ALLOW_FILE_READ"] = "1"
     os.environ["PATH"] = bin_dir + os.pathsep + os.environ.get("PATH", "")
     qmlRegisterType(Process, "Quickshell.Io", 1, 0, "Process")

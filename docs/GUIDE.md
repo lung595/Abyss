@@ -15,6 +15,8 @@ Every refusal in Abyss says why in a short note, with a GitHub mark that opens t
 - [Internet through a whole group](#internet-through-a-whole-group)
 - [Turn a network on or off](#turn-a-network-on-or-off)
 - [Find a peer](#find-a-peer)
+- [The list](#the-list)
+- [Ping](#ping)
 - [From the launcher](#from-the-launcher)
 - [Settings](#settings)
 - [Privacy](#privacy)
@@ -32,7 +34,7 @@ Every refusal in Abyss says why in a short note, with a GitHub mark that opens t
 
 ## Connect and disconnect
 
-Click **the jellyfish** (you) to connect or disconnect; if NetBird needs it, the same click signs you in or starts the service. Right-click it for more: connect or disconnect, switch to the next profile, show or hide offline peers. From the bar, a right click on the small jellyfish does the same, and so does `dms ipc call abyss toggle`.
+Click **the jellyfish** (you) to connect or disconnect: it is the only switch, and the small ON / OFF under "you" says where you stand; if NetBird needs it, the same click signs you in or starts the service. Right-click it for more: connect or disconnect, switch to the next profile, show or hide offline peers, open the admin console (NetBird Cloud's dashboard, or your management server's address when self-hosted). Pointing at it says your address and which NetBird version runs. From the bar, a right click on the small jellyfish does the same, and so does `dms ipc call abyss toggle`.
 
 ## Open a peer's card
 
@@ -52,7 +54,7 @@ Peers that look alike swim together as a shoal ("3 busy", "2 quiet"). Rest the p
 
 ## Make your own groups
 
-Right-click a creature or a group: add it to one of your groups, start a new one, rename it, ungroup it, or keep an automatic group as yours. Your groups come first and never reshuffle.
+Right-click a creature or a group: add it to one of your groups, start a new one, rename it, ungroup it, or keep an automatic group as yours. Your groups come first and never reshuffle. With a group open, click its name at the top to rename it; the small ⚙ beside the name opens the same menu as a right click.
 
 ![The right-click menu](../screenshots/groups-menu.png)
 
@@ -62,7 +64,7 @@ The light at the surface is your Internet. **Drag it onto a peer** and all your 
 
 ![Carrying the light onto a peer](../screenshots/internet.gif)
 
-**Only a peer that offers an exit node can lend Internet** (NetBird's rule). NetBird does not say which peer serves an exit route until it is in use, so **name the route after its peer** (`exit-atlas` for *atlas*); a route already used once is remembered for the session. While you carry the light, the others step back and, over one of them, the light says so; drop it there anyway and it bounces home with a note. To let a device lend Internet, turn it into an exit node in NetBird's dashboard: *Network Routes* › *Add route* › *Exit node*, see [NetBird's guide](https://docs.netbird.io/how-to/configuring-default-routes-for-internet-traffic).
+**Only a peer that offers an exit node can lend Internet** (NetBird's rule). NetBird does not say which peer serves an exit route until it is in use, so **name the route after its peer** (`exit-atlas` for *atlas*); a route named after no peer is listed by its own name at the bottom of the light's menu: choose it once and Abyss remembers, in your settings, which peer carries it. While you carry the light, the others step back and, over one of them, the light says so; drop it there anyway and it bounces home with a note. To let a device lend Internet, turn it into an exit node in NetBird's dashboard: *Network Routes* › *Add route* › *Exit node*, see [NetBird's guide](https://docs.netbird.io/how-to/configuring-default-routes-for-internet-traffic).
 
 ![Dropping the light on a peer that cannot lend Internet](../screenshots/cant-lend.gif)
 
@@ -86,11 +88,21 @@ The caves on the floor are your networks and routes. Click one to turn it on or 
 
 Just type a name: the deep keeps the matches (favorites first) and dims the rest. <kbd>Enter</kbd> opens the first one's card, <kbd>Esc</kbd> clears.
 
+Words work too, in English or French, and they combine (`slow nas`, `phones offline`): a kind (`phone`, `server`, `nas`, `vps`, `pi`, `laptop`, `desktop`) with its usual names (`iphone`, `proxmox`, `synology`, `hetzner`, `macbook`…), a state (`online`, `offline`, `direct`, `relay`, `eu`), `exit` (can lend Internet), `new` (online for under an hour), `busy`, `quiet`, `slow`, `fast`, or a speed (`>100ms`, `<20ms`). Letters in order find a name (`hrbr` finds *harbor*).
+
 ![Finding a peer](../screenshots/find.png)
+
+## The list
+
+With 12 peers or more, a list icon appears in the top bar: every peer as one line (name, kind, relay, traffic, latency), online first and the closest first. It follows the search (type to narrow it) and *Show offline peers*; click a line for the peer's card, <kbd>Esc</kbd> to close.
+
+## Ping
+
+A peer's card has a **Ping** button: three echoes to its address, and a toast with the average, the best and worst time and how many answered. It runs only when you ask (also `dms ipc call abyss ping <peer>`); Abyss never pings by itself. In the test lab it says what the made-up mesh claims.
 
 ## From the launcher
 
-Press Super+Space and type `abyss`: "Open Abyss" opens the deep from the bar; below it, connect, choose where Internet goes out (a sun marks the one in use), and, as you type a name (`abyss vega`), copy its address or SSH to it.
+Press Super+Space and type `abyss`: "Open Abyss" opens the deep from the bar; below it, connect, choose where Internet goes out (a sun marks the one in use), and, as you type a name (`abyss vega`), copy its address or SSH to it. The same words as the search in the deep pick peers by what they are: a speed (`abyss >100ms`, `abyss <20ms`), a state (`direct`, `relay`, `slow`, `busy`), a kind (`nas`, `phones`, `vps`) or a relay (`eu`); start with `ssh` or `copy` to keep one action (`abyss ssh nas`, `abyss copy >100ms`).
 
 ## Settings
 
@@ -100,15 +112,18 @@ Press Super+Space and type `abyss`: "Open Abyss" opens the deep from the bar; be
 | | Keep the desktop alive | Off | The bowl keeps moving when the pointer is away (off costs nothing) |
 | The deep | Things on screen | 5 | How many creatures and groups show before the rest gather into shoals (3 to 10) |
 | | Open groups | Hover and click | Hover and click, hover only, or click only. Carrying the light always opens them |
-| | Show offline peers | On | Asleep on the floor, or hidden |
+| | Show offline peers | On | Asleep on the floor, or hidden. With NetBird's lazy connections on, idle peers doze a little above the floor instead ("idle · wake on use"): NetBird does not say which of them are really off |
 | | Light pulses | On | Pulses of traffic along the tentacles |
-| Peers | Notifications | Off | When a peer comes or goes; muted peers stay quiet |
+| | Companion | On | Darwin, a goldfish with a life of his own: he eats the crumbs the traffic drops, scrubs the glass as it clouds over, sleeps on the bottom while the mesh is down and waves when clicked. He only moves while a view is open, and stays still with *Reduce motion* |
+| Peers | Bar pill | Peers online | What the small jellyfish in the bar says beside it: how many peers are online, the total traffic, or nothing |
+| | Notifications | Off | When a peer comes or goes; muted peers stay quiet |
 | | Terminal for SSH | Automatic | The terminal used for SSH |
 | Source | Mesh source | Automatic | Your NetBird daemon, or the test lab's made-up mesh. Automatic reads NetBird when the `netbird` command is installed |
 | Test lab | Mesh | Home | Home (10 peers), work (5), crowd (30), or a custom size from 1 to 120 peers, to see how groups form |
 | | Added latency | 0 ms | Added to every peer: they sink deeper and may switch places |
 | | Trouble | None | A peer stops answering (raised as silent after a few minutes without a handshake), a peer keeps dropping out (every 6 s, for notifications), a relay goes down, the management server is unreachable, signed out, service stopped. Applied when chosen; the jellyfish still connects and disconnects |
 | | Traffic | Normal | Calm, normal, or rush hour (pulses and totals) |
+| | Lazy connections | Off | As if NetBird's lazy connections were on: idle peers doze in the water instead of sleeping on the floor |
 
 The test lab only shows while it is the mesh source. It never touches NetBird: the mesh is made up and lives in memory. Its title sums up what is set ("48 peers · +80 ms · a peer stops answering") and *Reset* brings back the quiet home mesh.
 
@@ -117,8 +132,8 @@ DMS's *Reduce motion* is respected: every movement stops.
 ## Privacy
 
 - **No network access by the plugin itself, no telemetry.** NetBird is read through its local `netbird` command, never through a shell: no peer name or address can run anything.
-- **Nothing written to disk except your settings** (favorites, muted peers, your groups and the group carrying the Internet). Peers, addresses and traffic stay in memory for the session.
-- **Local tools only**: copy uses DMS's clipboard, SSH opens your own terminal. The GitHub mark in help notes opens the docs in your browser, on click only.
+- **Nothing written to disk except your settings** (favorites, muted peers, your groups, the group carrying the Internet, and which peer carries each exit route once seen). Peers, addresses and traffic stay in memory for the session.
+- **Local tools only**: copy uses DMS's clipboard, SSH opens your own terminal, Ping runs your own `ping` to one peer of your mesh, only when you click it. The GitHub mark in help notes opens the docs in your browser, on click only.
 
 ## Performance
 

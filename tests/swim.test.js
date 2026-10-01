@@ -83,4 +83,20 @@ ok("the manta never looks round", S.idle("server", 37.3, 0.4, 1).f === 1);
 ok("neighbours move out of step", S.seed("p:a") !== S.seed("p:b"));
 ok("REST is still", S.REST.dx === 0 && S.REST.f === 1);
 
+// Shoals: an open group's members drift together, gently and boundedly
+{
+    let bounded = true, together = true;
+    for (let t = 0; t < 120; t += 0.37) {
+        const a = S.shoal(t, 0.3, 0), b = S.shoal(t, 0.3, 1), c = S.shoal(t, 0.3, 5);
+        if ([a, b, c].some(q => Math.abs(q.dx) > 10 || Math.abs(q.dy) > 6 || Math.abs(q.a) > 6))
+            bounded = false;
+        // Neighbours in the school are never far from each other's offset
+        if (Math.hypot(a.dx - b.dx, a.dy - b.dy) > 4)
+            together = false;
+    }
+    ok("a shoal stays within a few pixels of its places", bounded);
+    ok("neighbours swim together", together);
+    ok("two groups do not swim in step", Math.abs(S.shoal(10, 0.1, 0).dx - S.shoal(10, 0.6, 0).dx) > 1);
+}
+
 done("swim");

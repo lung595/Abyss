@@ -316,6 +316,14 @@ Item {
                     ink: card.ink
                     onClicked: card.scene.openWeb(card.peer)
                 }
+                // Three echoes, only when asked
+                ActionChip {
+                    visible: card.live
+                    icon: "network_ping"
+                    text: "Ping"
+                    ink: card.ink
+                    onClicked: card.scene.ping(card.peer)
+                }
                 // Only for a peer that offers an exit node; through the scene so
                 // a group chosen before is let go too
                 ActionChip {

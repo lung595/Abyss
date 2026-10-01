@@ -117,4 +117,30 @@ eq("nothing typed finds nobody", Q.lookup(L, " ").peer, null);
 eq("error for an ambiguous word", Q.lookupError("a", Q.lookup(L, "a")), "Several peers start with a: atlas, aurora");
 eq("error for an unknown word", Q.lookupError("zz", Q.lookup(L, "zz")), "No peer named zz");
 
+// Idle peers under lazy connections are called idle, not asleep
+{
+    const ps = mesh(10).map(p => Object.assign({}, p, { "dozing": !p.online }));
+    ps.push(Object.assign({}, ps[6], { "id": "k99", "name": "x-99" }));
+    const it = G.arrange(ps, 5, {}).items.find(i => i.id === "g:asleep");
+    ok("a dozing pile says idle", !!it && / idle$/.test(it.label) && it.dozing === true);
+    const it2 = G.arrange(mesh(14), 5, {}).items.find(i => i.id === "g:asleep");
+    ok("a sleeping pile says asleep", !!it2 && / asleep$/.test(it2.label) && !it2.dozing);
+}
+
+// Synonyms: a word for the kind of machine finds it whatever it is called
+{
+    const ps = [
+        { id: "1", name: "atlas", kind: "server", online: true, latencyMs: 4, exit: true, down: 0, up: 0 },
+        { id: "2", name: "kestrel", kind: "phone", online: true, latencyMs: 9, exit: false, down: 0, up: 0 },
+        { id: "3", name: "nook", kind: "nas", online: true, latencyMs: 6, exit: false, down: 0, up: 0, since: Date.now() - 600000 }
+    ];
+    const hit = w => ps.filter(p => Q.parse(w, []).every(f => f.test(p))).map(p => p.name).join();
+    ok("tablet or iphone finds the phones", hit("iphone") === "kestrel" && hit("tablet") === "kestrel");
+    ok("proxmox or router finds the servers", hit("proxmox") === "atlas" && hit("router") === "atlas");
+    ok("synology or backup finds the NAS", hit("synology") === "nook" && hit("backup") === "nook");
+    ok("exit finds who can lend Internet", hit("exit") === "atlas");
+    ok("new finds who came online in the last hour", hit("new") === "nook");
+    ok("French words too", hit("sortie") === "atlas" && hit("sauvegarde") === "nook");
+}
+
 done("groups + query");

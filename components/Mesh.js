@@ -226,6 +226,21 @@ const TOP_KEEP = 1.3;
 // A WireGuard handshake happens every 2 minutes on a live tunnel
 const SILENT_MS = 5 * 60000;
 
+// The admin console of a mesh, from its management server's address: the
+// cloud's own dashboard for NetBird Cloud, else the same host (where a
+// self-hosted dashboard usually sits). "" when the address says nothing
+function consoleUrl(managementUrl) {
+    const m = String(managementUrl || "").match(/^(https?):\/\/([^\/:?#]+)/i);
+    if (!m)
+        return "";
+    const host = m[2].toLowerCase();
+    if (host === "api.netbird.io")
+        return "https://app.netbird.io";
+    if (/^(localhost|[0-9.]+|\[.*\])$/.test(host) || host.indexOf(".") < 0)
+        return "";
+    return m[1].toLowerCase() + "://" + host;
+}
+
 function parse(daemonStatus, json, prev, now) {
     const state = stateOf(daemonStatus);
     const s = json || {};
@@ -237,6 +252,11 @@ function parse(daemonStatus, json, prev, now) {
     const dt = prev && prev.at ? (now - prev.at) / 1000 : 0;
     // rx is what we received from a peer: its download toward us
     list.forEach(p => follow(p, before[p.id], dt, state === "connected"));
+    // NetBird's lazy connections keep idle peers unconnected until used: an
+    // idle peer may then be reachable (it wakes on use) or really off, and
+    // NetBird does not say which. Such peers doze in the water, not asleep
+    const lazy = !!s.lazyConnectionEnabled;
+    list.forEach(p => p.dozing = lazy && !p.online);
     list.sort(_order);
     let down = 0, up = 0, top = null, online = 0;
     list.forEach(p => {
@@ -262,7 +282,10 @@ function parse(daemonStatus, json, prev, now) {
         "me": {
             "name": shortName(s.fqdn) || "you",
             "fqdn": s.fqdn || "",
-            "ip": bareIp(s.netbirdIp)
+            "ip": bareIp(s.netbirdIp),
+            // The client's own version, and where the admin console is
+            "version": String(s.daemonVersion || ""),
+            "console": consoleUrl((s.management || {}).url)
         },
         "peers": list,
         "online": online,
@@ -271,6 +294,7 @@ function parse(daemonStatus, json, prev, now) {
         "up": up,
         "topId": top ? top.id : "",
         "relays": relays,
+        "lazy": lazy,
         "managementUp": !s.management || s.management.connected !== false
     };
     view.omens = state === "connected" ? omensOf(view, now) : [];

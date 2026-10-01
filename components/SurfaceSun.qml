@@ -91,7 +91,8 @@ Item {
         visible: sun.dragging || text !== ""
         // While carried, where it would go; then NetBird at work; then
         // where it went
-        text: sun.dragging ? sun.scene.dropHint : sun.scene.switching ? "Switching…" : sun.scene.sunWord
+        // (pointed at, with nothing else to say: how it is used)
+        text: sun.dragging ? sun.scene.dropHint : sun.scene.switching ? "Switching…" : sun.scene.sunWord || (area.containsMouse && !sun.asleep ? "Drag onto a device · click for the list" : "")
         wrapMode: Text.NoWrap
         font.pixelSize: 11
         font.weight: Font.Bold

@@ -95,13 +95,25 @@ Item {
         }
     }
 
+    // Internet goes out through one of its members: a small still sun
+    // beside its label, so a closed group says it lends
+    readonly property bool lending: !!sc.scene.exitPeer && sc.item.members.indexOf(sc.scene.exitPeer.id) >= 0
+    SunGlyph {
+        visible: sc.lending && !sc.scene._carrying
+        spinning: false
+        color: sc.scene.sunColor
+        x: label.x - width - 3
+        y: label.y + (label.height - height) / 2
+    }
+
     // One short line: what the group is, and what it pulls
     Chip {
+        id: label
         x: body.x - width / 2
         y: body.y + (sc.quiet ? 22 : 28) * body.scale
         title: sc.item.label
         titleSize: sc.item.fog ? 10 : 11
-        sub: sc.quiet ? "" : "↓" + Mesh.fmtShort(sc.down) + (sc.broken ? "  ⚠" : "")
+        sub: sc.item.dozing ? "wake on use" : sc.quiet ? "" : "↓" + Mesh.fmtShort(sc.down) + (sc.broken ? "  ⚠" : "")
         ink: sc.quiet ? sc.scene.inkDim : sc.scene.ink
         subInk: sc.broken ? Theme.warning : sc.scene.inkDim
         color: Qt.rgba(sc.scene.abyss.r, sc.scene.abyss.g, sc.scene.abyss.b, sc.quiet ? 0.25 : 0.45)

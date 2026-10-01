@@ -100,9 +100,11 @@ function pickExit(peers, memberIds, currentName) {
 // `open` lists the unfolded groups. Rows:
 //   { kind: "group", id, name, count, open, on, dim }
 //   { kind: "peer", name, ms, online, on, serving, depth, last }
+//   { kind: "route", id, name, on }: an exit route no peer is known for
+//   (`loose`, from the NetBird source), listed by name, last
 // `on` is the current choice; `serving` the member a chosen group goes out
 // through. Offline lenders show dimmed inside a group, and not at all outside.
-function exitTree(groups, peers, open, exitNode, exitGroup) {
+function exitTree(groups, peers, open, exitNode, exitGroup, loose) {
     const rows = [], grouped = {};
     const byMs = (a, b) => (b.online - a.online) || (_ms(a) - _ms(b));
     groups.forEach(g => {
@@ -124,5 +126,6 @@ function exitTree(groups, peers, open, exitNode, exitGroup) {
         "kind": "peer", "name": p.name, "ms": Math.round(_ms(p)), "online": true, "depth": 0, "last": false,
         "on": !exitGroup && exitNode === p.name, "serving": false
     }));
+    (loose || []).forEach(r => rows.push({ "kind": "route", "id": r.id, "name": r.id, "on": r.selected, "online": true, "depth": 0, "last": false, "serving": false }));
     return rows;
 }

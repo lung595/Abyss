@@ -12,7 +12,7 @@ Column {
     id: tree
     required property var scene
     readonly property string exitNode: scene.source ? scene.source.exitNode : ""
-    readonly property var rows: MyGroups.exitTree(scene.prefs.groups, scene.view.peers, scene.sunOpen, exitNode, scene.prefs.exitGroup)
+    readonly property var rows: MyGroups.exitTree(scene.prefs.groups, scene.view.peers, scene.sunOpen, exitNode, scene.prefs.exitGroup, scene.source ? scene.source.looseExits : [])
     spacing: 2
 
     StyledText {
@@ -63,6 +63,8 @@ Column {
                 onClicked: {
                     if (row.isGroup)
                         tree.scene.setExit("", row.modelData.id);
+                    else if (row.modelData.kind === "route")
+                        tree.scene.setExitRoute(row.modelData.id);
                     else
                         tree.scene.setExit(row.modelData.name, "");
                     tree.scene.closeMenu();
@@ -112,7 +114,8 @@ Column {
                 spacing: 6
                 StyledText {
                     anchors.verticalCenter: parent.verticalCenter
-                    text: row.isGroup ? (row.modelData.open ? "" : row.modelData.count) : row.modelData.online ? row.modelData.ms + " ms" : "offline"
+                    // A route no peer is known for yet: no figure, just what it is
+                    text: row.isGroup ? (row.modelData.open ? "" : row.modelData.count) : row.modelData.kind === "route" ? "route" : row.modelData.online ? row.modelData.ms + " ms" : "offline"
                     font.pixelSize: 10
                     color: tree.scene.inkDim
                 }
