@@ -32,3 +32,14 @@ Newest work at the bottom of each section.
   why it does not open SSH (toast), and the IPC answers "Refused: …"
   instead of "OK".
 - **Checked**: 10 new cases in `tests/terminal.test.js`.
+
+### 3. A command picked whichever peer came first
+- **Where**: `AbyssDaemon.qml` (`findPeer`, IPC `copy`, `ssh`, `exit`),
+  used by the launcher too.
+- **Bug**: after the exact match, any peer whose name *started* with the
+  word was taken, the first one in the list: `dms ipc call abyss ssh a`
+  opened SSH to atlas or aurora depending on latency order.
+- **Fix**: `Query.lookup` (pure): exact name, fqdn, address or id; then the
+  start of a name only when a single peer starts that way. Otherwise the
+  IPC answers "Several peers start with a: atlas, aurora".
+- **Checked**: 11 new cases in `tests/groups.test.js`.
