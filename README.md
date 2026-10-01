@@ -90,6 +90,8 @@ In **Settings → Plugins**, turn **Abyss** on. The launcher entry works right a
 | The light of the surface | Internet; drag it onto a peer to go out through it |
 | A shoal ("3 busy") | A group; hover or click to open it |
 
+**Search**: the field at the top (or just type anywhere). Empty, it offers one-click shortcuts (Online, Phones, Slow, Can lend Internet…); it also understands commands: `add`, `share`, `disconnect`, `console`… (Enter runs the first). **Add a device**: the **+** at the top: this computer (paste a setup key) or your phone (QR codes for the NetBird app, click one to enlarge it); the new device is spotted and celebrated the moment it joins. **Open a device**: its card has four doors, **Terminal** (SSH), **Files** (SFTP), **Screen** (VNC) and **Desktop** (RDP); a device that does not answer, or a viewer that is missing, gets a note saying how to fix it, with the command to copy. **Bar**: hover the jellyfish for a summary, middle-click to connect or disconnect; a coloured dot tells the state. **Control Center**: your starred devices along the bottom, one click from their terminal or files.
+
 **Find a peer**: just type its name. **A big mesh** (12 peers or more): the list icon in the top bar shows everyone as one line each. **Launcher**: Super+Space, `abyss`, then connect, choose where Internet goes out, or `abyss vega` to copy or SSH. The launcher understands the deep's search words too: `abyss >100ms`, `abyss ssh nas`, `abyss copy phones`, `abyss ssh direct <5ms`.
 
 ### Internet through a peer
@@ -107,28 +109,19 @@ In **Settings → Plugins**, turn **Abyss** on. The launcher entry works right a
 
 ## Settings
 
-**Settings → Plugins → Abyss** (the *Desktop* section is also in **Settings → Desktop Widgets**).
+**Settings → Plugins → Abyss**: one tab per subject, a title and one plain line under every option. Everything works out of the box.
 
-| Section | Setting | Default |
-| --- | --- | --- |
-| Desktop | Screens showing the fishbowl | All |
-| | Keep the desktop alive | Off |
-| The deep | Things on screen (3 to 10) | 5 |
-| | Open groups: hover and click, hover only, click only | Hover and click |
-| | Show offline peers | On |
-| | Light pulses | On |
-| | Companion: Darwin the goldfish | On |
-| Peers | Bar pill: peers online, total traffic, icon only | Peers online |
-| | Notifications when a peer comes or goes | Off |
-| | Terminal for SSH | Automatic |
-| Source | Mesh source: automatic, NetBird, test lab | Automatic (NetBird when installed) |
-| Test lab | Mesh: home (10), work (5), crowd (30) or a custom size (1 to 120 peers) | Home |
-| | Added latency (0 to 400 ms) | 0 ms |
-| | Trouble: a peer stops answering, a peer keeps dropping out, a relay or the management server down, signed out, service stopped | None |
-| | Traffic: calm, normal, rush hour | Normal |
-| | Lazy connections | Off |
+| Tab | What is there |
+| --- | --- |
+| **Connect** | Add this computer with a setup key (self-hosted server optional) · Let my devices into this computer (SSH) · Terminal · Saved logins (user and port per device, forget them here) |
+| **The deep** | Things on screen (3 to 10) · Open groups · Show offline devices · Search suggestions |
+| **Effects & battery** | Smooth motion (60 fps) · Creatures drift · Light pulses · Darwin the goldfish · Celebrations · Keep the desktop fishbowl alive. Each says its battery use (⚡ high, some, light) right under it |
+| **Bar & alerts** | Beside the jellyfish: devices online, total traffic or nothing · Status dot · Middle-click connects · Notifications |
+| **Desktop** | Screens showing the fishbowl |
+| **Source & lab** | Mesh source: automatic, NetBird, test lab · the test lab's mesh, latency, trouble, traffic, lazy connections |
+| **Help** | The whole of Abyss in six lines, and the user guide |
 
-The **Test lab** section only shows while the test lab is the mesh source. It lives in memory and never touches NetBird; its title sums it up in one line and *Reset* brings back the quiet home mesh.
+The test lab lives in memory and never touches NetBird; its title sums it up in one line and *Reset* brings back the quiet home mesh.
 
 ## Command line and keybindings
 

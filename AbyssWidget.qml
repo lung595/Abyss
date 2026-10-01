@@ -14,9 +14,7 @@ PluginComponent {
     id: root
 
     // What the bar pill says beside the jellyfish (setting "Bar pill")
-    Prefs {
-        id: prefs
-    }
+    readonly property Prefs prefs: Prefs {}
     readonly property string pillText: !connected || !view || prefs.pill === "icon" ? "" : prefs.pill === "rate" ? Mesh.fmtRate(view.down + view.up) : String(view.online)
 
     readonly property var daemon: PluginService.pluginDaemonInstances["abyss"] ?? null
@@ -27,6 +25,25 @@ PluginComponent {
 
     // Internet goes out through a peer: a small still sun in the pill
     readonly property bool lending: connected && !!source && source.exitNode !== ""
+    readonly property color dotColor: connected ? Theme.success : (meshState === "needsLogin" || meshState === "connecting") ? Theme.warning : Theme.error
+    // The tooltip on the bar's jellyfish: everything in four short lines
+    readonly property string tipText: {
+        if (!view)
+            return "Abyss is starting";
+        const lines = [({
+                    "connected": "NetBird connected · " + view.online + "/" + view.total + " online",
+                    "connecting": "NetBird connecting…",
+                    "disconnected": "NetBird off",
+                    "needsLogin": "NetBird needs you to sign in",
+                    "stopped": "The NetBird service is stopped"
+                })[meshState] || meshState];
+        if (connected) {
+            lines.push("↓ " + Mesh.fmtRate(view.down) + "   ↑ " + Mesh.fmtRate(view.up));
+            lines.push("Internet " + (daemon ? daemon.exitText() : "directly"));
+        }
+        lines.push("Click: open" + (prefs.middleToggle ? " · Middle: " + (connected ? "disconnect" : "connect") : "") + " · Right: " + (connected ? "disconnect" : "connect"));
+        return lines.join("\n");
+    }
     readonly property color stateColor: connected ? Theme.primary : (meshState === "needsLogin" || meshState === "stopped") ? Theme.warning : meshState === "connecting" ? Theme.withAlpha(Theme.primary, 0.7) : Theme.surfaceVariantText
 
     // --- Control Center -------------------------------------------------------
@@ -60,58 +77,15 @@ PluginComponent {
 
     // --- Bar ------------------------------------------------------------------
     horizontalBarPill: Component {
-        Row {
-            spacing: Theme.spacingXS
-
-            JellyGlyph {
-                width: root.iconSize
-                height: root.iconSize
-                color: root.stateColor
-                asleep: !root.connected
-                anchors.verticalCenter: parent.verticalCenter
-            }
-            StyledText {
-                visible: root.pillText !== ""
-                text: root.pillText
-                color: Theme.primary
-                font.pixelSize: Theme.fontSizeSmall
-                anchors.verticalCenter: parent.verticalCenter
-            }
-            // Never turns here: the bar stays still
-            SunGlyph {
-                visible: root.lending
-                spinning: false
-                color: Theme.primary
-                anchors.verticalCenter: parent.verticalCenter
-            }
+        BarPill {
+            widget: root
         }
     }
 
     verticalBarPill: Component {
-        Column {
-            spacing: 2
-
-            JellyGlyph {
-                width: root.iconSize
-                height: root.iconSize
-                color: root.stateColor
-                asleep: !root.connected
-                anchors.horizontalCenter: parent.horizontalCenter
-            }
-            StyledText {
-                visible: root.pillText !== ""
-                text: root.pillText
-                color: Theme.primary
-                font.pixelSize: Theme.fontSizeSmall
-                anchors.horizontalCenter: parent.horizontalCenter
-            }
-            // Never turns here: the bar stays still
-            SunGlyph {
-                visible: root.lending
-                spinning: false
-                color: Theme.primary
-                anchors.horizontalCenter: parent.horizontalCenter
-            }
+        BarPill {
+            widget: root
+            vertical: true
         }
     }
 

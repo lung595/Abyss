@@ -2385,6 +2385,66 @@ Item {
             }
         }
 
+        // Desktop: no top bar, only a small glass pill under the surface
+        // while the pointer is over the bowl: search (in the bar, where the
+        // keyboard reaches) and Add a device
+        Rectangle {
+            id: deskPill
+            visible: root.borderless && opacity > 0.01
+            opacity: root.interacting && root.cardId === "" && !root.addOpen && !root._carrying ? 1 : 0
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: root.reduceMotion ? 0 : 220
+                }
+            }
+            z: 29
+            // Under the surface on the left: the jellyfish keeps the middle
+            // and the Internet light the right
+            x: root.insetTop + 20
+            y: 46
+            width: deskRow.implicitWidth + 12
+            height: 34
+            radius: 17
+            color: Qt.rgba(root.abyss.r, root.abyss.g, root.abyss.b, 0.7)
+            border.width: 1
+            border.color: Qt.rgba(root.ink.r, root.ink.g, root.ink.b, 0.18)
+            Row {
+                id: deskRow
+                anchors.centerIn: parent
+                spacing: 6
+                ActionChip {
+                    icon: "search"
+                    text: "Search"
+                    ink: root.ink
+                    tip: "Search and commands, in the bar"
+                    onClicked: {
+                        if (root.actions)
+                            root.actions.open();
+                    }
+                }
+                ActionChip {
+                    icon: "add"
+                    primary: true
+                    accent: root.sunColor
+                    ink: root.ink
+                    tip: "Add a device"
+                    onClicked: root.openAdd()
+                }
+            }
+        }
+
+        // Control Center: the starred devices, one click from their
+        // terminal or files
+        FavoritesBar {
+            visible: root.compact && root.cardId === "" && !root.addOpen && !root.listOpen && !root.netsOpen
+            anchors.bottom: parent.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.margins: 8
+            scene: root
+            z: 27
+        }
+
         // "Add a device": this computer or a phone, over everything but menus
         AddDevice {
             anchors.fill: parent

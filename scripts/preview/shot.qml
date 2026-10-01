@@ -126,6 +126,10 @@ Window {
         // hints / cmd: the search bar's panel, empty (shortcuts) or with a command typed
         if (mode === "hints")
             scene.searchFocus = true;
+        // fav: Control Center with two starred devices (use with -cc)
+        if (mode === "fav") {
+            scene.prefs.set("favorites", { "demo-atlas-server": "atlas-server", "demo-kestrel-phone": "kestrel-phone" });
+        }
         if (mode === "cmd")
             scene.query = "sha";
         // add / add-phone / add-pc / add-zoom / add-done: the Add a device sheet
