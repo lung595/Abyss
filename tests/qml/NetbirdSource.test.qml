@@ -118,6 +118,9 @@ Item {
             check("a failed deselect skips the select", after.indexOf("networks deselect -- exit-harbor") >= 0 && !after.some(l => l.indexOf("networks select") === 0), after);
             check("...says why", notices.some(n => n.indexOf("Could not go out through atlas: Error: networks failed") === 0), notices);
             check("...and the light goes back", src.exitNode === "harbor-vps", src.exitNode);
+            const n = calls().length;
+            src.setExitNode("atlas");
+            check("a failed exit is not tried again at once", calls().length === n && !src.busy);
             fake("fail", "");
             fake("daemon", "stopped");
         },

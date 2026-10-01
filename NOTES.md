@@ -141,3 +141,12 @@ integration tests (`tests/qml/`, need PySide6) against a fake `netbird`
   a polkit agent (DMS has one).
 - Not tried against a live NetBird daemon from this environment: the
   outputs come from the client's source code (cloned at 82e5428, 2026-09-30).
+
+### 10. A failing exit was retried on every read
+- **Where**: `components/NetbirdSource.qml` (`setExitNode`), driven by
+  `AbyssDaemon._followExitGroup`.
+- **Bug**: with Internet through a group of mine, each read picks the
+  group's best member; when switching to it failed, the next read (2 s
+  later) asked for it again, running a failing command every 2 s.
+- **Fix**: an exit that just failed is not asked again for 30 s.
+- **Checked**: a step in `NetbirdSource.test.qml`.
