@@ -2,7 +2,7 @@ import QtQuick
 import "Goldfish.js" as Fish
 
 // Darwin, the goldfish companion (Goldfish.js is his life; this draws it):
-// two little arms, no legs.
+// a round orange fish with big eyes, two little arms and no legs.
 // Plain rectangles turned and scaled from his pose: nothing is painted on a
 // canvas, nothing runs here. The scene's clock moves him while someone
 // watches (setting "Companion"); a click and he waves back.
@@ -17,8 +17,9 @@ Item {
 
     readonly property var s: frame >= 0 ? fish : null
     readonly property var p: s ? Fish.pose(s, scene.t) : null
-    readonly property color orange: "#f2913a"
-    readonly property color deep: "#d9661f"
+    readonly property color orange: "#f5892b"
+    readonly property color deep: "#d8661c"
+    readonly property color light: "#ffb066"
 
     // The glass clouding over where he has not scrubbed yet
     Repeater {
@@ -53,7 +54,9 @@ Item {
         }
     }
 
-    // Darwin himself, drawn facing left; turned round by his heading
+    // Darwin himself: a round orange body, two big eyes standing up on
+    // top, a small tail, two little arms and no legs. Drawn facing left,
+    // turned round by his heading
     Item {
         id: body
         visible: !!gf.s
@@ -68,129 +71,162 @@ Item {
             }
         ]
 
-        // Tail: two lobes, swinging
-        Item {
-            x: 9
-            rotation: gf.p ? gf.p.tail : 0
-            transformOrigin: Item.Left
-            Rectangle {
-                y: -7
-                width: 11
-                height: 7
-                radius: 4
-                color: gf.deep
-                rotation: -24
-                transformOrigin: Item.BottomLeft
-                opacity: 0.92
-            }
-            Rectangle {
-                y: 0
-                width: 11
-                height: 7
-                radius: 4
-                color: gf.deep
-                rotation: 24
-                transformOrigin: Item.TopLeft
-                opacity: 0.92
-            }
-        }
-        // Body and belly
-        Rectangle {
-            x: -12
-            y: -7
-            width: 23
-            height: 14
-            radius: 7
-            color: gf.orange
-        }
-        Rectangle {
-            x: -9
-            y: 0
-            width: 15
-            height: 6
-            radius: 3
-            color: "#f7b26a"
-        }
-        // Two little arms, no legs. The near one paddles, scrubs the glass
-        // and waves hello; the far one, behind him, swings as he swims
+        // Two little arms (the far one behind him, darker). The near one
+        // paddles, scrubs the glass and waves hello; the far one swings as
+        // he swims. Both reach forward from his front, never down like legs
         component Arm: Item {
             id: arm
-            // 0 reaches forward and down, like a little arm (never hanging
-            // straight down, where it would read as a leg); positive lifts
-            // it forward and up (he faces left)
+            // 0 reaches forward and down; positive lifts it forward and up
             property real angle: 0
             property color ink: gf.orange
             rotation: 135 + angle
             transformOrigin: Item.TopLeft
             Rectangle {
                 y: -0.9
-                width: 7.5
+                width: 6.5
                 height: 1.8
                 radius: 0.9
                 color: arm.ink
             }
-            // A round little hand
             Rectangle {
-                x: 6.2
-                y: -1.8
-                width: 3.6
-                height: 3.6
-                radius: 1.8
+                x: 5.4
+                y: -1.7
+                width: 3.4
+                height: 3.4
+                radius: 1.7
                 color: arm.ink
             }
         }
         Arm {
             x: -3
-            y: 2
-            z: -1
+            y: 6
             angle: gf.p ? gf.p.arms * 0.8 - 10 : 0
             ink: gf.deep
         }
-        // From his flank: a wave rises in front of his face (fin -100..-40
-        // lifts it up), a scrub reaches forward, a paddle stays low
+
+        // A small tail: two rounded lobes, swinging
+        Item {
+            x: 8
+            y: 1
+            rotation: gf.p ? gf.p.tail * 0.8 : 0
+            transformOrigin: Item.Left
+            Rectangle {
+                y: -5.5
+                width: 8
+                height: 5.5
+                radius: 2.8
+                color: gf.deep
+                rotation: -28
+                transformOrigin: Item.BottomLeft
+            }
+            Rectangle {
+                width: 8
+                height: 5.5
+                radius: 2.8
+                color: gf.deep
+                rotation: 28
+                transformOrigin: Item.TopLeft
+            }
+        }
+        // The body: a ball, a lighter cheek where the light falls
+        Rectangle {
+            x: -10
+            y: -9
+            width: 20
+            height: 19
+            radius: 9.5
+            color: gf.orange
+            border.width: 0.6
+            border.color: gf.deep
+            // A soft light on his back
+            Rectangle {
+                x: 11
+                y: 4
+                width: 4
+                height: 6
+                radius: 2
+                color: gf.light
+                opacity: 0.55
+            }
+        }
+        // Mouth: a small dark smile that opens while he munches
+        Rectangle {
+            x: -10.8
+            y: 1 - height / 2
+            width: 3
+            height: 1.2 + 2.6 * (gf.p ? gf.p.mouth : 0)
+            radius: 1.2
+            color: "#6b2a0e"
+        }
         Arm {
             x: -5
-            y: 2.5
+            y: 6.5
             angle: gf.p ? -gf.p.fin * 1.2 : 0
-            ink: "#ffc27a"
+            ink: gf.light
         }
-        // Eye and its lid
-        Rectangle {
-            x: -9
-            y: -4
-            width: 5
-            height: 5
-            radius: 2.5
-            color: "white"
+
+        // Two big eyes standing up on top, the far one just behind the near
+        // one, both looking where he goes; a blink closes them from above
+        component Eye: Item {
+            id: eye
+            width: 9
+            height: 10.5
             Rectangle {
-                x: 0.8
-                y: 1.2
-                width: 2.6
-                height: 2.6
-                radius: 1.3
-                color: "#1b1b24"
+                anchors.fill: parent
+                radius: width / 2
+                color: "white"
+                border.width: 0.6
+                border.color: "#c9c3bd"
             }
             Rectangle {
-                width: 5
-                height: 5 * (gf.p ? gf.p.lid : 0)
-                radius: 2.5
+                x: 1.3
+                y: 3.6
+                width: 4
+                height: 4.4
+                radius: 2
+                color: "#15151d"
+                Rectangle {
+                    x: 0.6
+                    y: 0.6
+                    width: 1.1
+                    height: 1.1
+                    radius: 0.55
+                    color: "white"
+                }
+            }
+            // The lid: closes from above; shut, a dark line marks it
+            Rectangle {
+                width: parent.width
+                height: parent.height * (gf.p ? gf.p.lid : 0)
+                radius: width / 2
                 color: gf.orange
+                border.width: height > 2 ? 0.6 : 0
+                border.color: gf.deep
+                Rectangle {
+                    visible: parent.height > parent.width * 0.8
+                    x: 1.5
+                    y: parent.height * 0.62
+                    width: parent.width - 3
+                    height: 0.9
+                    radius: 0.45
+                    color: "#6b2a0e"
+                }
             }
         }
-        // Mouth: opens while he munches
-        Rectangle {
-            x: -13
-            y: 0.5
-            width: 2.5
-            height: 1 + 2.5 * (gf.p ? gf.p.mouth : 0)
-            radius: 1
-            color: "#7a2f10"
+        Eye {
+            x: -3
+            y: -17
         }
+        Eye {
+            x: -10
+            y: -16
+        }
+
         // "z" while he sleeps
         Text {
             visible: !!gf.p && gf.p.asleep
-            x: -6
-            y: -22
+            x: -4
+            y: -27
             text: "z"
             font.pixelSize: 9
             color: gf.scene ? gf.scene.inkDim : "white"
@@ -199,10 +235,10 @@ Item {
             }
         }
         MouseArea {
-            x: -16
-            y: -12
-            width: 36
-            height: 24
+            x: -14
+            y: -18
+            width: 30
+            height: 30
             cursorShape: Qt.PointingHandCursor
             onClicked: {
                 Fish.wave(gf.fish);
