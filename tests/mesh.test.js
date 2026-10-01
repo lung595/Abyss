@@ -155,4 +155,14 @@ eq("same fqdn twice falls back to the address", same.peers.map(p => p.name).sort
 const solo = M.parse("Connected", { peers: { details: [twin("pc.a.example", "100.92.0.1", "k1"), twin("vega.a.example", "100.92.0.2", "k2")] } }, null, t0);
 eq("names that do not clash stay short", solo.peers.map(p => p.name).sort(), ["pc", "vega"]);
 
+// Lazy connections: idle peers doze (maybe reachable), only when NetBird says lazy is on
+{
+    const d = (n, st) => ({ "fqdn": n + ".x", "netbirdIp": "100.1.0." + n.length, "publicKey": n, "status": st });
+    const lazy = M.parse("Connected", { "lazyConnectionEnabled": true, "peers": { "details": [d("aa", "Connected"), d("bbb", "Idle")] } }, null, 1000);
+    eq("lazy: the idle peer dozes, the live one does not", lazy.peers.map(p => [p.name, p.dozing]), [["aa", false], ["bbb", true]]);
+    ok("lazy is said in the view", lazy.lazy === true);
+    const plain = M.parse("Connected", { "peers": { "details": [d("bbb", "Idle")] } }, null, 1000);
+    ok("without lazy, idle is asleep", plain.peers[0].dozing === false && plain.lazy === false);
+}
+
 done("mesh");

@@ -296,4 +296,11 @@ const LAB = [1, 2, 12, 60, 120].flatMap(n => [3, 5, 10].map(max => ["lab:" + n, 
         + sat.length + (sat.length ? ": " + sat.join(", ") : "") + ")", sat.length === 0);
 });
 
+// Dozing peers (lazy connections) float above the floor; asleep ones rest on it
+{
+    const items = [{ "id": "a", "online": true, "latencyMs": 10 }, { "id": "z", "online": false }, { "id": "d", "online": false, "dozing": true }];
+    const l = L.layout(items, 580, 480, 54, null);
+    ok("a dozing peer floats, an asleep one rests", !l.peers.d.floor && l.peers.z.floor && l.peers.d.y < l.peers.z.y - 40);
+}
+
 done("layout");

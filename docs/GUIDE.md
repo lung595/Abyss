@@ -100,7 +100,7 @@ Press Super+Space and type `abyss`: "Open Abyss" opens the deep from the bar; be
 | | Keep the desktop alive | Off | The bowl keeps moving when the pointer is away (off costs nothing) |
 | The deep | Things on screen | 5 | How many creatures and groups show before the rest gather into shoals (3 to 10) |
 | | Open groups | Hover and click | Hover and click, hover only, or click only. Carrying the light always opens them |
-| | Show offline peers | On | Asleep on the floor, or hidden |
+| | Show offline peers | On | Asleep on the floor, or hidden. With NetBird's lazy connections on, idle peers doze a little above the floor instead ("idle · wake on use"): NetBird does not say which of them are really off |
 | | Light pulses | On | Pulses of traffic along the tentacles |
 | Peers | Notifications | Off | When a peer comes or goes; muted peers stay quiet |
 | | Terminal for SSH | Automatic | The terminal used for SSH |
@@ -109,6 +109,7 @@ Press Super+Space and type `abyss`: "Open Abyss" opens the deep from the bar; be
 | | Added latency | 0 ms | Added to every peer: they sink deeper and may switch places |
 | | Trouble | None | A peer stops answering (raised as silent after a few minutes without a handshake), a peer keeps dropping out (every 6 s, for notifications), a relay goes down, the management server is unreachable, signed out, service stopped. Applied when chosen; the jellyfish still connects and disconnects |
 | | Traffic | Normal | Calm, normal, or rush hour (pulses and totals) |
+| | Lazy connections | Off | As if NetBird's lazy connections were on: idle peers doze in the water instead of sleeping on the floor |
 
 The test lab only shows while it is the mesh source. It never touches NetBird: the mesh is made up and lives in memory. Its title sums up what is set ("48 peers · +80 ms · a peer stops answering") and *Reset* brings back the quiet home mesh.
 

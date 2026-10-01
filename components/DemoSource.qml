@@ -38,6 +38,9 @@ QtObject {
     property string labTrouble: "none"
     // How busy the links are: "calm", "normal" or "rush"
     property string labTraffic: "normal"
+    // NetBird's lazy connections: idle peers doze instead of sleeping
+    property bool labLazy: false
+    onLabLazyChanged: refresh()
     // The peers the trouble hits right now, by name ("" when none)
     readonly property string silentPeer: labTrouble === "silent" ? Demo.silentPeer(profile) : ""
     readonly property string flappingPeer: labTrouble === "flap" ? Demo.flapPeer(profile) : ""
@@ -65,7 +68,8 @@ QtObject {
         const json = daemonStatus ? Demo.status(profile, now, up, _counters, _offline, relayDown, {
             "addMs": labLatency,
             "silent": _silent(),
-            "managementDown": _managementDown
+            "managementDown": _managementDown,
+            "lazy": labLazy
         }) : null;
         const before = {};
         (view.peers || []).forEach(p => before[p.name] = p.online);

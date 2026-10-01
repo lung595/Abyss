@@ -117,4 +117,14 @@ eq("nothing typed finds nobody", Q.lookup(L, " ").peer, null);
 eq("error for an ambiguous word", Q.lookupError("a", Q.lookup(L, "a")), "Several peers start with a: atlas, aurora");
 eq("error for an unknown word", Q.lookupError("zz", Q.lookup(L, "zz")), "No peer named zz");
 
+// Idle peers under lazy connections are called idle, not asleep
+{
+    const ps = mesh(10).map(p => Object.assign({}, p, { "dozing": !p.online }));
+    ps.push(Object.assign({}, ps[6], { "id": "k99", "name": "x-99" }));
+    const it = G.arrange(ps, 5, {}).items.find(i => i.id === "g:asleep");
+    ok("a dozing pile says idle", !!it && / idle$/.test(it.label) && it.dozing === true);
+    const it2 = G.arrange(mesh(14), 5, {}).items.find(i => i.id === "g:asleep");
+    ok("a sleeping pile says asleep", !!it2 && / asleep$/.test(it2.label) && !it2.dozing);
+}
+
 done("groups + query");

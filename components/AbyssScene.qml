@@ -190,6 +190,7 @@ Item {
         return {
             "id": it.id,
             "online": !it.asleep && !it.fog && ms.length > 0,
+            "dozing": !!it.dozing,
             "latencyMs": lat.length ? lat[lat.length >> 1] : 0,
             "relayed": via !== "",
             "relay": via

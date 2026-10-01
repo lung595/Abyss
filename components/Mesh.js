@@ -237,6 +237,11 @@ function parse(daemonStatus, json, prev, now) {
     const dt = prev && prev.at ? (now - prev.at) / 1000 : 0;
     // rx is what we received from a peer: its download toward us
     list.forEach(p => follow(p, before[p.id], dt, state === "connected"));
+    // NetBird's lazy connections keep idle peers unconnected until used: an
+    // idle peer may then be reachable (it wakes on use) or really off, and
+    // NetBird does not say which. Such peers doze in the water, not asleep
+    const lazy = !!s.lazyConnectionEnabled;
+    list.forEach(p => p.dozing = lazy && !p.online);
     list.sort(_order);
     let down = 0, up = 0, top = null, online = 0;
     list.forEach(p => {
@@ -271,6 +276,7 @@ function parse(daemonStatus, json, prev, now) {
         "up": up,
         "topId": top ? top.id : "",
         "relays": relays,
+        "lazy": lazy,
         "managementUp": !s.management || s.management.connected !== false
     };
     view.omens = state === "connected" ? omensOf(view, now) : [];
