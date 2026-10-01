@@ -89,12 +89,14 @@ Rectangle {
         anchors.verticalCenter: parent.verticalCenter
         spacing: 6
 
+        // In the test lab a flask, so a made-up mesh is never taken for yours
         ActionChip {
+            readonly property bool lab: bar.scene.lab
             visible: !!bar.source && bar.source.profiles.length > 1 && !bar.compact
-            icon: "badge"
+            icon: lab ? "science" : "badge"
             text: bar.source ? bar.source.profile : ""
             ink: bar.scene.ink
-            tip: "Switch profile"
+            tip: lab ? "Test lab: switch the made-up mesh" : "Switch profile"
             onClicked: {
                 const ps = bar.source.profiles;
                 bar.source.setProfile(ps[(ps.indexOf(bar.source.profile) + 1) % ps.length]);

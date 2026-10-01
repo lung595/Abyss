@@ -67,6 +67,41 @@ function _crowd() {
 }
 PROFILES.crowd = _crowd();
 
+// The test lab's own mesh: n made-up peers (1 to LAB_MAX) in a mix that
+// exercises everything at once: every kind of creature, both relays, some
+// asleep, latencies from the next room to the other side of the world, one
+// peer that hogs the link. The same n always gives the same mesh.
+const LAB_MAX = 120;
+function lab(n) {
+    n = Math.max(1, Math.min(LAB_MAX, Math.round(Number(n) || 1)));
+    const words = ["alder", "birch", "cedar", "dune", "ember", "fjord", "grove", "haze", "iris", "jade", "kelp", "lumen", "moss", "nectar", "onyx", "pearl", "quill", "reed", "sable", "tide"];
+    const kinds = ["server", "phone", "laptop", "nas", "vps", "pi", "pc"];
+    const ladder = [2, 5, 9, 14, 22, 35, 58, 90, 140, 210];
+    const peers = [];
+    for (let i = 0; i < n; i++) {
+        const kind = kinds[i % kinds.length], round = Math.floor(i / words.length);
+        const name = words[i % words.length] + "-" + kind + (round ? "-" + (round + 1) : "");
+        // Every 6th asleep, but never the first: a mesh of one is awake
+        const ms = i && i % 6 === 5 ? 0 : ladder[(i * 7 + round) % ladder.length];
+        const relay = kind === "vps" || i % 5 === 4 ? (i % 2 ? EU : US) : "";
+        const rate = i === 2 ? 5.5 : [0.02, 0.4, 0.08, 1.1, 0.06, 0.3, 0.01][(i * 3) % 7];
+        peers.push([name, "100.94." + (Math.floor(i / 250) + 1) + "." + (i % 250 + 2), ms, relay, rate, 30 + i * 53]);
+    }
+    return {
+        "fqdn": "wren.lab.example",
+        "ip": "100.94.0.1/16",
+        "peers": peers,
+        "networks": [{ "id": "lab-lan", "cidr": "10.42.0.0/16", "via": peers[0][0], "on": true }]
+    };
+}
+
+// Builds (or rebuilds) the "lab" profile for n peers
+function setLab(n) {
+    PROFILES.lab = lab(n);
+    return PROFILES.lab.peers.length;
+}
+setLab(24);
+
 function profiles() {
     return Object.keys(PROFILES);
 }
@@ -81,24 +116,55 @@ function baseRate(profile, name) {
     return p ? p[4] : 0;
 }
 
-// counters: {name: {rx, tx}} bytes so far; offline: {name: true} peers the
-// demo took offline; relayDown: a relay that stopped answering
-function status(profile, now, up, counters, offline, relayDown) {
+// The peer the lab makes silent: online, but no handshake for minutes (the
+// second live peer reached directly, so the closest one stays well)
+function silentPeer(profile) {
     const pr = PROFILES[profile];
+    const q = pr.peers.find((p, i) => i > 0 && p[2] > 0 && !p[3]) || pr.peers.find(p => p[2] > 0);
+    return q ? q[0] : "";
+}
+
+// The peer the lab makes drop out and come back: the first awake one
+function flapPeer(profile) {
+    const q = PROFILES[profile].peers.find(p => p[2] > 0);
+    return q ? q[0] : "";
+}
+
+// The first relay a mesh uses ("relay-eu"), the one the lab breaks
+function firstRelay(profile) {
+    const q = PROFILES[profile].peers.find(p => p[3]);
+    return q ? relayOf(q[3]) : "";
+}
+
+function relayOf(uri) {
+    return String(uri || "").replace(/^[a-z]+:\/\//, "").split(".")[0];
+}
+
+// counters: {name: {rx, tx}} bytes so far; offline: {name: true} peers the
+// demo took offline; relayDown: a relay that stopped answering.
+// lab (optional): { addMs: latency added to every peer, silent: a peer that
+// stopped answering, managementDown: the management server is unreachable }
+function status(profile, now, up, counters, offline, relayDown, lab) {
+    const pr = PROFILES[profile];
+    lab = lab || {};
+    const addMs = Math.max(0, Number(lab.addMs) || 0);
     const relayOk = uri => !relayDown || uri.indexOf(relayDown) < 0;
     const details = pr.peers.map(q => {
-        const [name, ip, ms, relay, , minutes] = q;
+        const [name, ip, base, relay, , minutes] = q;
+        const ms = base > 0 ? base + addMs : 0;
+        const silent = name === lab.silent;
         const online = up && ms > 0 && !offline[name] && (!relay || relayOk(relay));
         const c = counters[name] || { "rx": 0, "tx": 0 };
         return {
-            "fqdn": name + (({ "work": ".corp.example", "crowd": ".crowd.example" })[profile] || ".mesh.example"),
+            "fqdn": name + (({ "work": ".corp.example", "crowd": ".crowd.example", "lab": ".lab.example" })[profile] || ".mesh.example"),
             "netbirdIp": ip,
             "publicKey": "demo-" + name,
             "status": online ? "Connected" : "Idle",
             "lastStatusUpdate": new Date(now - (online ? minutes : 120) * 60000).toISOString(),
             "connectionType": online ? (relay ? "Relayed" : "P2P") : "",
             "relayAddress": relay,
-            "lastWireguardHandshake": online ? new Date(now - 40000).toISOString() : "0001-01-01T00:00:00Z",
+            // A silent peer last shook hands 7 minutes ago (live ones: 40 s)
+            "lastWireguardHandshake": online ? new Date(now - (silent ? 420000 : 40000)).toISOString() : "0001-01-01T00:00:00Z",
             "transferReceived": c.rx,
             "transferSent": c.tx,
             "latency": online ? ms * 1e6 : 0,
@@ -109,7 +175,7 @@ function status(profile, now, up, counters, offline, relayDown) {
     return {
         "fqdn": pr.fqdn,
         "netbirdIp": pr.ip,
-        "management": { "url": "https://api.mesh.example:443", "connected": true },
+        "management": { "url": "https://api.mesh.example:443", "connected": !lab.managementDown },
         "signal": { "url": "https://signal.mesh.example:443", "connected": true },
         "relays": { "details": [{ "uri": EU, "available": relayOk(EU) }, { "uri": US, "available": relayOk(US) }].filter(r => pr.peers.some(q => q[3] === r.uri)) },
         "peers": { "details": details }

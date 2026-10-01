@@ -23,7 +23,7 @@ Everything needed to work on Abyss or take over the project.
 
 2. Add at least one widget (Control Center, bar or desktop) to see your changes.
 3. DMS reloads QML on save, but Qt keeps `components/` and `.js` files cached in the running shell: **run `dms restart`** after changing them.
-4. Set **Mesh source** to *Demo mesh* to work without NetBird, then switch the demo between states with `dms ipc call abyss demo <state>` (`connected`, `disconnected`, `connecting`, `needsLogin`, `stopped`, `relayDown`, `relayUp`).
+4. Set **Mesh source** to *Test lab* to work without NetBird: the **Test lab** section then sets the number of peers, added latency, a trouble (silent or flapping peer, relay or management down, signed out, service stopped) and the traffic. `dms ipc call abyss demo <state>` still jumps between states (`connected`, `disconnected`, `connecting`, `needsLogin`, `stopped`, `relayDown`, `relayUp`).
 
 Tools: `gjs` (unit tests), Python with PySide6 (integration tests: `pip install PySide6-Essentials`), `ffmpeg` (GIFs).
 

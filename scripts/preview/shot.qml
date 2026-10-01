@@ -8,7 +8,7 @@ import "../../components/Bowl.js" as Bowl
 import "../../components/MyGroups.js" as MyGroups
 
 // Offscreen renders from the demo mesh (fictional names and addresses).
-// Usage: see render.sh. Modes: connected, disconnected, connecting,
+// Usage: see render.sh. Modes: lab (the test lab), connected, disconnected, connecting,
 // needsLogin, stopped, card, relay, find, exit, nets, work, crowd, lens,
 // peek, search (these four on the 30-peer crowd mesh), grab, reef (the lamp on the floor), fly / unfly (the card
 // opening / closing, as frames out-0.png ... out-11.png), step (the open card
@@ -97,6 +97,15 @@ Window {
             scene.cardId = "demo-harbor-vps";
         if (mode === "find")
             scene.query = "pi";
+        // lab: the test lab's custom mesh (60 peers, +40 ms, a peer silent),
+        // flagged as such
+        if (mode === "lab") {
+            scene.markLab = true;
+            demo.labPeers = 60;
+            demo.labLatency = 40;
+            demo.labTrouble = "silent";
+            demo.labMesh = "lab";
+        }
         if (["crowd", "lens", "peek", "search", "zoom", "life-peek"].indexOf(mode) >= 0)
             demo.setProfile("crowd");
         if (mode === "search")
@@ -174,6 +183,7 @@ Window {
     }
     AbyssScene {
         id: scene
+        markLab: false
         x: win.desk ? 50 + win.bowl.scene.x : 0
         y: win.desk ? 30 + win.bowl.scene.y : 0
         width: win.desk ? win.bowl.scene.w : win.width
