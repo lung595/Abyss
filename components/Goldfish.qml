@@ -1,7 +1,8 @@
 import QtQuick
 import "Goldfish.js" as Fish
 
-// Darwin, the goldfish companion (Goldfish.js is his life; this draws it).
+// Darwin, the goldfish companion (Goldfish.js is his life; this draws it):
+// two little arms, no legs.
 // Plain rectangles turned and scaled from his pose: nothing is painted on a
 // canvas, nothing runs here. The scene's clock moves him while someone
 // watches (setting "Companion"); a click and he waves back.
@@ -110,16 +111,48 @@ Item {
             radius: 3
             color: "#f7b26a"
         }
-        // The near fin: paddles, scrubs the glass, waves hello
-        Rectangle {
-            x: -2
-            y: 1
-            width: 7
-            height: 4
-            radius: 2
-            color: gf.deep
-            rotation: gf.p ? gf.p.fin : 0
-            transformOrigin: Item.Left
+        // Two little arms, no legs. The near one paddles, scrubs the glass
+        // and waves hello; the far one, behind him, swings as he swims
+        component Arm: Item {
+            id: arm
+            // 0 reaches forward and down, like a little arm (never hanging
+            // straight down, where it would read as a leg); positive lifts
+            // it forward and up (he faces left)
+            property real angle: 0
+            property color ink: gf.orange
+            rotation: 135 + angle
+            transformOrigin: Item.TopLeft
+            Rectangle {
+                y: -0.9
+                width: 7.5
+                height: 1.8
+                radius: 0.9
+                color: arm.ink
+            }
+            // A round little hand
+            Rectangle {
+                x: 6.2
+                y: -1.8
+                width: 3.6
+                height: 3.6
+                radius: 1.8
+                color: arm.ink
+            }
+        }
+        Arm {
+            x: -3
+            y: 2
+            z: -1
+            angle: gf.p ? gf.p.arms * 0.8 - 10 : 0
+            ink: gf.deep
+        }
+        // From his flank: a wave rises in front of his face (fin -100..-40
+        // lifts it up), a scrub reaches forward, a paddle stays low
+        Arm {
+            x: -5
+            y: 2.5
+            angle: gf.p ? -gf.p.fin * 1.2 : 0
+            ink: "#ffc27a"
         }
         // Eye and its lid
         Rectangle {

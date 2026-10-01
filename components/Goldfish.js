@@ -175,8 +175,9 @@ function pose(s, t) {
     const blink = asleep ? 1 : ((t % 4.3) < 0.14 ? 1 : 0);
     return {
         "tail": Math.sin(t * (asleep ? 1.5 : 5 + 7 * busy)) * (asleep ? 6 : 12 + 14 * busy),
-        "legs": asleep ? 0 : Math.sin(t * (4 + 8 * busy)) * (8 + 22 * busy),
-        // The near fin: waves hello, rubs the glass, paddles otherwise
+        // No legs, two little arms: the far one swings as he swims, the near
+        // one waves hello, rubs the glass, paddles otherwise ("fin")
+        "arms": asleep ? 10 : Math.sin(t * (4 + 8 * busy)) * (8 + 22 * busy),
         "fin": s.mood === "wave" ? -70 + Math.sin(t * 12) * 30 : s.scrubbing ? -30 + Math.sin(t * 16) * 35 : Math.sin(t * 3.2) * 14,
         "lid": blink,
         "mouth": s.munch > 0 ? Math.abs(Math.sin(s.munch * 14)) : asleep ? 0.2 : 0,
