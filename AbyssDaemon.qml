@@ -138,6 +138,18 @@ Item {
     }
 
     // --- Internet exit -------------------------------------------------------
+    // Where Internet goes out now, in words: "directly", "through studio",
+    // "through Homelab (studio)", or "through Homelab: nobody online"
+    function exitText() {
+        const src = root.source;
+        if (!src)
+            return "";
+        const g = prefs.exitGroup ? MyGroups.byId(prefs.groups, prefs.exitGroup) : null;
+        if (g)
+            return "through " + g.name + (src.exitNode ? " (" + src.exitNode + ")" : ": nobody online");
+        return src.exitNode ? "through " + src.exitNode : "directly";
+    }
+
     // Through one peer (its name), through a group of mine (its id: the
     // group lends its best member, MyGroups.pickExit), or "" to stop
     function setExit(peerName, groupId) {
@@ -206,7 +218,7 @@ Item {
                 return "Abyss is starting";
             const v = root.source.view;
             const on = v.peers.filter(p => p.online).length;
-            return v.state + (v.state === "connected" ? " · " + on + "/" + v.peers.length + " online" : "");
+            return v.state + (v.state === "connected" ? " · " + on + "/" + v.peers.length + " online · Internet " + root.exitText() : "");
         }
 
         // Opens (or closes) the deep in the bar's popout
@@ -256,19 +268,22 @@ Item {
             return root.ssh(p.fqdn || p.ip) ? "OK" : "Refused: " + (p.fqdn || p.ip) + " is not a plain host name";
         }
 
-        // Internet through a peer, a group of mine (by name), or "off"
+        // Internet through a peer, a group of mine (by name), or "off";
+        // "" says where it goes out now
         function exit(target: string): string {
             if (!root.source)
                 return "Abyss is starting";
             const k = String(target || "").trim().toLowerCase();
-            if (k === "" || k === "off" || k === "none") {
+            if (k === "")
+                return "Internet goes out " + root.exitText();
+            if (k === "off" || k === "none") {
                 root.setExit("", "");
                 return "Internet exit off";
             }
             const g = prefs.groups.find(x => x.name.toLowerCase() === k);
             if (g) {
                 root.setExit("", g.id);
-                return "Internet through " + g.name + (root.source.exitNode ? " (" + root.source.exitNode + ")" : ": nobody online");
+                return "Internet " + root.exitText();
             }
             const found = Query.lookup(root.source.view.peers, k), p = found.peer;
             if (!p)
