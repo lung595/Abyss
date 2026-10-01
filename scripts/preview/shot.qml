@@ -8,7 +8,8 @@ import "../../components/Bowl.js" as Bowl
 import "../../components/MyGroups.js" as MyGroups
 
 // Offscreen renders from the demo mesh (fictional names and addresses).
-// Usage: see render.sh. Modes: lab (the test lab), connected, disconnected, connecting,
+// Usage: see render.sh. Modes: lab (the test lab), switching, asleep,
+// dropped (Internet when something goes wrong), connected, disconnected, connecting,
 // needsLogin, stopped, card, relay, find, exit, nets, work, crowd, lens,
 // peek, search (these four on the 30-peer crowd mesh), grab, reef (the lamp on the floor), fly / unfly (the card
 // opening / closing, as frames out-0.png ... out-11.png), step (the open card
@@ -89,6 +90,23 @@ Window {
             demo.setState("relayDown");
         if (mode === "exit")
             demo.setExitNode("harbor-vps");
+        // switching: NetBird still at it, under the light
+        if (mode === "switching") {
+            demo._switch.interval = 60000;
+            demo.setExitNode("harbor-vps");
+        }
+        // asleep: disconnected, the dim light clicked ("Connect first")
+        if (mode === "asleep") {
+            demo.setState("disconnected");
+            later.task = () => win.find(scene, "surfaceSun").children.find(c => c.drag !== undefined).clicked(null);
+            later.start();
+        }
+        // dropped: the peer lending Internet goes offline, the next best named
+        if (mode === "dropped") {
+            demo.setExitNode("atlas-server");
+            later.task = () => demo.flap("atlas-server");
+            later.start();
+        }
         if (mode === "work")
             demo.setProfile("work");
         if (mode === "nets")
@@ -591,6 +609,12 @@ Window {
         }
     }
 
+    Timer {
+        id: later
+        property var task
+        interval: 900
+        onTriggered: task()
+    }
     // Let a few clock ticks run so pulses and tentacles are in place
     Timer {
         id: shot

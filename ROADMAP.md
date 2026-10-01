@@ -15,11 +15,10 @@ No promises, no dates. Everything here was asked for and is not in a release yet
 
 ## Internet, the whole journey
 
-Already done: the light, the beam and its traffic, dimming, the menu, gliding, Esc, whole groups, the `exit` command (alone, it says where Internet goes out), a sun in the bar pill, a short word under the light after each change. Still to come:
+Already done: the light, the beam and its traffic, dimming, the menu, gliding, Esc, whole groups, the `exit` command (alone, it says where Internet goes out), a sun in the bar pill, a short word under the light after each change, and what goes wrong ("Switching…", "Connect first", the next best peer when one drops). Still to come:
 
 - **Choosing**: hints while hovering and carrying the light.
 - **Groups**: a sun on a group lending Internet, a note when it switches member.
-- **When something goes wrong**: "Switching…", the next best peer when one drops, "Connect first".
 
 ## Later
 

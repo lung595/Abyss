@@ -18,6 +18,8 @@ Item {
     // What goes through the beam now ("↓ 9.5 Mb/s  ↑ 1.2 Mb/s"), "" when nothing
     property string rates: ""
     readonly property bool dragging: area.drag.active
+    // Disconnected: drawn dim, cannot be carried; a click says to connect
+    property bool asleep: false
     property bool reduceMotion: false
     // Where it is drawn: `home`, but a new home (an exit picked from the
     // menu, a drop, Escape) is reached by gliding there in 0.6 s instead of
@@ -34,6 +36,12 @@ Item {
     x: shown.x - width / 2
     y: shown.y - height / 2
     z: 20
+    opacity: asleep ? 0.35 : 1
+    Behavior on opacity {
+        NumberAnimation {
+            duration: sun.reduceMotion ? 0 : 300
+        }
+    }
 
     Halo {
         width: 110
@@ -81,8 +89,9 @@ Item {
         anchors.top: parent.bottom
         anchors.horizontalCenter: parent.horizontalCenter
         visible: sun.dragging || text !== ""
-        // While carried, where it would go; just after, where it went
-        text: sun.dragging ? sun.scene.dropHint : sun.scene.sunWord
+        // While carried, where it would go; then NetBird at work; then
+        // where it went
+        text: sun.dragging ? sun.scene.dropHint : sun.scene.switching ? "Switching…" : sun.scene.sunWord
         wrapMode: Text.NoWrap
         font.pixelSize: 11
         font.weight: Font.Bold
@@ -153,15 +162,20 @@ Item {
         anchors.fill: parent
         hoverEnabled: true
         onContainsMouseChanged: sun.scene.sunHovered = containsMouse
-        cursorShape: drag.active ? Qt.ClosedHandCursor : Qt.OpenHandCursor
-        drag.target: cancelled ? null : sun
+        cursorShape: sun.asleep ? Qt.PointingHandCursor : drag.active ? Qt.ClosedHandCursor : Qt.OpenHandCursor
+        drag.target: cancelled || sun.asleep ? null : sun
         // Heavy to lift: a brush or a click never carries it away
         drag.threshold: 16
         // Escape (AbyssScene.cancelCarry): let go without dropping
         property bool cancelled: false
         onPressed: cancelled = false
         // A click, no drag: where Internet can go, as a list
-        onClicked: sun.scene.openMenu("sun", Qt.point(sun.x - 160, sun.y + sun.height))
+        onClicked: {
+            if (sun.asleep)
+                sun.scene.explain("Connect first", "Click the jellyfish, then carry the light", "internet-through-a-peer", sun.x + sun.width / 2, sun.y + sun.height + 26);
+            else
+                sun.scene.openMenu("sun", Qt.point(sun.x - 160, sun.y + sun.height));
+        }
         onPositionChanged: {
             if (drag.active && !cancelled)
                 sun.scene.dragOver(sun.x + sun.width / 2, sun.y + sun.height / 2);

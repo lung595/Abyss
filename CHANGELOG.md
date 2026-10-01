@@ -13,6 +13,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - **Tests**: QML integration tests through real processes against a fake `netbird`, `tests/run.sh` to run every test, and CI on every push. The tentacle layout check (P60) also runs on the test lab's meshes, from 1 to 120 peers.
 
 - **Where Internet goes out, everywhere**: a small still sun in the bar pill while it goes out through a peer; the beam's traffic (↓ ↑) under the light's name; `dms ipc call abyss exit ""` says where it goes out, and `status` ends with it ("· Internet through studio"). After each change a short word under the light confirms it for two seconds ("Direct", "Through studio").
+- **When Internet goes wrong**: "Switching…" under the light until NetBird confirms the new exit; disconnected, the light stays, dim, and a click says "Connect first"; when the peer lending Internet goes offline, a note says so and names the next best peer.
 
 ### Changed
 
@@ -47,6 +48,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - **How to use**: the docs explain every option, with pictures and GIFs.
 
 - **Where Internet goes out, everywhere**: a small still sun in the bar pill while it goes out through a peer; the beam's traffic (↓ ↑) under the light's name; `dms ipc call abyss exit ""` says where it goes out, and `status` ends with it ("· Internet through studio"). After each change a short word under the light confirms it for two seconds ("Direct", "Through studio").
+- **When Internet goes wrong**: "Switching…" under the light until NetBird confirms the new exit; disconnected, the light stays, dim, and a click says "Connect first"; when the peer lending Internet goes offline, a note says so and names the next best peer.
 
 ### Changed
 
@@ -77,6 +79,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - **The desktop widget is a fishbowl**: round glass with a rim, highlights and a soft shadow, water tinted by your theme and a bed of sand.
 
 - **Where Internet goes out, everywhere**: a small still sun in the bar pill while it goes out through a peer; the beam's traffic (↓ ↑) under the light's name; `dms ipc call abyss exit ""` says where it goes out, and `status` ends with it ("· Internet through studio"). After each change a short word under the light confirms it for two seconds ("Direct", "Through studio").
+- **When Internet goes wrong**: "Switching…" under the light until NetBird confirms the new exit; disconnected, the light stays, dim, and a click says "Connect first"; when the peer lending Internet goes offline, a note says so and names the next best peer.
 
 ### Changed
 
