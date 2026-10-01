@@ -163,15 +163,16 @@ PluginSettings {
             return [mesh, labLatency.value ? "+" + labLatency.value + " ms" : "", trouble || "", ({
                         "calm": "calm links",
                         "rush": "rush hour"
-                    })[labTraffic.value] || ""].filter(s => s).join(" · ");
+                    })[labTraffic.value] || "", labLazy.value ? "lazy connections" : ""].filter(s => s).join(" · ");
         }
         // Back to a quiet home mesh, in one click
-        dirty: labMesh.value !== "home" || labLatency.value !== 0 || labTrouble.value !== "none" || labTraffic.value !== "normal"
+        dirty: labMesh.value !== "home" || labLatency.value !== 0 || labTrouble.value !== "none" || labTraffic.value !== "normal" || labLazy.value
         onReset: {
             labMesh.value = "home";
             labLatency.value = 0;
             labTrouble.value = "none";
             labTraffic.value = "normal";
+            labLazy.value = false;
         }
     }
 
@@ -283,5 +284,14 @@ PluginSettings {
             }
         ]
         defaultValue: "normal"
+    }
+
+    ToggleSetting {
+        id: labLazy
+        visible: lab.visible
+        settingKey: "labLazy"
+        label: "Lazy connections"
+        description: "Idle peers doze in the water: NetBird wakes them on use"
+        defaultValue: false
     }
 }

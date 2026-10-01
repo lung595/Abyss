@@ -127,7 +127,7 @@ Item {
             y: body.y + (cr.onFloor ? 16 : 26)
             title: (cr.favorite ? "★ " : "") + cr.peer.name
             titleSize: cr.detailed ? 12 : 11
-            sub: !cr.detailed ? "" : !cr.peer.online ? "offline" : !cr.scene.connected ? "" : "↓" + Mesh.fmtShort(cr.peer.down) + "  ↑" + Mesh.fmtShort(cr.peer.up)
+            sub: !cr.detailed ? "" : !cr.peer.online ? (cr.peer.dozing ? "idle · wakes on use" : "offline") : !cr.scene.connected ? "" : "↓" + Mesh.fmtShort(cr.peer.down) + "  ↑" + Mesh.fmtShort(cr.peer.up)
             third: (cr.hovered || cr.focused) && cr.live ? Math.round(cr.peer.latencyMs) + " ms · " + (cr.peer.relayed ? "via " + cr.peer.relay : "direct") : ""
             caption: cr.broken ? "RELAY DOWN" : cr.isTop ? "TOP CONSUMER" : ""
             captionInk: cr.broken ? Theme.warning : cr.tint

@@ -53,7 +53,7 @@ Column {
             color: head.live ? Theme.success : Qt.rgba(head.ink.r, head.ink.g, head.ink.b, 0.35)
         }
         StyledText {
-            text: !head.peer ? "" : !head.peer.online ? "Offline" : !head.scene.connected ? "Mesh disconnected" : "Online · " + (head.peer.relayed ? "via " + head.peer.relay : "direct (P2P)") + (head.isTop ? " · top consumer" : "")
+            text: !head.peer ? "" : !head.peer.online ? (head.peer.dozing ? "Idle · lazy connection, wakes on first use" : "Offline") : !head.scene.connected ? "Mesh disconnected" : "Online · " + (head.peer.relayed ? "via " + head.peer.relay : "direct (P2P)") + (head.isTop ? " · top consumer" : "")
             font.pixelSize: 11
             color: head.scene.inkDim
             wrapMode: Text.NoWrap

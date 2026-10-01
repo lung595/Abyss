@@ -8,7 +8,7 @@ import "../../components/Bowl.js" as Bowl
 import "../../components/MyGroups.js" as MyGroups
 
 // Offscreen renders from the demo mesh (fictional names and addresses).
-// Usage: see render.sh. Modes: lab (the test lab), switching, asleep,
+// Usage: see render.sh. Modes: lab (the test lab), lazy, switching, asleep,
 // dropped (Internet when something goes wrong), handover (a group of mine
 // passes the Internet to its next member), rename / gear (an open group
 // of mine, its title clicked or its ⚙), connected, disconnected, connecting,
@@ -97,6 +97,9 @@ Window {
             demo._switch.interval = 60000;
             demo.setExitNode("harbor-vps");
         }
+        // lazy: NetBird's lazy connections on, idle peers dozing
+        if (mode === "lazy")
+            demo.labLazy = true;
         // asleep: disconnected, the dim light clicked ("Connect first")
         if (mode === "asleep") {
             demo.setState("disconnected");

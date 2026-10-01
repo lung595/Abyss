@@ -215,8 +215,11 @@ function _arrange(peers, max, opts) {
     }
     if (asleep.length === 1)
         out.push(_peerItem(asleep[0], false));
-    else if (asleep.length)
-        out.push(_groupItem("g:asleep", asleep.length + " asleep", asleep, { "asleep": true }));
+    else if (asleep.length) {
+        // Lazy connections: idle, maybe reachable, rather than asleep
+        const dozing = asleep.every(p => p.dozing);
+        out.push(_groupItem("g:asleep", asleep.length + (dozing ? " idle" : " asleep"), asleep, { "asleep": true, "dozing": dozing }));
+    }
     return _done(out, key, scores);
 }
 

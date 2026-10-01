@@ -43,6 +43,7 @@ Item {
             labLatency: prefs.labLatency
             labTrouble: prefs.labTrouble
             labTraffic: prefs.labTraffic
+            labLazy: prefs.labLazy
         }
     }
     Component {

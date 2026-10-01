@@ -113,7 +113,7 @@ Item {
         y: body.y + (sc.quiet ? 22 : 28) * body.scale
         title: sc.item.label
         titleSize: sc.item.fog ? 10 : 11
-        sub: sc.quiet ? "" : "↓" + Mesh.fmtShort(sc.down) + (sc.broken ? "  ⚠" : "")
+        sub: sc.item.dozing ? "wake on use" : sc.quiet ? "" : "↓" + Mesh.fmtShort(sc.down) + (sc.broken ? "  ⚠" : "")
         ink: sc.quiet ? sc.scene.inkDim : sc.scene.ink
         subInk: sc.broken ? Theme.warning : sc.scene.inkDim
         color: Qt.rgba(sc.scene.abyss.r, sc.scene.abyss.g, sc.scene.abyss.b, sc.quiet ? 0.25 : 0.45)

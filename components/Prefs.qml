@@ -54,6 +54,7 @@ QtObject {
     readonly property int labLatency: _get("labLatency", 0)
     readonly property string labTrouble: _get("labTrouble", "none")
     readonly property string labTraffic: _get("labTraffic", "normal")
+    readonly property bool labLazy: _get("labLazy", false)
 
     readonly property bool reduceMotion: SettingsData.reduceMotion
 

@@ -121,6 +121,7 @@ In **Settings → Plugins**, turn **Abyss** on. The launcher entry works right a
 | | Added latency (0 to 400 ms) | 0 ms |
 | | Trouble: a peer stops answering, a peer keeps dropping out, a relay or the management server down, signed out, service stopped | None |
 | | Traffic: calm, normal, rush hour | Normal |
+| | Lazy connections | Off |
 
 The **Test lab** section only shows while the test lab is the mesh source. It lives in memory and never touches NetBird; its title sums it up in one line and *Reset* brings back the quiet home mesh.
 
