@@ -88,6 +88,8 @@ The caves on the floor are your networks and routes. Click one to turn it on or 
 
 Just type a name: the deep keeps the matches (favorites first) and dims the rest. <kbd>Enter</kbd> opens the first one's card, <kbd>Esc</kbd> clears.
 
+Words work too, in English or French, and they combine (`slow nas`, `phones offline`): a kind (`phone`, `server`, `nas`, `vps`, `pi`, `laptop`, `desktop`) with its usual names (`iphone`, `proxmox`, `synology`, `hetzner`, `macbook`…), a state (`online`, `offline`, `direct`, `relay`, `eu`), `exit` (can lend Internet), `new` (online for under an hour), `busy`, `quiet`, `slow`, `fast`, or a speed (`>100ms`, `<20ms`). Letters in order find a name (`hrbr` finds *harbor*).
+
 ![Finding a peer](../screenshots/find.png)
 
 ## The list
