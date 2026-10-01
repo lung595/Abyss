@@ -65,7 +65,7 @@ const json = (rx) => ({
 });
 const t0 = Date.parse("2026-09-26T12:01:00Z");
 const v1 = M.parse("Connected", json(1000), null, t0);
-eq("me", v1.me, { name: "wren", fqdn: "wren.mesh.example", ip: "100.92.0.1" });
+eq("me", v1.me, { name: "wren", fqdn: "wren.mesh.example", ip: "100.92.0.1", version: "", console: "" });
 eq("order: online by latency, then offline", v1.peers.map(p => p.name), ["near", "far", "gone"]);
 eq("counts", [v1.online, v1.total], [2, 3]);
 eq("relayed peer knows its relay", [v1.peers[1].relayed, v1.peers[1].relay], [true, "relay-eu"]);
@@ -163,6 +163,15 @@ eq("names that do not clash stay short", solo.peers.map(p => p.name).sort(), ["p
     ok("lazy is said in the view", lazy.lazy === true);
     const plain = M.parse("Connected", { "peers": { "details": [d("bbb", "Idle")] } }, null, 1000);
     ok("without lazy, idle is asleep", plain.peers[0].dozing === false && plain.lazy === false);
+}
+
+// The admin console, from the management address
+eq("NetBird Cloud has its own dashboard", M.consoleUrl("https://api.netbird.io:443"), "https://app.netbird.io");
+eq("a self-hosted one is on the same host", M.consoleUrl("https://netbird.example.org:33073"), "https://netbird.example.org");
+eq("an address that is not a host says nothing", M.consoleUrl("https://100.64.0.1:443") + M.consoleUrl("http://localhost:33073") + M.consoleUrl("nonsense"), "");
+{
+    const v = M.parse("Connected", { "daemonVersion": "0.60.1", "management": { "url": "https://api.netbird.io:443", "connected": true }, "peers": { "details": [] } }, null, 1000);
+    ok("the view knows the version and the console", v.me.version === "0.60.1" && v.me.console === "https://app.netbird.io");
 }
 
 done("mesh");

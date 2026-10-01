@@ -33,7 +33,7 @@ Every refusal in Abyss says why in a short note, with a GitHub mark that opens t
 
 ## Connect and disconnect
 
-Click **the jellyfish** (you) to connect or disconnect: it is the only switch, and the small ON / OFF under "you" says where you stand; if NetBird needs it, the same click signs you in or starts the service. Right-click it for more: connect or disconnect, switch to the next profile, show or hide offline peers. From the bar, a right click on the small jellyfish does the same, and so does `dms ipc call abyss toggle`.
+Click **the jellyfish** (you) to connect or disconnect: it is the only switch, and the small ON / OFF under "you" says where you stand; if NetBird needs it, the same click signs you in or starts the service. Right-click it for more: connect or disconnect, switch to the next profile, show or hide offline peers, open the admin console (NetBird Cloud's dashboard, or your management server's address when self-hosted). Pointing at it says your address and which NetBird version runs. From the bar, a right click on the small jellyfish does the same, and so does `dms ipc call abyss toggle`.
 
 ## Open a peer's card
 
