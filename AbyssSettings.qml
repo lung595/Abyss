@@ -6,7 +6,8 @@ import "components"
 import "components/Terminal.js" as Terminal
 
 // Plugin settings. Everything works out of the box; each option says in one
-// short line what it changes.
+// short line what it changes. Four short sections, and a fifth, the test
+// lab, that only shows while the lab is the mesh source.
 PluginSettings {
     id: root
     pluginId: "abyss"
@@ -41,7 +42,7 @@ PluginSettings {
         visible: desktopScreens.visible
         settingKey: "desktopLive"
         label: "Keep the desktop alive"
-        description: "Otherwise it only moves under the pointer · ⚡ Uses more battery"
+        description: "Otherwise it moves only under the pointer · ⚡ more battery"
         defaultValue: false
     }
 
@@ -114,13 +115,14 @@ PluginSettings {
     }
 
     Section {
-        text: "NetBird"
+        text: "Source"
     }
 
     SelectionSetting {
+        id: source
         settingKey: "source"
         label: "Mesh source"
-        description: "Automatic reads NetBird when it is installed, the demo mesh otherwise"
+        description: "Automatic: NetBird when installed, the test lab otherwise. Abyss itself never goes online"
         options: [
             {
                 "label": "Automatic",
@@ -131,10 +133,155 @@ PluginSettings {
                 "value": "netbird"
             },
             {
-                "label": "Demo mesh",
+                "label": "Test lab",
                 "value": "demo"
             }
         ]
         defaultValue: "auto"
+    }
+
+    // --- Test lab: a made-up mesh to try groups, latency and failures on.
+    // Shown only while it is the source; nothing here touches NetBird.
+    LabHeader {
+        id: lab
+        visible: source.value === "demo"
+        summary: {
+            const mesh = ({
+                    "home": "10 peers",
+                    "work": "5 peers",
+                    "crowd": "30 peers",
+                    "lab": labPeers.value + (labPeers.value === 1 ? " peer" : " peers")
+                })[labMesh.value] || "";
+            const trouble = ({
+                    "silent": "a peer stops answering",
+                    "flap": "a peer keeps dropping out",
+                    "relay": "a relay is down",
+                    "management": "management unreachable",
+                    "signedOut": "signed out",
+                    "stopped": "service stopped"
+                })[labTrouble.value];
+            return [mesh, labLatency.value ? "+" + labLatency.value + " ms" : "", trouble || "", ({
+                        "calm": "calm links",
+                        "rush": "rush hour"
+                    })[labTraffic.value] || ""].filter(s => s).join(" · ");
+        }
+        // Back to a quiet home mesh, in one click
+        dirty: labMesh.value !== "home" || labLatency.value !== 0 || labTrouble.value !== "none" || labTraffic.value !== "normal"
+        onReset: {
+            labMesh.value = "home";
+            labLatency.value = 0;
+            labTrouble.value = "none";
+            labTraffic.value = "normal";
+        }
+    }
+
+    SelectionSetting {
+        id: labMesh
+        visible: lab.visible
+        settingKey: "labMesh"
+        label: "Mesh"
+        description: "Custom size to see how groups form"
+        options: [
+            {
+                "label": "Home · 10 peers",
+                "value": "home"
+            },
+            {
+                "label": "Work · 5 peers",
+                "value": "work"
+            },
+            {
+                "label": "Crowd · 30 peers",
+                "value": "crowd"
+            },
+            {
+                "label": "Custom size",
+                "value": "lab"
+            }
+        ]
+        defaultValue: "home"
+    }
+
+    SliderSetting {
+        id: labPeers
+        visible: lab.visible && labMesh.value === "lab"
+        settingKey: "labPeers"
+        label: "Peers"
+        defaultValue: 24
+        minimum: 1
+        maximum: 120
+    }
+
+    SliderSetting {
+        id: labLatency
+        visible: lab.visible
+        settingKey: "labLatency"
+        label: "Added latency"
+        description: "On every peer: they sink deeper and may switch places"
+        defaultValue: 0
+        minimum: 0
+        maximum: 400
+        unit: "ms"
+    }
+
+    SelectionSetting {
+        id: labTrouble
+        visible: lab.visible
+        settingKey: "labTrouble"
+        label: "Trouble"
+        description: "Applied when chosen; the jellyfish still connects and disconnects"
+        options: [
+            {
+                "label": "None",
+                "value": "none"
+            },
+            {
+                "label": "A peer stops answering",
+                "value": "silent"
+            },
+            {
+                "label": "A peer keeps dropping out",
+                "value": "flap"
+            },
+            {
+                "label": "A relay goes down",
+                "value": "relay"
+            },
+            {
+                "label": "Management unreachable",
+                "value": "management"
+            },
+            {
+                "label": "Signed out",
+                "value": "signedOut"
+            },
+            {
+                "label": "Service stopped",
+                "value": "stopped"
+            }
+        ]
+        defaultValue: "none"
+    }
+
+    SelectionSetting {
+        id: labTraffic
+        visible: lab.visible
+        settingKey: "labTraffic"
+        label: "Traffic"
+        options: [
+            {
+                "label": "Calm",
+                "value": "calm"
+            },
+            {
+                "label": "Normal",
+                "value": "normal"
+            },
+            {
+                "label": "Rush hour",
+                "value": "rush"
+            }
+        ]
+        defaultValue: "normal"
     }
 }

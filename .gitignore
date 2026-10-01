@@ -1,3 +1,4 @@
 # Local working files, never published
-rendu-planche.png
+/*.png
+!/screenshot.png
 .claude/
