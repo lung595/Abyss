@@ -145,4 +145,14 @@ eq("a peer serving 0.0.0.0/0 can lend", M.peerOf(peer("x", "Connected", "P2P", 5
 eq("older clients call them routes", M.peerOf(peer("x", "Connected", "P2P", 5, 0, 0, { routes: ["0.0.0.0/0"] })).exit, true);
 eq("no such route: cannot lend", M.peerOf(peer("x", "Connected", "P2P", 5, 0, 0, { networks: ["192.168.1.0/24"] })).exit, false);
 
+// Two peers never share a name
+const twin = (fqdn, ip, key) => ({ fqdn, netbirdIp: ip + "/16", publicKey: key, status: "Connected", latency: 1e7 });
+const twins = M.parse("Connected", { peers: { details: [
+    twin("pc.home.example", "100.92.0.1", "k1"), twin("pc.work.example", "100.92.0.2", "k2"), twin("nas.home.example", "100.92.0.3", "k3")] } }, null, t0);
+eq("clashing names take a label more", twins.peers.map(p => p.name).sort(), ["nas", "pc.home", "pc.work"]);
+const same = M.parse("Connected", { peers: { details: [twin("pc.a.example", "100.92.0.1", "k1"), twin("pc.a.example", "100.92.0.2", "k2")] } }, null, t0);
+eq("same fqdn twice falls back to the address", same.peers.map(p => p.name).sort(), ["100.92.0.1", "100.92.0.2"]);
+const solo = M.parse("Connected", { peers: { details: [twin("pc.a.example", "100.92.0.1", "k1"), twin("vega.a.example", "100.92.0.2", "k2")] } }, null, t0);
+eq("names that do not clash stay short", solo.peers.map(p => p.name).sort(), ["pc", "vega"]);
+
 done("mesh");

@@ -43,3 +43,14 @@ Newest work at the bottom of each section.
   start of a name only when a single peer starts that way. Otherwise the
   IPC answers "Several peers start with a: atlas, aurora".
 - **Checked**: 11 new cases in `tests/groups.test.js`.
+
+### 4. Two peers with the same short name
+- **Where**: `components/Mesh.js` (`parse`).
+- **Risk**: a peer's name is its fqdn's first label, and the exit node,
+  `findPeer`, notifications and the demo all go by name. Two peers named
+  `pc` in different domains would have been mixed up. NetBird normally
+  keeps labels unique within one account, so this is defensive.
+- **Fix**: `_unique` gives clashing peers as many fqdn labels as it takes
+  (`pc.home`, `pc.work`), else their address. Names that do not clash stay
+  short.
+- **Checked**: 3 new cases in `tests/mesh.test.js`.
