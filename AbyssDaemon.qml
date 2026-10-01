@@ -135,12 +135,18 @@ Item {
         return true;
     }
 
-    // Lets the other peers SSH into this device, or stops letting them
+    // Lets the other peers SSH into this device, or stops letting them. The
+    // setting is the switch (here, the menu, the IPC or Settings): NetBird
+    // follows each change of it, never at start
     function shareSsh(on) {
-        if (!root.source)
-            return;
-        root.source.shareSsh(on);
-        prefs.set("shareSsh", on);
+        prefs.set("shareSsh", !!on);
+    }
+    Connections {
+        target: prefs
+        function onShareSshChanged() {
+            if (root.source)
+                root.source.shareSsh(prefs.shareSsh);
+        }
     }
 
     // Three echoes to a peer, when asked (never on its own); the answer

@@ -31,6 +31,16 @@ QtObject {
     readonly property var links: _get("links", ({}))
     // This device lets the other peers SSH in (NetBird's SSH server)
     readonly property bool shareSsh: _get("shareSsh", false)
+    // Effects (Settings > Effects & battery): 60 fps while things move (else
+    // 30), creatures swaying, bubbles when a new device joins
+    readonly property bool smooth: _get("smooth", true)
+    readonly property bool drift: _get("drift", true)
+    readonly property bool celebrate: _get("celebrate", true)
+    // Bar: a coloured dot for the state; middle click connects
+    readonly property bool statusDot: _get("statusDot", true)
+    readonly property bool middleToggle: _get("middleToggle", true)
+    // Shortcuts under the empty search bar
+    readonly property bool searchHints: _get("searchHints", true)
     // Desktop: keep the deep alive when the pointer is elsewhere
     readonly property bool desktopLive: _get("desktopLive", false)
     // How many things the deep shows at once; more peers gather in groups
