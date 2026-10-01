@@ -44,6 +44,9 @@ Item {
     // it has no frame, water, reef or floor of its own; the top bar only
     // shows while the pointer is over it
     property bool borderless: false
+    // Say so when the mesh is the test lab's (the README's captures turn it off)
+    property bool markLab: true
+    readonly property bool lab: markLab && !!source && source.demo
     // In the desktop bowl: how far in from each side the surface (top bar,
     // sun) and the floor (caves, sleepers) must stay, as the glass narrows
     property real insetTop: 0
@@ -1122,8 +1125,9 @@ Item {
     }
     function copy(text, what) {
         if (actions)
-            actions.copy(text);
-        ToastService.showInfo(what + " copied", text);
+            actions.copy(text, what);
+        else
+            ToastService.showInfo(what + " copied", text);
     }
     function ssh(peer) {
         if (actions)

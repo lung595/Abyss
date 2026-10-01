@@ -39,10 +39,11 @@ Item {
             check("ipc status", test.ipc.status() === "connected · 3/4 online", test.ipc.status());
             check("ipc copy", test.ipc.copy("nook") === "100.90.0.3" && JSON.stringify(Quickshell.launched[0]) === '["dms","cl","copy","100.90.0.3"]', Quickshell.launched);
             check("ipc copy, unknown peer", test.ipc.copy("zz") === "No peer named zz");
-            check("ipc ssh opens a terminal with the fqdn", test.ipc.ssh("atlas") === "OK" && Quickshell.launched[1].slice(-1)[0] === "atlas.netbird.cloud", Quickshell.launched);
+            check("ipc ssh answers at once", test.ipc.ssh("atlas") === "OK");
             check("ipc exit through a peer", test.ipc.exit("harbor-vps") === "Internet through harbor-vps");
         },
         () => {
+            check("ipc ssh opens a terminal with the fqdn, once one is found", Quickshell.launched[1].slice(-1)[0] === "atlas.netbird.cloud", Quickshell.launched);
             check("the exit reached NetBird", daemon.source.exitNode === "harbor-vps" && daemon.source.view.peers.find(p => p.name === "harbor-vps").lending);
             check("ipc exit off", test.ipc.exit("off") === "Internet exit off");
             check("ipc demo refuses on the real mesh", test.ipc.demo("needsLogin") === "Not in demo mode");
