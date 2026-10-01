@@ -15,6 +15,7 @@ Every refusal in Abyss says why in a short note, with a GitHub mark that opens t
 - [Internet through a whole group](#internet-through-a-whole-group)
 - [Turn a network on or off](#turn-a-network-on-or-off)
 - [Find a peer](#find-a-peer)
+- [The list](#the-list)
 - [Ping](#ping)
 - [From the launcher](#from-the-launcher)
 - [Settings](#settings)
@@ -88,6 +89,10 @@ The caves on the floor are your networks and routes. Click one to turn it on or 
 Just type a name: the deep keeps the matches (favorites first) and dims the rest. <kbd>Enter</kbd> opens the first one's card, <kbd>Esc</kbd> clears.
 
 ![Finding a peer](../screenshots/find.png)
+
+## The list
+
+With 12 peers or more, a list icon appears in the top bar: every peer as one line (name, kind, relay, traffic, latency), online first and the closest first. It follows the search (type to narrow it) and *Show offline peers*; click a line for the peer's card, <kbd>Esc</kbd> to close.
 
 ## Ping
 

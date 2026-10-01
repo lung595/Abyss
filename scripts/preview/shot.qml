@@ -8,7 +8,7 @@ import "../../components/Bowl.js" as Bowl
 import "../../components/MyGroups.js" as MyGroups
 
 // Offscreen renders from the demo mesh (fictional names and addresses).
-// Usage: see render.sh. Modes: lab (the test lab), lazy, switching, asleep,
+// Usage: see render.sh. Modes: lab (the test lab), list, lazy, switching, asleep,
 // dropped (Internet when something goes wrong), handover (a group of mine
 // passes the Internet to its next member), rename / gear (an open group
 // of mine, its title clicked or its ⚙), connected, disconnected, connecting,
@@ -129,8 +129,12 @@ Window {
             demo.labTrouble = "silent";
             demo.labMesh = "lab";
         }
-        if (["crowd", "lens", "peek", "search", "zoom", "life-peek"].indexOf(mode) >= 0)
+        // list: the compact list of a big mesh (the 30-peer crowd)
+        if (["crowd", "lens", "peek", "search", "zoom", "life-peek", "list"].indexOf(mode) >= 0)
             demo.setProfile("crowd");
+        // list: the compact list of a big mesh
+        if (mode === "list")
+            scene.listOpen = true;
         if (mode === "search")
             scene.query = "nas";
         if (mode === "unfly" || mode === "step")
