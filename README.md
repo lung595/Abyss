@@ -1,41 +1,121 @@
+<div align="center">
+
 # Abyss
 
-Your [NetBird](https://netbird.io) mesh as a glowing deep sea, for [DankMaterialShell](https://github.com/AvengeMedia/DankMaterialShell).
+**Your [NetBird](https://netbird.io) mesh as a glowing deep sea, for [DankMaterialShell](https://github.com/AvengeMedia/DankMaterialShell).**
 
-You are the giant jellyfish. Every peer is a creature floating at the depth of its latency, tied to you by a tentacle that carries its live traffic: the more it uses, the thicker and brighter the tentacle, with pulses of light running toward you (download) or toward it (upload). Who uses the most is marked at a glance, and every creature shows its ↓/↑ rate. No clicks needed to read your network.
-
-> **New in 0.3.0:** your own groups, Internet through a peer or a whole group by carrying the light of the surface (or picking it from a small tree), livelier animals, a launcher entry (Super+Space, `abyss`), a borderless fishbowl, and a guide to every option below. Anything you cannot do now says why. Still on a **made-up demo mesh**; reading the real NetBird daemon comes next.
+You are the giant jellyfish. Every peer is a creature floating at the depth of its latency,
+tied to you by a tentacle lit by its live traffic. No clicks needed to read your network.
 
 ![The deep, connected](screenshots/connected.png)
 
-## What you see
+</div>
+
+> [!WARNING]
+> **Preview: Abyss runs on a made-up demo mesh.** It does not read your real NetBird daemon yet; that comes next (see the [roadmap](#roadmap)).
+
+> **New in 0.3.0:** your own groups, Internet through a peer or a whole group, livelier animals, a launcher entry and a borderless fishbowl. Anything you cannot do now says why. See the [changelog](#changelog).
+
+## Contents
+
+- [Getting started](#getting-started)
+- [Features](#features)
+- [Usage](#usage)
+- [Settings](#settings)
+- [Command line and keybindings](#command-line-and-keybindings)
+- [Troubleshooting](#troubleshooting)
+- [Privacy](#privacy)
+- [Performance](#performance)
+- [Development](#development)
+- [Changelog](#changelog)
+- [Roadmap](#roadmap)
+- [Credits](#credits)
+- [License](#license)
+
+## Getting started
+
+### Requirements
+
+| Dependency | Version | Needed for |
+| --- | --- | --- |
+| DankMaterialShell | 1.6.0 or newer | Everything |
+| A terminal emulator | Any | *Optional*: SSH to a peer |
+
+### 1. Install
+
+Abyss is a preview and is installed by hand:
+
+```sh
+git clone https://github.com/lung595/Abyss ~/.config/DankMaterialShell/plugins/Abyss
+```
+
+Then click **Settings → Plugins → *Scan for plugins***.
+
+### 2. Enable
+
+In **Settings → Plugins**, turn **Abyss** on. The launcher entry works right away (Super+Space, type `abyss`).
+
+### 3. Add a widget
+
+> [!IMPORTANT]
+> **Abyss does not replace any existing widget.** Enabling it is not enough to see the deep: **add at least one of its widgets** yourself. You can add one, two or all three.
+
+| Where | How to add it | What you get |
+| --- | --- | --- |
+| **Control Center** | Open the Control Center, enter **edit mode** and add the **NetBird** tile from *Abyss* | A NetBird on/off tile with the deep underneath |
+| **Bar** | **Settings → Appearance → DankBar Layout**, add **Abyss** to any section | A small jellyfish with the number of peers online; click it for the deep |
+| **Desktop** | **Settings → Desktop Widgets**, add **Abyss** | A round fishbowl on your wallpaper, the deep inside it |
+
+### 4. First steps
+
+1. **Open the deep** from the widget you added (or the launcher: `abyss` → *Open Abyss*).
+2. **Click the jellyfish** (you) to connect or disconnect.
+3. **Click a creature** to open its card; **drag the light of the surface** onto a peer to send your Internet through it.
+
+## Features
+
+- **Read your mesh at a glance.** Depth is latency, tentacle width is live traffic, pulses of light show download (toward you) and upload (toward the peer). **TOP CONSUMER** marks the busiest peer.
+- **A creature per device type**: manta = server, lantern whale = VPS, fish = laptop, nautilus = desktop, seahorse = phone, squid = Raspberry Pi, turtle = NAS.
+- **Internet through a peer or a whole group**, by carrying the light of the surface.
+- **Your own groups**, plus automatic shoals that keep the view uncluttered.
+- **Peer cards** with live rates, copy, SSH and more.
+- **Everywhere**: bar, Control Center, desktop fishbowl and launcher.
+- **Never refused in silence**: every refusal says why, with a link to the right section of this README.
+- **Lightweight and private**: nothing runs while no view is open, nothing leaves your machine.
 
 | In the deep | Means |
-|---|---|
+| --- | --- |
 | The jellyfish (you), lit | Connected. Click it to connect or disconnect (or sign in / start the service) |
-| A creature | A peer; its species says what it is: manta = server, lantern whale = VPS, fish = laptop, nautilus = desktop, seahorse = phone, squid = Raspberry Pi, turtle = NAS |
+| A creature | A peer; its species says what it is |
 | Depth | Latency, on a log scale (1–320 ms, gauge on the right) |
 | Tentacle width and pulses | Live traffic of that peer; **TOP CONSUMER** marks the biggest |
 | A coral lantern on a tentacle | The relay a peer goes through; blinking orange = the relay stopped answering |
 | A creature asleep on the floor | Offline |
 | Caves on the floor | Networks and routes; click one to turn it on or off |
-| The light of the surface | Internet. Drag it onto a peer to use it as exit node, drop it in the water to stop ([how](#internet-through-a-peer)) |
+| The light of the surface | Internet. Drag it onto a peer to use it as exit node ([how](#internet-through-a-peer)) |
 
 | Relay down | Exit node, light theme |
-|---|---|
+| --- | --- |
 | ![Relay down](screenshots/relay.png) | ![Exit node](screenshots/exit-light.png) |
 
-The full guide, option by option, is in [How to use](#how-to-use).
-
-## How to use
+## Usage
 
 Every refusal in Abyss says why in a short note, with a GitHub mark that opens the matching section below.
 
+### Widgets
+
+- **Bar**: a small jellyfish with the number of peers online. Click opens the deep, right click connects or disconnects.
+- **Control Center**: a NetBird tile (toggle) with the deep underneath.
+- **Desktop**: a round fishbowl with a sandy bed, glass and a water line; the deep lives inside it. It stays still until the pointer is over it. Who is online and the live totals are written in a fine line of coloured sand. Choose which screens show it in the settings.
+- **Launcher**: see [From the launcher](#from-the-launcher).
+
+| Desktop fishbowl | Control Center |
+| --- | --- |
+| ![The fishbowl desktop widget, with a made-up mesh](screenshots/desk.png) | ![Control Center](screenshots/connected-cc.png) |
+
 ### Connect and disconnect
 
-Click **the jellyfish** (you) to connect or disconnect; if NetBird needs it, the same click signs you in or starts the service. Right-click it for more: connect or disconnect, switch to the next profile, show or hide offline peers. From the bar, a right click on the small jellyfish does the same, and `dms ipc call abyss toggle` too.
-
-![The deep, connected](screenshots/connected.png)
+Click **the jellyfish** (you) to connect or disconnect; if NetBird needs it, the same click signs you in or starts the service. Right-click it for more: connect or disconnect, switch to the next profile, show or hide offline peers. From the bar, a right click on the small jellyfish does the same, and so does `dms ipc call abyss toggle`.
 
 ### Open a peer's card
 
@@ -65,7 +145,8 @@ The light at the surface is your Internet. **Drag it onto a peer** and all your 
 
 ![Carrying the light onto a peer](screenshots/internet.gif)
 
-**Only a peer that offers an exit node can lend Internet** (NetBird's rule). While you carry the light, the others step back and, over one of them, the light says so; drop it there anyway and it bounces home with a note. To let a device lend Internet, turn it into an exit node in NetBird's dashboard: *Network Routes* › *Add route* › *Exit node*, see [NetBird's guide](https://docs.netbird.io/how-to/configuring-default-routes-for-internet-traffic).
+> [!NOTE]
+> **Only a peer that offers an exit node can lend Internet** (NetBird's rule). While you carry the light, the others step back and, over one of them, the light says so; drop it there anyway and it bounces home with a note. To let a device lend Internet, turn it into an exit node in NetBird's dashboard: *Network Routes* › *Add route* › *Exit node*, see [NetBird's guide](https://docs.netbird.io/how-to/configuring-default-routes-for-internet-traffic).
 
 ![Dropping the light on a peer that cannot lend Internet](screenshots/cant-lend.gif)
 
@@ -93,90 +174,135 @@ Just type a name: the deep keeps the matches (favorites first) and dims the rest
 
 ### From the launcher
 
-Press Super+Space and type `abyss`: "Open Abyss" opens the deep from the bar; below it, connect, where Internet goes out (a sun marks the one in use), and, as you type a name (`abyss vega`), copy its address or SSH to it.
+Press Super+Space and type `abyss`: "Open Abyss" opens the deep from the bar; below it, connect, choose where Internet goes out (a sun marks the one in use), and, as you type a name (`abyss vega`), copy its address or SSH to it.
 
-### On the desktop
+## Settings
 
-Add Abyss in Settings › Desktop Widgets: a round fishbowl on your wallpaper, the deep inside it. It stays still until the pointer is over it; who is online and the live totals are poured into its sand. Pick its screens in the settings.
+Open **Settings → Plugins → Abyss** (the desktop section is also reachable from **Settings → Desktop Widgets**).
 
-![The fishbowl](screenshots/desk.png)
+| Section | Setting | Default | Description |
+| --- | --- | --- | --- |
+| Desktop | Screens | All | Which screens show the fishbowl |
+| | Keep the desktop alive | Off | The bowl keeps moving when the pointer is away (off costs nothing) |
+| The deep | Things on screen | 5 | How many creatures and groups show before the rest gather into shoals (3 to 10) |
+| | Open groups | Hover and click | On hover and click, hover only, or click only. Carrying the light always opens them |
+| | Show offline peers | On | Asleep on the floor, or hidden |
+| | Light pulses | On | Pulses of traffic along the tentacles |
+| Peers | Notifications | Off | When a peer comes or goes; muted peers stay quiet |
+| | Terminal for SSH | Automatic | The terminal used for SSH |
 
-### Settings
+DMS's *Reduce motion* setting is respected: every movement stops.
 
-- **Desktop**: which screens show the bowl (all by default).
-- **Open groups**: on hover and click (default), hover only, or click only. Carrying the light always opens them.
-- **Show offline peers**: asleep on the floor, or hidden.
-- **Light pulses**: the pulses of traffic along the tentacles, on or off.
-- **Keep the desktop alive**: the bowl keeps moving when the pointer is away (off by default, to cost nothing).
-- **Things on screen**: how many creatures and groups the deep shows before it gathers the rest into shoals (3 to 10, 5 by default).
-- **Notifications**: when a peer comes or goes (off by default; muted peers stay quiet).
-- **Terminal for SSH**: the one used for SSH (automatic by default).
-
-## Surfaces
-
-- **Bar**: a small jellyfish with the number of peers online. Click opens the deep, right click connects or disconnects.
-- **Control Center**: a NetBird tile (toggle) with the deep underneath.
-- **Launcher** (Super+Space, type `abyss`): "Open Abyss" opens the deep from the bar; below it, the quick steps — connect, where Internet goes out (a sun marks the one in use), and, as you type a name (`abyss vega`), copy its address or SSH to it.
-- **Desktop**: a round fishbowl on your wallpaper, with a sandy bed, glass and a water line; the deep lives inside it. It stays still until the pointer is over it. Who is online and the live totals are written in its sand, in a fine line of coloured sand; choose which screens show it in the settings.
-
-![The fishbowl desktop widget, with a made-up mesh](screenshots/desk.png)
-
-![Control Center](screenshots/connected-cc.png)
-
-## Keyboard and scripts
+## Command line and keybindings
 
 ```sh
-dms ipc call abyss open            # opens the deep from the bar
+dms ipc call abyss open            # open the deep from the bar
 dms ipc call abyss status          # "connected · 8/10 online"
 dms ipc call abyss toggle          # or connect / disconnect
-dms ipc call abyss copy <peer>     # copies the peer's IP
+dms ipc call abyss copy <peer>     # copy the peer's IP
 dms ipc call abyss ssh <peer>      # SSH in your terminal
-dms ipc call abyss exit <target>   # Internet through a peer or one of your
-                                   # groups; "off" to stop
+dms ipc call abyss exit <target>   # Internet through a peer or one of your groups; "off" to stop
 dms ipc call abyss demo <state>    # demo only: connected, disconnected, connecting,
                                    # needsLogin, stopped, relayDown, relayUp
 ```
 
-## Lightweight
+Bind them to keys in your compositor, for example:
 
-- Nothing runs while no view is open: no timer, no reads.
-- While a view is open, one 30 Hz timer moves the pulses and the marine snow; only this window redraws, never the whole shell. Backgrounds are painted once.
-- *Reduce motion* turns every movement off.
+**niri** (`~/.config/niri/config.kdl`):
 
-Measured numbers will be added here before the first stable release.
+```kdl
+binds {
+    Mod+A { spawn "dms" "ipc" "call" "abyss" "open"; }
+}
+```
+
+**Hyprland**:
+
+```ini
+bind = SUPER, A, exec, dms ipc call abyss open
+```
+
+## Troubleshooting
+
+<details>
+<summary><b>I enabled the plugin but nothing changed.</b></summary>
+
+Abyss does not replace any widget: add one of its widgets yourself (Control Center tile, bar or desktop). See [Add a widget](#3-add-a-widget).
+</details>
+
+<details>
+<summary><b>The peers shown are not mine.</b></summary>
+
+This is expected: Abyss is a preview running on a made-up demo mesh. Reading the real NetBird daemon is on the [roadmap](#roadmap).
+</details>
+
+<details>
+<summary><b>The light bounces back when I drop it on a peer.</b></summary>
+
+That peer does not offer an exit node. See [Internet through a peer](#internet-through-a-peer).
+</details>
+
+<details>
+<summary><b>A group name stays "Group n" on the desktop.</b></summary>
+
+Typing a name needs keyboard focus, which the desktop widget may not get. Rename the group from the bar popout instead.
+</details>
 
 ## Privacy
 
-- The plugin never talks to the network itself and has no telemetry.
-- Peers, addresses and traffic stay in memory for the session; nothing is written to disk except your settings (favorites, muted peers, your groups and the group carrying the Internet included).
-- Copy uses DMS's clipboard, SSH opens your own terminal.
+- **No network access by the plugin itself, no telemetry.**
+- **Nothing written to disk except your settings** (favorites, muted peers, your groups and the group carrying the Internet included). Peers, addresses and traffic stay in memory for the session.
+- **Local tools only**: copy uses DMS's clipboard, SSH opens your own terminal. The GitHub mark in help notes opens this README in your browser, on click only.
 
-## Install
+## Performance
 
-```sh
-git clone https://github.com/lung595/Abyss ~/.config/DankMaterialShell/plugins/Abyss
-```
+- **Nothing runs while no view is open**: no timer, no reads.
+- **One 30 Hz timer** moves the pulses and the marine snow while a view is open; only this window redraws, never the whole shell. Backgrounds are painted once.
+- **Reduce motion** turns every movement off.
 
-Then enable **Abyss** in DMS Settings → Plugins, and add it to the bar, the Control Center or the desktop.
+Measured numbers will be added here before the first stable release.
 
 ## Development
 
+### Project layout
+
+```
+Abyss/
+├── plugin.json           # manifest (composite: daemon, bar, Control Center, desktop, launcher)
+├── AbyssDaemon.qml       # state shared by every view, IPC
+├── AbyssWidget.qml       # bar pill, popout and Control Center tile
+├── AbyssDesktop.qml      # desktop fishbowl
+├── AbyssLauncher.qml     # launcher provider
+├── AbyssSettings.qml     # settings page
+├── components/           # the scene, creatures, cards, layout and pure .js logic
+├── tests/                # gjs tests for the pure .js logic
+├── scripts/preview/      # offscreen renders and README GIFs from the demo mesh
+└── screenshots/
+```
+
+### Tests
+
 ```sh
-gjs tests/mesh.test.js && gjs tests/layout.test.js && gjs tests/terminal.test.js
-scripts/preview/render.sh connected "$PWD/out.png"   # offscreen renders from the demo mesh
-scripts/preview/gif.sh gif-sun "$PWD/out.gif" 80      # the README GIFs, frame by frame (needs ffmpeg)
+for t in tests/*.test.js; do gjs "$t" || break; done
+```
+
+### Previews
+
+```sh
+scripts/preview/render.sh connected "$PWD/out.png"   # offscreen render from the demo mesh
+scripts/preview/gif.sh gif-sun "$PWD/out.gif" 80      # README GIFs, frame by frame (needs ffmpeg)
 ```
 
 ## Changelog
 
-### 0.3.0 — 2026-09-27
+### 0.3.0 (2026-09-27)
 
 - **Never refused in silence**: drop the light on a peer that cannot lend Internet and it bounces home, with a short note saying why and what to do, and a GitHub mark that opens the right part of this README. While you carry it, such peers step further back and the hint under the light starts with ⊘.
 - **How to use**: this README now explains every option, with pictures and GIFs.
-- **From the launcher**: Super+Space, type `abyss` — open the deep, connect, choose where Internet goes out, copy an address or SSH to a peer, without leaving the keyboard. Nothing runs between two uses; it reads NetBird once when you open it.
-- **Livelier animals**: between trips every creature now has its own life — the fish beats its tail and wanders, the manta flaps its wings, the squid squeezes and jets upward, the seahorse sways upright, the turtle paddles, the whale and the nautilus roll slowly — and now and then the ones that can turn look the other way. Inside an open group the members live too (they were still). Calmer asleep, still with *Reduce motion*, and nothing runs while nobody looks: it rides the scene's existing clock, moving the shapes without repainting them (idle CPU unchanged: 3.7 % vs 3.6 % of one core, same session).
-- **Click the light** for where Internet can go, as a small file tree: each of your groups is a folder — click its name for the whole group, or its arrow to unfold it and pick one of its peers — then the peers in no group, quickest first, and "Stop". What is in use wears a small turning sun (still with *Reduce motion*). No dragging needed. Picked from there or dropped, the light now **glides** to its new place in 0.6 s instead of jumping, and the beam follows it; **Escape** while carrying puts it back; a peer's right-click menu has "Use for Internet" too.
-- **From the whole group to one member, and back**: with a group open, take the light up from the middle and drop it on one member — it now rests above that member (it used to vanish), and goes back to the middle for the whole group.
+- **From the launcher**: Super+Space, type `abyss`: open the deep, connect, choose where Internet goes out, copy an address or SSH to a peer, without leaving the keyboard. Nothing runs between two uses; it reads NetBird once when you open it.
+- **Livelier animals**: between trips every creature now has its own life: the fish beats its tail and wanders, the manta flaps its wings, the squid squeezes and jets upward, the seahorse sways upright, the turtle paddles, the whale and the nautilus roll slowly, and now and then the ones that can turn look the other way. Inside an open group the members live too (they were still). Calmer asleep, still with *Reduce motion*, and nothing runs while nobody looks: it rides the scene's existing clock, moving the shapes without repainting them (idle CPU unchanged: 3.7 % vs 3.6 % of one core, same session).
+- **Click the light** for where Internet can go, as a small file tree: each of your groups is a folder (click its name for the whole group, or its arrow to unfold it and pick one of its peers), then the peers in no group, quickest first, and "Stop". What is in use wears a small turning sun (still with *Reduce motion*). No dragging needed. Picked from there or dropped, the light now **glides** to its new place in 0.6 s instead of jumping, and the beam follows it; **Escape** while carrying puts it back; a peer's right-click menu has "Use for Internet" too.
+- **From the whole group to one member, and back**: with a group open, take the light up from the middle and drop it on one member: it now rests above that member (it used to vanish), and goes back to the middle for the whole group.
 - **Only what can lend Internet**: while you carry the light, the peers that can lend it (they offer an exit node) stay bright and the others step back; over one that cannot, the light says so and dropping it changes nothing. A group only ever lends through such a member. In a peer's card, "Use for Internet" appears only when it can.
 - **See what "the whole group" means before letting go**: carrying the light over the middle of an open group shows a ring where it will rest and faint tentacles to every member; once dropped, a bead of light runs out to each of them, once.
 - **Your own groups**: right-click a creature or a group to add it to a group, start one, rename, ungroup, or keep an automatic group. They come first and never reshuffle.
@@ -191,7 +317,7 @@ scripts/preview/gif.sh gif-sun "$PWD/out.gif" 80      # the README GIFs, frame b
 - **Fixed**: a group could close again at once when reopened (the camera carries it to the middle, away from the pointer, which then counted as having left); leaving now only counts once the pointer has been inside, or has clearly moved on.
 - **Fixed**: a click, or resting the pointer, opened a creature or a group a hand-width away; it now takes the pointer being on it (the lens still aims from afar).
 
-### 0.2.0 — 2026-09-27
+### 0.2.0 (2026-09-27)
 
 - **Lens**: a soft magnetic lens follows the pointer and gently enlarges what it lights; the scroll wheel sets its strength. The pointer is a warm light in a darker, more immersive deep.
 - **Groups**: never more than 5 things on screen (3–10 in settings). Busy, struggling and favourite peers stay alone; the rest gather in automatic groups. Rest the pointer on one and the camera glides and zooms towards it until it opens in the middle of the view; move away and it glides back. Type anywhere to find, and everything else blurs.
@@ -210,9 +336,8 @@ scripts/preview/gif.sh gif-sun "$PWD/out.gif" 80      # the README GIFs, frame b
 - **Steadier fan**: devices keep their side when their traffic changes, instead of swimming across the view; caves keep clear of them.
 - **The top consumer label stops flickering**: its filled, coloured label only moves to another device when that one is clearly busier (30 % more).
 - Fixed: a traffic spike each time the view opened; grabbing moved only the tentacle.
-- Still to come: see the [Roadmap](#roadmap).
 
-### 0.1.0 — 2026-09-26
+### 0.1.0 (2026-09-26)
 
 - First preview: the whole deep (jellyfish, creatures by device type, traffic tentacles, relays, networks, exit node by drag, peer card, type to find) on a made-up demo mesh.
 - Bar pill, Control Center tile and desktop widget; IPC; notifications; SSH in the terminal of your choice.
@@ -221,53 +346,9 @@ scripts/preview/gif.sh gif-sun "$PWD/out.gif" 80      # the README GIFs, frame b
 
 No promises, no dates. Everything here was asked for and is not in a release yet.
 
-### Internet, the whole journey
-
-Sending your Internet through a peer (a NetBird exit node) should explain itself at every step. The full list, from the user's side; ✓ = already in 0.3.0.
-
-**Knowing where you stand**
-- ✓ The light at the surface is your Internet; its label says where it goes out ("Internet via studio", or just "Internet" when it goes out directly).
-- ✓ A soft beam falls from it onto the peer that lends it, and follows that peer when you drag it.
-- The bar pill shows a small sun while your Internet goes out through a peer, so you know it away from the deep too.
-- The beam's label shows the traffic going out through it (↓ ↑), and the card of the lending peer says "Lends you Internet".
-
-**Choosing a peer**
-- Hovering the light says what it does: "Drag onto a device to go out through it".
-- ✓ While you carry it, the peers that can lend Internet (they offer an exit node) stay bright and the others dim, so you only aim at what works; dropping on one that cannot says why.
-- ✓ Drop it on a peer: "Internet through X".
-- ✓ Click the light (no dragging needed): a small file tree — your groups as folders (the name picks the whole group, the arrow unfolds it to pick one member), the peers in no group, and "Stop"; a turning sun marks what is in use.
-- ✓ Wherever it is picked, the light glides to its new place rather than jumping.
-- ✓ A peer's card: "Use for Internet" / "Lends you Internet ✓", only on a peer that can.
-- ✓ The same in a peer's right-click menu.
-- ✓ Escape while carrying puts the light back where it was.
-
-**Choosing a group**
-- ✓ Carrying the light over a shoal opens it; drop on a member for that one only. The light then rests just above that member, so you see who lends it, and you can take it up from there: onto another member, or back to the middle for the whole group.
-- ✓ Drop it in the middle of the group for the whole group: the group lends its best member online, and switches by itself when that one goes offline.
-- ✓ **While you carry it over the middle**, a ring appears where it will rest, faint tentacles reach out to every member, and the light says "Internet through all of Homelab": you see what dropping will do before you let go.
-- ✓ **Once dropped**, the light settles in the middle and a bead of light runs once along the tentacles; the member that lends it is lit, the others wait on dotted lines.
-- The members waiting on dotted lines say "ready to take over" when the lens is on them.
-- With the group closed, its shoal wears a small sun and the beam falls on it, labelled "Internet via Homelab · studio".
-- When the group switches member, a short note says so ("studio went offline, now via nas").
-- ✓ Right-click a group: "Internet through it" / "Stop Internet through it"; ✓ right-click a creature to make a group of your own.
-
-**Stopping or changing**
-- ✓ Drag the light out of the group to stop it there.
-- ✓ Drag the light back up to the surface, or anywhere empty: back to your own connection.
-- ✓ Dropping it on another peer or group simply moves it there.
-- A word under the light for a moment ("Direct", "Through studio") confirms each change.
-
-**When something goes wrong**
-- While NetBird switches, the light pulses once and says "Switching…"; if it fails, it goes back and says why.
-- The lending peer goes offline (alone, not in a group): the beam goes out, the light turns to a warning colour with "studio is offline", and a click offers the next best peer.
-- Disconnected: the light is dim and cannot be carried ("Connect first").
-
-**Everywhere**
-- ✓ Same gestures in the bar popout, the Control Center and the desktop bowl; ✓ `dms ipc call abyss exit <peer | group | off>`, plus `exit` with no argument to say where Internet goes out now.
-- Reduce motion: no pulse and no travelling light, only the end states.
-
 ### Next
 
+- **Read the real NetBird daemon** (`netbird status --json`, only while a view is open), connect, disconnect, sign in, networks and profiles through the `netbird` CLI.
 - **Tentacles that hold their device**: the tip wraps around the creature, as if the jellyfish really held it.
 - **The card first, then the creature**: both finish landing at the same moment.
 - **Rename a group**: click its name at the top of the group view; a small ⚙ opens its settings.
@@ -276,14 +357,23 @@ Sending your Internet through a peer (a NetBird exit node) should explain itself
 - **Shoals**: the creatures of a group swim together like a real school of fish (only while you watch).
 - **A goldfish companion** in every view (bar popout, Control Center, desktop): it waves when you click it and lives its life, eats, sleeps with little *z z z*, and cleans the bowl now and then. Still while nobody looks.
 - Measured CPU cost while a view is open, and fresh screenshots.
-- Naming a group types in the view: it needs keyboard focus, which the desktop widget may not get (the name stays "Group n" there; rename it from the popout).
+
+### Internet, the whole journey
+
+Sending your Internet through a peer (a NetBird exit node) should explain itself at every step. Done in 0.3.0: the light and its label, the beam, dimming the peers that cannot lend, the light's menu, "Use for Internet" in cards and menus, gliding, <kbd>Esc</kbd> to put it back, whole groups with a preview ring, and the `exit` command. Still to come:
+
+- **Where you stand**: a small sun in the bar pill while Internet goes out through a peer; the beam's label shows the traffic going out through it (↓ ↑), and the lending peer's card says "Lends you Internet".
+- **Choosing**: hovering the light says "Drag onto a device to go out through it"; members waiting on dotted lines say "ready to take over".
+- **Groups**: a closed group lending Internet wears a small sun, its beam labelled "Internet via Homelab · studio"; a short note when the group switches member ("studio went offline, now via nas").
+- **Confirming**: a word under the light for a moment ("Direct", "Through studio") after each change.
+- **When something goes wrong**: "Switching…" while NetBird switches, and why if it fails; a warning colour and the next best peer when the lending peer goes offline; a dim light that cannot be carried while disconnected ("Connect first").
+- **Everywhere**: `exit` with no argument says where Internet goes out now; with *Reduce motion*, only the end states.
 
 ### Later
 
 - **Smart search bar**: understands words and synonyms, not only names.
 - **Smart tags**: added automatically (from the name, services, machine type) or by hand.
-- **Search the launcher by speed or tags**: `abyss >100ms`, `abyss proxmox`, `docker`… (the launcher shows rows, not the live scene: "Open Abyss" opens it).
-- **Read the real NetBird daemon** (`netbird status --json`, only while a view is open), connect, disconnect, sign in, networks and profiles through the `netbird` CLI.
+- **Search the launcher by speed or tags**: `abyss >100ms`, `abyss proxmox`, `docker`…
 - Bar count kept fresh without polling while nothing is open.
 - Bar pill options: icon only, with peers online, or with the total rate.
 - Show online peers only, or all of them.
@@ -301,4 +391,4 @@ Sending your Internet through a peer (a NetBird exit node) should explain itself
 
 ## License
 
-MIT © lung595
+[MIT](LICENSE) © lung595
