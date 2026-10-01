@@ -59,12 +59,29 @@ function missingText(terminal) {
 // argv for Quickshell.execDetached, or null for a host validHost refuses.
 // A known terminal runs directly; "auto" (or anything unknown) asks sh to
 // try each installed one in turn, with the host handed over as $1. "--"
-// ends ssh's options either way.
-function sshCommand(terminal, host) {
+// ends ssh's options either way. link: { user, port } to reach this peer
+// as (a phone running Termux: another user, port 8022); only well-formed
+// ones count, anything else is left out.
+function sshCommand(terminal, host, link) {
+    return _inTerminal(terminal, "ssh", host, link);
+}
+
+// The same for `sftp`: a file session in a terminal
+function sftpCommand(terminal, host, link) {
+    return _inTerminal(terminal, "sftp", host, link);
+}
+
+// ssh and sftp both read the port as -P/-p, the user as user@host
+function _inTerminal(terminal, prog, host, link) {
     if (!validHost(host))
         return null;
+    const l = link || {};
+    const user = /^[A-Za-z0-9_][A-Za-z0-9_.-]{0,63}$/.test(String(l.user || "")) ? String(l.user) : "";
+    const port = /^\d{1,5}$/.test(String(l.port || "")) && Number(l.port) >= 1 && Number(l.port) <= 65535 ? String(Number(l.port)) : "";
+    const opt = port ? [prog === "sftp" ? "-P" : "-p", port] : [];
+    const target = (user ? user + "@" : "") + host;
     if (RUN[terminal])
-        return [terminal].concat(RUN[terminal], ["ssh", "--", host]);
-    const tries = TERMINALS.map(t => "command -v " + t + " >/dev/null && exec " + [t].concat(RUN[t]).join(" ") + " ssh -- \"$1\"");
-    return ["sh", "-c", tries.join("; ") + "; exit 1", "sh", host];
+        return [terminal].concat(RUN[terminal], [prog], opt, ["--", target]);
+    const tries = TERMINALS.map(t => "command -v " + t + " >/dev/null && exec " + [t].concat(RUN[t]).join(" ") + " " + [prog].concat(opt).join(" ") + " -- \"$1\"");
+    return ["sh", "-c", tries.join("; ") + "; exit 1", "sh", target];
 }

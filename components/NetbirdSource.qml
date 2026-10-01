@@ -87,6 +87,29 @@ QtObject {
         src._act([Netbird.upCmd()], "Could not sign in");
     }
 
+    // Joins this device to a mesh with a setup key; the address of a
+    // self-hosted management server and the name this device takes are
+    // optional. False (and says why) when the key or address is malformed
+    function join(key, url, hostname) {
+        const cmd = Netbird.joinCmd(key, url, hostname);
+        if (!cmd) {
+            src._say("That is not a setup key, or its address is not an http(s) one");
+            return false;
+        }
+        src._act([cmd], "Could not join the mesh");
+        return true;
+    }
+
+    // Signs this device out of the mesh
+    function logout() {
+        src._act([Netbird.logoutCmd()], "Could not sign out");
+    }
+
+    // Lets the other peers open an SSH session here (NetBird's SSH server)
+    function shareSsh(on) {
+        src._act([Netbird.shareSshCmd(on)], on ? "Could not let peers SSH in" : "Could not stop peers SSH-ing in");
+    }
+
     function startService() {
         src._act([Netbird.startServiceCmd()], "Could not start the NetBird service");
     }

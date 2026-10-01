@@ -138,6 +138,10 @@ dms ipc call abyss status          # "connected · 8/10 online · Internet throu
 dms ipc call abyss toggle          # or connect / disconnect
 dms ipc call abyss copy <peer>     # copy the peer's IP
 dms ipc call abyss ssh <peer>      # SSH in your terminal
+dms ipc call abyss sftp|files|vnc|rdp <peer>   # files in a terminal or the file manager, a remote desktop
+dms ipc call abyss link <peer> <user|-> <port|->  # how to SSH to it (Termux: user u0_a…, port 8022)
+dms ipc call abyss join <setup key> [url|-]    # join a mesh (netbird up --setup-key); leave signs out
+dms ipc call abyss share on|off    # let the other peers SSH into this device
 dms ipc call abyss ping <peer>     # three echoes to a peer (only when asked), the answer as a toast
 dms ipc call abyss exit <target>   # Internet through a peer or one of your groups; "off" to stop
 dms ipc call abyss exit ""         # where Internet goes out now

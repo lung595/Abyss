@@ -50,6 +50,15 @@ Item {
             check("the exit reached NetBird", daemon.source.exitNode === "harbor-vps" && daemon.source.view.peers.find(p => p.name === "harbor-vps").lending);
             check("ipc exit alone names the peer", test.ipc.exit(" ") === "Internet goes out through harbor-vps", test.ipc.exit(" "));
             check("ipc exit off", test.ipc.exit("off") === "Internet exit off");
+            check("ipc sftp, files, vnc and rdp answer at once", test.ipc.sftp("atlas") === "OK" && test.ipc.files("atlas") === "OK" && test.ipc.vnc("atlas") === "OK" && test.ipc.rdp("atlas") === "OK");
+            check("ipc ssh as a user", test.ipc.ssh("tom@atlas") === "OK");
+            check("ipc ssh refuses a user that is an option", test.ipc.ssh("-oProxyCommand=x@atlas").indexOf("Refused") === 0, test.ipc.ssh("-oProxyCommand=x@atlas"));
+            check("ipc link saves user and port", test.ipc.link("atlas", "tom", "8022").indexOf("atlas") === 0 && daemon.prefs.linkOf(daemon.source.view.peers.find(p => p.name === "atlas").id).port === "8022", daemon.prefs.links);
+            check("ipc link refuses a bad port", test.ipc.link("atlas", "-", "99999").indexOf("Refused") === 0);
+            check("ipc join refuses a short key", test.ipc.join("abc", "-").indexOf("Refused") === 0);
+            check("ipc join takes a setup key", test.ipc.join("A1B2C3D4-E5F6-47A8", "-") === "Joining");
+            check("ipc share on", test.ipc.share("on") === "SSH in this device: on" && daemon.prefs.shareSsh === true);
+            check("ipc share says where it stands", test.ipc.share("") === "Shared with SSH: on");
             check("ipc demo refuses on the real mesh", test.ipc.demo("needsLogin") === "Not in demo mode");
             PluginService.savePluginData("abyss", "source", "demo");
         },

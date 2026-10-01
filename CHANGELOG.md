@@ -3,6 +3,18 @@
 All notable changes to Abyss are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow [Semantic Versioning](https://semver.org/).
 
+## Unreleased
+
+### Added
+
+- **Connect from Abyss, not only look**: a peer's card now opens **Files** (SFTP, in your file manager), **Screen** (VNC) and **RDP** next to SSH, with whichever viewer is installed (`gio`/`xdg-open`; `remmina`, `vncviewer`, `krdc`; `xfreerdp`, `remmina`, `krdc`). A missing viewer says what to install.
+- **SSH as the right user, on the right port**: `dms ipc call abyss link <peer> <user|-> <port|->` remembers how to reach a peer (a phone running Termux: its own user, port 8022); SSH and SFTP use it. `ssh user@peer` logs in as that user once.
+- **Join a mesh from Abyss**: `dms ipc call abyss join <setup key> [management url|-]` runs `netbird up --setup-key` (NetBird Cloud or self-hosted); `leave` signs this device out.
+- **Let other peers in**: right-click the jellyfish, "Let peers SSH in here" (or `dms ipc call abyss share on|off`) turns NetBird's own SSH server on this device on or off, so your phone can open a session on your PC.
+- IPC: `sftp`, `files`, `vnc`, `rdp`, `link`, `join`, `leave`, `share`.
+
+Not done yet: managing access policies (who may talk to whom) needs a NetBird API token and is not part of this.
+
 ## 0.4.0 - 2026-10-01
 
 ### Added
