@@ -1178,6 +1178,21 @@ Item {
             root._confirmExit();
         }
     }
+    // A group of mine handed the Internet to another member (its lender
+    // went offline): say who took over
+    property string _prevExit: ""
+    Connections {
+        target: root.source
+        ignoreUnknownSignals: true
+        function onExitNodeChanged() {
+            const was = root._prevExit, now = root.source.exitNode;
+            root._prevExit = now;
+            const g = root.exitMine, old = was ? root.view.peers.find(p => p.name === was) : null;
+            if (!root.active || !g || !now || !old || old.online || g.members.indexOf(old.id) < 0)
+                return;
+            root.explain(was + " went offline", g.name + " goes out through " + now + " now", "internet-through-a-peer", surfaceSun.x + surfaceSun.width / 2, surfaceSun.y + surfaceSun.height + 26);
+        }
+    }
     // The peer lending Internet went offline (not one of a group of mine:
     // the group hands over by itself): say so, and name the next best
     property string _lentBy: ""
