@@ -1157,6 +1157,24 @@ Item {
     readonly property var exitMine: MyGroups.byId(prefs.groups, prefs.exitGroup)
     // What the carried light says under it
     property string dropHint: "Drop on a peer"
+    // Said under the light for a moment after each change of exit, so the
+    // change is confirmed where the eye already is: "Direct", "Through studio"
+    property string sunWord: ""
+    Connections {
+        target: root.source
+        ignoreUnknownSignals: true
+        function onExitNodeChanged() {
+            if (!root.active)
+                return;
+            root.sunWord = root.source.exitNode ? "Through " + root.source.exitNode : "Direct";
+            sunWordTimer.restart();
+        }
+    }
+    Timer {
+        id: sunWordTimer
+        interval: 2200
+        onTriggered: root.sunWord = ""
+    }
     // What you tried and could not do: why, what to do, and the README
     // section (anchor) that explains it. HelpNote shows it, then clears it.
     property var note: null
