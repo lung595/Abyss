@@ -1499,6 +1499,8 @@ Item {
             if (ps.length > 1)
                 out.push({ "text": "Profile: " + ps[(ps.indexOf(source.profile) + 1) % ps.length], "act": "profile" });
             out.push({ "text": prefs.showOffline ? "Hide offline peers" : "Show offline peers", "act": "offline" });
+            if (view.me.console)
+                out.push({ "text": "Open the admin console", "act": "console" });
         } else if (p) {
             const g = MyGroups.groupOf(mine, p.id);
             if (p.exit && p.online) {
@@ -1537,6 +1539,9 @@ Item {
         else if (a.act === "profile") {
             const ps = source.profiles;
             source.setProfile(ps[(ps.indexOf(source.profile) + 1) % ps.length]);
+        } else if (a.act === "console") {
+            if (actions)
+                actions.openUrl(view.me.console);
         } else if (a.act === "offline")
             prefs.set("showOffline", !prefs.showOffline);
         else if (a.act === "join")
@@ -1897,6 +1902,7 @@ Item {
                 y: root.frame.jelly.y - height / 2
                 title: jellyArea.containsMouse ? root.view.me.name + " · you" : "you"
                 sub: jellyArea.containsMouse ? root.view.me.ip : ""
+                third: jellyArea.containsMouse && root.view.me.version ? "NetBird " + root.view.me.version : ""
                 ink: root.connected ? root.abyss : root.ink
                 subInk: root.connected ? Qt.rgba(root.abyss.r, root.abyss.g, root.abyss.b, 0.7) : root.inkDim
                 color: root.connected ? Theme.tertiary : Qt.rgba(root.abyss.r, root.abyss.g, root.abyss.b, 0.7)
