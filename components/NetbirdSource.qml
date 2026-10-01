@@ -140,8 +140,11 @@ QtObject {
     // What the next read must also fetch, asked while one was running
     property bool _moreNetworks: false
     property bool _moreProfiles: false
-    // `netbird networks list`, as read (Netbird.readNetworks)
+    // `netbird networks list`, as read (Netbird.readNetworks), and whether
+    // it was asked once (an empty list or a stopped daemon is not asked
+    // again on every read; every 10th read and every change ask anyway)
     property var _nets: []
+    property bool _netsRead: false
     // Exit routes seen going through a peer: { routeId: peerId }
     property var _learned: ({})
     property var _exitMap: ({})
@@ -149,7 +152,7 @@ QtObject {
     // One read: networks and profiles when asked, then the status. A read
     // asked while one runs is folded into one more read after it
     function _read(withNetworks, withProfiles) {
-        src._moreNetworks = src._moreNetworks || withNetworks || !src._nets.length;
+        src._moreNetworks = src._moreNetworks || withNetworks || !src._netsRead;
         src._moreProfiles = src._moreProfiles || withProfiles;
         if (src._reading)
             return;
@@ -157,6 +160,7 @@ QtObject {
         src._reads++;
         if (src._moreNetworks)
             src._reader.run(Netbird.networksCmd(), (out, err, code) => {
+                src._netsRead = true;
                 if (code === 0)
                     src._nets = Netbird.readNetworks(out);
             });
