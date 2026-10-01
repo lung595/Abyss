@@ -118,6 +118,9 @@ Window {
             scene.netsOpen = true;
         if (mode === "card" || mode === "desk-card")
             scene.cardId = "demo-harbor-vps";
+        // card-phone: a phone's card, with the Termux hint ready to accept
+        if (mode === "card-phone")
+            scene.cardId = "demo-kestrel-phone";
         if (mode === "find")
             scene.query = "pi";
         // lab: the test lab's custom mesh (60 peers, +40 ms, a peer silent),

@@ -249,7 +249,7 @@ Item {
     // The deep's swimming phase: it runs while someone watches, slower asleep
     // (breathing, bobbing, a shoal turning), and simply stops otherwise
     property real swim: 0
-    readonly property bool floating: awake && !reduceMotion && peekId === ""
+    readonly property bool floating: awake && !reduceMotion && prefs.drift && peekId === ""
     // Inside a group only its members live: the deep behind is a still picture
     readonly property bool peekLive: awake && !reduceMotion && peekId !== ""
     function wakeAt(x, y) {
@@ -919,7 +919,7 @@ Item {
     Timer {
         id: clock
         // 60 Hz while the lens or a grabbed item follows the hand, 30 Hz for the flow alone
-        interval: root._lensMoving || root._springing || root._swimming ? 16 : 33
+        interval: (root._lensMoving || root._springing || root._swimming) && root.prefs.smooth ? 16 : 33
         repeat: true
         running: root.awake && (root.flowing || root.floating || root.peekLive || root._lensMoving || root._springing || root._swimming || Math.abs(root.ext - (root.connected ? 1 : 0)) > 0.001 || Math.abs(root.power - (root.connected ? 1 : 0)) > 0.001)
         onRunningChanged: {
