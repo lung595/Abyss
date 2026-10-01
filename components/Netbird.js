@@ -37,6 +37,30 @@ function upCmd() {
 function downCmd() {
     return [BIN, "down"];
 }
+
+// Joins this device to a mesh with a setup key (from the NetBird dashboard:
+// Setup Keys), on NetBird Cloud or on a self-hosted management server.
+// null for a key or an address that is not well formed. A key never starts
+// with "-" (it would read as an option) and the address must be http(s)
+function joinCmd(key, url, hostname) {
+    const k = String(key || "").trim(), u = String(url || "").trim(), h = String(hostname || "").trim();
+    if (!/^[A-Za-z0-9][A-Za-z0-9_.=-]{7,}$/.test(k))
+        return null;
+    if (u && !/^https?:\/\/[^\s\/][^\s]*$/.test(u))
+        return null;
+    if (h && !/^[A-Za-z0-9][A-Za-z0-9-]{0,62}$/.test(h))
+        return null;
+    return [BIN, "up", "--setup-key", k].concat(u ? ["--management-url", u] : [], h ? ["--hostname", h] : []);
+}
+// Signs this device out of the mesh (it stays listed, offline)
+function logoutCmd() {
+    return [BIN, "logout"];
+}
+// Lets the other peers open an SSH session on this device (NetBird's own
+// SSH server) or stops letting them
+function shareSshCmd(on) {
+    return [BIN, "up", "--allow-server-ssh=" + (on ? "true" : "false")];
+}
 function selectProfileCmd(name) {
     return [BIN, "profile", "select", String(name)];
 }

@@ -26,6 +26,11 @@ QtObject {
     readonly property bool notifications: _get("notifications", false)
     // Terminal used for SSH ("auto" tries the usual ones)
     readonly property string terminal: _get("terminal", "auto")
+    // How to reach each peer over SSH: peer id -> { user, port } (a phone
+    // running Termux listens on 8022 and has its own user)
+    readonly property var links: _get("links", ({}))
+    // This device lets the other peers SSH in (NetBird's SSH server)
+    readonly property bool shareSsh: _get("shareSsh", false)
     // Desktop: keep the deep alive when the pointer is elsewhere
     readonly property bool desktopLive: _get("desktopLive", false)
     // How many things the deep shows at once; more peers gather in groups
@@ -81,6 +86,17 @@ QtObject {
     }
     function isFavorite(id) {
         return !!id && favorites[id] !== undefined;
+    }
+    function linkOf(id) {
+        return links[id] || ({});
+    }
+    function setLink(id, user, port) {
+        const next = Object.assign({}, links);
+        if (!user && !port)
+            delete next[id];
+        else
+            next[id] = { "user": user || "", "port": port || "" };
+        set("links", next);
     }
     function toggleMuted(id, name) {
         _toggleIn("muted", muted, id, name);

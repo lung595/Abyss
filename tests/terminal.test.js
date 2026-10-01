@@ -50,4 +50,15 @@ GLib.spawn_command_line_sync("rm -r " + bin);
 eq("settings list starts with Automatic", T.options()[0], { "label": "Automatic", "value": "auto" });
 eq("settings list has every terminal", T.options().length, T.TERMINALS.length + 1);
 
+// A user and a port for the peer (a phone running Termux)
+const phone = { "user": "u0_a123", "port": "8022" };
+eq("ssh as a user on a port", T.sshCommand("kitty", "phone.mesh", phone), ["kitty", "ssh", "-p", "8022", "--", "u0_a123@phone.mesh"]);
+eq("sftp takes -P", T.sftpCommand("kitty", "phone.mesh", phone), ["kitty", "sftp", "-P", "8022", "--", "u0_a123@phone.mesh"]);
+eq("sftp without a link", T.sftpCommand("foot", "h"), ["foot", "sftp", "--", "h"]);
+eq("a bad user or port is left out", T.sshCommand("kitty", "h", { "user": "-oProxyCommand=x", "port": "22; ls" }), ["kitty", "ssh", "--", "h"]);
+const withLink = T.sshCommand("auto", "phone.mesh", phone);
+eq("auto still hands one target as $1", withLink.slice(3), ["sh", "u0_a123@phone.mesh"]);
+ok("auto puts the port in the script, never the user", withLink[2].indexOf("ssh -p 8022 -- \"$1\"") >= 0 && withLink[2].indexOf("u0_a123") < 0);
+eq("sftp refuses an option as a host", T.sftpCommand("kitty", "-oProxyCommand=x"), null);
+
 done("Terminal.js");

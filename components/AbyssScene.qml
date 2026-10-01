@@ -1165,7 +1165,12 @@ Item {
     }
     function ssh(peer) {
         if (actions)
-            actions.ssh(peer.fqdn || peer.ip, prefs.terminal);
+            actions.reach("ssh", peer);
+    }
+    // "sftp", "files", "vnc" or "rdp" to a peer
+    function reach(kind, peer) {
+        if (actions)
+            actions.reach(kind, peer);
     }
     function ping(peer) {
         if (actions)
@@ -1502,6 +1507,7 @@ Item {
             if (ps.length > 1)
                 out.push({ "text": "Profile: " + ps[(ps.indexOf(source.profile) + 1) % ps.length], "act": "profile" });
             out.push({ "text": prefs.showOffline ? "Hide offline peers" : "Show offline peers", "act": "offline" });
+            out.push({ "text": prefs.shareSsh ? "Stop peers SSH-ing in here" : "Let peers SSH in here", "act": "share" });
             if (view.me.console)
                 out.push({ "text": "Open the admin console", "act": "console" });
         } else if (p) {
@@ -1542,6 +1548,9 @@ Item {
         else if (a.act === "profile") {
             const ps = source.profiles;
             source.setProfile(ps[(ps.indexOf(source.profile) + 1) % ps.length]);
+        } else if (a.act === "share") {
+            if (actions)
+                actions.shareSsh(!prefs.shareSsh);
         } else if (a.act === "console") {
             if (actions)
                 actions.openUrl(view.me.console);

@@ -310,6 +310,28 @@ Item {
                     ink: card.ink
                     onClicked: card.scene.ssh(card.peer)
                 }
+                // More ways in, through whichever program is installed
+                ActionChip {
+                    visible: card.live
+                    icon: "folder_open"
+                    text: "Files"
+                    ink: card.ink
+                    onClicked: card.scene.reach("files", card.peer)
+                }
+                ActionChip {
+                    visible: card.live
+                    icon: "desktop_windows"
+                    text: "Screen"
+                    ink: card.ink
+                    onClicked: card.scene.reach("vnc", card.peer)
+                }
+                ActionChip {
+                    visible: card.live
+                    icon: "computer"
+                    text: "RDP"
+                    ink: card.ink
+                    onClicked: card.scene.reach("rdp", card.peer)
+                }
                 ActionChip {
                     icon: "open_in_browser"
                     text: "Browser"
