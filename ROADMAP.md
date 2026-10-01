@@ -4,7 +4,8 @@ No promises, no dates. Everything here was asked for and is not in a release yet
 
 ## Next
 
-- **Read the real NetBird daemon** (`netbird status --json`, only while a view is open); connect, disconnect, sign in, networks and profiles through the `netbird` CLI.
+- **Exit routes named after no peer**: list them in the light's menu by name, or tie one to a peer once (saved in the settings).
+- **Peers kept idle by NetBird's lazy connections**: drawn as reachable rather than asleep.
 - **Tentacles that hold their device**: the tip wraps around the creature.
 - **The card first, then the creature**: both finish landing at the same moment.
 - **Rename a group**: click its name at the top of the group view; a small ⚙ opens its settings.
@@ -41,3 +42,7 @@ Sending your Internet through a peer should explain itself at every step. Alread
 ## Known limits
 
 - Naming a group needs keyboard focus, which the desktop widget may not get: the name stays "Group n" there; rename it from the bar popout.
+- NetBird's CLI does not say which peer serves an exit route that is not in use: an exit route is matched to its peer by name until it has been used once.
+- The bar count is read once when the shell starts and while a view is open; it goes stale in between.
+- When `netbird up` cannot open a browser for the sign-in, the sign-in address is not shown in Abyss.
+- Starting the NetBird service goes through `pkexec`, so it needs a polkit agent.

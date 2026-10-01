@@ -95,7 +95,7 @@ function status(profile, now, up, counters, offline, relayDown) {
             "netbirdIp": ip,
             "publicKey": "demo-" + name,
             "status": online ? "Connected" : "Idle",
-            "statusSince": new Date(now - (online ? minutes : 120) * 60000).toISOString(),
+            "lastStatusUpdate": new Date(now - (online ? minutes : 120) * 60000).toISOString(),
             "connectionType": online ? (relay ? "Relayed" : "P2P") : "",
             "relayAddress": relay,
             "lastWireguardHandshake": online ? new Date(now - 40000).toISOString() : "0001-01-01T00:00:00Z",

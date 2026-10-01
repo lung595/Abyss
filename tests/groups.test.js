@@ -99,4 +99,22 @@ ok("slow = online and > 100 ms", slow.test({ online: true, latencyMs: 140 }) && 
     ok("a group with nobody online is not drawn", G.arrange(peers, 5, { mine: [{ id: "u3", name: "Gone", members: ["k6"] }] }).items.every(i => i.id !== "g:u:u3"));
 }
 
+// lookup: one peer for a word typed in a command
+const L = [
+    { id: "k1", name: "atlas", fqdn: "atlas.mesh.example", ip: "100.92.0.1" },
+    { id: "k2", name: "aurora", fqdn: "aurora.mesh.example", ip: "100.92.0.2" },
+    { id: "k3", name: "vega", fqdn: "vega.mesh.example", ip: "100.92.0.3" }
+];
+eq("lookup by name", Q.lookup(L, "Vega").peer.id, "k3");
+eq("lookup by fqdn", Q.lookup(L, "atlas.mesh.example").peer.id, "k1");
+eq("lookup by ip", Q.lookup(L, "100.92.0.2").peer.id, "k2");
+eq("lookup by id", Q.lookup(L, "k1").peer.name, "atlas");
+eq("a unique start finds the peer", Q.lookup(L, "ve").peer.id, "k3");
+eq("an ambiguous start finds nobody", Q.lookup(L, "a").peer, null);
+eq("...and lists who it could be", Q.lookup(L, "a").many, ["atlas", "aurora"]);
+eq("an exact name wins over a longer one", Q.lookup([{ id: "x", name: "pi2" }, { id: "y", name: "pi" }], "pi").peer.id, "y");
+eq("nothing typed finds nobody", Q.lookup(L, " ").peer, null);
+eq("error for an ambiguous word", Q.lookupError("a", Q.lookup(L, "a")), "Several peers start with a: atlas, aurora");
+eq("error for an unknown word", Q.lookupError("zz", Q.lookup(L, "zz")), "No peer named zz");
+
 done("groups + query");

@@ -5,9 +5,26 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## Unreleased
 
+### Added
+
+- **Your real NetBird mesh**: peers, traffic, relays, networks, profiles and the Internet light come from the NetBird daemon through its `netbird` command: one read when the shell starts, then every 2 s only while a view is open. Connect, disconnect, sign in, start the service, switch profile, turn networks on or off and choose where Internet goes out all run the matching command; anything that fails says why.
+- **Setting "Mesh source"**: automatic (NetBird when installed, else the demo mesh), NetBird, or demo mesh.
+- **Tests**: QML integration tests through real processes against a fake `netbird`, `tests/run.sh` to run every test, and CI on every push.
+
 ### Changed
 
 - Documentation split into `README.md`, `docs/GUIDE.md`, `CHANGELOG.md`, `ROADMAP.md` and `CONTRIBUTING.md`.
+- **Internet through a peer, the NetBird way**: a peer can lend Internet when one of NetBird's exit routes (`0.0.0.0/0`) goes through it. A route is matched to the peer seen carrying it, or the peer it is named after (`exit-atlas`); otherwise dropping the light there says to name the route after the peer.
+- **Commands pick the right peer**: `dms ipc call abyss ssh a` no longer picks whoever comes first when several peers start with "a"; it names them.
+
+### Fixed
+
+- **SSH to a peer whose name looks like an option** (`-oProxyCommand=…`) could run a command on this machine; such names are refused, and `--` always ends ssh's options.
+- Creatures were guessed from letters inside other words (`chair-pc` drawn as a laptop, `banana` as a NAS).
+- Two peers with the same short name could be mixed up.
+- "Connected since" read a field NetBird never prints (`statusSince` instead of `lastStatusUpdate`).
+- A failing Internet switch was retried every 2 s while a group carried the Internet.
+- A view kept watching a source that had been swapped.
 
 ## 0.3.0 - 2026-09-27
 

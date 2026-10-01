@@ -26,6 +26,20 @@ eq("vps", M.kindOf("harbor-vps"), "vps");
 eq("server", M.kindOf("proxmox01"), "server");
 eq("laptop", M.kindOf("thinkpad"), "laptop");
 eq("default desktop", M.kindOf("studio"), "desktop");
+// Short words only count as a whole word
+eq("air inside chair is no laptop", M.kindOf("chair-pc"), "desktop");
+eq("air inside hairdresser is no laptop", M.kindOf("hairdresser"), "desktop");
+eq("nas inside banana is no nas", M.kindOf("banana"), "desktop");
+eq("host inside ghost is no server", M.kindOf("ghost"), "desktop");
+eq("node inside nodejs is no server", M.kindOf("nodejs-dev"), "desktop");
+eq("macbook-air is a laptop", M.kindOf("macbook-air"), "laptop");
+eq("macbookair is a laptop", M.kindOf("macbookair"), "laptop");
+eq("rpi4 is a pi", M.kindOf("rpi4"), "pi");
+eq("pi_garden is a pi", M.kindOf("pi_garden"), "pi");
+eq("k8s-node2 is a server", M.kindOf("k8s-node2"), "server");
+eq("my-iphone is a phone", M.kindOf("my-iphone"), "phone");
+eq("aws-bastion is a vps", M.kindOf("aws-bastion"), "vps");
+eq("nas01 is a nas", M.kindOf("nas01"), "nas");
 
 // Rates
 eq("rate", M.rate(2000, 1000, 1), 8000);
@@ -37,7 +51,7 @@ const peer = (name, status, type, latMs, rx, tx, extra) => Object.assign({
     fqdn: name + ".mesh.example", netbirdIp: "100.92.0." + name.length, publicKey: "k-" + name,
     status, connectionType: type, latency: latMs * 1e6, transferReceived: rx, transferSent: tx,
     relayAddress: type === "Relayed" ? "rels://relay-eu.mesh.example:443" : "",
-    statusSince: "2026-09-26T10:00:00Z", lastWireguardHandshake: "2026-09-26T12:00:00Z"
+    lastStatusUpdate: "2026-09-26T10:00:00Z", lastWireguardHandshake: "2026-09-26T12:00:00Z"
 }, extra || {});
 const json = (rx) => ({
     fqdn: "wren.mesh.example", netbirdIp: "100.92.0.1/16",
@@ -130,5 +144,15 @@ eq("ago", [M.fmtAgo(12000), M.fmtAgo(125 * 60000)], ["12 s", "2 h 05"]);
 eq("a peer serving 0.0.0.0/0 can lend", M.peerOf(peer("x", "Connected", "P2P", 5, 0, 0, { networks: ["10.0.0.0/8", "0.0.0.0/0"] })).exit, true);
 eq("older clients call them routes", M.peerOf(peer("x", "Connected", "P2P", 5, 0, 0, { routes: ["0.0.0.0/0"] })).exit, true);
 eq("no such route: cannot lend", M.peerOf(peer("x", "Connected", "P2P", 5, 0, 0, { networks: ["192.168.1.0/24"] })).exit, false);
+
+// Two peers never share a name
+const twin = (fqdn, ip, key) => ({ fqdn, netbirdIp: ip + "/16", publicKey: key, status: "Connected", latency: 1e7 });
+const twins = M.parse("Connected", { peers: { details: [
+    twin("pc.home.example", "100.92.0.1", "k1"), twin("pc.work.example", "100.92.0.2", "k2"), twin("nas.home.example", "100.92.0.3", "k3")] } }, null, t0);
+eq("clashing names take a label more", twins.peers.map(p => p.name).sort(), ["nas", "pc.home", "pc.work"]);
+const same = M.parse("Connected", { peers: { details: [twin("pc.a.example", "100.92.0.1", "k1"), twin("pc.a.example", "100.92.0.2", "k2")] } }, null, t0);
+eq("same fqdn twice falls back to the address", same.peers.map(p => p.name).sort(), ["100.92.0.1", "100.92.0.2"]);
+const solo = M.parse("Connected", { peers: { details: [twin("pc.a.example", "100.92.0.1", "k1"), twin("vega.a.example", "100.92.0.2", "k2")] } }, null, t0);
+eq("names that do not clash stay short", solo.peers.map(p => p.name).sort(), ["pc", "vega"]);
 
 done("mesh");
