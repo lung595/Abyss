@@ -3,16 +3,28 @@ imports.searchPath.unshift(imports.gi.GLib.path_get_dirname(imports.system.progr
 const { load, eq, ok, done } = imports.load;
 const T = load("components/Terminal.js");
 
-eq("kitty runs ssh directly", T.sshCommand("kitty", "atlas.example"), ["kitty", "ssh", "atlas.example"]);
-eq("alacritty needs -e", T.sshCommand("alacritty", "10.0.0.2"), ["alacritty", "-e", "ssh", "10.0.0.2"]);
-eq("wezterm needs start --", T.sshCommand("wezterm", "h"), ["wezterm", "start", "--", "ssh", "h"]);
-eq("gnome-terminal needs --", T.sshCommand("gnome-terminal", "h"), ["gnome-terminal", "--", "ssh", "h"]);
+eq("kitty runs ssh directly", T.sshCommand("kitty", "atlas.example"), ["kitty", "ssh", "--", "atlas.example"]);
+eq("alacritty needs -e", T.sshCommand("alacritty", "10.0.0.2"), ["alacritty", "-e", "ssh", "--", "10.0.0.2"]);
+eq("wezterm needs start --", T.sshCommand("wezterm", "h"), ["wezterm", "start", "--", "ssh", "--", "h"]);
+eq("gnome-terminal needs --", T.sshCommand("gnome-terminal", "h"), ["gnome-terminal", "--", "ssh", "--", "h"]);
 
 // "auto": a shell tries each terminal; the host stays a separate argument
-const auto = T.sshCommand("auto", "evil; rm -rf ~");
+const auto = T.sshCommand("auto", "evil.example");
 eq("auto goes through sh", auto.slice(0, 2), ["sh", "-c"]);
-eq("auto passes the host as $1, untouched", auto.slice(3), ["sh", "evil; rm -rf ~"]);
+eq("auto passes the host as $1, untouched", auto.slice(3), ["sh", "evil.example"]);
 ok("auto never pastes the host into the script", auto[2].indexOf("evil") < 0);
+ok("auto ends ssh's options before the host", auto[2].indexOf("ssh -- \"$1\"") >= 0);
+
+// Hosts that ssh would read as something else are refused
+eq("an option is no host", T.sshCommand("kitty", "-oProxyCommand=touch /tmp/x"), null);
+eq("an option is no host for auto either", T.sshCommand("auto", "-oProxyCommand=x"), null);
+eq("a shell line is no host", T.sshCommand("auto", "evil; rm -rf ~"), null);
+eq("no host at all", T.sshCommand("kitty", ""), null);
+eq("a space is no host", T.sshCommand("kitty", "a b"), null);
+ok("a NetBird name is a host", T.validHost("vega.netbird.cloud"));
+ok("an IPv4 address is a host", T.validHost("100.92.0.7"));
+ok("an IPv6 address is a host", T.validHost("fd00::1"));
+ok("a dash inside a name is fine", T.validHost("lark-phone.mesh.example"));
 ok("auto tries every terminal", T.TERMINALS.every(t => auto[2].indexOf("command -v " + t + " ") >= 0));
 eq("an unknown terminal falls back to auto", T.sshCommand("nope", "h").slice(0, 2), ["sh", "-c"]);
 

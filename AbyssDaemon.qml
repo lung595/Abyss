@@ -38,9 +38,17 @@ Item {
         ToastService.showInfo("Copied " + text);
     }
 
+    // False when the host is not one ssh can safely be handed (says why)
     function ssh(host, terminal) {
-        if (host)
-            Quickshell.execDetached(Terminal.sshCommand(terminal || prefs.terminal, String(host)));
+        if (!host)
+            return false;
+        const cmd = Terminal.sshCommand(terminal || prefs.terminal, String(host));
+        if (!cmd) {
+            ToastService.showInfo("Abyss", "Not opening SSH: \"" + host + "\" is not a plain host name or address");
+            return false;
+        }
+        Quickshell.execDetached(cmd);
+        return true;
     }
 
     function openUrl(url) {
@@ -174,8 +182,7 @@ Item {
             const p = root.findPeer(peer);
             if (!p)
                 return "No peer named " + peer;
-            root.ssh(p.fqdn || p.ip);
-            return "OK";
+            return root.ssh(p.fqdn || p.ip) ? "OK" : "Refused: " + (p.fqdn || p.ip) + " is not a plain host name";
         }
 
         // Internet through a peer, a group of mine (by name), or "off"
