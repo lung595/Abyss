@@ -98,6 +98,10 @@ QtObject {
         name = name || "";
         if (src._exitShown() === name)
             return;
+        // Just failed: not again before 30 s (a group of mine asks on
+        // every read; the note was already said)
+        if (name === src._failedExit && Date.now() - src._failedAt < 30000)
+            return;
         const p = name ? src.view.peers.find(q => q.name === name) : null;
         if (name && !p) {
             src._say("No peer named " + name);
@@ -224,6 +228,9 @@ QtObject {
     readonly property string _direct: "\u0000direct"
     property string _wantExit: ""
     property real _wantUntil: 0
+    // The last exit that failed, and when (no retry for 30 s)
+    property string _failedExit: ""
+    property real _failedAt: 0
 
     function _exitShown() {
         if (!src._wantExit)
@@ -246,6 +253,10 @@ QtObject {
         cmds.forEach((cmd, i) => src._actor.run(cmd, (out, err, code) => {
             if (!failed && code !== 0) {
                 failed = true;
+                if (src._wantExit) {
+                    src._failedExit = src._wantExit === src._direct ? "" : src._wantExit;
+                    src._failedAt = Date.now();
+                }
                 src._wantExit = "";
                 src._say(failText + ": " + (Netbird.firstLine(err) || Netbird.firstLine(out) || "netbird exited with " + code));
             }
