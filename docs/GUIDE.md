@@ -15,6 +15,7 @@ Every refusal in Abyss says why in a short note, with a GitHub mark that opens t
 - [Internet through a whole group](#internet-through-a-whole-group)
 - [Turn a network on or off](#turn-a-network-on-or-off)
 - [Find a peer](#find-a-peer)
+- [Ping](#ping)
 - [From the launcher](#from-the-launcher)
 - [Settings](#settings)
 - [Privacy](#privacy)
@@ -88,6 +89,10 @@ Just type a name: the deep keeps the matches (favorites first) and dims the rest
 
 ![Finding a peer](../screenshots/find.png)
 
+## Ping
+
+A peer's card has a **Ping** button: three echoes to its address, and a toast with the average, the best and worst time and how many answered. It runs only when you ask (also `dms ipc call abyss ping <peer>`); Abyss never pings by itself. In the test lab it says what the made-up mesh claims.
+
 ## From the launcher
 
 Press Super+Space and type `abyss`: "Open Abyss" opens the deep from the bar; below it, connect, choose where Internet goes out (a sun marks the one in use), and, as you type a name (`abyss vega`), copy its address or SSH to it. The same words as the search in the deep pick peers by what they are: a speed (`abyss >100ms`, `abyss <20ms`), a state (`direct`, `relay`, `slow`, `busy`), a kind (`nas`, `phones`, `vps`) or a relay (`eu`); start with `ssh` or `copy` to keep one action (`abyss ssh nas`, `abyss copy >100ms`).
@@ -103,7 +108,8 @@ Press Super+Space and type `abyss`: "Open Abyss" opens the deep from the bar; be
 | | Show offline peers | On | Asleep on the floor, or hidden. With NetBird's lazy connections on, idle peers doze a little above the floor instead ("idle · wake on use"): NetBird does not say which of them are really off |
 | | Light pulses | On | Pulses of traffic along the tentacles |
 | | Companion | On | Darwin, a goldfish with a life of his own: he eats the crumbs the traffic drops, scrubs the glass as it clouds over, sleeps on the bottom while the mesh is down and waves when clicked. He only moves while a view is open, and stays still with *Reduce motion* |
-| Peers | Notifications | Off | When a peer comes or goes; muted peers stay quiet |
+| Peers | Bar pill | Peers online | What the small jellyfish in the bar says beside it: how many peers are online, the total traffic, or nothing |
+| | Notifications | Off | When a peer comes or goes; muted peers stay quiet |
 | | Terminal for SSH | Automatic | The terminal used for SSH |
 | Source | Mesh source | Automatic | Your NetBird daemon, or the test lab's made-up mesh. Automatic reads NetBird when the `netbird` command is installed |
 | Test lab | Mesh | Home | Home (10 peers), work (5), crowd (30), or a custom size from 1 to 120 peers, to see how groups form |
@@ -120,7 +126,7 @@ DMS's *Reduce motion* is respected: every movement stops.
 
 - **No network access by the plugin itself, no telemetry.** NetBird is read through its local `netbird` command, never through a shell: no peer name or address can run anything.
 - **Nothing written to disk except your settings** (favorites, muted peers, your groups, the group carrying the Internet, and which peer carries each exit route once seen). Peers, addresses and traffic stay in memory for the session.
-- **Local tools only**: copy uses DMS's clipboard, SSH opens your own terminal. The GitHub mark in help notes opens the docs in your browser, on click only.
+- **Local tools only**: copy uses DMS's clipboard, SSH opens your own terminal, Ping runs your own `ping` to one peer of your mesh, only when you click it. The GitHub mark in help notes opens the docs in your browser, on click only.
 
 ## Performance
 

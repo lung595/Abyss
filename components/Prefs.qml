@@ -30,6 +30,9 @@ QtObject {
     readonly property bool desktopLive: _get("desktopLive", false)
     // How many things the deep shows at once; more peers gather in groups
     readonly property int maxItems: _get("maxItems", 5)
+    // What the bar pill shows beside the jellyfish: "peers" (how many are
+    // online), "rate" (the total traffic) or "icon" (nothing)
+    readonly property string pill: _get("pill", "peers")
     // Darwin, the goldfish companion (only moves while a view is open)
     readonly property bool companion: _get("companion", true)
     // How a group opens: "both" (resting the pointer on it, or a click),
