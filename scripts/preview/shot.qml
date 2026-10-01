@@ -60,7 +60,7 @@ Window {
             console.log("glide: " + n * 100 + " ms x " + Math.round(sun.shown.x) + " (from " + Math.round(from.x) + " to " + Math.round(sun.home.x) + ") gliding " + sun.gliding);
             if (++n > 8) {
                 // Near the left edge its words go to its right
-                const words = sun.children.find(c => c.text !== undefined && c.text === sun.label);
+                const words = sun.children.find(c => c.objectName === "sunWords");
                 const x0 = sun.x;
                 sun.x = 20;
                 console.log("glide: label at the edge x " + Math.round(words.x) + ", in the open x " + (sun.x = 300, Math.round(words.x)));

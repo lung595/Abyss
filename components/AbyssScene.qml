@@ -2127,6 +2127,8 @@ Item {
             scene: root
             // In the open group it carries: in the middle, tied to its members
             home: groupPeek.lit ? Qt.point(groupPeek.cx, groupPeek.cy) : onMember ? Qt.point(groupPeek.memberPose(root.exitPeer.id).x, groupPeek.memberPose(root.exitPeer.id).y - 46) : root.exitPeer ? Qt.point(root.anchorOfPeer(root.exitPeer.id).x, root.frame.surfaceY) : Qt.point(root.width - root.insetTop - 58, root.frame.surfaceY)
+            // The beam's traffic: what goes out through the lending peer
+            rates: label !== "" && root.exitPeer && root.exitPeer.online && root.exitPeer.down + root.exitPeer.up > 0 ? "↓ " + Mesh.fmtRate(root.exitPeer.down) + "  ↑ " + Mesh.fmtRate(root.exitPeer.up) : ""
             label: groupPeek.lit || onMember ? "" : root.exitMine && root.exitPeer ? "Internet via " + root.exitMine.name + " · " + root.exitPeer.name : root.exitPeer ? "Internet via " + root.exitPeer.name : "Internet"
             onDropped: (px, py) => root.dropSun(px, py)
         }
