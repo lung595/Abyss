@@ -106,6 +106,27 @@ PluginSettings {
         text: "Peers"
     }
 
+    SelectionSetting {
+        settingKey: "pill"
+        label: "Bar pill"
+        description: "What the small jellyfish in the bar says beside it"
+        options: [
+            {
+                "label": "Peers online",
+                "value": "peers"
+            },
+            {
+                "label": "Total traffic",
+                "value": "rate"
+            },
+            {
+                "label": "Icon only",
+                "value": "icon"
+            }
+        ]
+        defaultValue: "peers"
+    }
+
     ToggleSetting {
         settingKey: "notifications"
         label: "Notifications"

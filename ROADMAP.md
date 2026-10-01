@@ -10,9 +10,8 @@ No promises, no dates. Everything here was asked for and is not in a release yet
 
 - **Smart search**: synonyms and tags (the launcher already takes `abyss >100ms`).
 - Bar count kept fresh without polling.
-- Ping a peer on demand.
 - A compact list for large meshes (30+ peers).
-- Bar pill options, admin console link, daemon version.
+- Admin console link, daemon version.
 - Maybe: a debug bundle and client settings.
 
 ## Known limits

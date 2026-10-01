@@ -6,6 +6,7 @@ import "components"
 import "components/Terminal.js" as Terminal
 import "components/MyGroups.js" as MyGroups
 import "components/Query.js" as Query
+import "components/Ping.js" as Ping
 
 // The one engine every surface shares: the mesh source, the actions that
 // leave the shell (copy, SSH, browser), notifications and the IPC.
@@ -105,6 +106,30 @@ Item {
             else
                 Quickshell.execDetached(Terminal.sshCommand(found, h));
         });
+        return true;
+    }
+
+    // Three echoes to a peer, when asked (never on its own); the answer
+    // comes as a toast. The demo mesh has nobody to answer: it says what it
+    // made up
+    CliRunner {
+        id: pinger
+        timeout: 12000
+    }
+    function ping(peer) {
+        if (!peer || !root.source)
+            return false;
+        if (root.source.demo) {
+            ToastService.showInfo("Abyss", peer.name + ": " + Math.round(peer.latencyMs * 10) / 10 + " ms (made-up mesh)");
+            return true;
+        }
+        const cmd = Ping.command(peer.ip);
+        if (!cmd) {
+            ToastService.showInfo("Abyss", "Not pinging: \"" + peer.ip + "\" is not an address");
+            return false;
+        }
+        ToastService.showInfo("Abyss", "Pinging " + peer.name + "…");
+        pinger.run(cmd, (out, err, code) => ToastService.showInfo("Abyss", Ping.summary(peer.name, out, code)));
         return true;
     }
 
@@ -268,6 +293,18 @@ Item {
                 return Query.lookupError(peer, found);
             root.copy(p.ip);
             return p.ip;
+        }
+
+        // Three echoes to a peer: "Pinging…", then the answer as a toast
+        function ping(peer: string): string {
+            if (!root.source)
+                return "Abyss is starting";
+            const found = Query.lookup(root.source.view.peers, peer), p = found.peer;
+            if (!p)
+                return Query.lookupError(peer, found);
+            if (!p.online)
+                return p.name + " is offline";
+            return root.ping(p) ? "Pinging " + p.name : "Refused";
         }
 
         // Opens `ssh <peer>` in the terminal chosen in the settings

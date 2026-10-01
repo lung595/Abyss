@@ -118,7 +118,8 @@ In **Settings → Plugins**, turn **Abyss** on. The launcher entry works right a
 | | Show offline peers | On |
 | | Light pulses | On |
 | | Companion: Darwin the goldfish | On |
-| Peers | Notifications when a peer comes or goes | Off |
+| Peers | Bar pill: peers online, total traffic, icon only | Peers online |
+| | Notifications when a peer comes or goes | Off |
 | | Terminal for SSH | Automatic |
 | Source | Mesh source: automatic, NetBird, test lab | Automatic (NetBird when installed) |
 | Test lab | Mesh: home (10), work (5), crowd (30) or a custom size (1 to 120 peers) | Home |
@@ -137,6 +138,7 @@ dms ipc call abyss status          # "connected · 8/10 online · Internet throu
 dms ipc call abyss toggle          # or connect / disconnect
 dms ipc call abyss copy <peer>     # copy the peer's IP
 dms ipc call abyss ssh <peer>      # SSH in your terminal
+dms ipc call abyss ping <peer>     # three echoes to a peer (only when asked), the answer as a toast
 dms ipc call abyss exit <target>   # Internet through a peer or one of your groups; "off" to stop
 dms ipc call abyss exit ""         # where Internet goes out now
 dms ipc call abyss demo <state>    # test lab only: connected, disconnected, connecting,

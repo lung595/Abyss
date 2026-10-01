@@ -1164,6 +1164,10 @@ Item {
         if (actions)
             actions.ssh(peer.fqdn || peer.ip, prefs.terminal);
     }
+    function ping(peer) {
+        if (actions)
+            actions.ping(peer);
+    }
     function openWeb(peer) {
         if (actions)
             actions.openUrl("http://" + (peer.fqdn || peer.ip));
