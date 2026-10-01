@@ -1080,6 +1080,8 @@ Item {
     // 0 -> 1 as the card opens: the desktop bowl darkens its water and
     // fades its glass with it, so the card reads clearly (a short fade only)
     property real cardMix: cardId !== "" ? 1 : 0
+    // How long the card takes to land; its creature lands with it (CardHero)
+    readonly property int cardLandMs: 480
     Behavior on cardMix {
         NumberAnimation {
             duration: root.reduceMotion ? 0 : 400
@@ -2582,7 +2584,7 @@ Item {
             opacity: root.cardId !== "" ? 1 : 0
             Behavior on y {
                 NumberAnimation {
-                    duration: root.reduceMotion ? 0 : 480
+                    duration: root.reduceMotion ? 0 : root.cardLandMs
                     easing.type: Easing.OutCubic
                 }
             }
