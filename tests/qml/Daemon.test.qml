@@ -31,6 +31,7 @@ Item {
     property var steps: [
         () => {
             check("NetBird is found and used", daemon.hasNetbird && daemon.source && !daemon.source.demo, [daemon.hasNetbird, !!daemon.source]);
+            check("the real state is known before any view opens", daemon.source.view.state === "connected" && daemon.source.view.online === 3, daemon.source.view.state);
             test.ipc = daemon.data.find(o => o.target === "abyss");
             daemon.source.watch(true);
         },

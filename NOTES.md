@@ -150,3 +150,17 @@ integration tests (`tests/qml/`, need PySide6) against a fake `netbird`
   later) asked for it again, running a failing command every 2 s.
 - **Fix**: an exit that just failed is not asked again for 30 s.
 - **Checked**: a step in `NetbirdSource.test.qml`.
+
+### 11. The bar and the launcher knew nothing before a view opened
+- **Where**: `components/NetbirdSource.qml`, `AbyssLauncher.qml`.
+- **Bug**: the demo had a mesh from the start; the NetBird source read
+  nothing until a view opened, so the bar pill showed "Service stopped",
+  and the launcher's first rows offered to start the service. The launcher
+  also read the view right after asking for a read the NetBird source only
+  answers later.
+- **Fix**: one read at start (then nothing until a view opens). The
+  launcher asks for its rows again once, when the read it asked for lands
+  (never on the reads of an open view, so no loop).
+- **Checked**: a step in `Daemon.test.qml`.
+- **Still open**: the bar count goes stale while no view is open (roadmap:
+  "Bar count kept fresh without polling").
