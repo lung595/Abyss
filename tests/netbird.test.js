@@ -47,7 +47,7 @@ eq("nothing printed is an error", N.readStatus("", 0).error, "NetBird printed no
 // --- The view from a real-shaped status -----------------------------------
 const view = M.parse(st.daemonStatus, st.json, null, Date.parse("2026-09-30T10:00:00Z"));
 eq("connected", view.state, "connected");
-eq("me", view.me, { "name": "wren", "fqdn": "wren.netbird.cloud", "ip": "100.90.0.1" });
+eq("me", view.me, { "name": "wren", "fqdn": "wren.netbird.cloud", "ip": "100.90.0.1", "version": "0.60.0", "console": "https://app.netbird.io" });
 eq("online count (Idle is not online)", view.online, 3);
 const atlas = view.peers.find(p => p.name === "atlas");
 eq("since comes from lastStatusUpdate", atlas.since, Date.parse("2026-09-30T08:00:00Z"));
