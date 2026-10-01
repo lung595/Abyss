@@ -256,9 +256,17 @@ function _inBox(pts, x, y, w, h) {
 
 // size: the popout (580x480), the Control Center (440x420) and the bowl
 // (646x420, two caves). max: the setting "Things on screen" (3, 5, 10).
+// "lab:n": the test lab's mesh of n peers, from one peer to its maximum
+const LAB = [1, 2, 12, 60, 120].flatMap(n => [3, 5, 10].map(max => ["lab:" + n, 580, 480, 54, null, max]))
+    .concat([["lab:24", 440, 420, 50, null, 5], ["lab:24", 646, 420, 60, { "caves": 2 }, 5]]);
 [["home", 580, 480, 54, null, 5], ["work", 580, 480, 54, null, 5], ["crowd", 580, 480, 54, null, 5],
     ["home", 440, 420, 50, null, 5], ["crowd", 646, 420, 60, { "caves": 2 }, 5],
-    ["crowd", 580, 480, 54, null, 10], ["crowd", 580, 480, 54, null, 3]].forEach(m => {
+    ["crowd", 580, 480, 54, null, 10], ["crowd", 580, 480, 54, null, 3]].concat(LAB).forEach(c => {
+    const m = c.slice();
+    if (m[0].indexOf("lab:") === 0) {
+        D.setLab(Number(m[0].slice(4)));
+        m[0] = "lab";
+    }
     const s = _scene(m[0], m[5], MINE), l = L.layout(s.items, m[1], m[2], m[3], m[4]);
     const paths = _paths(l, s.items);
     const ids = Object.keys(l.peers).filter(id => l.peers[id].deg !== undefined);
@@ -277,14 +285,14 @@ function _inBox(pts, x, y, w, h) {
         if (n !== p.relay && _inBox(p.pts, l.relays[n].x, l.relays[n].y, L.HUB_W, L.HUB_H))
             over.push(p.id + " over the lantern " + n);
     }));
-    ok(m[0] + " " + m[1] + "x" + m[2] + " max " + m[5] + ": nothing in the way of a tentacle ("
+    ok(c[0] + " " + m[1] + "x" + m[2] + " max " + m[5] + ": nothing in the way of a tentacle ("
         + over.length + (over.length ? ": " + over.join(", ") : "") + ")", over.length === 0);
     const sat = [];
     Object.keys(l.relays).forEach(n => ids.forEach(id => {
         if (_inBox([[l.relays[n].x, l.relays[n].y]], l.peers[id].x, l.peers[id].y, L.BODY_W, L.BODY_H))
             sat.push(n + " on " + id);
     }));
-    ok(m[0] + " " + m[1] + "x" + m[2] + " max " + m[5] + ": no lantern on a creature ("
+    ok(c[0] + " " + m[1] + "x" + m[2] + " max " + m[5] + ": no lantern on a creature ("
         + sat.length + (sat.length ? ": " + sat.join(", ") : "") + ")", sat.length === 0);
 });
 

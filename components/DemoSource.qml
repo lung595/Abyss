@@ -2,10 +2,12 @@ import QtQuick
 import "Mesh.js" as Mesh
 import "DemoMesh.js" as Demo
 
-// Stands in for NetBird while the plugin only has its interface: a made-up
-// mesh (DemoMesh.js) with the same view model and the same actions the real
-// source will have. Traffic only flows while a view is watching, the way the
-// NetBird source will only read the daemon while a view is open.
+// Stands in for NetBird: a made-up mesh (DemoMesh.js) with the same view
+// model and the same actions as the real source. Traffic only flows while a
+// view is watching, the way the NetBird source only reads while one is open.
+// It is also the test lab (Settings > Test lab): any number of peers, added
+// latency, a peer that stops answering, a relay or the management server
+// down, a peer that keeps dropping out. Everything stays in memory.
 QtObject {
     id: src
 
@@ -25,6 +27,26 @@ QtObject {
     property var history: ({})
     readonly property bool connected: view.state === "connected"
 
+    // --- Test lab (bound to the settings by the daemon) ----------------------
+    // Which mesh: "home", "work", "crowd", or "lab" (labPeers made-up peers)
+    property string labMesh: "home"
+    property int labPeers: 24
+    // Milliseconds added to every peer's latency
+    property int labLatency: 0
+    // What goes wrong: "none", "silent" (a peer stops answering), "flap" (a
+    // peer keeps dropping out), "relay", "management", "signedOut", "stopped"
+    property string labTrouble: "none"
+    // How busy the links are: "calm", "normal" or "rush"
+    property string labTraffic: "normal"
+    // The peers the trouble hits right now, by name ("" when none)
+    readonly property string silentPeer: labTrouble === "silent" ? Demo.silentPeer(profile) : ""
+    readonly property string flappingPeer: labTrouble === "flap" ? Demo.flapPeer(profile) : ""
+    // The same, worked out on the spot: a handler of labTrouble may run
+    // before the bindings above have followed it
+    function _silent() {
+        return labTrouble === "silent" ? Demo.silentPeer(profile) : "";
+    }
+
     // A peer's name went online or offline (for notifications)
     signal peerEvent(string name, bool online)
 
@@ -32,16 +54,23 @@ QtObject {
     property var _offline: ({})
     property string _hog: ""
     property int _reads: 0
+    property bool _managementDown: false
+    // Faking the last minute at start: nobody is told about it
+    property bool _priming: false
 
     // now: the time of this read (the history priming fakes one per second)
     function refresh(now) {
         now = now || Date.now();
         const up = daemonStatus === "Connected";
-        const json = daemonStatus ? Demo.status(profile, now, up, _counters, _offline, relayDown) : null;
+        const json = daemonStatus ? Demo.status(profile, now, up, _counters, _offline, relayDown, {
+            "addMs": labLatency,
+            "silent": _silent(),
+            "managementDown": _managementDown
+        }) : null;
         const before = {};
         (view.peers || []).forEach(p => before[p.name] = p.online);
         view = Mesh.parse(daemonStatus, json, view, now);
-        if (up)
+        if (up && !_priming)
             view.peers.forEach(p => {
                 if (p.name in before && before[p.name] !== p.online)
                     src.peerEvent(p.name, p.online);
@@ -55,17 +84,26 @@ QtObject {
         history = h;
     }
 
-    // One read: every live peer moves some bytes; one of them hogs
+    // One read: every live peer moves some bytes; one of them hogs. In the
+    // lab, the flapping peer drops out or comes back every 6 reads
     function _step(now) {
         _reads++;
-        const live = view.peers.filter(p => p.online);
+        const flap = labTrouble === "flap" ? Demo.flapPeer(profile) : "";
+        if (flap && _reads % 6 === 0) {
+            const o = Object.assign({}, _offline);
+            o[flap] = !o[flap];
+            _offline = o;
+        }
+        const busy = ({ "calm": 0.15, "rush": 5 })[labTraffic] || 1;
+        const quiet = _silent();
+        const live = view.peers.filter(p => p.online && p.name !== quiet);
         if (!live.length)
             return refresh(now);
         if (!_hog || _reads % 9 === 0)
             _hog = live[Math.floor(Math.random() * live.length)].name;
         const c = Object.assign({}, _counters);
         live.forEach(p => {
-            let mbps = Demo.baseRate(profile, p.name) * (p.name === _hog ? 16 : 1) * (0.55 + Math.random() * 0.9);
+            let mbps = busy * Demo.baseRate(profile, p.name) * (p.name === _hog ? 16 : 1) * (0.55 + Math.random() * 0.9);
             if (p.name === exitNode)
                 mbps += 4 + Math.random() * 5;
             const prev = c[p.name] || { "rx": 0, "tx": 0 };
@@ -115,8 +153,9 @@ QtObject {
         daemonStatus = "Idle";
         refresh();
     }
-    function setProfile(name) {
-        if (name === profile || profiles.indexOf(name) < 0)
+    // again: rebuild even when it is the current one (the lab's size changed)
+    function setProfile(name, again) {
+        if ((name === profile && !again) || profiles.indexOf(name) < 0)
             return;
         profile = name;
         exitNode = "";
@@ -148,6 +187,39 @@ QtObject {
         }
         refresh();
     }
+    // --- Test lab ------------------------------------------------------------
+    // Puts the mesh in the state the lab's trouble asks for. Called when the
+    // setting changes: the jellyfish still connects and disconnects after
+    function _applyTrouble() {
+        const t = labTrouble;
+        _settle.stop();
+        _offline = {};
+        relayDown = t === "relay" ? Demo.firstRelay(profile) : "";
+        _managementDown = t === "management";
+        if (t === "signedOut")
+            daemonStatus = "NeedsLogin";
+        else if (t === "stopped")
+            daemonStatus = "";
+        else if (daemonStatus === "NeedsLogin" || daemonStatus === "")
+            daemonStatus = "Connected";
+    }
+    onLabTroubleChanged: {
+        _applyTrouble();
+        refresh();
+    }
+    onLabLatencyChanged: refresh()
+    onLabMeshChanged: {
+        Demo.setLab(labPeers);
+        setProfile(labMesh, labMesh === "lab");
+        _applyTrouble();
+        refresh();
+    }
+    onLabPeersChanged: {
+        Demo.setLab(labPeers);
+        if (labMesh === "lab")
+            setProfile("lab", true);
+    }
+
     // Takes a peer offline or back (the demo's way to show notifications)
     function flap(name) {
         const o = Object.assign({}, _offline);
@@ -178,11 +250,19 @@ QtObject {
         }
     }
     Component.onCompleted: {
+        Demo.setLab(labPeers);
+        if (labMesh !== profile && profiles.indexOf(labMesh) >= 0) {
+            profile = labMesh;
+            networks = Demo.networks(labMesh);
+        }
+        _applyTrouble();
         // Prime a minute of history so cards open on a real curve
         const t = Date.now();
         _seed();
+        _priming = true;
         refresh(t - 61000);
         for (let i = 60; i > 0; i--)
             _step(t - i * 1000);
+        _priming = false;
     }
 }

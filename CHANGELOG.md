@@ -8,8 +8,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 ### Added
 
 - **Your real NetBird mesh**: peers, traffic, relays, networks, profiles and the Internet light come from the NetBird daemon through its `netbird` command: one read when the shell starts, then every 2 s only while a view is open. Connect, disconnect, sign in, start the service, switch profile, turn networks on or off and choose where Internet goes out all run the matching command; anything that fails says why.
-- **Setting "Mesh source"**: automatic (NetBird when installed, else the demo mesh), NetBird, or demo mesh.
-- **Tests**: QML integration tests through real processes against a fake `netbird`, `tests/run.sh` to run every test, and CI on every push.
+- **Setting "Mesh source"**: automatic (NetBird when installed, else the test lab), NetBird, or test lab.
+- **Test lab** in the settings, shown while it is the mesh source: a mesh of 1 to 120 made-up peers (or the home, work and crowd meshes), latency added to every peer, a trouble to try (a peer that stops answering, a peer that keeps dropping out, a relay or the management server down, signed out, service stopped) and calm, normal or rush-hour traffic. A one-line summary and *Reset* under its title. In memory only; NetBird is never touched.
+- **Tests**: QML integration tests through real processes against a fake `netbird`, `tests/run.sh` to run every test, and CI on every push. The tentacle layout check (P60) also runs on the test lab's meshes, from 1 to 120 peers.
 
 ### Changed
 

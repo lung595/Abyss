@@ -42,6 +42,16 @@ QtObject {
     // Internet through a whole group of mine (its id), "" otherwise
     readonly property string exitGroup: _get("exitGroup", "")
 
+    // Test lab (Mesh source = Test lab): the made-up mesh to try things on.
+    // labMesh "home", "work", "crowd" or "lab" (labPeers peers); labLatency
+    // ms added to every peer; labTrouble what goes wrong (DemoSource);
+    // labTraffic "calm", "normal" or "rush"
+    readonly property string labMesh: _get("labMesh", "home")
+    readonly property int labPeers: _get("labPeers", 24)
+    readonly property int labLatency: _get("labLatency", 0)
+    readonly property string labTrouble: _get("labTrouble", "none")
+    readonly property string labTraffic: _get("labTraffic", "normal")
+
     readonly property bool reduceMotion: SettingsData.reduceMotion
 
     function set(key, value) {

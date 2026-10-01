@@ -104,7 +104,13 @@ Press Super+Space and type `abyss`: "Open Abyss" opens the deep from the bar; be
 | | Light pulses | On | Pulses of traffic along the tentacles |
 | Peers | Notifications | Off | When a peer comes or goes; muted peers stay quiet |
 | | Terminal for SSH | Automatic | The terminal used for SSH |
-| NetBird | Mesh source | Automatic | Your NetBird daemon, or a made-up demo mesh to try Abyss. Automatic reads NetBird when the `netbird` command is installed |
+| Source | Mesh source | Automatic | Your NetBird daemon, or the test lab's made-up mesh. Automatic reads NetBird when the `netbird` command is installed |
+| Test lab | Mesh | Home | Home (10 peers), work (5), crowd (30), or a custom size from 1 to 120 peers, to see how groups form |
+| | Added latency | 0 ms | Added to every peer: they sink deeper and may switch places |
+| | Trouble | None | A peer stops answering (raised as silent after a few minutes without a handshake), a peer keeps dropping out (every 6 s, for notifications), a relay goes down, the management server is unreachable, signed out, service stopped. Applied when chosen; the jellyfish still connects and disconnects |
+| | Traffic | Normal | Calm, normal, or rush hour (pulses and totals) |
+
+The test lab only shows while it is the mesh source. It never touches NetBird: the mesh is made up and lives in memory. Its title sums up what is set ("48 peers · +80 ms · a peer stops answering") and *Reset* brings back the quiet home mesh.
 
 DMS's *Reduce motion* is respected: every movement stops.
 

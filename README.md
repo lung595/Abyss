@@ -14,7 +14,7 @@ tied to you by a tentacle lit by its live traffic.
 </div>
 
 > [!NOTE]
-> **Abyss reads your real NetBird daemon** through the `netbird` command when it is installed, and shows a made-up demo mesh otherwise. Choose with the **Mesh source** [setting](#settings).
+> **Abyss reads your real NetBird daemon** through the `netbird` command when it is installed, and opens its test lab, a made-up mesh, otherwise. Choose with the **Mesh source** [setting](#settings).
 
 ## Getting started
 
@@ -23,7 +23,7 @@ tied to you by a tentacle lit by its live traffic.
 | Dependency | Version | Needed for |
 | --- | --- | --- |
 | DankMaterialShell | 1.6.0 or newer | Everything |
-| NetBird client (`netbird` command) | Any recent | Your real mesh; without it, Abyss shows a demo mesh |
+| NetBird client (`netbird` command) | Any recent | Your real mesh; without it, Abyss shows its test lab |
 | A polkit agent | Any (DMS has one) | *Optional*: starting the NetBird service from Abyss |
 | A terminal emulator | Any | *Optional*: SSH to a peer |
 
@@ -116,7 +116,13 @@ In **Settings → Plugins**, turn **Abyss** on. The launcher entry works right a
 | | Light pulses | On |
 | Peers | Notifications when a peer comes or goes | Off |
 | | Terminal for SSH | Automatic |
-| NetBird | Mesh source: automatic, NetBird, demo mesh | Automatic (NetBird when installed) |
+| Source | Mesh source: automatic, NetBird, test lab | Automatic (NetBird when installed) |
+| Test lab | Mesh: home (10), work (5), crowd (30) or a custom size (1 to 120 peers) | Home |
+| | Added latency (0 to 400 ms) | 0 ms |
+| | Trouble: a peer stops answering, a peer keeps dropping out, a relay or the management server down, signed out, service stopped | None |
+| | Traffic: calm, normal, rush hour | Normal |
+
+The **Test lab** section only shows while the test lab is the mesh source. It lives in memory and never touches NetBird; its title sums it up in one line and *Reset* brings back the quiet home mesh.
 
 ## Command line and keybindings
 
@@ -127,7 +133,7 @@ dms ipc call abyss toggle          # or connect / disconnect
 dms ipc call abyss copy <peer>     # copy the peer's IP
 dms ipc call abyss ssh <peer>      # SSH in your terminal
 dms ipc call abyss exit <target>   # Internet through a peer or one of your groups; "off" to stop
-dms ipc call abyss demo <state>    # demo only: connected, disconnected, connecting,
+dms ipc call abyss demo <state>    # test lab only: connected, disconnected, connecting,
                                    # needsLogin, stopped, relayDown, relayUp
 ```
 
@@ -138,7 +144,7 @@ Bind them in your compositor, for example in niri: `Mod+A { spawn "dms" "ipc" "c
 | Problem | Solution |
 | --- | --- |
 | Nothing changed after enabling | Add one of its widgets, see [Add a widget](#3-add-a-widget) |
-| The peers shown are not mine | The demo mesh is shown: install the NetBird client, or set **Mesh source** to *NetBird* |
+| The peers shown are not mine | The test lab is shown: install the NetBird client, or set **Mesh source** to *NetBird* |
 | "Service stopped" while NetBird runs | The `netbird` command cannot reach the daemon: check `netbird status` in a terminal |
 | The light says to name the route after the peer | NetBird does not say which peer serves an unused exit route: name it after the peer in NetBird's dashboard, see [Internet through a peer](#internet-through-a-peer) |
 | The light bounces back from a peer | That peer is not an exit node, see [Internet through a peer](#internet-through-a-peer) |

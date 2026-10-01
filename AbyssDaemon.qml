@@ -20,8 +20,8 @@ Item {
     property var pluginService: null
     property string pluginId: "abyss"
 
-    // The mesh every surface draws: the NetBird daemon, or a made-up mesh
-    // to try the plugin (setting "Mesh source"; "auto" takes NetBird when
+    // The mesh every surface draws: the NetBird daemon, or the test lab's
+    // made-up mesh (setting "Mesh source"; "auto" takes NetBird when
     // its CLI is installed). Both have the same interface; only the one in
     // use exists. Null until the lookup below has answered.
     readonly property var source: sourceLoader.item
@@ -37,7 +37,13 @@ Item {
     }
     Component {
         id: demoSource
-        DemoSource {}
+        DemoSource {
+            labMesh: prefs.labMesh
+            labPeers: prefs.labPeers
+            labLatency: prefs.labLatency
+            labTrouble: prefs.labTrouble
+            labTraffic: prefs.labTraffic
+        }
     }
     Component {
         id: netbirdSource
