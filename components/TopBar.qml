@@ -15,6 +15,7 @@ Rectangle {
     property bool compact: false
 
     signal networksClicked
+    signal listClicked
 
     height: 38
     radius: 12
@@ -79,6 +80,15 @@ Rectangle {
             text: bar.source ? bar.source.networks.filter(n => n.on).length + "/" + bar.source.networks.length : ""
             ink: bar.scene.ink
             onClicked: bar.networksClicked()
+        }
+        // A big mesh as a list, not only as a picture
+        ActionChip {
+            visible: bar.scene.listWanted
+            icon: "view_list"
+            checked: bar.scene.listOpen
+            ink: bar.scene.ink
+            tip: "All peers as a list"
+            onClicked: bar.listClicked()
         }
         ActionChip {
             icon: bar.scene.prefs.showOffline ? "visibility" : "visibility_off"

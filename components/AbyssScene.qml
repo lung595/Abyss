@@ -1088,6 +1088,9 @@ Item {
         }
     }
     property bool netsOpen: false
+    // The compact list of every peer (PeerList), for a big mesh
+    property bool listOpen: false
+    readonly property bool listWanted: view.peers.length >= 12
     property string dropName: ""
     // The carried light is over the middle of the open group: dropping it
     // there gives Internet to the whole group (GroupPeek shows what it will do)
@@ -2304,8 +2307,29 @@ Item {
             compact: root.compact
             onNetworksClicked: {
                 root.netsOpen = !root.netsOpen;
+                root.listOpen = false;
                 root.cardId = "";
             }
+            onListClicked: {
+                root.listOpen = !root.listOpen;
+                root.netsOpen = false;
+                root.cardId = "";
+            }
+        }
+
+        // Every peer, compactly (a big mesh): under the bar, over the deep
+        PeerList {
+            visible: root.listOpen && root.listWanted && root.cardId === ""
+            anchors.top: bar.bottom
+            anchors.topMargin: 6
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            anchors.margins: 8
+            anchors.leftMargin: 8 + root.insetTop
+            anchors.rightMargin: 8 + root.insetTop
+            scene: root
+            z: 28
         }
 
         // Networks and the Internet exit, from the bar
@@ -2672,9 +2696,10 @@ Item {
                 closeMenu();
             else if (query !== "")
                 query = "";
-            else if (cardId !== "" || netsOpen) {
+            else if (cardId !== "" || netsOpen || listOpen) {
                 cardId = "";
                 netsOpen = false;
+                listOpen = false;
             } else if (peekId !== "")
                 closePeek();
             else

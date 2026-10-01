@@ -267,7 +267,8 @@ QtObject {
     }
     Component.onCompleted: {
         Demo.setLab(labPeers);
-        if (labMesh !== profile && profiles.indexOf(labMesh) >= 0) {
+        // (only while nothing chose another mesh before this ran)
+        if (profile === "home" && labMesh !== profile && profiles.indexOf(labMesh) >= 0) {
             profile = labMesh;
             networks = Demo.networks(labMesh);
         }
