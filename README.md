@@ -140,7 +140,8 @@ dms ipc call abyss demo <state>    # demo only: connected, disconnected, connect
 
 ## Lightweight
 
-- Nothing runs while no view is open: no timer, no reads.
+- Nothing runs while no view is open: no timer, no reads (one read of NetBird when the shell starts, so the bar shows the real state).
+- While a view is open, NetBird is read every 2 s, one command at a time, never piled up.
 - While a view is open, one 30 Hz timer moves the pulses and the marine snow; only this window redraws, never the whole shell. Backgrounds are painted once.
 - *Reduce motion* turns every movement off.
 
