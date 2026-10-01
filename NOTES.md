@@ -181,3 +181,12 @@ integration tests (`tests/qml/`, need PySide6) against a fake `netbird`
   every read (every 2 s) ask `netbird networks list` again: one process
   too many each time.
 - **Fix**: asked once, then every 10th read and after each change.
+
+## Documentation layout
+
+The docs follow the structure of PR #1 (merged into this branch):
+`README.md` (getting started, settings, troubleshooting), `docs/GUIDE.md`
+(every feature), `CHANGELOG.md` (Keep a Changelog, the work above under
+"Unreleased"), `ROADMAP.md` (next, later, known limits) and
+`CONTRIBUTING.md` (architecture, tests, rules). This file stays the review
+log; CONTRIBUTING points to it.
