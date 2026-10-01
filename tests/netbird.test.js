@@ -118,4 +118,14 @@ eq("a shared word fitting one peer", one("Atlas Exit"), "c");
 eq("generic words never match", one("exit-node"), undefined);
 eq("names shorter than 3 letters never match inside", one("spirit"), undefined);
 
+// Exit routes named after no peer
+const R = [{ id: "exit-atlas", range: "0.0.0.0/0", domains: [], selected: false },
+    { id: "office-gw", range: "0.0.0.0/0", domains: [], selected: true },
+    { id: "lan", range: "10.0.0.0/8", domains: [], selected: true }];
+eq("loose: the exit routes no peer is known for", N.looseRoutes(R, { "exit-atlas": "c" }), [{ "id": "office-gw", "selected": true }]);
+eq("loose: none once each is known", N.looseRoutes(R, { "exit-atlas": "c", "office-gw": "a" }), []);
+eq("a loose route is chosen by its id", N.routeCommands(R, "exit-atlas").cmds, [["netbird", "networks", "deselect", "--", "office-gw"], ["netbird", "networks", "select", "-a", "--", "exit-atlas"]]);
+eq("choosing the selected one only selects it again", N.routeCommands(R, "office-gw").cmds, [["netbird", "networks", "select", "-a", "--", "office-gw"]]);
+ok("an unknown route is refused", N.routeCommands(R, "nope").error !== "" && N.routeCommands(R, "lan").error !== "");
+
 done("netbird");

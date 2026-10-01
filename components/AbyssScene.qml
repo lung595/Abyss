@@ -1223,6 +1223,13 @@ Item {
     function explain(title, hint, anchor, px, py) {
         note = { "title": title, "hint": hint, "anchor": anchor, "x": px, "y": py };
     }
+    // Internet through an exit route no peer is known for yet (by its id)
+    function setExitRoute(id) {
+        if (actions && actions.setExitRoute)
+            actions.setExitRoute(id);
+        else if (source)
+            source.setExitRoute(id);
+    }
     function setExit(peerName, groupId) {
         if (actions && actions.setExit) {
             actions.setExit(peerName, groupId);

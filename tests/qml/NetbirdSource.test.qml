@@ -12,9 +12,11 @@ Item {
     property var notices: []
     property int step: 0
 
+    property var ties: null
     NetbirdSource {
         id: src
         onNotice: text => test.notices = test.notices.concat([text])
+        onTiesLearned: t => test.ties = t
     }
 
     CliRunner {
@@ -80,6 +82,20 @@ Item {
         () => {
             check("stopping drops the route", called("networks deselect -- exit-harbor"), calls());
             check("Internet goes out directly", src.exitNode === "" && !src.view.peers.some(p => p.lending));
+            check("a route named after no peer is listed by name", JSON.stringify(src.looseExits) === '[{"id":"office-gw","selected":false}]', src.looseExits);
+            check("...and lends nothing yet", !peer("nook-nas").exit);
+            src.setExitRoute("office-gw");
+            check("choosing it switches", src.switching);
+        },
+        () => {
+            check("the route is selected by its id", called("networks select -a -- office-gw"), calls());
+            check("the peer carrying it is learned", peer("nook-nas").exit && src.exitNode === "nook-nas" && src.looseExits.length === 0, [src.exitNode, src.looseExits]);
+            check("...and handed over to be kept", !!test.ties && test.ties["office-gw"] === "key-nook-nas", test.ties);
+            check("switching is over", !src.switching);
+            src.setExitNode("");
+        },
+        () => {
+            check("stopping drops that route too", called("networks deselect -- office-gw"), calls());
             src.toggleNetwork("home-lan");
         },
         () => {
