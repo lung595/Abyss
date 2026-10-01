@@ -42,6 +42,20 @@ function validHost(host) {
     return /^[A-Za-z0-9_.:%\[\]][A-Za-z0-9_.:%\[\]-]*$/.test(String(host || ""));
 }
 
+// argv that prints the first of these terminals installed here and exits 0,
+// or exits 1 when there is none: the chosen one, or every supported one in
+// order for "auto". Run before opening SSH, so a missing terminal is said
+// rather than nothing happening. Names go in as arguments, never as code.
+function lookupCommand(terminal) {
+    const names = RUN[terminal] ? [terminal] : TERMINALS;
+    return ["sh", "-c", "for t in \"$@\"; do command -v \"$t\" >/dev/null 2>&1 && { echo \"$t\"; exit 0; }; done; exit 1", "sh"].concat(names);
+}
+
+// What to say when lookupCommand found nothing
+function missingText(terminal) {
+    return RUN[terminal] ? "Not opening SSH: " + terminal + " is not installed. Pick another in Settings > Terminal for SSH" : "Not opening SSH: no terminal found. Install one, or pick yours in Settings > Terminal for SSH";
+}
+
 // argv for Quickshell.execDetached, or null for a host validHost refuses.
 // A known terminal runs directly; "auto" (or anything unknown) asks sh to
 // try each installed one in turn, with the host handed over as $1. "--"
