@@ -20,8 +20,8 @@ Item {
     // The orange of the picture, for the lids drawn over it
     readonly property color orange: "#ff7a12"
     readonly property color ink: "#1c1a24"
-    // The picture is 729 px wide; he is about 50 px on screen
-    readonly property real unit: 0.068
+    // The picture is 729 px wide; he is about 25 px on screen
+    readonly property real unit: 0.034
 
     // The glass clouding over where he has not scrubbed yet
     Repeater {
