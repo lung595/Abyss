@@ -17,7 +17,9 @@ Canvas {
     property var b
     property var scene
     readonly property var v: scene.view
-    readonly property string label: v.state === "connected" ? v.online + "/" + v.total + " online  ·  ↓ " + Mesh.fmtRate(v.down) + "  ↑ " + Mesh.fmtRate(v.up) : ({
+    // "test lab" first while the mesh is made up, so it is never taken for yours
+    readonly property string label: (scene.lab ? "test lab  ·  " : "") + _status
+    readonly property string _status: v.state === "connected" ? v.online + "/" + v.total + " online  ·  ↓ " + Mesh.fmtRate(v.down) + "  ↑ " + Mesh.fmtRate(v.up) : ({
             "connecting": "connecting…",
             "needsLogin": "sign-in needed",
             "stopped": "NetBird is off"
