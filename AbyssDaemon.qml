@@ -6,6 +6,7 @@ import "components"
 import "components/Terminal.js" as Terminal
 import "components/MyGroups.js" as MyGroups
 import "components/Query.js" as Query
+import "components/Ping.js" as Ping
 
 // The one engine every surface shares: the mesh source, the actions that
 // leave the shell (copy, SSH, browser), notifications and the IPC.
@@ -43,11 +44,15 @@ Item {
             labLatency: prefs.labLatency
             labTrouble: prefs.labTrouble
             labTraffic: prefs.labTraffic
+            labLazy: prefs.labLazy
         }
     }
     Component {
         id: netbirdSource
-        NetbirdSource {}
+        NetbirdSource {
+            savedTies: prefs.exitTies
+            onTiesLearned: ties => prefs.set("exitTies", ties)
+        }
     }
 
     CliRunner {
@@ -101,6 +106,30 @@ Item {
             else
                 Quickshell.execDetached(Terminal.sshCommand(found, h));
         });
+        return true;
+    }
+
+    // Three echoes to a peer, when asked (never on its own); the answer
+    // comes as a toast. The demo mesh has nobody to answer: it says what it
+    // made up
+    CliRunner {
+        id: pinger
+        timeout: 12000
+    }
+    function ping(peer) {
+        if (!peer || !root.source)
+            return false;
+        if (root.source.demo) {
+            ToastService.showInfo("Abyss", peer.name + ": " + Math.round(peer.latencyMs * 10) / 10 + " ms (made-up mesh)");
+            return true;
+        }
+        const cmd = Ping.command(peer.ip);
+        if (!cmd) {
+            ToastService.showInfo("Abyss", "Not pinging: \"" + peer.ip + "\" is not an address");
+            return false;
+        }
+        ToastService.showInfo("Abyss", "Pinging " + peer.name + "…");
+        pinger.run(cmd, (out, err, code) => ToastService.showInfo("Abyss", Ping.summary(peer.name, out, code)));
         return true;
     }
 
@@ -164,6 +193,14 @@ Item {
         _choosing = false;
     }
     property bool _choosing: false
+    // Through an exit route no peer is known for yet: the next read shows
+    // who carries it, and the source learns it (saved as exitTies)
+    function setExitRoute(id) {
+        if (!root.source)
+            return;
+        prefs.set("exitGroup", "");
+        root.source.setExitRoute(id);
+    }
     // A group of mine carries the exit: when its member goes offline, the
     // next best takes over. Runs on each read, never on its own.
     function _followExitGroup(id) {
@@ -258,6 +295,18 @@ Item {
             return p.ip;
         }
 
+        // Three echoes to a peer: "Pinging…", then the answer as a toast
+        function ping(peer: string): string {
+            if (!root.source)
+                return "Abyss is starting";
+            const found = Query.lookup(root.source.view.peers, peer), p = found.peer;
+            if (!p)
+                return Query.lookupError(peer, found);
+            if (!p.online)
+                return p.name + " is offline";
+            return root.ping(p) ? "Pinging " + p.name : "Refused";
+        }
+
         // Opens `ssh <peer>` in the terminal chosen in the settings
         function ssh(peer: string): string {
             if (!root.source)
@@ -286,8 +335,13 @@ Item {
                 return "Internet " + root.exitText();
             }
             const found = Query.lookup(root.source.view.peers, k), p = found.peer;
+            const route = root.source.looseExits.find(r => r.id.toLowerCase() === k);
+            if (!p && route) {
+                root.setExitRoute(route.id);
+                return "Internet through the route " + route.id;
+            }
             if (!p)
-                return found.many.length ? Query.lookupError(target, found) : "No peer or group named " + target;
+                return found.many.length ? Query.lookupError(target, found) : "No peer, group or exit route named " + target;
             root.setExit(p.name, "");
             return "Internet through " + p.name;
         }

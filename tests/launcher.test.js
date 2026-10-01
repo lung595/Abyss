@@ -40,4 +40,15 @@ eq("offline peers are not offered", L.items(base, "ssh orion").length, 0);
 const off = Object.assign({}, base, { status: "needsLogin" });
 eq("signed out: open and sign in only", names(L.items(off, "")).join(), "Open Abyss,Sign in to NetBird");
 
+// Smart search from the launcher: speeds, states and kinds pick the peers
+const P2 = peers.map(p => Object.assign({ kind: p.name === "vega" ? "phone" : "server", relayed: p.name === "pike", relay: p.name === "pike" ? "relay-eu" : "", down: 0, up: 0 }, p));
+const smart = Object.assign({}, base, { peers: P2, relays: ["relay-eu"] });
+eq(">50ms lists the slow peers", names(L.items(smart, ">50ms")).filter(n => /^(Copy|SSH)/.test(n)).join("|"), "Copy tern's address|SSH to tern|Copy pike's address|SSH to pike");
+eq("a verb keeps one row per peer", names(L.items(smart, "ssh >50ms")).join("|"), "SSH to tern|SSH to pike");
+eq("a kind: copy phones", names(L.items(smart, "copy phones")).join("|"), "Copy vega's address");
+eq("a state: direct and fast", names(L.items(smart, "ssh direct <5ms")).join("|"), "SSH to atlas|SSH to laptop");
+eq("a relay by its tail", names(L.items(smart, "ssh eu")).join("|"), "SSH to pike");
+eq("plain words still narrow by name", names(L.items(smart, "ssh vega")).join(), "SSH to vega");
+eq("offline peers are never offered", names(L.items(smart, "ssh offline")).join("|"), "");
+
 done("launcher");

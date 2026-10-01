@@ -41,6 +41,8 @@ Item {
             check("ipc copy", test.ipc.copy("nook") === "100.90.0.3" && JSON.stringify(Quickshell.launched[0]) === '["dms","cl","copy","100.90.0.3"]', Quickshell.launched);
             check("ipc copy, unknown peer", test.ipc.copy("zz") === "No peer named zz");
             check("ipc ssh answers at once", test.ipc.ssh("atlas") === "OK");
+            check("ipc ping answers at once", test.ipc.ping("atlas") === "Pinging atlas", test.ipc.ping("atlas"));
+            check("ipc ping, offline peer", test.ipc.ping("lark") === "lark-phone is offline", test.ipc.ping("lark"));
             check("ipc exit through a peer", test.ipc.exit("harbor-vps") === "Internet through harbor-vps");
         },
         () => {
@@ -54,7 +56,8 @@ Item {
         () => {
             check("the demo setting swaps the source", daemon.source && daemon.source.demo);
             check("ipc demo works there", test.ipc.demo("needsLogin") === "needsLogin");
-            check("nothing went wrong in silence", ToastService.shown.length === 1 && ToastService.shown[0].indexOf("Copied") === 0, ToastService.shown);
+            check("the ping was announced, then answered", ToastService.shown.some(t => t === "Abyss: Pinging atlas…") && ToastService.shown.some(t => t === "Abyss: atlas: no answer"), ToastService.shown);
+            check("nothing went wrong in silence", ToastService.shown.filter(t => t.indexOf("Copied") === 0).length === 1 && !ToastService.shown.some(t => /Could not|Refused|Not /.test(t)), ToastService.shown);
         }
     ]
 

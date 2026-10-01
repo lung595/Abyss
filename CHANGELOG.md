@@ -3,7 +3,7 @@
 All notable changes to Abyss are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow [Semantic Versioning](https://semver.org/).
 
-## Unreleased
+## 0.4.0 - 2026-10-01
 
 ### Added
 
@@ -13,10 +13,24 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - **Tests**: QML integration tests through real processes against a fake `netbird`, `tests/run.sh` to run every test, and CI on every push. The tentacle layout check (P60) also runs on the test lab's meshes, from 1 to 120 peers.
 
 - **Where Internet goes out, everywhere**: a small still sun in the bar pill while it goes out through a peer; the beam's traffic (↓ ↑) under the light's name; `dms ipc call abyss exit ""` says where it goes out, and `status` ends with it ("· Internet through studio"). After each change a short word under the light confirms it for two seconds ("Direct", "Through studio").
+- **Rename a group from its title**: with a group of yours open, click its name at the top; a small ⚙ beside it opens the group's menu (Internet through it, rename, ungroup, or keep an automatic group).
+- **Shoals**: in an open group, the awake members drift together around their places, one slow loop shared by the whole school, each a little behind the next (a few pixels, only while you watch; still with *Reduce motion*).
+- **More search words**: the usual names of a kind find it (`iphone`, `proxmox`, `synology`, `hetzner`, `macbook`…), plus `exit` (can lend Internet) and `new` (online for under an hour), in English and French.
+- **A compact list for big meshes**: from 12 peers on, a list icon in the top bar shows every peer as one line (name, kind, relay, traffic, latency), sorted like the deep, following the search and "Show offline peers"; a click opens the peer's card, Esc closes it.
+- **Admin console and version**: right-click the jellyfish for "Open the admin console" (NetBird Cloud's dashboard, or your management server's host when self-hosted; opened on click only); pointing at it also says which NetBird version runs.
+- **Ping a peer on demand**: a Ping button in the peer's card and `dms ipc call abyss ping <peer>` send three echoes and say the average (and how many came back) in a toast. Never on its own.
+- **Setting "Bar pill"**: peers online (default), total traffic, or icon only.
+- **Smart search from the launcher**: `abyss >100ms`, `abyss ssh nas`, `abyss copy phones`, `abyss ssh direct <5ms`: the deep's search words (speed, state, kind, relay) pick peers there too.
+- **Darwin, the goldfish companion** (setting "Companion", on by default): the goldfish of the cartoon, drawn from pictures (cut out of reference images, in `components/assets/darwin/`) instead of shapes: his whole-body head with the face, and his two hands that move on their own, no legs. He eats the crumbs the traffic drops, scrubs the glass as it clouds over, sleeps on the bottom (lids drawn over his eyes) while the mesh is down, explores, and waves when clicked. Drawn behind every creature; he moves only while a view is open, on the clock the deep already runs.
+- **Lazy connections**: when NetBird's lazy connections are on, idle peers doze in the water a little above the floor ("3 idle · wake on use"; the card says "Idle · lazy connection, wakes on first use") instead of lying asleep. NetBird does not say which idle peers are really off, so none is drawn as asleep then. The test lab can turn it on.
+- **Exit routes named after no peer**: listed by their own name at the bottom of the light's menu (and `dms ipc call abyss exit <route>`). Once one is used, the peer carrying it is learned and kept in the settings, so it lends from then on.
+- **Choosing and groups**: pointed at, the light says how it is used ("Drag onto a device · click for the list"); a closed group lending Internet wears a small sun beside its name; when a group of yours hands the Internet to another member, a note says who took over.
 - **When Internet goes wrong**: "Switching…" under the light until NetBird confirms the new exit; disconnected, the light stays, dim, and a click says "Connect first"; when the peer lending Internet goes offline, a note says so and names the next best peer.
 
 ### Changed
 
+- **The card first, then the creature**: opening a peer, the card leads and the creature flies into its medallion a beat later; both land together (480 ms), with a softer overshoot.
+- **The jellyfish is the only on/off switch**: the switch at the top left is gone; a small ON / OFF under "you" says the state, and a click on the jellyfish connects or disconnects.
 - Documentation split into `README.md`, `docs/GUIDE.md`, `CHANGELOG.md`, `ROADMAP.md` and `CONTRIBUTING.md`.
 - **Internet through a peer, the NetBird way**: a peer can lend Internet when one of NetBird's exit routes (`0.0.0.0/0`) goes through it. A route is matched to the peer seen carrying it, or the peer it is named after (`exit-atlas`); otherwise dropping the light there says to name the route after the peer.
 - **Commands pick the right peer**: `dms ipc call abyss ssh a` no longer picks whoever comes first when several peers start with "a"; it names them.

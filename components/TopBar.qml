@@ -3,8 +3,9 @@ import qs.Common
 import qs.Widgets
 import "Mesh.js" as Mesh
 
-// The strip above the surface: connection switch, who is online and the
-// live totals; on the right, profile, networks and the offline filter.
+// The strip above the surface: who is online and the live totals; on the
+// right, profile, networks and the offline filter. Connecting is the
+// jellyfish's job alone (a click on it; ON/OFF written beside it).
 Rectangle {
     id: bar
 
@@ -14,6 +15,7 @@ Rectangle {
     property bool compact: false
 
     signal networksClicked
+    signal listClicked
 
     height: 38
     radius: 12
@@ -21,43 +23,13 @@ Rectangle {
     border.width: 1
     border.color: Qt.rgba(scene.ink.r, scene.ink.g, scene.ink.b, 0.12)
 
-    readonly property bool on: view.state === "connected" || view.state === "connecting"
 
     Row {
         anchors.left: parent.left
-        anchors.leftMargin: 6
+        anchors.leftMargin: 12
         anchors.verticalCenter: parent.verticalCenter
         spacing: 10
 
-        // The connection switch
-        Rectangle {
-            width: 36
-            height: 22
-            radius: 11
-            anchors.verticalCenter: parent.verticalCenter
-            color: bar.on ? Theme.primary : Qt.rgba(bar.scene.ink.r, bar.scene.ink.g, bar.scene.ink.b, 0.2)
-            Rectangle {
-                width: 16
-                height: 16
-                radius: 8
-                y: 3
-                x: bar.on ? 17 : 3
-                color: bar.on ? Theme.primaryText : bar.scene.ink
-                Behavior on x {
-                    NumberAnimation {
-                        duration: 160
-                    }
-                }
-            }
-            MouseArea {
-                anchors.fill: parent
-                cursorShape: Qt.PointingHandCursor
-                onClicked: {
-                    if (bar.source)
-                        bar.source.toggle();
-                }
-            }
-        }
         Column {
             anchors.verticalCenter: parent.verticalCenter
             StyledText {
@@ -108,6 +80,15 @@ Rectangle {
             text: bar.source ? bar.source.networks.filter(n => n.on).length + "/" + bar.source.networks.length : ""
             ink: bar.scene.ink
             onClicked: bar.networksClicked()
+        }
+        // A big mesh as a list, not only as a picture
+        ActionChip {
+            visible: bar.scene.listWanted
+            icon: "view_list"
+            checked: bar.scene.listOpen
+            ink: bar.scene.ink
+            tip: "All peers as a list"
+            onClicked: bar.listClicked()
         }
         ActionChip {
             icon: bar.scene.prefs.showOffline ? "visibility" : "visibility_off"

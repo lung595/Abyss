@@ -143,7 +143,8 @@ function relayOf(uri) {
 // counters: {name: {rx, tx}} bytes so far; offline: {name: true} peers the
 // demo took offline; relayDown: a relay that stopped answering.
 // lab (optional): { addMs: latency added to every peer, silent: a peer that
-// stopped answering, managementDown: the management server is unreachable }
+// stopped answering, managementDown: the management server is unreachable,
+// lazy: NetBird's lazy connections are on }
 function status(profile, now, up, counters, offline, relayDown, lab) {
     const pr = PROFILES[profile];
     lab = lab || {};
@@ -177,6 +178,7 @@ function status(profile, now, up, counters, offline, relayDown, lab) {
         "netbirdIp": pr.ip,
         "management": { "url": "https://api.mesh.example:443", "connected": !lab.managementDown },
         "signal": { "url": "https://signal.mesh.example:443", "connected": true },
+        "lazyConnectionEnabled": !!lab.lazy,
         "relays": { "details": [{ "uri": EU, "available": relayOk(EU) }, { "uri": US, "available": relayOk(US) }].filter(r => pr.peers.some(q => q[3] === r.uri)) },
         "peers": { "details": details }
     };

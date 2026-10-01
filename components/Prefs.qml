@@ -30,6 +30,11 @@ QtObject {
     readonly property bool desktopLive: _get("desktopLive", false)
     // How many things the deep shows at once; more peers gather in groups
     readonly property int maxItems: _get("maxItems", 5)
+    // What the bar pill shows beside the jellyfish: "peers" (how many are
+    // online), "rate" (the total traffic) or "icon" (nothing)
+    readonly property string pill: _get("pill", "peers")
+    // Darwin, the goldfish companion (only moves while a view is open)
+    readonly property bool companion: _get("companion", true)
     // How a group opens: "both" (resting the pointer on it, or a click),
     // "hover" or "click"
     readonly property string groupOpen: _get("groupOpen", "both")
@@ -39,6 +44,9 @@ QtObject {
     readonly property var favorites: _get("favorites", ({}))
     // The user's own groups (right-click a creature): [{ id, name, members }]
     readonly property var groups: _get("groups", [])
+    // Which peer each exit route goes through, once seen (route id -> peer
+    // id): exit routes named after no peer are then lent by the right one
+    readonly property var exitTies: _get("exitTies", ({}))
     // Internet through a whole group of mine (its id), "" otherwise
     readonly property string exitGroup: _get("exitGroup", "")
 
@@ -51,6 +59,7 @@ QtObject {
     readonly property int labLatency: _get("labLatency", 0)
     readonly property string labTrouble: _get("labTrouble", "none")
     readonly property string labTraffic: _get("labTraffic", "normal")
+    readonly property bool labLazy: _get("labLazy", false)
 
     readonly property bool reduceMotion: SettingsData.reduceMotion
 

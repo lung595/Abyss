@@ -12,6 +12,7 @@ import "Query.js" as Query
 import "Spring.js" as Spring
 import "Swim.js" as Swim
 import "Grips.js" as Grips
+import "Goldfish.js" as Fish
 
 // The deep, shared by the popout, the Control Center and the desktop.
 //
@@ -190,6 +191,7 @@ Item {
         return {
             "id": it.id,
             "online": !it.asleep && !it.fog && ms.length > 0,
+            "dozing": !!it.dozing,
             "latencyMs": lat.length ? lat[lat.length >> 1] : 0,
             "relayed": via !== "",
             "relay": via
@@ -879,6 +881,31 @@ Item {
         return Math.max(-k * (size - from), Math.min(k * from, (to - from) * camera));
     }
 
+    // --- Darwin, the goldfish companion (setting "Companion") ---------------
+    // His life is Goldfish.js; the clock below moves him while someone
+    // watches, and nothing at all happens to him otherwise
+    readonly property bool companion: prefs.companion
+    property var fish: null
+    property int fishFrame: 0
+    // The water he may use: below the surface, above the floor, inside the
+    // bowl's narrowing
+    function _fishWater() {
+        const f = frame, side = Math.max(24, f.insetFloor + 24);
+        return { "l": side, "r": width - side, "top": f.surfaceY + 44, "bottom": f.floorY - 22 };
+    }
+    function _fishStep(dt) {
+        if (!companion || width < 200)
+            return;
+        if (!fish)
+            fish = Fish.create(_fishWater(), 7);
+        Fish.step(fish, dt, {
+            "b": _fishWater(),
+            "asleep": !connected,
+            "bits": view.down + view.up
+        });
+        fishFrame++;
+    }
+
     // --- The clock ---------------------------------------------------------
     property real t: 0
     property real ext: connected ? 1 : 0
@@ -926,6 +953,8 @@ Item {
         // Floating: slower asleep, so the deep seems to sleep
         if (floating || peekLive)
             swim += dt * (0.35 + 0.65 * power);
+        if (floating)
+            _fishStep(dt);
         // Grabbed things first, then the lens; tentacles rebuilt once (not
         // while a bubble hides the deep)
         const swam = _tripStep();
@@ -1051,12 +1080,17 @@ Item {
     // 0 -> 1 as the card opens: the desktop bowl darkens its water and
     // fades its glass with it, so the card reads clearly (a short fade only)
     property real cardMix: cardId !== "" ? 1 : 0
+    // How long the card takes to land; its creature lands with it (CardHero)
+    readonly property int cardLandMs: 480
     Behavior on cardMix {
         NumberAnimation {
             duration: root.reduceMotion ? 0 : 400
         }
     }
     property bool netsOpen: false
+    // The compact list of every peer (PeerList), for a big mesh
+    property bool listOpen: false
+    readonly property bool listWanted: view.peers.length >= 12
     property string dropName: ""
     // The carried light is over the middle of the open group: dropping it
     // there gives Internet to the whole group (GroupPeek shows what it will do)
@@ -1133,6 +1167,10 @@ Item {
         if (actions)
             actions.ssh(peer.fqdn || peer.ip, prefs.terminal);
     }
+    function ping(peer) {
+        if (actions)
+            actions.ping(peer);
+    }
     function openWeb(peer) {
         if (actions)
             actions.openUrl("http://" + (peer.fqdn || peer.ip));
@@ -1178,6 +1216,21 @@ Item {
             root._confirmExit();
         }
     }
+    // A group of mine handed the Internet to another member (its lender
+    // went offline): say who took over
+    property string _prevExit: ""
+    Connections {
+        target: root.source
+        ignoreUnknownSignals: true
+        function onExitNodeChanged() {
+            const was = root._prevExit, now = root.source.exitNode;
+            root._prevExit = now;
+            const g = root.exitMine, old = was ? root.view.peers.find(p => p.name === was) : null;
+            if (!root.active || !g || !now || !old || old.online || g.members.indexOf(old.id) < 0)
+                return;
+            root.explain(was + " went offline", g.name + " goes out through " + now + " now", "internet-through-a-peer", surfaceSun.x + surfaceSun.width / 2, surfaceSun.y + surfaceSun.height + 26);
+        }
+    }
     // The peer lending Internet went offline (not one of a group of mine:
     // the group hands over by itself): say so, and name the next best
     property string _lentBy: ""
@@ -1207,6 +1260,13 @@ Item {
     property var note: null
     function explain(title, hint, anchor, px, py) {
         note = { "title": title, "hint": hint, "anchor": anchor, "x": px, "y": py };
+    }
+    // Internet through an exit route no peer is known for yet (by its id)
+    function setExitRoute(id) {
+        if (actions && actions.setExitRoute)
+            actions.setExitRoute(id);
+        else if (source)
+            source.setExitRoute(id);
     }
     function setExit(peerName, groupId) {
         if (actions && actions.setExit) {
@@ -1442,6 +1502,8 @@ Item {
             if (ps.length > 1)
                 out.push({ "text": "Profile: " + ps[(ps.indexOf(source.profile) + 1) % ps.length], "act": "profile" });
             out.push({ "text": prefs.showOffline ? "Hide offline peers" : "Show offline peers", "act": "offline" });
+            if (view.me.console)
+                out.push({ "text": "Open the admin console", "act": "console" });
         } else if (p) {
             const g = MyGroups.groupOf(mine, p.id);
             if (p.exit && p.online) {
@@ -1480,6 +1542,9 @@ Item {
         else if (a.act === "profile") {
             const ps = source.profiles;
             source.setProfile(ps[(ps.indexOf(source.profile) + 1) % ps.length]);
+        } else if (a.act === "console") {
+            if (actions)
+                actions.openUrl(view.me.console);
         } else if (a.act === "offline")
             prefs.set("showOffline", !prefs.showOffline);
         else if (a.act === "join")
@@ -1744,6 +1809,13 @@ Item {
                 }
             }
 
+            // Behind every creature and label: he lives in the background
+            Goldfish {
+                scene: root
+                visible: root.companion && !!root.fish && root.peekId === ""
+                fish: root.fish
+                frame: root.fishFrame
+            }
             Repeater {
                 model: root.relayNames
                 Lantern {
@@ -1833,6 +1905,7 @@ Item {
                 y: root.frame.jelly.y - height / 2
                 title: jellyArea.containsMouse ? root.view.me.name + " · you" : "you"
                 sub: jellyArea.containsMouse ? root.view.me.ip : ""
+                third: jellyArea.containsMouse && root.view.me.version ? "NetBird " + root.view.me.version : ""
                 ink: root.connected ? root.abyss : root.ink
                 subInk: root.connected ? Qt.rgba(root.abyss.r, root.abyss.g, root.abyss.b, 0.7) : root.inkDim
                 color: root.connected ? Theme.tertiary : Qt.rgba(root.abyss.r, root.abyss.g, root.abyss.b, 0.7)
@@ -1853,6 +1926,23 @@ Item {
                     }
                     root.pressJelly();
                 }
+            }
+
+            // The jellyfish is the switch: ON/OFF, small, under "you"
+            StyledText {
+                readonly property string word: ({
+                        "connected": "ON",
+                        "connecting": "…"
+                    })[root.view.state] || "OFF"
+                x: root.frame.jelly.x - root.frame.jelly.r * 1.25 - 14 - implicitWidth / 2
+                y: root.frame.jelly.y + 16
+                visible: !!root.source
+                text: word
+                font.pixelSize: 9
+                font.weight: Font.Bold
+                font.letterSpacing: 1.2
+                color: root.connected ? Theme.tertiary : root.inkDim
+                opacity: jellyArea.containsMouse ? 1 : 0.8
             }
 
             // When not connected: what is going on, and the one action that helps
@@ -2184,6 +2274,7 @@ Item {
         }
         // The open group's name (click to rename) and its settings, at the top
         GroupTitle {
+            objectName: "groupTitle"
             z: 21
             scene: root
             item: groupPeek._shown || null
@@ -2216,8 +2307,29 @@ Item {
             compact: root.compact
             onNetworksClicked: {
                 root.netsOpen = !root.netsOpen;
+                root.listOpen = false;
                 root.cardId = "";
             }
+            onListClicked: {
+                root.listOpen = !root.listOpen;
+                root.netsOpen = false;
+                root.cardId = "";
+            }
+        }
+
+        // Every peer, compactly (a big mesh): under the bar, over the deep
+        PeerList {
+            visible: root.listOpen && root.listWanted && root.cardId === ""
+            anchors.top: bar.bottom
+            anchors.topMargin: 6
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            anchors.margins: 8
+            anchors.leftMargin: 8 + root.insetTop
+            anchors.rightMargin: 8 + root.insetTop
+            scene: root
+            z: 28
         }
 
         // Networks and the Internet exit, from the bar
@@ -2506,7 +2618,7 @@ Item {
             opacity: root.cardId !== "" ? 1 : 0
             Behavior on y {
                 NumberAnimation {
-                    duration: root.reduceMotion ? 0 : 480
+                    duration: root.reduceMotion ? 0 : root.cardLandMs
                     easing.type: Easing.OutCubic
                 }
             }
@@ -2584,9 +2696,10 @@ Item {
                 closeMenu();
             else if (query !== "")
                 query = "";
-            else if (cardId !== "" || netsOpen) {
+            else if (cardId !== "" || netsOpen || listOpen) {
                 cardId = "";
                 netsOpen = false;
+                listOpen = false;
             } else if (peekId !== "")
                 closePeek();
             else

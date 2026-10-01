@@ -4,6 +4,7 @@ import qs.Services
 import qs.Widgets
 import qs.Modules.Plugins
 import "components"
+import "components/Mesh.js" as Mesh
 
 // Bar pill + bar popout + Control Center tile. All three show the same
 // source, owned by the daemon. The popout keeps its content loaded, so its
@@ -11,6 +12,12 @@ import "components"
 // the tile expands and destroyed when it collapses.
 PluginComponent {
     id: root
+
+    // What the bar pill says beside the jellyfish (setting "Bar pill")
+    Prefs {
+        id: prefs
+    }
+    readonly property string pillText: !connected || !view || prefs.pill === "icon" ? "" : prefs.pill === "rate" ? Mesh.fmtRate(view.down + view.up) : String(view.online)
 
     readonly property var daemon: PluginService.pluginDaemonInstances["abyss"] ?? null
     readonly property var source: daemon ? daemon.source : null
@@ -64,8 +71,8 @@ PluginComponent {
                 anchors.verticalCenter: parent.verticalCenter
             }
             StyledText {
-                visible: root.connected
-                text: root.view ? root.view.online : ""
+                visible: root.pillText !== ""
+                text: root.pillText
                 color: Theme.primary
                 font.pixelSize: Theme.fontSizeSmall
                 anchors.verticalCenter: parent.verticalCenter
@@ -92,8 +99,8 @@ PluginComponent {
                 anchors.horizontalCenter: parent.horizontalCenter
             }
             StyledText {
-                visible: root.connected
-                text: root.view ? root.view.online : ""
+                visible: root.pillText !== ""
+                text: root.pillText
                 color: Theme.primary
                 font.pixelSize: Theme.fontSizeSmall
                 anchors.horizontalCenter: parent.horizontalCenter

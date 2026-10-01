@@ -16,6 +16,8 @@ DEFAULT = {
         {"id": "exit-atlas", "range": "0.0.0.0/0", "selected": False, "peer": "atlas"},
         {"id": "exit-harbor", "range": "0.0.0.0/0", "selected": False, "peer": "harbor-vps"},
         {"id": "home-lan", "range": "192.168.1.0/24", "selected": True, "peer": "nook-nas"},
+        # An exit route named after no peer: Abyss learns who carries it
+        {"id": "office-gw", "range": "0.0.0.0/0", "selected": False, "peer": "nook-nas"},
     ],
     "fail": "",                     # a subcommand that fails ("up", "networks"…)
 }

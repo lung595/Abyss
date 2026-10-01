@@ -13,6 +13,9 @@ tied to you by a tentacle lit by its live traffic.
 
 </div>
 
+> [!TIP]
+> **New in 0.4.0**: your real NetBird mesh, a test lab in the settings, the whole Internet journey (where it goes out, what goes wrong, exit routes named after no peer), lazy connections, shoals, and Darwin the goldfish. See the [changelog](CHANGELOG.md).
+
 > [!NOTE]
 > **Abyss reads your real NetBird daemon** through the `netbird` command when it is installed, and opens its test lab, a made-up mesh, otherwise. Choose with the **Mesh source** [setting](#settings).
 
@@ -87,7 +90,7 @@ In **Settings → Plugins**, turn **Abyss** on. The launcher entry works right a
 | The light of the surface | Internet; drag it onto a peer to go out through it |
 | A shoal ("3 busy") | A group; hover or click to open it |
 
-**Find a peer**: just type its name. **Launcher**: Super+Space, `abyss`, then connect, choose where Internet goes out, or `abyss vega` to copy or SSH.
+**Find a peer**: just type its name. **A big mesh** (12 peers or more): the list icon in the top bar shows everyone as one line each. **Launcher**: Super+Space, `abyss`, then connect, choose where Internet goes out, or `abyss vega` to copy or SSH. The launcher understands the deep's search words too: `abyss >100ms`, `abyss ssh nas`, `abyss copy phones`, `abyss ssh direct <5ms`.
 
 ### Internet through a peer
 
@@ -98,7 +101,7 @@ In **Settings → Plugins**, turn **Abyss** on. The launcher entry works right a
 > [!NOTE]
 > **Only a peer that offers an exit node can lend Internet** (NetBird's rule). Elsewhere, the light bounces back with a note. To turn a device into an exit node, in NetBird's dashboard: *Network Routes* › *Add route* › *Exit node*. See [NetBird's guide](https://docs.netbird.io/how-to/configuring-default-routes-for-internet-traffic).
 >
-> **Name the exit route after its peer** (for example `exit-atlas` for *atlas*): NetBird does not tell which peer serves a route until it is in use, so Abyss matches routes to peers by name.
+> **Name the exit route after its peer** (for example `exit-atlas` for *atlas*): NetBird does not tell which peer serves a route until it is in use, so Abyss matches routes to peers by name. A route named after no peer is listed by its own name in the light's menu (click the light): choose it once, and Abyss remembers which peer carries it.
 
 📖 Cards, groups, Internet through a whole group, networks and the desktop fishbowl are explained step by step, with GIFs, in the **[user guide](docs/GUIDE.md)**.
 
@@ -114,13 +117,16 @@ In **Settings → Plugins**, turn **Abyss** on. The launcher entry works right a
 | | Open groups: hover and click, hover only, click only | Hover and click |
 | | Show offline peers | On |
 | | Light pulses | On |
-| Peers | Notifications when a peer comes or goes | Off |
+| | Companion: Darwin the goldfish | On |
+| Peers | Bar pill: peers online, total traffic, icon only | Peers online |
+| | Notifications when a peer comes or goes | Off |
 | | Terminal for SSH | Automatic |
 | Source | Mesh source: automatic, NetBird, test lab | Automatic (NetBird when installed) |
 | Test lab | Mesh: home (10), work (5), crowd (30) or a custom size (1 to 120 peers) | Home |
 | | Added latency (0 to 400 ms) | 0 ms |
 | | Trouble: a peer stops answering, a peer keeps dropping out, a relay or the management server down, signed out, service stopped | None |
 | | Traffic: calm, normal, rush hour | Normal |
+| | Lazy connections | Off |
 
 The **Test lab** section only shows while the test lab is the mesh source. It lives in memory and never touches NetBird; its title sums it up in one line and *Reset* brings back the quiet home mesh.
 
@@ -132,6 +138,7 @@ dms ipc call abyss status          # "connected · 8/10 online · Internet throu
 dms ipc call abyss toggle          # or connect / disconnect
 dms ipc call abyss copy <peer>     # copy the peer's IP
 dms ipc call abyss ssh <peer>      # SSH in your terminal
+dms ipc call abyss ping <peer>     # three echoes to a peer (only when asked), the answer as a toast
 dms ipc call abyss exit <target>   # Internet through a peer or one of your groups; "off" to stop
 dms ipc call abyss exit ""         # where Internet goes out now
 dms ipc call abyss demo <state>    # test lab only: connected, disconnected, connecting,
@@ -147,13 +154,13 @@ Bind them in your compositor, for example in niri: `Mod+A { spawn "dms" "ipc" "c
 | Nothing changed after enabling | Add one of its widgets, see [Add a widget](#3-add-a-widget) |
 | The peers shown are not mine | The test lab is shown: install the NetBird client, or set **Mesh source** to *NetBird* |
 | "Service stopped" while NetBird runs | The `netbird` command cannot reach the daemon: check `netbird status` in a terminal |
-| The light says to name the route after the peer | NetBird does not say which peer serves an unused exit route: name it after the peer in NetBird's dashboard, see [Internet through a peer](#internet-through-a-peer) |
+| The light says to name the route after the peer | NetBird does not say which peer serves an unused exit route: choose the route by its name in the light's menu once (Abyss then remembers it), or name it after the peer in NetBird's dashboard, see [Internet through a peer](#internet-through-a-peer) |
 | The light bounces back from a peer | That peer is not an exit node, see [Internet through a peer](#internet-through-a-peer) |
 | A group stays "Group n" on the desktop | The desktop widget may not get keyboard focus: rename it from the bar popout |
 
 ## Privacy
 
-The plugin never talks to the network and has no telemetry. It reads NetBird through its local `netbird` command, never through a shell. Peers and traffic stay in memory; only your settings (favorites, muted peers, groups) are saved by DMS. Details in the [user guide](docs/GUIDE.md#privacy).
+The plugin never talks to the network and has no telemetry. It reads NetBird through its local `netbird` command, never through a shell. Peers and traffic stay in memory; only your settings (favorites, muted peers, groups, and which peer carries each exit route once seen) are saved by DMS. Details in the [user guide](docs/GUIDE.md#privacy).
 
 ## Documentation
 

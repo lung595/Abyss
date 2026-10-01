@@ -174,6 +174,9 @@ function pack(f, rings, prev) {
     return items;
 }
 
+// How far above the floor a dozing peer floats
+const DOZE_LIFT = 56;
+
 // peers: the things shown (layout order = importance).
 // prev: {id: angle} of the previous layout (its peers' `deg`), or null.
 // Returns { frame, peers: {id: {x, y, floor, ring, deg}}, relays: {name: {x, y}} }
@@ -213,11 +216,13 @@ function layout(peers, w, h, top, inset, prev) {
     const m = rest.length;
     const fx0 = live.length ? w * 0.56 : f.insetFloor + 60, fx1 = w - f.insetFloor - 60;
     const twoRows = m > 1 && (fx1 - fx0) / (m - 1) < 70;
+    // Dozing ones (NetBird's lazy connections: idle, they wake on use)
+    // float a little above the floor instead of resting on it
     rest.forEach((p, i) => {
         out.peers[p.id] = {
             "x": m > 1 ? fx0 + (fx1 - fx0) * i / (m - 1) : (fx0 + fx1) / 2,
-            "y": f.floorY - 30 - (twoRows && i % 2 ? 34 : 0),
-            "floor": true
+            "y": f.floorY - 30 - (twoRows && i % 2 ? 34 : 0) - (p.dozing ? DOZE_LIFT : 0),
+            "floor": !p.dozing
         };
     });
     return out;
