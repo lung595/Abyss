@@ -9,7 +9,8 @@ import "../../components/MyGroups.js" as MyGroups
 
 // Offscreen renders from the demo mesh (fictional names and addresses).
 // Usage: see render.sh. Modes: lab (the test lab), switching, asleep,
-// dropped (Internet when something goes wrong), connected, disconnected, connecting,
+// dropped (Internet when something goes wrong), handover (a group of mine
+// passes the Internet to its next member), connected, disconnected, connecting,
 // needsLogin, stopped, card, relay, find, exit, nets, work, crowd, lens,
 // peek, search (these four on the 30-peer crowd mesh), grab, reef (the lamp on the floor), fly / unfly (the card
 // opening / closing, as frames out-0.png ... out-11.png), step (the open card
@@ -134,7 +135,7 @@ Window {
             cam.start();
             return;
         }
-        if (["mine", "menu", "menu-name", "carry", "carry-crowd", "carry-mid", "carry-aim", "carry-pulse", "carry-fade", "sun-menu", "sun-glide", "carry-reopen", "sun-regive", "refuse"].indexOf(mode) >= 0) {
+        if (["mine", "handover", "menu", "menu-name", "carry", "carry-crowd", "carry-mid", "carry-aim", "carry-pulse", "carry-fade", "sun-menu", "sun-glide", "carry-reopen", "sun-regive", "refuse"].indexOf(mode) >= 0) {
             if (mode === "carry-crowd")
                 demo.setProfile("crowd");
             mine.start();
@@ -380,6 +381,21 @@ Window {
                 SettingsData.pluginSettings = Object.assign({}, SettingsData.pluginSettings, { "groups": [{ "id": "u1", "name": "Homelab", "members": ids }], "exitGroup": "u1" });
                 PluginService.pluginDataChanged("abyss");
                 demo.setExitNode(live[2].name);
+                win.grabLater();
+                stop();
+            } else if (win.mode === "handover") {
+                // A group of mine lends; its member goes offline and the
+                // next one takes over (what the daemon does on each read)
+                if (step++ === 0) {
+                    const ids = live.slice(1, 4).map(p => p.id);
+                    SettingsData.pluginSettings = Object.assign({}, SettingsData.pluginSettings, { "groups": [{ "id": "u1", "name": "Homelab", "members": ids }], "exitGroup": "u1" });
+                    PluginService.pluginDataChanged("abyss");
+                    demo.setExitNode(live[2].name);
+                    return;
+                }
+                const gone = demo.exitNode;
+                demo.flap(gone);
+                demo.setExitNode(live.slice(1, 4).find(p => p.name !== gone).name);
                 win.grabLater();
                 stop();
             } else if (win.mode === "menu" || win.mode === "menu-name") {
