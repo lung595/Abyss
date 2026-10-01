@@ -10,7 +10,8 @@ import "../../components/MyGroups.js" as MyGroups
 // Offscreen renders from the demo mesh (fictional names and addresses).
 // Usage: see render.sh. Modes: lab (the test lab), switching, asleep,
 // dropped (Internet when something goes wrong), handover (a group of mine
-// passes the Internet to its next member), connected, disconnected, connecting,
+// passes the Internet to its next member), rename / gear (an open group
+// of mine, its title clicked or its ⚙), connected, disconnected, connecting,
 // needsLogin, stopped, card, relay, find, exit, nets, work, crowd, lens,
 // peek, search (these four on the 30-peer crowd mesh), grab, reef (the lamp on the floor), fly / unfly (the card
 // opening / closing, as frames out-0.png ... out-11.png), step (the open card
@@ -135,7 +136,7 @@ Window {
             cam.start();
             return;
         }
-        if (["mine", "handover", "menu", "menu-name", "carry", "carry-crowd", "carry-mid", "carry-aim", "carry-pulse", "carry-fade", "sun-menu", "sun-glide", "carry-reopen", "sun-regive", "refuse"].indexOf(mode) >= 0) {
+        if (["mine", "handover", "rename", "gear", "menu", "menu-name", "carry", "carry-crowd", "carry-mid", "carry-aim", "carry-pulse", "carry-fade", "sun-menu", "sun-glide", "carry-reopen", "sun-regive", "refuse"].indexOf(mode) >= 0) {
             if (mode === "carry-crowd")
                 demo.setProfile("crowd");
             mine.start();
@@ -381,6 +382,25 @@ Window {
                 SettingsData.pluginSettings = Object.assign({}, SettingsData.pluginSettings, { "groups": [{ "id": "u1", "name": "Homelab", "members": ids }], "exitGroup": "u1" });
                 PluginService.pluginDataChanged("abyss");
                 demo.setExitNode(live[2].name);
+                win.grabLater();
+                stop();
+            } else if (win.mode === "rename" || win.mode === "gear") {
+                // A group of mine opened; its title clicked (rename) or its ⚙
+                if (step++ === 0) {
+                    const ids = live.slice(1, 4).map(p => p.id);
+                    SettingsData.pluginSettings = Object.assign({}, SettingsData.pluginSettings, { "groups": [{ "id": "u1", "name": "Homelab", "members": ids }] });
+                    PluginService.pluginDataChanged("abyss");
+                    return;
+                }
+                if (step === 2) {
+                    scene.openPeek("g:u:u1");
+                    return;
+                }
+                const t = win.find(scene, "groupTitle");
+                const at = t._below();
+                scene.openMenu(t.item.id, Qt.point(at.x + (t.width - 200) / 2, at.y));
+                if (win.mode === "rename")
+                    scene.naming = t.item.mine;
                 win.grabLater();
                 stop();
             } else if (win.mode === "handover") {

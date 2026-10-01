@@ -6,7 +6,6 @@ No promises, no dates. Everything here was asked for and is not in a release yet
 
 - **Exit routes named after no peer**: listed by name in the light's menu, or tied to a peer once.
 - **Lazy connections**: peers NetBird keeps idle are drawn as reachable, not asleep.
-- **Rename a group**: click its title in the group view; a small ⚙ opens its settings.
 - **Shoals**: the members of a group swim together (only while you watch).
 - **A goldfish companion**: purely decorative, with a life of its own: it sleeps, cleans the bowl, eats, explores, waves when clicked. Still while nobody looks.
 - **The card first, then the creature**: both finish landing together.

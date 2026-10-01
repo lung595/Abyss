@@ -52,7 +52,7 @@ Peers that look alike swim together as a shoal ("3 busy", "2 quiet"). Rest the p
 
 ## Make your own groups
 
-Right-click a creature or a group: add it to one of your groups, start a new one, rename it, ungroup it, or keep an automatic group as yours. Your groups come first and never reshuffle.
+Right-click a creature or a group: add it to one of your groups, start a new one, rename it, ungroup it, or keep an automatic group as yours. Your groups come first and never reshuffle. With a group open, click its name at the top to rename it; the small ⚙ beside the name opens the same menu as a right click.
 
 ![The right-click menu](../screenshots/groups-menu.png)
 
