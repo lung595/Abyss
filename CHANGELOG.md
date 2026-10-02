@@ -5,6 +5,24 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## Unreleased
 
+## 0.5.1 - 2026-10-02
+
+### Security
+
+- **The setup key no longer shows in `ps`**: joining used to run `netbird up --setup-key <key>`, and any program on the computer can read a command line while it runs. The key now goes through `netbird`'s environment (`NB_SETUP_KEY`), which only you can read, and is dropped once the command ends.
+- **No command line in the log**: a failing callback used to write the whole command, a setup key included, to the shell's journal. Only the program name is written now.
+- **`dms ipc call abyss join` takes a key file, not the key**: a key typed in a terminal stays in the shell history. `netbird` reads the file itself (`--setup-key-file`); a key passed directly is refused with a link to the guide.
+- The setup key field of *Add a device* shows dots unless you are typing in it, like the one in the settings.
+
+### Fixed
+
+- **Signing in or joining is no longer cut off after 15 s**: `netbird up` waits for you in the browser, so Abyss now gives it five minutes.
+- **Nothing moves or reads NetBird while the screen is locked or off**: the desktop fishbowl kept reading the mesh every 2 s and animating behind the lock screen.
+
+### Documentation
+
+- The guide now covers the 0.5.0 features: connecting to a peer, search and commands, adding a device, joining a mesh, and letting peers SSH in. *Privacy* now lists exactly what the settings hold (peer names and identifiers, logins).
+
 ## 0.5.0 - 2026-10-02
 
 ### Added

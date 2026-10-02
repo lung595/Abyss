@@ -431,11 +431,15 @@ Item {
         }
 
         // Joins this device to a mesh with a setup key (the dashboard's
-        // Setup Keys); `url` is the management server when self-hosted
-        function join(key: string, url: string): string {
+        // Setup Keys) kept in a file; `url` is the management server when
+        // self-hosted. The key itself is refused: typed here it would stay
+        // in the shell history and on the command line of `dms`
+        function join(keyFile: string, url: string): string {
             if (!root.source)
                 return "Abyss is starting";
-            return root.source.join(key, url === "-" ? "" : url, "") ? "Joining" : "Refused: not a setup key, or its address is not http(s)";
+            if (!keyFile.startsWith("/"))
+                return "Refused: give the full path of a file that holds the setup key, not the key itself (it would stay in your shell history). See https://github.com/lung595/Abyss/blob/main/docs/GUIDE.md#join-a-mesh";
+            return root.source.joinFile(keyFile, url === "-" ? "" : url) ? "Joining" : "Refused: that path or its address is not usable (the address must be http(s))";
         }
         function leave(): string {
             if (!root.source)

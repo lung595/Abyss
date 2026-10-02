@@ -584,6 +584,9 @@ Rectangle {
                                 font.pixelSize: 13
                                 font.family: Theme.monoFontFamily
                                 color: sheet.ink
+                                // A setup key is a secret: dots unless it is being typed,
+                                // like the field in the settings
+                                echoMode: !activeFocus && text !== "" ? TextInput.Password : TextInput.Normal
                                 selectByMouse: true
                                 clip: true
                                 onAccepted: sheet.join()

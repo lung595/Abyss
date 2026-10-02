@@ -141,7 +141,7 @@ dms ipc call abyss copy <peer>     # copy the peer's IP
 dms ipc call abyss ssh <peer>      # SSH in your terminal
 dms ipc call abyss sftp|files|vnc|rdp <peer>   # files in a terminal or the file manager, a remote desktop
 dms ipc call abyss link <peer> <user|-> <port|->  # how to SSH to it (Termux: user u0_a…, port 8022)
-dms ipc call abyss join <setup key> [url|-]    # join a mesh (netbird up --setup-key); leave signs out
+dms ipc call abyss join <key file> [url|-]     # join a mesh (the key in a file, never typed); leave signs out
 dms ipc call abyss share on|off    # let the other peers SSH into this device
 dms ipc call abyss ping <peer>     # three echoes to a peer (only when asked), the answer as a toast
 dms ipc call abyss exit <target>   # Internet through a peer or one of your groups; "off" to stop
@@ -167,7 +167,7 @@ Bind them in your compositor, for example in niri: `Mod+A { spawn "dms" "ipc" "c
 
 ## Privacy
 
-The plugin never talks to the network and has no telemetry. It reads NetBird through its local `netbird` command, never through a shell. Peers and traffic stay in memory; only your settings (favorites, muted peers, groups, and which peer carries each exit route once seen) are saved by DMS. Details in the [user guide](docs/GUIDE.md#privacy).
+The plugin never talks to the network and has no telemetry. It reads NetBird through its local `netbird` command, never through a shell. A setup key goes to `netbird` through its environment, never on a command line, and is never saved or logged. Peers and traffic stay in memory; only your settings (favorites, muted peers, your groups, exit routes once seen, and the login you set per peer, with peer names and identifiers) are saved by DMS. Details in the [user guide](docs/GUIDE.md#privacy).
 
 ## Documentation
 

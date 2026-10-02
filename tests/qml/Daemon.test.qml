@@ -55,8 +55,10 @@ Item {
             check("ipc ssh refuses a user that is an option", test.ipc.ssh("-oProxyCommand=x@atlas").indexOf("Refused") === 0, test.ipc.ssh("-oProxyCommand=x@atlas"));
             check("ipc link saves user and port", test.ipc.link("atlas", "tom", "8022").indexOf("atlas") === 0 && daemon.prefs.linkOf(daemon.source.view.peers.find(p => p.name === "atlas").id).port === "8022", daemon.prefs.links);
             check("ipc link refuses a bad port", test.ipc.link("atlas", "-", "99999").indexOf("Refused") === 0);
-            check("ipc join refuses a short key", test.ipc.join("abc", "-").indexOf("Refused") === 0);
-            check("ipc join takes a setup key", test.ipc.join("A1B2C3D4-E5F6-47A8", "-") === "Joining");
+            // The key itself would stay in the shell history: only a key file
+            check("ipc join refuses the key itself", test.ipc.join("A1B2C3D4-E5F6-47A8", "-").indexOf("Refused") === 0);
+            check("ipc join points to the guide", test.ipc.join("A1B2C3D4-E5F6-47A8", "-").indexOf("GUIDE.md#join-a-mesh") > 0);
+            check("ipc join takes a key file", test.ipc.join("/run/user/1000/nb.key", "-") === "Joining");
             check("ipc share on", test.ipc.share("on") === "SSH in this device: on" && daemon.prefs.shareSsh === true);
             check("ipc share says where it stands", test.ipc.share("") === "Shared with SSH: on");
             check("ipc demo refuses on the real mesh", test.ipc.demo("needsLogin") === "Not in demo mode");

@@ -59,7 +59,11 @@ Item {
     readonly property var view: source ? source.view : Mesh.parse("", null, null, 0)
     readonly property bool connected: view.state === "connected"
     readonly property bool reduceMotion: prefs.reduceMotion
-    readonly property bool awake: active && (!freezeWhenIdle || interacting || prefs.desktopLive)
+    // Locked or screens off: nobody sees the deep, so it neither moves nor
+    // reads NetBird (the desktop widget is otherwise active all the time)
+    readonly property bool screenAsleep: SessionService.locked || IdleService.isShellLocked || IdleService.monitorsOff
+    readonly property bool looking: active && !screenAsleep
+    readonly property bool awake: looking && (!freezeWhenIdle || interacting || prefs.desktopLive)
     // The flow pauses while a bubble is open: the deep behind it is a still,
     // blurred picture
     readonly property bool flowing: awake && connected && !reduceMotion && prefs.pulses && peekId === ""
@@ -1069,7 +1073,7 @@ Item {
     // changes (Mesh source setting) is released and the new one watched
     property var _watched: null
     function _watch() {
-        const want = active && source ? source : null;
+        const want = looking && source ? source : null;
         if (want === _watched)
             return;
         if (_watched)
@@ -1078,7 +1082,7 @@ Item {
         if (want)
             want.watch(true);
     }
-    onActiveChanged: _watch()
+    onLookingChanged: _watch()
     onSourceChanged: _watch()
     Component.onCompleted: _watch()
     Component.onDestruction: {

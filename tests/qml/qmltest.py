@@ -5,14 +5,15 @@
 #   tests/qml/qmltest.py tests/qml/NetbirdSource.test.qml
 #
 # DMS and Quickshell singletons are small recording stand-ins (imports/).
-# Quickshell.Io's Process and StdioCollector are played by QProcess, with
+# Quickshell.Io's Process, StdioCollector and SplitParser are played by
+# QProcess, with
 # the same properties and signals Abyss uses; `exited` comes before the
 # streams end (the order CliRunner must cope with). The PATH starts with
 # a temporary directory where `netbird` is tests/qml/fake-netbird. The test is the
 # root object: it calls Qt.exit(failures) when done.
 import os, shutil, sys, tempfile
 
-from PySide6.QtCore import QObject, QProcess, Property, Signal, QTimer, QUrl
+from PySide6.QtCore import QObject, QProcess, QProcessEnvironment, Property, Signal, QTimer, QUrl
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine, qmlRegisterType
 
@@ -31,6 +32,12 @@ class StdioCollector(QObject):
         return self._text
 
     text = Property(str, _get, notify=textChanged)
+
+
+class SplitParser(QObject):
+    # Lines are handed over once the process ends (enough for the tests:
+    # a long-running reader such as `ip monitor` just never reads)
+    read = Signal(str)
 
 
 class IpcHandler(QObject):
@@ -59,6 +66,7 @@ class Process(QObject):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._command = []
+        self._env = {}
         self._out = None
         self._err = None
         self._p = None
@@ -71,6 +79,15 @@ class Process(QObject):
         self.commandChanged.emit()
 
     command = Property("QVariantList", _getCommand, _setCommand, notify=commandChanged)
+
+    # Variables added for this process only, over the inherited ones
+    def _getEnv(self):
+        return self._env
+
+    def _setEnv(self, v):
+        self._env = dict(v or {})
+
+    environment = Property("QVariantMap", _getEnv, _setEnv)
 
     def _getOut(self):
         return self._out
@@ -97,6 +114,10 @@ class Process(QObject):
             self._p = p
             p.finished.connect(self._done)
             p.errorOccurred.connect(self._error)
+            env = QProcessEnvironment.systemEnvironment()
+            for k, v in self._env.items():
+                env.insert(k, str(v))
+            p.setProcessEnvironment(env)
             prog = shutil.which(self._command[0])
             if not prog:
                 # Like a missing program: no exit, nothing on the streams
@@ -122,7 +143,10 @@ class Process(QObject):
         self.runningChanged.emit()
         self.exited.emit(code, 0)
         for c, t in ((self._out, out), (self._err, err)):
-            if c is not None:
+            if isinstance(c, SplitParser):
+                for line in t.splitlines():
+                    c.read.emit(line)
+            elif c is not None:
                 c._text = t
                 c.textChanged.emit()
                 c.streamFinished.emit()
@@ -143,6 +167,7 @@ def main():
     qmlRegisterType(Process, "Quickshell.Io", 1, 0, "Process")
     qmlRegisterType(StdioCollector, "Quickshell.Io", 1, 0, "StdioCollector")
     qmlRegisterType(IpcHandler, "Quickshell.Io", 1, 0, "IpcHandler")
+    qmlRegisterType(SplitParser, "Quickshell.Io", 1, 0, "SplitParser")
     app = QGuiApplication([sys.argv[0]])
     eng = QQmlApplicationEngine()
     eng.addImportPath(os.path.join(HERE, "imports"))

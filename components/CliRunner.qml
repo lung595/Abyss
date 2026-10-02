@@ -1,12 +1,16 @@
 import QtQuick
 import Quickshell.Io
 
-// Runs commands one after the other. run(argv, done[, skip]) queues argv
+// Runs commands one after the other. run(cmd, done[, skip]) queues cmd
 // and calls done(stdout, stderr, exitCode) once the process has ended and
 // both streams are read, whichever comes last. When skip() is true at its
 // turn, the command does not run and done gets ("", "", 0).
-// argv is a list, never a shell line. A command still running after
-// `timeout` ms is stopped and ends with exit code -1 (so does a program
+// cmd is an argv list, never a shell line, or {argv, env, timeout}: env
+// adds variables for that process only, which is how a secret is handed
+// over (the command line is readable by every local user in ps and /proc,
+// the environment only by this user), and timeout replaces the default
+// for a command that waits for the user. A command still running after
+// its timeout is stopped and ends with exit code -1 (so does a program
 // that cannot start).
 QtObject {
     id: runner
@@ -20,9 +24,12 @@ QtObject {
     property bool _outDone: false
     property bool _errDone: false
 
-    function run(argv, done, skip) {
+    function run(cmd, done, skip) {
+        const plain = Array.isArray(cmd);
         runner._queue = runner._queue.concat([{
-                "argv": argv,
+                "argv": plain ? cmd : cmd.argv,
+                "env": plain ? null : (cmd.env || null),
+                "timeout": plain ? 0 : (cmd.timeout || 0),
                 "done": done,
                 "skip": skip || null
             }]);
@@ -49,8 +56,10 @@ QtObject {
             runner._code = null;
             runner._outDone = false;
             runner._errDone = false;
+            runner._proc.environment = job.env || {};
             runner._proc.command = job.argv;
             runner._proc.running = true;
+            runner._limit.interval = job.timeout || runner.timeout;
             runner._limit.restart();
         }
         runner._starting = false;
@@ -62,6 +71,9 @@ QtObject {
         runner._limit.stop();
         const job = runner._cur;
         runner._cur = null;
+        // Forget a secret handed over in env as soon as it has served
+        runner._proc.environment = {};
+        job.env = null;
         runner._call(job, outText.text, errText.text, runner._code);
         runner._next();
     }
@@ -70,7 +82,9 @@ QtObject {
         try {
             job.done(out, err, code);
         } catch (e) {
-            console.warn("Abyss:", job.argv.join(" "), e);
+            // Only the program name: the arguments may hold a peer name,
+            // an address or a user, and the journal is not ours to fill
+            console.warn("Abyss: a callback for", job.argv[0], "failed:", e);
         }
     }
 
@@ -96,7 +110,6 @@ QtObject {
     }
 
     property Timer _limit: Timer {
-        interval: runner.timeout
         onTriggered: {
             if (runner._proc.running)
                 runner._proc.running = false;

@@ -129,9 +129,17 @@ eq("choosing the selected one only selects it again", N.routeCommands(R, "office
 ok("an unknown route is refused", N.routeCommands(R, "nope").error !== "" && N.routeCommands(R, "lan").error !== "");
 
 // Joining a mesh, signing out, letting peers SSH in
-eq("join with a setup key", N.joinCmd("A1B2C3D4-E5F6-47A8", "", ""), ["netbird", "up", "--setup-key", "A1B2C3D4-E5F6-47A8"]);
-eq("join a self-hosted server under a name", N.joinCmd("A1B2C3D4-E5F6-47A8", "https://nb.example.org:33073", "wren"), ["netbird", "up", "--setup-key", "A1B2C3D4-E5F6-47A8", "--management-url", "https://nb.example.org:33073", "--hostname", "wren"]);
-eq("a key is trimmed", N.joinCmd("  A1B2C3D4-E5F6-47A8\n", "", ""), ["netbird", "up", "--setup-key", "A1B2C3D4-E5F6-47A8"]);
+// The key travels in the environment, never on the command line (ps)
+const joined = (argv, key) => ({ "argv": argv, "env": { "NB_SETUP_KEY": key }, "timeout": 300000 });
+eq("join with a setup key", N.joinCmd("A1B2C3D4-E5F6-47A8", "", ""), joined(["netbird", "up"], "A1B2C3D4-E5F6-47A8"));
+eq("join a self-hosted server under a name", N.joinCmd("A1B2C3D4-E5F6-47A8", "https://nb.example.org:33073", "wren"), joined(["netbird", "up", "--management-url", "https://nb.example.org:33073", "--hostname", "wren"], "A1B2C3D4-E5F6-47A8"));
+eq("a key is trimmed", N.joinCmd("  A1B2C3D4-E5F6-47A8\n", "", ""), joined(["netbird", "up"], "A1B2C3D4-E5F6-47A8"));
+eq("the key is never on the command line", N.joinCmd("A1B2C3D4-E5F6-47A8", "", "").argv.indexOf("A1B2C3D4-E5F6-47A8"), -1);
+eq("a sign-in waits for the browser", N.signInCmd(), { "argv": ["netbird", "up"], "timeout": 300000 });
+eq("join with a key file", N.joinFileCmd("/run/user/1000/nb.key", "", ""), { "argv": ["netbird", "up", "--setup-key-file", "/run/user/1000/nb.key"], "timeout": 300000 });
+eq("a key file path must be absolute", N.joinFileCmd("A1B2C3D4-E5F6-47A8", "", ""), null);
+eq("a key file path cannot read as an option", N.joinFileCmd("--setup-key=x", "", ""), null);
+eq("a key file with a bad address is refused", N.joinFileCmd("/tmp/k", "ftp://x", ""), null);
 eq("a key that looks like an option is refused", N.joinCmd("--management-url=evil", "", ""), null);
 eq("a short key is refused", N.joinCmd("abc", "", ""), null);
 eq("an address that is not http(s) is refused", N.joinCmd("A1B2C3D4-E5F6-47A8", "file:///etc/passwd", ""), null);

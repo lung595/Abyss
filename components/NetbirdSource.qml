@@ -87,7 +87,7 @@ QtObject {
 
     // `netbird up` opens the sign-in page in the browser when one is needed
     function login() {
-        src._act([Netbird.upCmd()], "Could not sign in");
+        src._act([Netbird.signInCmd()], "Could not sign in");
     }
 
     // Joins this device to a mesh with a setup key; the address of a
@@ -99,6 +99,15 @@ QtObject {
             src._say("That is not a setup key, or its address is not an http(s) one");
             return false;
         }
+        src._act([cmd], "Could not join the mesh");
+        return true;
+    }
+
+    // The same with the key in a file (see Netbird.joinFileCmd)
+    function joinFile(path, url) {
+        const cmd = Netbird.joinFileCmd(path, url, "");
+        if (!cmd)
+            return false;
         src._act([cmd], "Could not join the mesh");
         return true;
     }

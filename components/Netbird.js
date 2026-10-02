@@ -21,6 +21,9 @@
 // can run anything
 
 const BIN = "netbird";
+// `netbird up` may wait for the user to sign in in the browser, or for a
+// slow management server: five minutes before it is given up on
+const SIGN_IN_TIMEOUT = 300000;
 
 function statusCmd() {
     return [BIN, "status", "--json"];
@@ -33,6 +36,13 @@ function profilesCmd() {
 }
 function upCmd() {
     return [BIN, "up"];
+}
+// The same, for a sign-in: the user has time to finish it in the browser
+function signInCmd() {
+    return {
+        "argv": upCmd(),
+        "timeout": SIGN_IN_TIMEOUT
+    };
 }
 function downCmd() {
     return [BIN, "down"];
@@ -50,7 +60,31 @@ function joinCmd(key, url, hostname) {
         return null;
     if (h && !/^[A-Za-z0-9][A-Za-z0-9-]{0,62}$/.test(h))
         return null;
-    return [BIN, "up", "--setup-key", k].concat(u ? ["--management-url", u] : [], h ? ["--hostname", h] : []);
+    // The key goes in NB_SETUP_KEY (netbird reads every flag from NB_*),
+    // never on the command line, which any local user can read in ps
+    return {
+        "argv": [BIN, "up"].concat(u ? ["--management-url", u] : [], h ? ["--hostname", h] : []),
+        "env": {
+            "NB_SETUP_KEY": k
+        },
+        "timeout": SIGN_IN_TIMEOUT
+    };
+}
+// The same with the key read from a file by netbird itself: what the
+// command line (`dms ipc call abyss join`) takes, so the key never lands in
+// the shell history. null unless the path is absolute
+function joinFileCmd(path, url, hostname) {
+    const f = String(path || "").trim(), u = String(url || "").trim(), h = String(hostname || "").trim();
+    if (!/^\/[^\0\n]+$/.test(f))
+        return null;
+    if (u && !/^https?:\/\/[^\s\/][^\s]*$/.test(u))
+        return null;
+    if (h && !/^[A-Za-z0-9][A-Za-z0-9-]{0,62}$/.test(h))
+        return null;
+    return {
+        "argv": [BIN, "up", "--setup-key-file", f].concat(u ? ["--management-url", u] : [], h ? ["--hostname", h] : []),
+        "timeout": SIGN_IN_TIMEOUT
+    };
 }
 // Signs this device out of the mesh (it stays listed, offline)
 function logoutCmd() {

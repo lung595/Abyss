@@ -17,6 +17,11 @@ Every refusal in Abyss says why in a short note, with a GitHub mark that opens t
 - [Find a peer](#find-a-peer)
 - [The list](#the-list)
 - [Ping](#ping)
+- [Connect to a peer](#connect-to-a-peer)
+- [Search and commands](#search-and-commands)
+- [Add a device](#add-a-device)
+- [Join a mesh](#join-a-mesh)
+- [Let peers SSH in](#let-peers-ssh-in)
 - [From the launcher](#from-the-launcher)
 - [Settings](#settings)
 - [Privacy](#privacy)
@@ -100,6 +105,50 @@ With 12 peers or more, a list icon appears in the top bar: every peer as one lin
 
 A peer's card has a **Ping** button: three echoes to its address, and a toast with the average, the best and worst time and how many answered. It runs only when you ask (also `dms ipc call abyss ping <peer>`); Abyss never pings by itself. In the test lab it says what the made-up mesh claims.
 
+## Connect to a peer
+
+A peer's card has four doors, each with a plain line saying what it opens:
+
+- **Terminal**: SSH in your own terminal (the *Terminal for SSH* setting).
+- **Files**: SFTP in your file manager (`gio` or `xdg-open`).
+- **Screen**: VNC (`remmina`, `vncviewer` or `krdc`).
+- **Desktop**: RDP (`xfreerdp`, `remmina` or `krdc`).
+
+Abyss knocks on the device's port first. A device that does not answer, or a viewer that is not installed, gets a toast that says why and gives the command to copy (sshd, Termux, Remmina for your distribution).
+
+The card also shows the **login**, user and port, and changes it in place. A phone running Termux offers "Use 8022" in one click. From the command line: `dms ipc call abyss link <peer> <user|-> <port|->`. SSH and Files use that login.
+
+## Search and commands
+
+The search bar stays at the top, and typing anywhere fills it. While it is empty it shows one-click shortcuts. Type a command (`add`, `share`, `disconnect`, `console`…) and Enter runs the first match. Typing a peer's name or a filter finds peers, as described in [Find a peer](#find-a-peer).
+
+## Add a device
+
+The **+** at the top, the `add` command or the jellyfish's menu opens a step-by-step sheet:
+
+- **This computer**: paste a setup key from the NetBird dashboard (*Setup Keys*). The field shows dots unless you are typing in it, and it is emptied once the device has joined.
+- **Your phone**: QR codes for the NetBird app (click to enlarge). When the server is self-hosted, its address is also shown as a QR code. The codes are drawn on your computer; nothing is sent anywhere.
+- When the new device appears, Abyss greets it with a burst of bubbles. For an Android phone, the sheet then gives the Termux steps to reach its terminal and files.
+
+## Join a mesh
+
+Joining runs `netbird up` with your setup key. The key is handed to `netbird` through its environment (`NB_SETUP_KEY`), never on the command line, where any program on the computer could read it while it runs. It is never saved, logged or copied. Signing in or joining may take a while, and Abyss waits up to five minutes.
+
+From the command line, give the **path of a file** that holds the key, never the key itself: a key typed in a terminal stays in the shell history.
+
+```sh
+umask 077; printf '%s' 'PASTE-THE-KEY' > ~/nb.key   # or save it from your password manager
+dms ipc call abyss join ~/nb.key                     # NetBird Cloud
+dms ipc call abyss join ~/nb.key https://nb.example.org:33073   # self-hosted
+rm ~/nb.key
+```
+
+`netbird` reads the file itself (`--setup-key-file`). Abyss refuses a key passed directly and links to this section. `dms ipc call abyss leave` signs this device out.
+
+## Let peers SSH in
+
+Right-click the jellyfish and choose *Let peers SSH in here*, or run `dms ipc call abyss share on|off`. This turns NetBird's own SSH server on this device on or off, so your phone can open a session on your PC.
+
 ## From the launcher
 
 Press Super+Space and type `abyss`: "Open Abyss" opens the deep from the bar; below it, connect, choose where Internet goes out (a sun marks the one in use), and, as you type a name (`abyss vega`), copy its address or SSH to it. The same words as the search in the deep pick peers by what they are: a speed (`abyss >100ms`, `abyss <20ms`), a state (`direct`, `relay`, `slow`, `busy`), a kind (`nas`, `phones`, `vps`) or a relay (`eu`); start with `ssh` or `copy` to keep one action (`abyss ssh nas`, `abyss copy >100ms`).
@@ -131,9 +180,11 @@ DMS's *Reduce motion* is respected: every movement stops.
 
 ## Privacy
 
-- **No network access by the plugin itself, no telemetry.** NetBird is read through its local `netbird` command, never through a shell: no peer name or address can run anything.
-- **Nothing written to disk except your settings** (favorites, muted peers, your groups, the group carrying the Internet, and which peer carries each exit route once seen). Peers, addresses and traffic stay in memory for the session.
-- **Local tools only**: copy uses DMS's clipboard, SSH opens your own terminal, Ping runs your own `ping` to one peer of your mesh, only when you click it. The GitHub mark in help notes opens the docs in your browser, on click only.
+- **No network access by the plugin itself, no telemetry.** NetBird is read through its local `netbird` command, never through a shell: no peer name or address can run anything. QR codes are drawn locally.
+- **Secrets stay secret.** A setup key goes to `netbird` through its environment, which only you can read, never on a command line (visible to every user in `ps`). It is never saved, logged or put on the clipboard. The command line takes a key file, never the key (see [Join a mesh](#join-a-mesh)).
+- **Written to disk: only your settings**, saved by DMS. They hold peer names and identifiers (NetBird's key for each peer, or its name or address when it has none) for your favorites, muted peers and own groups, which peer carries each exit route once seen, and the login (user, port) you set for a peer. Live peers, addresses and traffic stay in memory for the session.
+- **Nothing in the log.** Abyss writes no peer, address or command line to the shell's journal.
+- **Local tools only**: copy uses DMS's clipboard, SSH, SFTP, VNC and RDP open your own programs, Ping runs your own `ping` to one peer of your mesh, only when you click it. The GitHub mark in help notes opens the docs in your browser, on click only.
 
 ## Performance
 
