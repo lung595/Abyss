@@ -53,7 +53,7 @@ Tools: `gjs` (unit tests), Python with PySide6 (integration tests: `pip install 
 
 **Motion.** `Spring.js` (grab and release) and `Swim.js` (moving to a new place) are pure functions driven by the scene clock.
 
-**Help notes link to the docs.** `HelpNote.qml` opens `https://github.com/lung595/Abyss#<anchor>`; the anchors used in `AbyssScene.qml` (`explain(…)`) must exist as headings in `README.md`. Today: `internet-through-a-peer`. **Do not rename that heading** without updating the code.
+**Help notes link to the guide.** `HelpNote.qml` opens `https://github.com/lung595/Abyss/blob/main/docs/GUIDE.md#<anchor>`; every anchor passed to it must exist as a heading in `docs/GUIDE.md`. **Do not rename those headings** without updating the code.
 
 Settings are read through `components/Prefs.qml`, a reactive view shared by every surface.
 
@@ -120,4 +120,4 @@ Abyss must cost nothing while nobody looks at it. Keep these rules when changing
 1. Bump `version` in `plugin.json` ([Semantic Versioning](https://semver.org/)).
 2. Move the `Unreleased` entries of `CHANGELOG.md` under the new version and date.
 3. Refresh screenshots and GIFs if the look changed (`scripts/preview/`).
-4. Run the tests, commit, then tag: `git tag v0.4.0 && git push --tags`.
+4. Run the tests, commit, then tag: `git tag v0.5.0 && git push --tags`.

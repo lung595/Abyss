@@ -5,6 +5,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## Unreleased
 
+## 0.5.0 - 2026-10-02
+
 ### Added
 
 - **Connect from Abyss, not only look**: a peer's card now opens **Files** (SFTP, in your file manager), **Screen** (VNC) and **RDP** next to SSH, with whichever viewer is installed (`gio`/`xdg-open`; `remmina`, `vncviewer`, `krdc`; `xfreerdp`, `remmina`, `krdc`). A missing viewer says what to install.
