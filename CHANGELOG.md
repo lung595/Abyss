@@ -21,6 +21,15 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - **Control Center**: starred devices along the bottom, one click from their terminal or files.
 - **Desktop fishbowl**: a small Search / + pill under the surface while the pointer is over it.
 
+### Changed
+
+- **Tentacles grip what they reach**: each tentacle ends in a hook under the device's belly instead of stopping short of it.
+
+### Fixed
+
+- **Relay lanterns no longer sit on a tentacle**: a lantern is placed where no other device's tentacle passes through it, checked against the tentacles as they are drawn, and placed again once every lantern is known.
+- The layout test now measures against the real body and lantern sizes; it used names that did not exist and could not fail.
+
 Not done yet: managing access policies (who may talk to whom) needs a NetBird API token and is not part of this.
 
 ## 0.4.0 - 2026-10-01

@@ -174,6 +174,75 @@ function pack(f, rings, prev) {
     return items;
 }
 
+// A lantern needs its own water: off every creature, off the other
+// lanterns, and off the tentacles it does not carry (P90). Its ideal place
+// is tried first, then the nearest one around it that is clear; when none
+// is, the one with the least in the way.
+const LANTERN_W = 24, LANTERN_H = 22, LANTERN_ROPE = 28;
+function _lantern(f, deg, rho, items, live, name, placed) {
+    const j = f.jelly;
+    // The ribbons it must keep off, drawn as the scene hangs them: from
+    // the leg under their direction (legSlots, as AbyssScene picks it),
+    // through their own lantern once it is placed
+    const at = id => items.find(it => it.id === id);
+    const order = live.slice().sort((a, b) => Math.atan2(at(b.id).y - j.y, at(b.id).x - j.x) - Math.atan2(at(a.id).y - j.y, at(a.id).x - j.x));
+    const slots = legSlots(j, order.map(p => at(p.id).x));
+    const ropes = [];
+    order.forEach((p, i) => {
+        if (p.relayed && p.relay === name)
+            return;
+        const it = at(p.id), via = p.relayed ? placed[p.relay] : null;
+        const start = slots ? legPoint(j, slots[i]) : rimPoint(j, i, order.length);
+        ropes.push(tentacle(start, [it.x, it.y], via ? [via.x, via.y] : null, 0));
+    });
+    const tries = [];
+    // Nearest first, so a free spot close to the aim wins over a far one
+    [0, -0.06, 0.06, -0.12, 0.12, -0.18, 0.18, 0.24, -0.24, 0.3, 0.36].forEach(dr => [0, -6, 6, -12, 12, -18, 18, -24, 24, -32, 32, -42, 42, -52, 52, -62, 62].forEach(dd => {
+        if (rho + dr >= 0.12 && rho + dr <= 0.9)
+            tries.push(fanPoint(f, deg + dd, rho + dr));
+    }));
+    const cost = c => {
+        let n = 0;
+        items.forEach(it => {
+            const dx = Math.abs(c.x - it.x), dy = Math.abs(c.y - it.y);
+            if (dx < BOX_W / 2 && dy < BOX_H / 2)
+                n += 30;
+            else if (dx < BOX_W / 2 + LANTERN_W && dy < BOX_H / 2 + LANTERN_H)
+                n += 3;
+        });
+        Object.keys(placed).forEach(k => {
+            if (Math.abs(c.x - placed[k].x) < 2 * LANTERN_W && Math.abs(c.y - placed[k].y) < 2 * LANTERN_H)
+                n += 10;
+        });
+        ropes.forEach(pts => {
+            // A rope through the lantern's own box swallows it: as bad as
+            // sitting on a creature, worse than crowding another lantern
+            if (pts.some(q => Math.abs(q[0] - c.x) < LANTERN_W && Math.abs(q[1] - c.y + 4) < LANTERN_H))
+                return n += 30;
+            for (let i = 1; i < pts.length; i++)
+                if (_toSegment(c, { "x": pts[i - 1][0], "y": pts[i - 1][1] }, { "x": pts[i][0], "y": pts[i][1] }) < LANTERN_ROPE)
+                    return n += 1;
+        });
+        return n;
+    };
+    let best = tries[0], bestCost = cost(best);
+    for (let i = 1; i < tries.length && bestCost > 0; i++) {
+        const c = cost(tries[i]);
+        if (c < bestCost) {
+            best = tries[i];
+            bestCost = c;
+        }
+    }
+    return best;
+}
+
+// Distance from point c to the segment a-b
+function _toSegment(c, a, b) {
+    const dx = b.x - a.x, dy = b.y - a.y, len = dx * dx + dy * dy;
+    const t = len ? Math.max(0, Math.min(1, ((c.x - a.x) * dx + (c.y - a.y) * dy) / len)) : 0;
+    return Math.hypot(c.x - a.x - t * dx, c.y - a.y - t * dy);
+}
+
 // How far above the floor a dozing peer floats
 const DOZE_LIFT = 56;
 
@@ -204,11 +273,21 @@ function layout(peers, w, h, top, inset, prev) {
         if (p.relayed)
             (groups[p.relay] = groups[p.relay] || []).push(it);
     });
+    const aim = {};
     Object.keys(groups).sort().forEach(name => {
         const g = groups[name];
-        const deg = g.reduce((s, it) => s + it.deg, 0) / g.length;
-        const rho = Math.max(0.3, Math.min.apply(null, g.map(it => it.rho)) * 0.5);
-        out.relays[name] = fanPoint(f, deg, rho);
+        aim[name] = {
+            "deg": g.reduce((s, it) => s + it.deg, 0) / g.length,
+            "rho": Math.max(0.3, Math.min.apply(null, g.map(it => it.rho)) * 0.5)
+        };
+        out.relays[name] = _lantern(f, aim[name].deg, aim[name].rho, items, live, name, out.relays);
+    });
+    // Once more, now that every lantern is known: the first ones were placed
+    // before the ribbons hanging through the later ones existed
+    Object.keys(aim).sort().forEach(name => {
+        const others = Object.assign({}, out.relays);
+        delete others[name];
+        out.relays[name] = _lantern(f, aim[name].deg, aim[name].rho, items, live, name, others);
     });
     // Offline peers rest on the right of the floor (the left is for caves);
     // with nobody online (disconnected) they use the whole floor, and a crowd
