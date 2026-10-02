@@ -1,4 +1,5 @@
 import QtQuick
+import Quickshell.Io
 import "Mesh.js" as Mesh
 import "Netbird.js" as Netbird
 
@@ -6,7 +7,9 @@ import "Netbird.js" as Netbird
 // view model and actions as DemoSource, so every surface works on either.
 //
 // One read at start (the bar shows the real state); after it, nothing runs
-// while no view watches: no timer, no process. While one does,
+// while no view watches but `ip monitor link`, asleep on netlink (no CPU):
+// when NetBird's interface wt0 comes or goes, one read (and one more 5 s
+// later, once peers have joined) keeps the bar's count right (P51). While one does,
 // `netbird status --json` runs every 2 s, one read at a time (never piled
 // up); `netbird networks list` and `netbird profile list` only on opening,
 // after a change, and every 10th read for the networks.
@@ -344,6 +347,26 @@ QtObject {
         repeat: true
         running: src._watchers > 0
         onTriggered: src.refresh()
+    }
+
+    // NetBird's interface coming up or going down: an event, not a poll.
+    // Peers joining or leaving on a live interface send no such event, so
+    // with every view closed that count waits for the next view.
+    property Process _link: Process {
+        command: ["ip", "-o", "monitor", "link"]
+        running: true
+        stdout: SplitParser {
+            onRead: line => {
+                if (/^(Deleted )?\d+: wt0[:@]/.test(line)) {
+                    src._read(false, false);
+                    src._settle.restart();
+                }
+            }
+        }
+    }
+    property Timer _settle: Timer {
+        interval: 5000
+        onTriggered: src._read(false, false)
     }
 
     property CliRunner _reader: CliRunner {}

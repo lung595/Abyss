@@ -180,7 +180,7 @@ The plugin never talks to the network and has no telemetry. It reads NetBird thr
 
 ## Credits
 
-The idea of a NetBird plugin for DMS comes from **NetbirdStatus** by [Dadangdut33](https://github.com/Dadangdut33) ([dms-plugins](https://github.com/Dadangdut33/dms-plugins)). The fishbowl is a nod to *The Amazing World of Gumball*, drawn from scratch. The GitHub mark is used only to link to these docs, as [GitHub's logo guidelines](https://github.com/logos) allow. Built on [DankMaterialShell](https://github.com/AvengeMedia/DankMaterialShell) and [Quickshell](https://quickshell.org).
+The idea of a NetBird plugin for DMS comes from **NetbirdStatus** by [Dadangdut33](https://github.com/Dadangdut33) ([dms-plugins](https://github.com/Dadangdut33/dms-plugins)). Darwin the goldfish is **Darwin Watterson** from *The Amazing World of Gumball*, created by Ben Bocquelet, © Cartoon Network; his pictures (`components/assets/darwin/`) are cut out of reference images of the show, are not covered by the MIT license, and are used as a fan tribute. Abyss is not affiliated with or endorsed by Cartoon Network. The GitHub mark is used only to link to these docs, as [GitHub's logo guidelines](https://github.com/logos) allow. Built on [DankMaterialShell](https://github.com/AvengeMedia/DankMaterialShell) and [Quickshell](https://quickshell.org).
 
 ## License
 

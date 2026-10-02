@@ -28,6 +28,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 ### Fixed
 
 - **Relay lanterns no longer sit on a tentacle**: a lantern is placed where no other device's tentacle passes through it, checked against the tentacles as they are drawn, and placed again once every lantern is known.
+- **The bar's peer count follows a connect or disconnect** with every view closed: Abyss listens for NetBird's interface (`wt0`) coming or going, an event from the kernel, and reads once (and once more 5 s later). Peers joining a live mesh still show at the next opening.
+- **Help links open the user guide** (`docs/GUIDE.md`) at the right section, not the README where those sections no longer are; "No exit node in a group" opens the group section.
+- **Darwin's credits** now say where he comes from: Darwin Watterson, *The Amazing World of Gumball* (Ben Bocquelet, © Cartoon Network); his pictures are cut out of reference images, not drawn from scratch as the README said, and are not covered by the MIT license.
 - The layout test now measures against the real body and lantern sizes; it used names that did not exist and could not fail.
 
 Not done yet: managing access policies (who may talk to whom) needs a NetBird API token and is not part of this.

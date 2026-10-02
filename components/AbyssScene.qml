@@ -1486,7 +1486,7 @@ Item {
             if (t.peer)
                 explain(t.peer.name + " isn't an exit node", "Turn it on in NetBird's dashboard", "internet-through-a-peer", px, py + 80);
             else
-                explain("No exit node in " + t.name, "Turn one on in NetBird's dashboard", "internet-through-a-peer", px, py + 80);
+                explain("No exit node in " + t.name, "Turn one on in NetBird's dashboard", "internet-through-a-whole-group", px, py + 80);
             return;
         }
         if (t && t.keep) {

@@ -14,8 +14,9 @@ Rectangle {
     // { title, hint, anchor, x, y }: set by scene.explain(), null when gone
     readonly property var info: scene.note
 
-    // The README the link opens; the anchor picks the section
-    readonly property string readme: "https://github.com/lung595/Abyss#"
+    // The user guide the link opens (the README only installs); the anchor
+    // picks the section
+    readonly property string readme: "https://github.com/lung595/Abyss/blob/main/docs/GUIDE.md#"
 
     visible: opacity > 0.01
     opacity: info ? 1 : 0

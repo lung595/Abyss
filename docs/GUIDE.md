@@ -114,7 +114,7 @@ Press Super+Space and type `abyss`: "Open Abyss" opens the deep from the bar; be
 | | Open groups | Hover and click | Hover and click, hover only, or click only. Carrying the light always opens them |
 | | Show offline peers | On | Asleep on the floor, or hidden. With NetBird's lazy connections on, idle peers doze a little above the floor instead ("idle · wake on use"): NetBird does not say which of them are really off |
 | | Light pulses | On | Pulses of traffic along the tentacles |
-| | Companion | On | Darwin, a goldfish with a life of his own: he eats the crumbs the traffic drops, scrubs the glass as it clouds over, sleeps on the bottom while the mesh is down and waves when clicked. He only moves while a view is open, and stays still with *Reduce motion* |
+| | Companion | On | Darwin (Darwin Watterson from *The Amazing World of Gumball*, © Cartoon Network, see the README's credits), a goldfish with a life of his own: he eats the crumbs the traffic drops, scrubs the glass as it clouds over, sleeps on the bottom while the mesh is down and waves when clicked. He only moves while a view is open, and stays still with *Reduce motion* |
 | Peers | Bar pill | Peers online | What the small jellyfish in the bar says beside it: how many peers are online, the total traffic, or nothing |
 | | Notifications | Off | When a peer comes or goes; muted peers stay quiet |
 | | Terminal for SSH | Automatic | The terminal used for SSH |
