@@ -12,7 +12,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - **The setup key no longer shows in `ps`**: joining used to run `netbird up --setup-key <key>`, and any program on the computer can read a command line while it runs. The key now goes through `netbird`'s environment (`NB_SETUP_KEY`), which only you can read, and is dropped once the command ends.
 - **No command line in the log**: a failing callback used to write the whole command, a setup key included, to the shell's journal. Only the program name is written now.
 - **`dms ipc call abyss join` takes a key file, not the key**: a key typed in a terminal stays in the shell history. `netbird` reads the file itself (`--setup-key-file`); a key passed directly is refused with a link to the guide.
-- The setup key field of *Add a device* shows dots unless you are typing in it, like the one in the settings.
+- The setup key field of *Add a device* always shows dots, and is emptied when the sheet closes.
+- **The copied setup key leaves the clipboard history** once the join has worked (pinned entries stay).
+- **Self-hosted servers must use `https://`**, so the key never travels in clear.
+- **Peer names stay plain text**: a name that looks like a web address is no longer turned into a link in a toast, and *Open page* only opens a plain host name or address, saying why otherwise.
 
 ### Fixed
 

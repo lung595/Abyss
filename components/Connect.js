@@ -32,6 +32,18 @@ function validHost(host) {
     return /^[A-Za-z0-9_.:%\[\]][A-Za-z0-9_.:%\[\]-]*$/.test(String(host || ""));
 }
 
+// The page a peer may serve, or null for a host validHost refuses: a peer's
+// name is chosen by whoever runs it, so it never becomes a URL unchecked
+function webUrl(host) {
+    return validHost(host) ? "http://" + urlHost(host) : null;
+}
+
+// Toast text with "://" broken up: DMS turns URLs in toasts into links, and
+// a peer named "https://..." must not become one to click (P113)
+function plainText(text) {
+    return String(text === undefined || text === null ? "" : text).replace(/:\/\//g, ": //");
+}
+
 // argv that prints the first program installed for this kind and exits 0,
 // or exits 1 when there is none; null for an unknown kind
 function lookupCommand(kind) {

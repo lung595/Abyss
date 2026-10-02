@@ -1,4 +1,5 @@
 import QtQuick
+import qs.Services
 import "../../components"
 
 // NetbirdSource against tests/qml/fake-netbird, through real processes.
@@ -148,8 +149,25 @@ Item {
         },
         () => {
             check("nothing runs while no view watches", calls().length === test.quiet, calls().length - test.quiet);
+        },
+        // P111: after a join, only the exact, unpinned copy of the key goes
+        () => {
+            DMSService.entries = [{"id": 1, "preview": test.key + "\n", "pinned": false, "isImage": false}, {"id": 2, "preview": test.key, "pinned": true, "isImage": false}, {"id": 3, "preview": "my key is " + test.key, "pinned": false, "isImage": false}];
+            fake("daemon", "Connected");
+            fake("fail", "up");
+        },
+        () => src.join(test.key, "", ""),
+        () => {
+            check("a failed join leaves the clipboard alone", !DMSService.requests.some(r => r.indexOf("clipboard.") === 0), DMSService.requests);
+            fake("fail", "");
+        },
+        () => src.join(test.key, "", ""),
+        () => {
+            const del = DMSService.requests.filter(r => r.indexOf("clipboard.deleteEntry") === 0);
+            check("a joined key leaves the clipboard history; pinned and longer texts stay", JSON.stringify(del) === JSON.stringify(["clipboard.deleteEntry {\"id\":1}"]), DMSService.requests);
         }
     ]
+    property string key: "A1B2C3D4-E5F6-7788-99AA-BBCCDDEEFF00"
     property int quiet: 0
     property int before: 0
 

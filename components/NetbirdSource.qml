@@ -1,5 +1,6 @@
 import QtQuick
 import Quickshell.Io
+import qs.Services
 import "Mesh.js" as Mesh
 import "Netbird.js" as Netbird
 
@@ -99,8 +100,27 @@ QtObject {
             src._say("That is not a setup key, or its address is not an http(s) one");
             return false;
         }
-        src._act([cmd], "Could not join the mesh");
+        src._act([cmd], "Could not join the mesh", () => src._forgetCopied(key));
         return true;
+    }
+
+    // A key copied from NetBird's dashboard stays in DMS's clipboard history,
+    // on disk. Once it has done its job, the matching entries are deleted;
+    // pinned ones are the user's choice and stay (P111). The comparison
+    // happens here, in memory: nothing about the history is logged
+    function _forgetCopied(key) {
+        const k = String(key || "").trim();
+        if (k.length < 8 || typeof DMSService === "undefined" || !DMSService.isConnected)
+            return;
+        DMSService.sendRequest("clipboard.search", {
+            "query": k,
+            "limit": 20
+        }, response => {
+            const entries = (response && response.result && response.result.entries) || [];
+            entries.filter(e => !e.pinned && !e.isImage && String(e.preview || "").trim() === k).forEach(e => DMSService.sendRequest("clipboard.deleteEntry", {
+                    "id": e.id
+                }, () => {}));
+        });
     }
 
     // The same with the key in a file (see Netbird.joinFileCmd)
@@ -312,7 +332,8 @@ QtObject {
 
     // Runs argv lists one after the other; stops at the first failure and
     // says why; reads everything again once the queue is empty
-    function _act(cmds, failText) {
+    // onOk (optional) runs once every command succeeded
+    function _act(cmds, failText, onOk) {
         if (!cmds.length)
             return;
         src._acting = true;
@@ -330,6 +351,8 @@ QtObject {
             }
             if (i < cmds.length - 1)
                 return;
+            if (!failed && onOk)
+                onOk();
             if (--src._pending === 0) {
                 src._acting = false;
                 src._read(true, true);

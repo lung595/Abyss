@@ -167,7 +167,7 @@ Bind them in your compositor, for example in niri: `Mod+A { spawn "dms" "ipc" "c
 
 ## Privacy
 
-The plugin never talks to the network and has no telemetry. It reads NetBird through its local `netbird` command, never through a shell. A setup key goes to `netbird` through its environment, never on a command line, and is never saved or logged. Peers and traffic stay in memory; only your settings (favorites, muted peers, your groups, exit routes once seen, and the login you set per peer, with peer names and identifiers) are saved by DMS. Details in the [user guide](docs/GUIDE.md#privacy).
+The plugin never talks to the network and has no telemetry. It reads NetBird through its local `netbird` command, never through a shell. A setup key goes to `netbird` through its environment, never on a command line, is never saved or logged, and its copy leaves the clipboard history once you have joined. Peers and traffic stay in memory; only your settings (favorites, muted peers, your groups, exit routes once seen, and the login you set per peer, with peer names and identifiers) are saved by DMS. Details in the [user guide](docs/GUIDE.md#privacy).
 
 ## Documentation
 

@@ -852,7 +852,8 @@ PluginSettings {
             font.pixelSize: Theme.fontSizeMedium
             font.family: Theme.monoFontFamily
             color: Theme.surfaceText
-            echoMode: parent.secret && !activeFocus && text !== "" ? TextInput.Password : TextInput.Normal
+            // A secret is always dots: no copy, no primary selection (P112)
+            echoMode: parent.secret ? TextInput.Password : TextInput.Normal
             selectByMouse: true
             clip: true
         }

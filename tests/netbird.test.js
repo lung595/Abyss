@@ -143,6 +143,9 @@ eq("a key file with a bad address is refused", N.joinFileCmd("/tmp/k", "ftp://x"
 eq("a key that looks like an option is refused", N.joinCmd("--management-url=evil", "", ""), null);
 eq("a short key is refused", N.joinCmd("abc", "", ""), null);
 eq("an address that is not http(s) is refused", N.joinCmd("A1B2C3D4-E5F6-47A8", "file:///etc/passwd", ""), null);
+eq("a server in plain http is refused (the key would travel in clear)", N.joinCmd("A1B2C3D4-E5F6-47A8", "http://nb.example.org", ""), null);
+eq("a key file with a plain http server is refused", N.joinFileCmd("/tmp/k", "http://nb.example.org", ""), null);
+eq("a server address with credentials is refused", N.joinCmd("A1B2C3D4-E5F6-47A8", "https://user:pw@nb.example.org", ""), null);
 eq("a bad host name is refused", N.joinCmd("A1B2C3D4-E5F6-47A8", "", "a b"), null);
 eq("sign out", N.logoutCmd(), ["netbird", "logout"]);
 eq("let peers SSH in", N.shareSshCmd(true), ["netbird", "up", "--allow-server-ssh=true"]);

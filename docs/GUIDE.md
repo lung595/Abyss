@@ -137,13 +137,16 @@ Joining runs `netbird up` with your setup key. The key is handed to `netbird` th
 From the command line, give the **path of a file** that holds the key, never the key itself: a key typed in a terminal stays in the shell history.
 
 ```sh
-umask 077; printf '%s' 'PASTE-THE-KEY' > ~/nb.key   # or save it from your password manager
-dms ipc call abyss join ~/nb.key                     # NetBird Cloud
-dms ipc call abyss join ~/nb.key https://nb.example.org:33073   # self-hosted
-rm ~/nb.key
+k="$XDG_RUNTIME_DIR/nb.key"                  # in memory, readable by you only
+read -rs NB_KEY && (umask 077; printf '%s' "$NB_KEY" > "$k"); unset NB_KEY   # paste the key, then Enter: nothing is shown or kept in the history
+dms ipc call abyss join "$k"                 # NetBird Cloud
+dms ipc call abyss join "$k" https://nb.example.org:33073   # self-hosted
+rm -f "$k"
 ```
 
 `netbird` reads the file itself (`--setup-key-file`). Abyss refuses a key passed directly and links to this section. `dms ipc call abyss leave` signs this device out.
+
+A self-hosted server address must start with `https://`, so the key never travels in clear. In *Add a device*, the key field always shows dots and is emptied when the sheet closes. If you copied the key from NetBird's dashboard, Abyss removes that copy from DMS's clipboard history once the join has worked; an entry you pinned stays.
 
 ## Let peers SSH in
 
@@ -183,6 +186,9 @@ DMS's *Reduce motion* is respected: every movement stops.
 - **No network access by the plugin itself, no telemetry.** NetBird is read through its local `netbird` command, never through a shell: no peer name or address can run anything. QR codes are drawn locally.
 - **Secrets stay secret.** A setup key goes to `netbird` through its environment, which only you can read, never on a command line (visible to every user in `ps`). It is never saved, logged or put on the clipboard. The command line takes a key file, never the key (see [Join a mesh](#join-a-mesh)).
 - **Written to disk: only your settings**, saved by DMS. They hold peer names and identifiers (NetBird's key for each peer, or its name or address when it has none) for your favorites, muted peers and own groups, which peer carries each exit route once seen, and the login (user, port) you set for a peer. Live peers, addresses and traffic stay in memory for the session.
+- **Clipboard tidy.** After a successful join, the copy of the setup key in DMS's clipboard history is removed (pinned entries are yours and stay).
+- **Names are only names.** A peer's name is shown as plain text: it never becomes a link in a toast, and *Open page* only opens a plain host name or address.
+- **Who can ask Abyss to act.** Like every DMS plugin, the `dms ipc call abyss …` commands answer programs running in your own session, the same way your keyboard shortcuts do. They can connect, disconnect or open a peer, never read a setup key.
 - **Nothing in the log.** Abyss writes no peer, address or command line to the shell's journal.
 - **Local tools only**: copy uses DMS's clipboard, SSH, SFTP, VNC and RDP open your own programs, Ping runs your own `ping` to one peer of your mesh, only when you click it. The GitHub mark in help notes opens the docs in your browser, on click only.
 

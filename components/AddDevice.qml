@@ -41,6 +41,8 @@ Rectangle {
     readonly property color accent: scene.sunColor
 
     onOpenChanged: {
+        // The key never outlives the sheet
+        key.text = "";
         if (!open)
             return;
         const k = {};
@@ -584,9 +586,9 @@ Rectangle {
                                 font.pixelSize: 13
                                 font.family: Theme.monoFontFamily
                                 color: sheet.ink
-                                // A setup key is a secret: dots unless it is being typed,
-                                // like the field in the settings
-                                echoMode: !activeFocus && text !== "" ? TextInput.Password : TextInput.Normal
+                                // A setup key is a secret: always dots. Qt then allows no
+                                // copy and no primary selection, so it cannot leak out (P112)
+                                echoMode: TextInput.Password
                                 selectByMouse: true
                                 clip: true
                                 onAccepted: sheet.join()
@@ -767,7 +769,11 @@ Rectangle {
         }
         const ok = src.join(key.text, own.on ? url.text : "", "");
         if (!ok) {
-            joinError = own.on && url.text ? "That address must start with https://" : "That does not look like a setup key";
+            const badKey = !(own.on && url.text);
+            joinError = badKey ? "That does not look like a setup key" : "That address must start with https://";
+            // A refused key is dropped; a refused address keeps the key to fix it
+            if (badKey)
+                key.text = "";
             return;
         }
         key.text = "";

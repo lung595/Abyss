@@ -38,4 +38,12 @@ eq("unknown package manager: no command", C.installHelp("rdp", "").command, "");
 ok("a phone gets the Termux line", C.closedHelp("ssh", "kestrel-phone", true, 22).command.indexOf("sshd") > 0);
 ok("a computer gets the sshd service", C.closedHelp("sftp", "atlas", false, 22).command === "sudo systemctl enable --now sshd");
 
+// A peer's name is its owner's choice: it never becomes a link unchecked (P113)
+eq("a peer's page", C.webUrl("vega.mesh.example"), "http://vega.mesh.example");
+eq("an IPv6 page gets brackets", C.webUrl("fd00::1"), "http://[fd00::1]");
+eq("no page for a URL as a name", C.webUrl("evil.example/x?y"), null);
+eq("no page for an option", C.webUrl("-x"), null);
+eq("a URL in a toast is not a link", C.plainText("https://evil.example is online"), "https: //evil.example is online");
+eq("plain text stays", C.plainText("vega is online"), "vega is online");
+
 done("Connect.js");

@@ -69,7 +69,7 @@ Item {
         target: root.source
         ignoreUnknownSignals: true
         function onNotice(text) {
-            ToastService.showInfo("Abyss", text);
+            root._toast("Abyss", text);
         }
     }
 
@@ -85,9 +85,9 @@ Item {
             return;
         Quickshell.execDetached(["dms", "cl", "copy", String(text)]);
         if (what)
-            ToastService.showInfo(what + " copied", String(text));
+            root._toast(what + " copied", String(text));
         else
-            ToastService.showInfo("Copied " + text);
+            root._toast("Copied " + text);
     }
 
     // False when the host is not one ssh can safely be handed (says why).
@@ -98,13 +98,13 @@ Item {
             return false;
         const h = String(host), want = terminal || prefs.terminal, p = prog || "ssh";
         if (!Terminal.validHost(h)) {
-            ToastService.showInfo("Abyss", "Not opening " + p.toUpperCase() + ": \"" + h + "\" is not a plain host name or address");
+            root._toast("Abyss", "Not opening " + p.toUpperCase() + ": \"" + h + "\" is not a plain host name or address");
             return false;
         }
         lookup.run(Terminal.lookupCommand(want), (out, err, code) => {
             const found = String(out).trim();
             if (code !== 0 || !found)
-                ToastService.showInfo("Abyss", Terminal.missingText(want));
+                root._toast("Abyss", Terminal.missingText(want));
             else
                 Quickshell.execDetached(p === "sftp" ? Terminal.sftpCommand(found, h, link) : Terminal.sshCommand(found, h, link));
         });
@@ -121,7 +121,7 @@ Item {
             return false;
         const host = peer.fqdn || peer.ip, link = prefs.linkOf(peer.id);
         if (!Connect.validHost(host)) {
-            ToastService.showInfo("Abyss", "Not opening " + kind + ": \"" + host + "\" is not a plain host name or address");
+            root._toast("Abyss", "Not opening " + kind + ": \"" + host + "\" is not a plain host name or address");
             return false;
         }
         const probe = root.source && !root.source.demo ? Connect.probeCommand(peer.ip || host, Connect.portOf(kind, link)) : null;
@@ -188,21 +188,29 @@ Item {
         if (!peer || !root.source)
             return false;
         if (root.source.demo) {
-            ToastService.showInfo("Abyss", peer.name + ": " + Math.round(peer.latencyMs * 10) / 10 + " ms (made-up mesh)");
+            root._toast("Abyss", peer.name + ": " + Math.round(peer.latencyMs * 10) / 10 + " ms (made-up mesh)");
             return true;
         }
         const cmd = Ping.command(peer.ip);
         if (!cmd) {
-            ToastService.showInfo("Abyss", "Not pinging: \"" + peer.ip + "\" is not an address");
+            root._toast("Abyss", "Not pinging: \"" + peer.ip + "\" is not an address");
             return false;
         }
-        ToastService.showInfo("Abyss", "Pinging " + peer.name + "…");
-        pinger.run(cmd, (out, err, code) => ToastService.showInfo("Abyss", Ping.summary(peer.name, out, code)));
+        root._toast("Abyss", "Pinging " + peer.name + "…");
+        pinger.run(cmd, (out, err, code) => root._toast("Abyss", Ping.summary(peer.name, out, code)));
         return true;
     }
 
     function openUrl(url) {
         Qt.openUrlExternally(url);
+    }
+
+    // Every toast goes through here: names and notes may come from peers
+    function _toast(title, text) {
+        if (text === undefined)
+            ToastService.showInfo(Connect.plainText(title));
+        else
+            ToastService.showInfo(Connect.plainText(title), Connect.plainText(text));
     }
 
     // The jellyfish's click: the one step that moves the connection forward
@@ -224,7 +232,7 @@ Item {
     function open() {
         if (BarWidgetService.triggerWidgetPopout("abyss"))
             return true;
-        ToastService.showInfo("Abyss", "Add Abyss to the bar to open it from here");
+        root._toast("Abyss", "Add Abyss to the bar to open it from here");
         return false;
     }
 
@@ -306,7 +314,7 @@ Item {
             const p = root.findPeer(name);
             if (p && prefs.isMuted(p.id))
                 return;
-            ToastService.showInfo(name + (online ? " is online" : " went offline"));
+            root._toast(name + (online ? " is online" : " went offline"));
         }
     }
 

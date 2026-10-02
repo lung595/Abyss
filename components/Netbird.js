@@ -52,11 +52,16 @@ function downCmd() {
 // Setup Keys), on NetBird Cloud or on a self-hosted management server.
 // null for a key or an address that is not well formed. A key never starts
 // with "-" (it would read as an option) and the address must be http(s)
+// A self-hosted management server: https only, since the setup key travels
+// to it (P109). No spaces, nothing before the host
+function validServer(url) {
+    return /^https:\/\/[^\s\/@][^\s@]*$/.test(url);
+}
 function joinCmd(key, url, hostname) {
     const k = String(key || "").trim(), u = String(url || "").trim(), h = String(hostname || "").trim();
     if (!/^[A-Za-z0-9][A-Za-z0-9_.=-]{7,}$/.test(k))
         return null;
-    if (u && !/^https?:\/\/[^\s\/][^\s]*$/.test(u))
+    if (u && !validServer(u))
         return null;
     if (h && !/^[A-Za-z0-9][A-Za-z0-9-]{0,62}$/.test(h))
         return null;
@@ -77,7 +82,7 @@ function joinFileCmd(path, url, hostname) {
     const f = String(path || "").trim(), u = String(url || "").trim(), h = String(hostname || "").trim();
     if (!/^\/[^\0\n]+$/.test(f))
         return null;
-    if (u && !/^https?:\/\/[^\s\/][^\s]*$/.test(u))
+    if (u && !validServer(u))
         return null;
     if (h && !/^[A-Za-z0-9][A-Za-z0-9-]{0,62}$/.test(h))
         return null;

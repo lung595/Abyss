@@ -14,6 +14,7 @@ import "Swim.js" as Swim
 import "Grips.js" as Grips
 import "Goldfish.js" as Fish
 import "Commands.js" as Commands
+import "Connect.js" as Connect
 
 // The deep, shared by the popout, the Control Center and the desktop.
 //
@@ -1229,7 +1230,7 @@ Item {
         if (actions)
             actions.copy(text, what);
         else
-            ToastService.showInfo(what + " copied", text);
+            ToastService.showInfo(what + " copied", Connect.plainText(text));
     }
     function ssh(peer) {
         if (actions)
@@ -1245,8 +1246,12 @@ Item {
             actions.ping(peer);
     }
     function openWeb(peer) {
-        if (actions)
-            actions.openUrl("http://" + (peer.fqdn || peer.ip));
+        const host = peer.fqdn || peer.ip;
+        const url = Connect.webUrl(host);
+        if (!url)
+            ToastService.showInfo("Abyss", Connect.plainText("Not opening the page: \"" + host + "\" is not a plain host name or address"));
+        else if (actions)
+            actions.openUrl(url);
     }
     function _peerAt(px, py) {
         let best = null, dist = 46;
