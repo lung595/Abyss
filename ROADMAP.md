@@ -4,7 +4,8 @@ No promises, no dates. Everything here was asked for and is not in a release yet
 
 ## Next
 
-- Measured CPU cost while a view is open, and fresh screenshots.
+- Measured CPU cost while a view is open, from a repeatable bench (the shell is too busy on a desktop in use for honest numbers).
+- The name of the deepest peer, when it is the top consumer, can reach the cave names on the floor.
 
 ## Later
 

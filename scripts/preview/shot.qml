@@ -686,13 +686,27 @@ Window {
         interval: 900
         onTriggered: task()
     }
-    // Let a few clock ticks run so pulses and tentacles are in place
+    // Let a few clock ticks run so pulses and tentacles are in place, then
+    // wait until no creature is swimming: the demo traffic regroups the deep
+    // every second, and a still taken mid-trip shows two animals crossing
+    // (P92). Checked every 100 ms, for 5 s at most.
     Timer {
         id: shot
+        property int waits: 0
         interval: 1600
-        onTriggered: win.contentItem.grabToImage(r => {
-            r.saveToFile(win.out);
-            Qt.quit();
-        })
+        onTriggered: {
+            if (scene._swimming && waits < 50) {
+                waits++;
+                interval = 100;
+                restart();
+                return;
+            }
+            if (scene._swimming)
+                console.warn("shot: still swimming after 5 s, grabbed anyway");
+            win.contentItem.grabToImage(r => {
+                r.saveToFile(win.out);
+                Qt.quit();
+            });
+        }
     }
 }

@@ -5,6 +5,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## Unreleased
 
+### Documentation
+
+- **Every screenshot and GIF redone for 0.5**: the README and the guide showed the deep of 0.1 and 0.2 (no search bar, no *+* button, no doors on the card). All of them are rendered again from the demo mesh: the deep, disconnected, relay down, exit node in a light theme, search, menus, networks, the card, the Control Center, the desktop fishbowl, and the five gesture GIFs.
+
+### Fixed
+
+- **Previews no longer catch two creatures crossing**: the demo traffic regroups the deep every second, and the preview script took its picture 1.6 s in, often in the middle of a swim, so a manta and a turtle could sit on top of each other with a hidden name. It now waits until nothing swims before taking the picture. The layout itself never overlaps resting creatures.
+
 ## 0.5.1 - 2026-10-02
 
 ### Security
