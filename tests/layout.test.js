@@ -190,8 +190,23 @@ ok("everyday traffic is fine", L.ribbonWidth(M.level(1e6)) < 1.5 && L.ribbonWidt
 {
     const six = ["a1", "a2", "a3", "a4"].map(id => p(id, 150));
     const g = L.layout(six, 646, 420, 60, { "caves": 2 });
-    const clear = Object.keys(g.peers).every(id => [0, 1].every(c => Math.abs(g.peers[id].x - L.caveX(g.frame, c)) >= 88 || Math.abs(g.peers[id].y - (g.frame.floorY - 70)) >= 60));
-    ok("the fan keeps clear of the caves' labels", clear);
+    // 100 px apart sideways; a creature's box: 30 px of body above its centre, its tallest label
+    // (TOP CONSUMER, name, rates) down to 66 px below; a cave's label from
+    // 88 to 52 px above the floor
+    const clearOf = (lay, n) => Object.keys(lay.peers).filter(id => !lay.peers[id].floor).every(id => [...Array(n).keys()].every(c => {
+        const q = lay.peers[id], fy = lay.frame.floorY;
+        return Math.abs(q.x - L.caveX(lay.frame, c)) >= 100 || q.y + 66 <= fy - 88 || q.y - 30 >= fy - 52;
+    }));
+    ok("the fan keeps clear of the caves' labels", clearOf(g, 2));
+    // P124: the deepest peer's label, when it is the top consumer, reached
+    // down onto the cave row ("lab" hidden in the exit-light demo). Every
+    // roomy size keeps the room, whoever is the top. (Too small for the roomy
+    // arrangement, the squeezed one ignores the caves: ROADMAP.md)
+    ok("no label reaches a cave, whoever is the top consumer", [[646, 420], [580, 480], [720, 520]].every(([w, h]) => [2, 3, 4, 5, 6].every(n => {
+        const ps = [];
+        for (let i = 0; i < n; i++) ps.push(p("t" + i, [4, 40, 150][i % 3]));
+        return clearOf(L.layout(ps, w, h, 60, { "caves": 3 }), 3);
+    })));
 }
 
 // Nothing in the way (P60)("components/DemoMesh.js");

@@ -109,7 +109,20 @@ function spreadSpan(n) {
 // Two placed things too close: their creature-and-label boxes touch, or one
 // hangs in the way of the other's tentacle (same direction, other ring)
 const BOX_W = 88, BOX_H = 60;
+// A cave's label against a creature: the creature's box runs from its body
+// down to the bottom of its tallest label (Creature.qml: label 26 px below
+// the centre; "TOP CONSUMER", name and rates make it ~40 px tall), the cave's
+// label from its hover height down to 52 px above the floor (Cave.qml: the
+// cave sits 8 px below floorY, its label ends 60 px above it). Any
+// peer may become the top consumer, so every one keeps that room (P124).
+// Sideways, the top consumer's rates widen its pill: it keeps 100 px from a
+// cave, not 88 (104 put a tentacle over a lantern in the lab demo).
+const BODY_UP = 30, LABEL_DOWN = 66, CAVE_LABEL = [88, 52], CAVE_W = 100;
 function _clash(a, b, strict) {
+    if (a.cave || b.cave) {
+        const c = a.cave ? a : b, q = a.cave ? b : a;
+        return Math.abs(q.x - c.x) < CAVE_W && q.y + LABEL_DOWN > c.floorY - CAVE_LABEL[0] && q.y - BODY_UP < c.floorY - CAVE_LABEL[1];
+    }
     if (Math.abs(a.x - b.x) < BOX_W && Math.abs(a.y - b.y) < BOX_H)
         return true;
     return strict && a.ring !== b.ring && Math.abs(a.deg - b.deg) < 14;
@@ -132,7 +145,7 @@ function spread(f, rings, strict, prev) {
     // The caves' labels are in the way too (never a tentacle clash: no ring)
     const caves = [];
     for (let c = 0; c < f.caves; c++)
-        caves.push({ "x": caveX(f, c), "y": f.floorY - 70, "ring": -1, "deg": 999 });
+        caves.push({ "x": caveX(f, c), "floorY": f.floorY, "cave": true, "ring": -1, "deg": 999 });
     const placed = caves.slice();
     for (let i = 0; i < n; i++) {
         const k = order[i].k, rho = f.fan.rings[k];
