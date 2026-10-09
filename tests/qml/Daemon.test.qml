@@ -44,6 +44,10 @@ Item {
             check("ipc ping answers at once", test.ipc.ping("atlas") === "Pinging atlas", test.ipc.ping("atlas"));
             check("ipc ping, offline peer", test.ipc.ping("lark") === "lark-phone is offline", test.ipc.ping("lark"));
             check("ipc exit through a peer", test.ipc.exit("harbor-vps") === "Internet through harbor-vps");
+            check("ipc send, no such peer", test.ipc.send("zz", "/tmp/x") === "No peer named zz", test.ipc.send("zz", "/tmp/x"));
+            check("ipc send, offline peer is refused with the reason", test.ipc.send("lark", "/tmp/x") === "Refused: lark-phone is offline", test.ipc.send("lark", "/tmp/x"));
+            check("ipc send, a relative path is refused", test.ipc.send("atlas", "relative/x").indexOf("Refused: ") === 0, test.ipc.send("atlas", "relative/x"));
+            check("ipc send, no path is refused", test.ipc.send("atlas", "").indexOf("Refused: ") === 0);
         },
         () => {
             check("ipc ssh knocks first: atlas does not answer, the toast says how to turn SSH on", ToastService.warned.some(t => t.indexOf("! atlas does not accept Terminal (port 22)") === 0 && t.indexOf("[sudo systemctl enable --now sshd]") > 0), ToastService.warned);

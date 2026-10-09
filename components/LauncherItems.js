@@ -71,15 +71,17 @@ function items(s, query) {
     // Smart words (a speed like ">100ms", slow, direct, relay, a kind such
     // as nas or phone…) pick the peers themselves, as in the deep's search:
     // "abyss >100ms", "abyss ssh nas", "abyss copy phones"
-    const toks = q.split(/\s+/), verb = ["copy", "ssh"].indexOf(toks[0]) >= 0 ? toks[0] : "";
+    const toks = q.split(/\s+/), verb = ["copy", "ssh", "send"].indexOf(toks[0]) >= 0 ? toks[0] : "";
     const filters = Query.parse((verb ? toks.slice(1) : toks).join(" "), s.relays);
     const smart = filters.some(f => !f.name);
     const rows = p => {
         const out = [];
-        if (verb !== "ssh")
+        if (!verb || verb === "copy")
             out.push(_item("Copy " + p.name + "'s address", "content_copy", p.ip, "copy:" + p.name));
-        if (verb !== "copy")
+        if (!verb || verb === "ssh")
             out.push(_item("SSH to " + p.name, "terminal", p.ip, "ssh:" + p.name));
+        if (!verb || verb === "send")
+            out.push(_item("Send a file to " + p.name + "…", "upload_file", "Choose what to send", "send:" + p.name));
         return out;
     };
     if (smart) {
@@ -88,10 +90,7 @@ function items(s, query) {
         return head.concat(net).filter(i => _match(i, q)).concat(found);
     }
     const peers = [];
-    s.peers.filter(p => p.online).forEach(p => {
-        peers.push(_item("Copy " + p.name + "'s address", "content_copy", p.ip, "copy:" + p.name));
-        peers.push(_item("SSH to " + p.name, "terminal", p.ip, "ssh:" + p.name));
-    });
+    s.peers.filter(p => p.online).forEach(p => rows(p).forEach(r => peers.push(r)));
     return head.concat(net, peers).filter(i => _match(i, q));
 }
 

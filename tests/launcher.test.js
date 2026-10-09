@@ -51,4 +51,10 @@ eq("a relay by its tail", names(L.items(smart, "ssh eu")).join("|"), "SSH to pik
 eq("plain words still narrow by name", names(L.items(smart, "ssh vega")).join(), "SSH to vega");
 eq("offline peers are never offered", names(L.items(smart, "ssh offline")).join("|"), "");
 
+// Sending a file: one row per online peer, opening the picker
+eq("send keeps one row per peer", names(L.items(smart, "send >50ms")).join("|"), "Send a file to tern…|Send a file to pike…");
+eq("a send row carries the peer's name", L.items(smart, "send vega")[0].action, "send:vega");
+ok("the plain list offers it too", names(L.items(smart, "atlas")).indexOf("Send a file to atlas…") >= 0);
+ok("never for an offline peer", names(L.items(smart, "orion")).every(n => n.indexOf("Send") !== 0));
+
 done("launcher");

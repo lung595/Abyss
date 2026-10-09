@@ -988,7 +988,7 @@ Item {
                         "o": 0
                     });
                 a.i += dt * (0.25 + 3.2 * tn.down);
-                a.o += dt * (0.12 + 2 * tn.up);
+                a.o += dt * (0.12 + 2 * (tn.id === sendLayer.sendingId ? 1 : tn.up));
                 if (a.i > 1) {
                     a.i = 0;
                     _pulses.push({
@@ -1253,11 +1253,13 @@ Item {
         else if (actions)
             actions.openUrl(url);
     }
-    function _peerAt(px, py) {
+    // The online peer under a point; any peer when asked (a file dropped on
+    // an offline one is explained, not ignored)
+    function _peerAt(px, py, any) {
         let best = null, dist = 46;
         arr.items.forEach(it => {
             const p = it.type === "peer" ? peerById[it.peerId] : null, s = lay.peers[it.id];
-            if (!p || !p.online || !s)
+            if (!p || (!p.online && !any) || !s)
                 return;
             const d = Math.hypot(s.x - px, s.y - py);
             if (d < dist) {
@@ -1590,6 +1592,10 @@ Item {
                 const on = !!source && source.exitNode === p.name && !prefs.exitGroup;
                 out.push({ "text": on ? "Stop using for Internet" : "Use for Internet", "act": "use", "arg": { "peer": on ? "" : p.name, "group": "" } });
             }
+            if (p.online) {
+                out.push({ "text": "Send a file…", "act": "send", "arg": false });
+                out.push({ "text": "Send a folder…", "act": "send", "arg": true });
+            }
             mine.filter(x => x !== g).forEach(x => out.push({ "text": "Add to " + x.name, "act": "join", "arg": x.id }));
             out.push({ "text": "New group", "act": "create", "arg": p.id });
             if (g)
@@ -1615,6 +1621,12 @@ Item {
         }
         if (a.act === "rename") {
             naming = a.arg;
+            return;
+        }
+        if (a.act === "send") {
+            const target = _menuPeer(menuId);
+            closeMenu();
+            sendLayer.pick(target, a.arg);
             return;
         }
         if (a.act === "toggle")
@@ -1982,6 +1994,14 @@ Item {
                 scene: root
                 tents: root.tents
                 ext: root.ext
+            }
+
+            // Sending files: the file carried to a creature, its light after
+            SendLayer {
+                id: sendLayer
+                objectName: "sendLayer"
+                anchors.fill: parent
+                scene: root
             }
 
             Jellyfish {
@@ -2767,6 +2787,33 @@ Item {
             ink: root.arr.hits ? root.sunColor : Theme.warning
         }
 
+        // Files dropped on a creature are sent to it (SendLayer). A drop on
+        // nothing says so; the fallbacks (menu, Ctrl+V, launcher) cover the
+        // views that cannot receive drops at all
+        DropArea {
+            anchors.fill: parent
+            z: 1
+            keys: ["text/uri-list"]
+            enabled: root.looking && !!root.actions && !!root.actions.send
+            onPositionChanged: drag => {
+                const p = root._peerAt(drag.x, drag.y, true);
+                root.dropName = p ? p.name : "";
+            }
+            onExited: root.dropName = ""
+            onDropped: drop => {
+                root.dropName = "";
+                const urls = drop.urls || [];
+                if (!urls.length)
+                    return;
+                const p = root._peerAt(drop.x, drop.y, true);
+                if (p)
+                    sendLayer.dropFiles(p, urls, Qt.point(drop.x, drop.y));
+                else
+                    root.explain("Drop it on a creature", "Each creature is a device; let go right on one", "send-a-file", drop.x, drop.y + 30);
+                drop.accept();
+            }
+        }
+
         // Dims the water behind the open card; a click there closes it. In
         // the bowl it stays clear: the bowl darkens its own water (cardMix)
         Rectangle {
@@ -2887,6 +2934,11 @@ Item {
                 closePeek();
             else
                 return;
+            event.accepted = true;
+            return;
+        }
+        if (event.key === Qt.Key_V && (event.modifiers & Qt.ControlModifier) && cardId !== "" && peerById[cardId]) {
+            sendLayer.paste(peerById[cardId]);
             event.accepted = true;
             return;
         }

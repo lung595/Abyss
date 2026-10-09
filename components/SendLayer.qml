@@ -1,4 +1,5 @@
 import QtQuick
+import qs.Common
 import "GrabMotion.js" as Motion
 import "SendFlow.js" as Flow
 
@@ -24,6 +25,7 @@ Item {
     // The creature that has just received something, and how bright it is
     property string bloomId: ""
     property real bloomAmount: 0
+    readonly property color bloomTint: layer.bloomId !== "" ? layer.scene.tintOfItem(layer.scene.itemById[layer.bloomId]) : Theme.primary
 
     // Where the last drop let go, for the file to start from (this view only)
     property var _dropAt: null
@@ -50,7 +52,6 @@ Item {
     }
 
     // --- Following it --------------------------------------------------------
-    onWatchingChanged: layer.hub.viewing(layer.watching)
     Component.onCompleted: {
         if (layer.watching)
             layer.hub.viewing(true);
@@ -81,7 +82,11 @@ Item {
             if (!layer.watching)
                 return;
             if (layer.flying !== "")
-                layer._late = { "peerId": peerId, "ok": ok, "failure": failure };
+                layer._late = {
+                    "peerId": peerId,
+                    "ok": ok,
+                    "failure": failure
+                };
             else
                 layer._outcome(peerId, ok, failure);
         }
@@ -102,8 +107,11 @@ Item {
             }
         }
     }
-    // The view closes mid-flight: nothing is left half done
+    // This view starts or stops being looked at; closing it mid-flight
+    // leaves nothing half done
     onWatchingChanged: {
+        if (layer.hub)
+            layer.hub.viewing(layer.watching);
         if (!layer.watching) {
             grab.stop();
             layer.flying = "";
@@ -124,6 +132,22 @@ Item {
         } else if (failure) {
             layer.scene.explain(failure.title, failure.advice, Flow.anchor(failure), at.x, at.y + 50);
         }
+    }
+
+    // The light a creature gives off for a moment once it has received
+    // something: a soft ring that widens as it fades
+    Rectangle {
+        readonly property point at: layer.bloomId !== "" ? layer.scene.spotOf(layer.bloomId) : Qt.point(0, 0)
+        readonly property real size: 70 + 50 * layer.bloomAmount
+        visible: layer.bloomAmount > 0.01
+        x: at.x - size / 2
+        y: at.y - size / 2
+        width: size
+        height: size
+        radius: size / 2
+        color: Qt.rgba(layer.bloomTint.r, layer.bloomTint.g, layer.bloomTint.b, 0.18 * layer.bloomAmount)
+        border.width: 2
+        border.color: Qt.rgba(layer.bloomTint.r, layer.bloomTint.g, layer.bloomTint.b, 0.8 * layer.bloomAmount)
     }
 
     // The bloom: 30 Hz while it lasts, then gone
