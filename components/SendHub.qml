@@ -15,6 +15,10 @@ QtObject {
     id: hub
 
     property var prefs: null
+    // How long the clipboard read and a person's choice in the picker may
+    // take (a person: as long as they need)
+    property int pasteTimeout: 10000
+    property int pickTimeout: 10 * 60 * 1000
     // How many views of Abyss are being looked at (each scene reports itself)
     property int viewers: 0
     // The peer a send is going to ("" when none)
@@ -27,6 +31,8 @@ QtObject {
     signal refused(string peerId, var failure)
 
     property string _peerId: ""
+    // The clipboard reader or the picker is open: a second one would ask twice
+    property bool _asking: false
     property var _sender: null
 
     function viewing(on) {
@@ -58,7 +64,7 @@ QtObject {
         const no = hub._check(peer);
         if (no)
             return no;
-        hub._ask(Flow.pasteCommand(), 10000, (out, code) => {
+        hub._ask(Flow.pasteCommand(), hub.pasteTimeout, (out, code) => {
             const fail = Flow.pasteFailure(code, out);
             if (fail)
                 hub.refused(peer.id, fail);
@@ -73,8 +79,7 @@ QtObject {
         const no = hub._check(peer);
         if (no)
             return no;
-        // A person is choosing: as long as they need
-        hub._ask(Flow.pickCommand(peer.name, folder), 10 * 60 * 1000, (out, code) => {
+        hub._ask(Flow.pickCommand(peer.name, folder), hub.pickTimeout, (out, code) => {
             const fail = Flow.pickFailure(code);
             if (fail)
                 hub.refused(peer.id, fail);
@@ -93,7 +98,7 @@ QtObject {
 
     // "" when the peer can be sent to now, otherwise why not (and refused())
     function _check(peer) {
-        const fail = !peer ? Flow.offlineFailure("") : !peer.online ? Flow.offlineFailure(peer.name) : hub._peerId !== "" ? Flow.busyFailure() : null;
+        const fail = !peer ? Flow.offlineFailure("") : !peer.online ? Flow.offlineFailure(peer.name) : hub._peerId !== "" || hub._asking ? Flow.busyFailure() : null;
         if (!fail)
             return "";
         hub.refused(peer ? peer.id : "", fail);
@@ -102,11 +107,13 @@ QtObject {
 
     // Runs one program to its end and hands back its output and exit code
     function _ask(argv, timeout, done) {
+        hub._asking = true;
         const run = runnerC.createObject(hub, {
             "timeout": timeout
         });
         run.run(argv, (out, err, code) => {
             run.destroy();
+            hub._asking = false;
             done(out, code);
         });
     }

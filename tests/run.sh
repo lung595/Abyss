@@ -23,5 +23,12 @@ else
     echo "- QML integration tests skipped: $PYTHON has no PySide6 (pip install PySide6-Essentials)"
 fi
 
+# The scene tests need qml-qt6 and the DMS Material Symbols font (see tests/scene/run.sh)
+if command -v qml-qt6 >/dev/null; then
+    tests/scene/run.sh || failed=1
+else
+    echo "- Scene tests skipped: qml-qt6 not found"
+fi
+
 [ "$failed" = 0 ] && echo "All tests passed" || echo "Some tests FAILED"
 exit "$failed"

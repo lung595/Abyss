@@ -169,7 +169,7 @@ Bind them in your compositor, for example in niri: `Mod+A { spawn "dms" "ipc" "c
 
 ## Privacy
 
-The plugin never talks to the network and has no telemetry. It reads NetBird through its local `netbird` command, never through a shell. A setup key goes to `netbird` through its environment, never on a command line, is never saved or logged, and its copy leaves the clipboard history once you have joined. Peers and traffic stay in memory; only your settings (favorites, muted peers, your groups, exit routes once seen, and the login you set per peer, with peer names and identifiers) are saved by DMS. Sending a file runs your own `scp` once, only when you send, in batch mode: it never asks for or stores a password, and a device whose key changed is refused. Details in the [user guide](docs/GUIDE.md#privacy).
+The plugin never talks to the network and has no telemetry. It reads NetBird through its local `netbird` command, never through a shell. A setup key goes to `netbird` through its environment, never on a command line, is never saved or logged, and its copy leaves the clipboard history once you have joined. Peers and traffic stay in memory; only your settings (favorites, muted peers, your groups, exit routes once seen, and the login you set per peer, with peer names and identifiers) are saved by DMS. Sending a file runs your own `scp` once, only when you send, in batch mode: it never asks for or stores a password, and a device whose key changed is refused. Ctrl+V on a card reads the clipboard once with `wl-paste`, only when you press it, and keeps nothing; "Send a file…" opens `zenity`, your file picker. Details in the [user guide](docs/GUIDE.md#privacy).
 
 ## Documentation
 

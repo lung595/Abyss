@@ -86,7 +86,7 @@ PYTHON=/path/to/python tests/run.sh   # a Python that has PySide6
 Run them before every commit; CI runs them on every push (`.github/workflows/tests.yml`).
 
 - **Unit tests** (`gjs`): the pure `.js` files in `components/` are tested in `tests/<name>.test.js`; `tests/load.js` loads QML-flavoured JavaScript (`.pragma`, `.import`) into gjs.
-- **Integration tests** (PySide6, skipped without it): `tests/qml/*.test.qml` run through `tests/qml/qmltest.py`, which plays Quickshell's `Process` with a real `QProcess` and puts a fake `netbird` (`tests/qml/fake-netbird`, outputs taken from the NetBird client's code) first on the `PATH`. They cover `CliRunner`, `NetbirdSource` and `AbyssDaemon`. `FAKE_NB_DELAY=0.3` makes every fake call slow, to try a slow machine.
+- **Integration tests** (PySide6, skipped without it): `tests/qml/*.test.qml` run through `tests/qml/qmltest.py`, which plays Quickshell's `Process` with a real `QProcess` and puts a fake `netbird` (`tests/qml/fake-netbird`, outputs taken from the NetBird client's code) first on the `PATH`. They cover `CliRunner`, `NetbirdSource`, `AbyssDaemon`, the send engine and `SendHub` (with fake `scp`, `wl-paste` and `zenity`; `touch $FAKE_NB/missing.<program>` makes a program fail to start). **Scene tests** (`tests/scene/*.test.qml`, `tests/scene/run.sh`, `qml-qt6` with the fake shell modules of `scripts/preview/imports`) drive the scene itself: drop, menu, Ctrl+V. `FAKE_NB_DELAY=0.3` makes every fake call slow, to try a slow machine.
 - `NOTES.md` logs every bug found in review: where, why, the fix and the test that shows it.
 
 ## Screenshots and GIFs

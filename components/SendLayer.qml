@@ -52,13 +52,25 @@ Item {
     }
 
     // --- Following it --------------------------------------------------------
-    Component.onCompleted: {
-        if (layer.watching)
-            layer.hub.viewing(true);
+    // The hub this view is counted on (null when it is not): the count moves
+    // only when that changes, so a view is never counted twice, and a hub
+    // that is swapped out is told this view has left it
+    property var _counted: null
+    function _count() {
+        const on = layer.watching ? layer.hub : null;
+        if (on === layer._counted)
+            return;
+        if (layer._counted)
+            layer._counted.viewing(false);
+        if (on)
+            on.viewing(true);
+        layer._counted = on;
     }
+    onHubChanged: layer._count()
+    Component.onCompleted: layer._count()
     Component.onDestruction: {
-        if (layer.watching)
-            layer.hub.viewing(false);
+        if (layer._counted)
+            layer._counted.viewing(false);
     }
 
     Connections {
@@ -110,8 +122,7 @@ Item {
     // This view starts or stops being looked at; closing it mid-flight
     // leaves nothing half done
     onWatchingChanged: {
-        if (layer.hub)
-            layer.hub.viewing(layer.watching);
+        layer._count();
         if (!layer.watching) {
             grab.stop();
             layer.flying = "";

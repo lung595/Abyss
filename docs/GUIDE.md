@@ -237,6 +237,7 @@ DMS's *Reduce motion* is respected: every movement stops.
 - **Names are only names.** A peer's name is shown as plain text: it never becomes a link in a toast, and *Open page* only opens a plain host name or address.
 - **Who can ask Abyss to act.** Like every DMS plugin, the `dms ipc call abyss …` commands answer programs running in your own session, the same way your keyboard shortcuts do. They can connect, disconnect or open a peer, never read a setup key.
 - **Nothing in the log.** Abyss writes no peer, address or command line to the shell's journal.
+- **Sending a file** runs your own `scp` once, only when you send. **Ctrl+V** on a card reads the clipboard once with `wl-paste` (the list of copied files), only on that keypress; nothing of it is kept. **Send a file…** opens `zenity`, your file picker. Paths go to these programs as arguments, never through a shell, and are never logged.
 - **Local tools only**: copy uses DMS's clipboard, SSH, SFTP, VNC and RDP open your own programs, Ping runs your own `ping` to one peer of your mesh, only when you click it. The GitHub mark in help notes opens the docs in your browser, on click only.
 
 ## Performance

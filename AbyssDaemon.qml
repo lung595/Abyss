@@ -91,7 +91,10 @@ Item {
         target: hub
         function onEnded(peerId, ok, text, failure) {
             if (hub.viewers === 0)
-                root._sendNote(ok ? { "title": text, "advice": "" } : failure);
+                root._sendNote(ok ? {
+                    "title": text,
+                    "advice": ""
+                } : failure);
         }
         function onRefused(peerId, failure) {
             if (hub.viewers === 0)

@@ -48,8 +48,12 @@ Item {
             check("ipc send, offline peer is refused with the reason", test.ipc.send("lark", "/tmp/x") === "Refused: lark-phone is offline", test.ipc.send("lark", "/tmp/x"));
             check("ipc send, a relative path is refused", test.ipc.send("atlas", "relative/x").indexOf("Refused: ") === 0, test.ipc.send("atlas", "relative/x"));
             check("ipc send, no path is refused", test.ipc.send("atlas", "").indexOf("Refused: ") === 0);
+            // The fake scp succeeds; no view is open, so the daemon says so in a toast
+            check("ipc send to an online peer starts", test.ipc.send("atlas", "/etc/os-release") === "OK");
+            check("ipc send, a second one meanwhile is refused as busy", test.ipc.send("atlas", "/etc/os-release").indexOf("Refused: Another send") === 0);
         },
         () => {
+            check("the send ended with a notification, as no view is open", ToastService.shown.some(t => t === "Sent to atlas"), ToastService.shown);
             check("ipc ssh knocks first: atlas does not answer, the toast says how to turn SSH on", ToastService.warned.some(t => t.indexOf("! atlas does not accept Terminal (port 22)") === 0 && t.indexOf("[sudo systemctl enable --now sshd]") > 0), ToastService.warned);
             check("the exit reached NetBird", daemon.source.exitNode === "harbor-vps" && daemon.source.view.peers.find(p => p.name === "harbor-vps").lending);
             check("ipc exit alone names the peer", test.ipc.exit(" ") === "Internet goes out through harbor-vps", test.ipc.exit(" "));

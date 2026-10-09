@@ -1255,6 +1255,17 @@ Item {
     }
     // The online peer under a point; any peer when asked (a file dropped on
     // an offline one is explained, not ignored)
+    // Files let go at (x, y): sent to the creature there, or a note says to
+    // drop right on one
+    function dropUrls(urls, x, y) {
+        if (!urls.length)
+            return;
+        const p = _peerAt(x, y, true);
+        if (p)
+            sendLayer.dropFiles(p, urls, Qt.point(x, y));
+        else
+            explain("Drop it on a creature", "Each creature is a device; let go right on one", "send-a-file", x, y + 30);
+    }
     function _peerAt(px, py, any) {
         let best = null, dist = 46;
         arr.items.forEach(it => {
@@ -1593,8 +1604,16 @@ Item {
                 out.push({ "text": on ? "Stop using for Internet" : "Use for Internet", "act": "use", "arg": { "peer": on ? "" : p.name, "group": "" } });
             }
             if (p.online) {
-                out.push({ "text": "Send a file…", "act": "send", "arg": false });
-                out.push({ "text": "Send a folder…", "act": "send", "arg": true });
+                out.push({
+                    "text": "Send a file…",
+                    "act": "send",
+                    "arg": false
+                });
+                out.push({
+                    "text": "Send a folder…",
+                    "act": "send",
+                    "arg": true
+                });
             }
             mine.filter(x => x !== g).forEach(x => out.push({ "text": "Add to " + x.name, "act": "join", "arg": x.id }));
             out.push({ "text": "New group", "act": "create", "arg": p.id });
@@ -2802,14 +2821,7 @@ Item {
             onExited: root.dropName = ""
             onDropped: drop => {
                 root.dropName = "";
-                const urls = drop.urls || [];
-                if (!urls.length)
-                    return;
-                const p = root._peerAt(drop.x, drop.y, true);
-                if (p)
-                    sendLayer.dropFiles(p, urls, Qt.point(drop.x, drop.y));
-                else
-                    root.explain("Drop it on a creature", "Each creature is a device; let go right on one", "send-a-file", drop.x, drop.y + 30);
+                root.dropUrls(drop.urls || [], drop.x, drop.y);
                 drop.accept();
             }
         }
@@ -2937,8 +2949,8 @@ Item {
             event.accepted = true;
             return;
         }
-        if (event.key === Qt.Key_V && (event.modifiers & Qt.ControlModifier) && cardId !== "" && peerById[cardId]) {
-            sendLayer.paste(peerById[cardId]);
+        if (event.key === Qt.Key_V && (event.modifiers & Qt.ControlModifier) && cardId !== "" && _menuPeer(cardId)) {
+            sendLayer.paste(_menuPeer(cardId));
             event.accepted = true;
             return;
         }

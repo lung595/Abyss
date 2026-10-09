@@ -118,7 +118,10 @@ class Process(QObject):
             for k, v in self._env.items():
                 env.insert(k, str(v))
             p.setProcessEnvironment(env)
-            prog = shutil.which(self._command[0])
+            # A test makes a program "missing" (even if the system has it) by
+            # creating $FAKE_NB/missing.<name>
+            gone = os.path.exists(os.path.join(os.environ["FAKE_NB"], "missing." + os.path.basename(self._command[0])))
+            prog = None if gone else shutil.which(self._command[0])
             if not prog:
                 # Like a missing program: no exit, nothing on the streams
                 QTimer.singleShot(0, lambda: self._error(QProcess.ProcessError.FailedToStart))
@@ -160,6 +163,9 @@ def main():
     os.symlink(os.path.join(HERE, "fake-netbird"), os.path.join(bin_dir, "netbird"))
     # scp is a fake too: it records its arguments and fails on demand
     os.symlink(os.path.join(HERE, "fake-scp"), os.path.join(bin_dir, "scp"))
+    # The clipboard reader and the file picker are fakes too (see their files)
+    os.symlink(os.path.join(HERE, "fake-wl-paste"), os.path.join(bin_dir, "wl-paste"))
+    os.symlink(os.path.join(HERE, "fake-zenity"), os.path.join(bin_dir, "zenity"))
     # A terminal for SSH: Abyss looks one up before opening it
     os.symlink(shutil.which("true"), os.path.join(bin_dir, "kitty"))
     # ping answers nothing (exit 0, no output): "no answer"
