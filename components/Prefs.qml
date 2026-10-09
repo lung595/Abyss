@@ -1,6 +1,7 @@
 import QtQuick
 import qs.Common
 import qs.Services
+import "Send.js" as Send
 
 // Reactive view over the plugin's saved settings, shared by every surface.
 QtObject {
@@ -26,6 +27,9 @@ QtObject {
     readonly property bool notifications: _get("notifications", false)
     // Terminal used for SSH ("auto" tries the usual ones)
     readonly property string terminal: _get("terminal", "auto")
+    // The folder on the receiving device that sent files land in ("~" is its
+    // home); Send.remoteDir turns it into what scp takes
+    readonly property string sendFolder: _get("sendFolder", Send.DEFAULT_DIR)
     // How to reach each peer over SSH: peer id -> { user, port } (a phone
     // running Termux listens on 8022 and has its own user)
     readonly property var links: _get("links", ({}))

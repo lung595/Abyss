@@ -158,6 +158,8 @@ def main():
     bin_dir = os.path.join(os.environ["FAKE_NB"], "bin")
     os.mkdir(bin_dir)
     os.symlink(os.path.join(HERE, "fake-netbird"), os.path.join(bin_dir, "netbird"))
+    # scp is a fake too: it records its arguments and fails on demand
+    os.symlink(os.path.join(HERE, "fake-scp"), os.path.join(bin_dir, "scp"))
     # A terminal for SSH: Abyss looks one up before opening it
     os.symlink(shutil.which("true"), os.path.join(bin_dir, "kitty"))
     # ping answers nothing (exit 0, no output): "no answer"

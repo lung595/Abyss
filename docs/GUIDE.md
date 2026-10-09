@@ -22,6 +22,7 @@ Every refusal in Abyss says why in a short note, with a GitHub mark that opens t
 - [Add a device](#add-a-device)
 - [Join a mesh](#join-a-mesh)
 - [Let peers SSH in](#let-peers-ssh-in)
+- [Send a file](#send-a-file)
 - [From the launcher](#from-the-launcher)
 - [Settings](#settings)
 - [Privacy](#privacy)
@@ -151,6 +152,28 @@ A self-hosted server address must start with `https://`, so the key never travel
 ## Let peers SSH in
 
 Right-click the jellyfish and choose *Let peers SSH in here*, or run `dms ipc call abyss share on|off`. This turns NetBird's own SSH server on this device on or off, so your phone can open a session on your PC.
+
+## Send a file
+
+Abyss sends files and folders to a device with your own `scp`, over the same SSH login as its card (the user and port you saved there). No password is ever asked: it uses your SSH keys or NetBird's SSH access, and says so when that is not enough. Nothing starts until you send, and nothing stays running after.
+
+**Where it lands.** The folder on the device is *Folder files are sent to* in **Settings → Connect → Opening a device**, `~/Downloads` by default (`~` is the device's home). Letters, digits, spaces and `. _ - / @ % + = ,` only; a folder with `..` is refused. The folder must exist on the device.
+
+**Limits.** Up to 100 items and 200 GB at once. Abyss looks at what you picked first, so a missing item or a huge drop is refused before anything leaves.
+
+When a send fails, Abyss says why and what to do:
+
+- **Refused the login**: pick the right user on the card, copy your key to the device (`ssh-copy-id`), or turn on SSH in NetBird for it.
+- **Different key**: the device's SSH key changed since last time. If you reinstalled it, run `ssh-keygen -R` with its address.
+- **Does not accept SSH**: turn on its SSH server (`sshd`), or use its port from the card.
+- **Does not answer**: check that it is online and on the same mesh.
+- **No space left**: free some space, or pick another folder.
+- **Would not let Abyss write there**, or **folder not found**: create the folder on the device, or change it in Settings.
+- **scp could not run**: install the OpenSSH client.
+
+While it sends, progress is shown as a moving mark, not a percentage: `scp` prints no count without a terminal.
+
+(The drop, menu, paste and launcher ways to start a send come in the next release.)
 
 ## From the launcher
 

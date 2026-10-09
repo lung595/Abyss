@@ -1,0 +1,15 @@
+#!/bin/sh
+# Stands in for scp in the QML tests. The last argument is "[user@]host:dir";
+# the host decides the outcome:
+#   auth.mesh  refuse the login      full.mesh  disk full
+#   slow.mesh  hang (the test cancels it); its pid is saved
+#   anything else: succeed
+# The arguments are saved one per line in $FAKE_NB/scp.argv.
+for last; do :; done
+printf '%s\n' "$@" > "$FAKE_NB/scp.argv"
+case "$last" in
+    *auth.mesh:*) echo "x@auth.mesh: Permission denied (publickey,password)." >&2; exit 255 ;;
+    *full.mesh:*) echo "scp: write remote \"/srv/f\": No space left on device" >&2; exit 1 ;;
+    *slow.mesh:*) echo $$ > "$FAKE_NB/slow.pid"; exec sleep 30 ;;
+esac
+exit 0

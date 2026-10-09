@@ -4,6 +4,7 @@ import qs.Services
 import qs.Widgets
 import qs.Modules.Plugins
 import "components"
+import "components/Send.js" as Send
 import "components/Terminal.js" as Terminal
 
 // Plugin settings, as tabs: one short subject each, a title with an icon,
@@ -219,6 +220,13 @@ PluginSettings {
                             description: "Used by Terminal and SFTP. Automatic picks the first one installed"
                             options: Terminal.options()
                             defaultValue: "auto"
+                        }
+                        StringSetting {
+                            settingKey: "sendFolder"
+                            label: "Folder files are sent to"
+                            description: "On the device receiving them. ~ is its home. Letters, digits, spaces and . _ - / @ % + = , only"
+                            placeholder: Send.DEFAULT_DIR
+                            defaultValue: Send.DEFAULT_DIR
                         }
                         StyledText {
                             width: parent.width

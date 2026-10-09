@@ -65,6 +65,17 @@ QtObject {
         runner._starting = false;
     }
 
+    // Gives up on everything: drops the queue and kills the running program,
+    // without calling its callback. The runner is not meant to be used again
+    // (a late end of the killed program would be taken for the next one's).
+    function stop() {
+        runner._queue = [];
+        runner._limit.stop();
+        runner._cur = null;
+        runner._proc.environment = {};
+        runner._proc.running = false;
+    }
+
     function _finish() {
         if (!runner._cur || runner._code === null || !runner._outDone || !runner._errDone)
             return;

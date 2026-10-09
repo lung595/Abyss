@@ -15,6 +15,7 @@ No promises, no dates. Everything here was asked for and is not in a release yet
 
 ## Known limits
 
+- A file send shows no percentage: `scp` prints no count without a terminal, so progress is a moving mark.
 - Naming a group needs keyboard focus, which the desktop widget may not get: rename it from the bar popout.
 - An exit route named after no peer shows by its name, not on its peer, until it has been used once.
 - While no view is open, the bar count follows connecting and disconnecting, not peers joining or leaving a live mesh.

@@ -5,6 +5,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## Unreleased
 
+### Added
+
+- **Send engine** (`Send.js`, `SendRunner.qml`): sends files and folders to a device with `scp`, as an argument list with `--` before the paths, the card's user and port, and the SFTP protocol forced so the destination never reaches a remote shell. Items and the destination folder are checked first (absolute paths, 100 items, 200 GB, size looked at with `du -l`, so an item inside another is not taken for missing); a failure is explained in one sentence with advice and a link to the guide (refused login, changed key, SSH off, device unreachable, no space, folder missing, send stopped for taking too long, no `scp`). No password prompt (batch mode), nothing created or running until the first send. Not wired to any view yet.
+- **Setting** *Folder files are sent to* (default `~/Downloads` on the device).
+
 ## 0.5.2 - 2026-10-03
 
 ### Documentation

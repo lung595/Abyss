@@ -121,7 +121,7 @@ In **Settings → Plugins**, turn **Abyss** on. The launcher entry works right a
 
 | Tab | What is there |
 | --- | --- |
-| **Connect** | Add this computer with a setup key (self-hosted server optional) · Let my devices into this computer (SSH) · Terminal · Saved logins (user and port per device, forget them here) |
+| **Connect** | Add this computer with a setup key (self-hosted server optional) · Let my devices into this computer (SSH) · Terminal · Folder files are sent to (default `~/Downloads` on the device) · Saved logins (user and port per device, forget them here) |
 | **The deep** | Things on screen (3 to 10) · Open groups · Show offline devices · Search suggestions |
 | **Effects & battery** | Smooth motion (60 fps) · Creatures drift · Light pulses · Darwin the goldfish · Celebrations · Keep the desktop fishbowl alive. Each says its battery use (⚡ high, some, light) right under it |
 | **Bar & alerts** | Beside the jellyfish: devices online, total traffic or nothing · Status dot · Middle-click connects · Notifications |
@@ -167,7 +167,7 @@ Bind them in your compositor, for example in niri: `Mod+A { spawn "dms" "ipc" "c
 
 ## Privacy
 
-The plugin never talks to the network and has no telemetry. It reads NetBird through its local `netbird` command, never through a shell. A setup key goes to `netbird` through its environment, never on a command line, is never saved or logged, and its copy leaves the clipboard history once you have joined. Peers and traffic stay in memory; only your settings (favorites, muted peers, your groups, exit routes once seen, and the login you set per peer, with peer names and identifiers) are saved by DMS. Details in the [user guide](docs/GUIDE.md#privacy).
+The plugin never talks to the network and has no telemetry. It reads NetBird through its local `netbird` command, never through a shell. A setup key goes to `netbird` through its environment, never on a command line, is never saved or logged, and its copy leaves the clipboard history once you have joined. Peers and traffic stay in memory; only your settings (favorites, muted peers, your groups, exit routes once seen, and the login you set per peer, with peer names and identifiers) are saved by DMS. Sending a file runs your own `scp` once, only when you send, in batch mode: it never asks for or stores a password, and a device whose key changed is refused. Details in the [user guide](docs/GUIDE.md#privacy).
 
 ## Documentation
 
