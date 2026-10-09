@@ -181,6 +181,18 @@ Window {
             reel.start();
             return;
         }
+        if (mode.indexOf("gif-send") === 0) {
+            sendReel.start();
+            return;
+        }
+        // bench-idle: the scene settles and nothing else runs; bench-send:
+        // the same, plus a send from the menu every 3 s (no picture taken)
+        if (mode === "bench-idle")
+            return;
+        if (mode === "bench-send") {
+            sendLoop.start();
+            return;
+        }
         if (mode === "life" || mode === "life-peek") {
             alive.start();
             return;
@@ -250,6 +262,7 @@ Window {
         freezeWhenIdle: win.desk
         interacting: win.mode !== "desk" && !win.dozed
         source: demo
+        actions: win.mode.indexOf("gif-send") === 0 ? sendActions : null
         compact: win.cc
         cornerRadius: 16
     }
@@ -367,6 +380,83 @@ Window {
             else if (!s.idle)
                 mouse.mouseMove(win.contentItem, s.at.x, s.at.y, 0);
             win.contentItem.grabToImage(r => r.saveToFile(win.out.replace(/\.png$/, "-" + (n - 1) + ".png")));
+        }
+    }
+
+    // The send hub, played: the same signals the real SendHub gives, a send
+    // that lasts 1.5 s and goes through (the real one runs scp)
+    QtObject {
+        id: sendActions
+        property var send: QtObject {
+            id: fakeHub
+            property string busyPeerId: ""
+            function viewing(on) {}
+            function sendTo(peer, items) {
+                fakeHub.busyPeerId = peer.id;
+                fakeHub.started(peer.id, "grab", items.length);
+                done.restart();
+                return "";
+            }
+            function pick(peer, folder) {
+                return fakeHub.sendTo(peer, ["/made/up/report.pdf"]);
+            }
+            signal started(string peerId, string mode, int count)
+            signal ended(string peerId, bool ok, string text, var failure)
+            signal refused(string peerId, var failure)
+            property Timer _done: Timer {
+                id: done
+                interval: 1500
+                onTriggered: {
+                    const id = fakeHub.busyPeerId;
+                    fakeHub.busyPeerId = "";
+                    fakeHub.ended(id, true, "Sent", null);
+                }
+            }
+        }
+    }
+
+    // gif-send-drop: a file dropped on a creature; gif-send-menu: the same
+    // send started from the creature's menu ("Send a file…"). Frames every
+    // 80 ms from the moment it starts.
+    Timer {
+        id: sendReel
+        property int frame: -1
+        interval: frame < 0 ? 1600 : 80
+        repeat: true
+        onTriggered: {
+            if (frame < 0) {
+                const it = scene.arr.items.find(i => i.type === "peer" && scene.peerById[i.peerId].online);
+                if (!it)
+                    return;
+                const peer = scene.peerById[it.peerId];
+                if (win.mode === "gif-send-drop") {
+                    const at = scene.spotOf(it.id);
+                    find(scene, "sendLayer").dropFiles(peer, ["file:///made/up/report.pdf"], Qt.point(at.x + 120, at.y - 80));
+                } else {
+                    scene.openMenu(it.id, scene.spotOf(it.id));
+                    scene.doMenu({ "act": "send", "arg": false });
+                }
+            }
+            const n = ++frame;
+            if (n > 40) {
+                stop();
+                Qt.quit();
+                return;
+            }
+            win.contentItem.grabToImage(r => r.saveToFile(win.out.replace(/\.png$/, "-" + n + ".png")));
+        }
+    }
+
+    Timer {
+        id: sendLoop
+        interval: 3000
+        repeat: true
+        onTriggered: {
+            const it = scene.arr.items.find(i => i.type === "peer" && scene.peerById[i.peerId].online);
+            if (!it || !find(scene, "sendLayer"))
+                return;
+            scene.openMenu(it.id, scene.spotOf(it.id));
+            scene.doMenu({ "act": "send", "arg": false });
         }
     }
 

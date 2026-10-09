@@ -8,6 +8,7 @@ import "components/Connect.js" as Connect
 import "components/MyGroups.js" as MyGroups
 import "components/Query.js" as Query
 import "components/Ping.js" as Ping
+import "components/SendFlow.js" as SendFlow
 
 // The one engine every surface shares: the mesh source, the actions that
 // leave the shell (copy, SSH, browser), notifications and the IPC.
@@ -76,6 +77,36 @@ Item {
     readonly property alias prefs: prefs
     Prefs {
         id: prefs
+    }
+
+    // Sending files to a peer: one hub for the drop, the menu, Ctrl+V, the
+    // launcher and the IPC. Each open view plays the outcome itself; with no
+    // view open it comes as a notification instead
+    readonly property alias send: hub
+    SendHub {
+        id: hub
+        prefs: prefs
+    }
+    Connections {
+        target: hub
+        function onEnded(peerId, ok, text, failure) {
+            if (hub.viewers === 0)
+                root._sendNote(ok ? {
+                    "title": text,
+                    "advice": ""
+                } : failure);
+        }
+        function onRefused(peerId, failure) {
+            if (hub.viewers === 0)
+                root._sendNote(failure);
+        }
+    }
+    // One notification for a send: its sentence, and the advice when it failed
+    function _sendNote(note) {
+        if (note.advice)
+            ToastService.showWarning(Connect.plainText(note.title), Connect.plainText(note.advice), "", "abyss-send");
+        else
+            root._toast(note.title);
     }
 
     // --- Actions (called by the scene's buttons and by the IPC) -------------
@@ -335,8 +366,24 @@ Item {
         return root.reach(kind, p) ? "OK" : "Refused: " + (p.fqdn || p.ip) + " is not a plain host name";
     }
 
+    // dms ipc call abyss send <peer> <path>: the same send as a drop, with a
+    // looked-up peer and a path checked and capped (SendFlow.ipcRequest)
+    function _sendIpc(pair, path) {
+        if (!root.source)
+            return "Abyss is starting";
+        const req = SendFlow.ipcRequest(pair, path);
+        if (!req.ok)
+            return "Refused: " + req.reason;
+        const found = Query.lookup(root.source.view.peers, req.pair);
+        if (!found.peer)
+            return Query.lookupError(req.pair, found);
+        const no = hub.sendTo(found.peer, req.items);
+        return no ? "Refused: " + no : "OK";
+    }
+
     // dms ipc call abyss open | status | toggle | connect | disconnect
     // dms ipc call abyss copy <peer> | ssh <peer | user@peer> | sftp | files | vnc | rdp <peer>
+    // dms ipc call abyss send <peer> <absolute path or file:// URL>
     // dms ipc call abyss link <peer> <user|-> <port|-> | join <setup key> <url|-> | leave | share on|off
     // dms ipc call abyss exit <peer | group of mine | off>
     // dms ipc call abyss demo connected | disconnected | connecting | needsLogin | stopped | relayDown | relayUp
@@ -409,6 +456,9 @@ Item {
         // Files over SFTP in a terminal, or in the file manager
         function sftp(peer: string): string {
             return root._reachIpc("sftp", peer);
+        }
+        function send(peer: string, path: string): string {
+            return root._sendIpc(peer, path);
         }
         function files(peer: string): string {
             return root._reachIpc("files", peer);

@@ -173,11 +173,35 @@ When a send fails, Abyss says why and what to do:
 
 While it sends, progress is shown as a moving mark, not a percentage: `scp` prints no count without a terminal.
 
-(The drop, menu, paste and launcher ways to start a send come in the next release.)
+### Four ways to start a send
+
+All four play the same short scene (about one second): the file appears, the creature's tentacle reaches it, carries it over and the file drops in; then the send's progress runs along that tentacle, and the creature glows once when it went through. With *Reduce motion* on, the scene is skipped and the progress starts at once.
+
+![A file dropped on a creature](../screenshots/send-drop.gif)
+
+- **Drop** one or several files or folders right on a creature. The scene starts where you let go.
+- **Right-click a creature → Send a file…** (or **Send a folder…**) opens a file picker (`zenity`). The scene is the same, starting beside the creature.
+
+![The same send from the menu](../screenshots/send-menu.gif)
+
+- **Ctrl+V on an open card** sends what you copied in your file manager (needs `wl-clipboard` for `wl-paste`).
+- **Launcher**: `abyss send` lists *Send a file to …* for each online device (`abyss send nas` keeps one), and **`dms ipc call abyss send <device> <path>`** sends without any window. The path is absolute (or a `file://` URL); at most 100 items, and a name that is not a plain device is refused.
+
+Use the menu, Ctrl+V or the launcher where a drop cannot work: a view that does not receive drops, or the desktop fishbowl when it has no focus.
+
+With no Abyss view open (no popout, Control Center or desktop view on screen), nothing is drawn: a notification says how the send went.
+
+When Abyss cannot start a send it says why next to the creature, with a link here:
+
+- **Device is offline**: wake it or check that it is connected to the mesh, then send again.
+- **Another send is still under way**: wait for it to finish.
+- **No copied file to send** (Ctrl+V): copy a file or folder in your file manager first.
+- **wl-paste could not run** or **The file picker could not open**: install `wl-clipboard` or `zenity`, or use another way.
+- **Drop it on a creature**: let go right on one.
 
 ## From the launcher
 
-Press Super+Space and type `abyss`: "Open Abyss" opens the deep from the bar; below it, connect, choose where Internet goes out (a sun marks the one in use), and, as you type a name (`abyss vega`), copy its address or SSH to it. The same words as the search in the deep pick peers by what they are: a speed (`abyss >100ms`, `abyss <20ms`), a state (`direct`, `relay`, `slow`, `busy`), a kind (`nas`, `phones`, `vps`) or a relay (`eu`); start with `ssh` or `copy` to keep one action (`abyss ssh nas`, `abyss copy >100ms`).
+Press Super+Space and type `abyss`: "Open Abyss" opens the deep from the bar; below it, connect, choose where Internet goes out (a sun marks the one in use), and, as you type a name (`abyss vega`), copy its address or SSH to it. The same words as the search in the deep pick peers by what they are: a speed (`abyss >100ms`, `abyss <20ms`), a state (`direct`, `relay`, `slow`, `busy`), a kind (`nas`, `phones`, `vps`) or a relay (`eu`); start with `ssh`, `copy` or `send` to keep one action (`abyss ssh nas`, `abyss copy >100ms`, `abyss send nas` to pick a file for it, see [Send a file](#send-a-file)).
 
 ## Settings
 
@@ -213,6 +237,7 @@ DMS's *Reduce motion* is respected: every movement stops.
 - **Names are only names.** A peer's name is shown as plain text: it never becomes a link in a toast, and *Open page* only opens a plain host name or address.
 - **Who can ask Abyss to act.** Like every DMS plugin, the `dms ipc call abyss …` commands answer programs running in your own session, the same way your keyboard shortcuts do. They can connect, disconnect or open a peer, never read a setup key.
 - **Nothing in the log.** Abyss writes no peer, address or command line to the shell's journal.
+- **Sending a file** runs your own `scp` once, only when you send. **Ctrl+V** on a card reads the clipboard once with `wl-paste` (the list of copied files), only on that keypress; nothing of it is kept. **Send a file…** opens `zenity`, your file picker. Paths go to these programs as arguments, never through a shell, and are never logged.
 - **Local tools only**: copy uses DMS's clipboard, SSH, SFTP, VNC and RDP open your own programs, Ping runs your own `ping` to one peer of your mesh, only when you click it. The GitHub mark in help notes opens the docs in your browser, on click only.
 
 ## Performance

@@ -76,7 +76,13 @@ Item {
             data === "off" ? daemon.setExit("", "") : data.indexOf("group:") === 0 ? daemon.setExit("", data.slice(6)) : daemon.setExit(data.slice(5), "");
         else if (type === "copy")
             daemon.copy(daemon.findPeer(data)?.ip);
-        else if (type === "ssh") {
+        else if (type === "send") {
+            // The picker opens once the launcher has closed, or it would be
+            // lost behind it
+            picker.peer = daemon.findPeer(data);
+            if (picker.peer)
+                picker.start();
+        } else if (type === "ssh") {
             const p = daemon.findPeer(data);
             if (p)
                 daemon.ssh(p.fqdn || p.ip);
@@ -86,6 +92,13 @@ Item {
     // dms ipc call plugins toggle abyss: DMS asks the launcher surface first
     function toggle() {
         opener.start();
+    }
+
+    Timer {
+        id: picker
+        property var peer: null
+        interval: 150
+        onTriggered: root.daemon.send.pick(peer, false)
     }
 
     Timer {

@@ -1,0 +1,7 @@
+#!/bin/sh
+# Stands in for zenity in the QML tests. With $FAKE_NB/pick.cancel the
+# picker is cancelled (exit 1, nothing printed); otherwise "the user"
+# chooses $FAKE_NB/a.txt. The arguments are saved to $FAKE_NB/zenity.argv.
+printf '%s\n' "$@" > "$FAKE_NB/zenity.argv"
+[ -e "$FAKE_NB/pick.cancel" ] && exit 1
+printf '%s\n' "$FAKE_NB/a.txt"
