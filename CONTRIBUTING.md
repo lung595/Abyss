@@ -68,8 +68,15 @@ Abyss/
 ├── AbyssLauncher.qml     # launcher provider
 ├── AbyssSettings.qml     # settings page
 ├── components/           # the scene (.qml) and pure logic (.js)
-├── tests/                # gjs tests for the pure .js logic (load.js: test helpers), run.sh runs all
+├── tests/                # gjs tests (cli.test.js: the app's parser; app.sh: launcher, offscreen)
 │   └── qml/              # QML integration tests, fake netbird, DMS / Quickshell stand-ins
+├── app/                  # the standalone app (Quickshell only, no DMS import)
+│   ├── shell.qml         # the window and its IPC entry point
+│   ├── abyss             # the `abyss` command (POSIX sh), single instance
+│   ├── abyss.desktop     # menu entry
+│   ├── usage.txt         # what `abyss --help` prints
+│   └── components/Cli.js # command-line parser, pure (shares components/*.js later)
+├── install-app.sh        # installs / removes the app under ~/.local
 ├── .github/workflows/    # CI: tests/run.sh on every push
 ├── scripts/preview/      # offscreen renders and GIFs from the demo mesh
 ├── screenshots/          # images used by the docs

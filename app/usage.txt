@@ -1,0 +1,11 @@
+Usage: abyss [command]
+
+  abyss                          open Abyss
+  abyss send <device> [files…]   send files to a device
+  abyss peer <device>            open a device
+  abyss map                      open the map
+  abyss settings [category]      open the settings
+  abyss --help | --version
+
+A second `abyss` raises the window already open instead of starting another.
+Guide: https://github.com/lung595/Abyss/blob/main/docs/GUIDE.md#app-command-line

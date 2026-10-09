@@ -1,0 +1,35 @@
+#!/bin/sh
+# The `abyss` command: starts the app, or hands the request to the one that
+# is already running. The words are data: they only travel as "$@", joined
+# into one string for Quickshell (the parser in Cli.js validates them).
+set -u
+
+# Where the app lives: next to this script, even through the installed symlink
+here=$(dirname -- "$(readlink -f -- "$0")")
+APP=${ABYSS_APP:-$here}
+
+case "${1-}" in
+-h | --help | help)
+    cat -- "$APP/usage.txt"
+    exit 0
+    ;;
+-V | --version)
+    sed -n 's/^const VERSION = "\(.*\)";$/\1/p' "$APP/components/Cli.js"
+    exit 0
+    ;;
+esac
+
+# Words joined by the unit separator (0x1f): the parser refuses control
+# characters, so it cannot occur inside a word.
+sep=$(printf '\037')
+words=
+for word in "$@"; do
+    words=${words:+$words$sep}$word
+done
+
+# A running instance takes the request and raises its window
+if qs ipc -p "$APP" call abyss go "$PWD" "$words" >/dev/null 2>&1; then
+    exit 0
+fi
+
+ABYSS_ARGV=$words ABYSS_CWD=$PWD exec qs -p "$APP"

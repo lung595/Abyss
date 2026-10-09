@@ -24,6 +24,7 @@ Every refusal in Abyss says why in a short note, with a GitHub mark that opens t
 - [Let peers SSH in](#let-peers-ssh-in)
 - [Send a file](#send-a-file)
 - [From the launcher](#from-the-launcher)
+- [The Abyss app](#the-abyss-app)
 - [Settings](#settings)
 - [Privacy](#privacy)
 - [Performance](#performance)
@@ -202,6 +203,38 @@ When Abyss cannot start a send it says why next to the creature, with a link her
 ## From the launcher
 
 Press Super+Space and type `abyss`: "Open Abyss" opens the deep from the bar; below it, connect, choose where Internet goes out (a sun marks the one in use), and, as you type a name (`abyss vega`), copy its address or SSH to it. The same words as the search in the deep pick peers by what they are: a speed (`abyss >100ms`, `abyss <20ms`), a state (`direct`, `relay`, `slow`, `busy`), a kind (`nas`, `phones`, `vps`) or a relay (`eu`); start with `ssh`, `copy` or `send` to keep one action (`abyss ssh nas`, `abyss copy >100ms`, `abyss send nas` to pick a file for it, see [Send a file](#send-a-file)).
+
+## The Abyss app
+
+Abyss also runs as an app of its own, without DankMaterialShell: one window, started by the `abyss` command or from the application menu. It needs only Quickshell (`qs`). The window is a placeholder for now (a title and what was asked); the views come next.
+
+### Install and remove
+
+From a checkout, run `./install-app.sh`. It copies the app to `~/.local/share/abyss/`, links the `abyss` command in `~/.local/bin/` (add that folder to your `PATH` if it is not there) and adds `abyss.desktop` to `~/.local/share/applications/`. Nothing outside `~/.local`, nothing needs root. `./install-app.sh --uninstall` removes exactly those and the empty folders it made; a command named `abyss` that is not Abyss's is never touched.
+
+### One window
+
+`abyss` starts the app. Run it again, from anywhere, and it hands its request to the window already open instead of starting a second process. Closing the window ends the process: no tray icon, nothing left in the background. Where the compositor refuses to bring a window forward on its own, the request is still delivered and the window is shown; focus it from your taskbar.
+
+### App command line
+
+```sh
+abyss                          # open Abyss
+abyss send <device> [files…]   # send files to a device
+abyss peer <device>            # open a device
+abyss map                      # open the map
+abyss settings [category]      # open the settings
+abyss --help | --version
+```
+
+Every word is checked before anything happens, and an error is one short sentence:
+
+- A **device** is a name: letters, digits, `.`, `_` and `-`, up to 63 characters, starting with a letter or digit.
+- **Files** are made absolute from where you typed the command (`..` cannot climb above `/`), at most 100, none starting with `-` unless you put `--` before them (`abyss send atlas -- -odd.txt`). The whole disk cannot be sent.
+- A **category** is lowercase letters and `-`.
+- No control character anywhere, no word longer than 4096 characters, at most 110 words.
+
+Nothing is run through a shell: the words reach the app as data only.
 
 ## Settings
 
