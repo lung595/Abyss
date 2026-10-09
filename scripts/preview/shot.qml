@@ -185,6 +185,14 @@ Window {
             sendReel.start();
             return;
         }
+        // bench-idle: the scene settles and nothing else runs; bench-send:
+        // the same, plus a send from the menu every 3 s (no picture taken)
+        if (mode === "bench-idle")
+            return;
+        if (mode === "bench-send") {
+            sendLoop.start();
+            return;
+        }
         if (mode === "life" || mode === "life-peek") {
             alive.start();
             return;
@@ -436,6 +444,19 @@ Window {
                 return;
             }
             win.contentItem.grabToImage(r => r.saveToFile(win.out.replace(/\.png$/, "-" + n + ".png")));
+        }
+    }
+
+    Timer {
+        id: sendLoop
+        interval: 3000
+        repeat: true
+        onTriggered: {
+            const it = scene.arr.items.find(i => i.type === "peer" && scene.peerById[i.peerId].online);
+            if (!it || !find(scene, "sendLayer"))
+                return;
+            scene.openMenu(it.id, scene.spotOf(it.id));
+            scene.doMenu({ "act": "send", "arg": false });
         }
     }
 
