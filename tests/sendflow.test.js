@@ -31,8 +31,26 @@ ok("such a list is then refused by the path check, not shortened", !load("compon
 eq("wl-paste missing", F.pasteFailure(-1, "").kind, "paste");
 ok("wl-paste missing says what to install", F.pasteFailure(-1, "").advice.indexOf("wl-clipboard") > 0);
 ok("an empty clipboard is explained", F.pasteFailure(1, "").title.indexOf("No copied file") === 0);
+eq("a failed read is no file, whatever it printed", F.pasteFailure(1, "file:///a").kind, "paste");
 eq("a clipboard with files is no failure", F.pasteFailure(0, "file:///a"), null);
 ok("every failure points to the guide", F.pasteFailure(1, "").guide.indexOf("docs/GUIDE.md#") === 0);
+
+// "Send a file…" from the menu
+eq("the picker is an argument list, one path per line", F.pickCommand("Nas", false), ["zenity", "--file-selection", "--multiple", "--separator=\n", "--title=Send to Nas"]);
+eq("a folder picker adds one flag", F.pickCommand("Nas", true).slice(-1), ["--directory"]);
+ok("a peer name with a newline cannot split the title", F.pickCommand("a\nb", false).every(a => a.indexOf("\n") < 0 || a === "--separator=\n"));
+ok("a long name is cut", F.pickCommand("n".repeat(200), false)[4].length < 80);
+eq("a picker that did not start", F.pickFailure(-1).kind, "picker");
+eq("a cancelled picker is no failure", F.pickFailure(1), null);
+eq("a chosen file is no failure", F.pickFailure(0), null);
+
+// Refusals before a send
+ok("offline names the device and says what to do", F.offlineFailure("Nas").title === "Nas is offline" && F.offlineFailure("Nas").advice.length > 20);
+ok("offline copes with no name", F.offlineFailure("").title === "This device is offline");
+ok("busy says wait", F.busyFailure().advice.indexOf("Wait") === 0);
+eq("the guide anchor", F.anchor(F.offlineFailure("x")), "send-a-file");
+eq("no failure, still an anchor", F.anchor(null), "send-a-file");
+ok("each refusal points to the guide", [F.offlineFailure("x"), F.busyFailure(), F.pickFailure(-1)].every(f => f.guide.indexOf("docs/GUIDE.md#") === 0));
 
 // What the send shows
 eq("no view: a notification", F.mode(false, false), "notify");
