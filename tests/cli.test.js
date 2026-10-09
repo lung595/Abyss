@@ -26,6 +26,10 @@ eq("--version", view(["--version"]), "version");
 eq("split of the joined words", C.split(["send", "atlas"].join(C.SEPARATOR)), ["send", "atlas"]);
 eq("split of nothing", C.split(""), []);
 ok("the version is a number", /^\d+\.\d+\.\d+$/.test(C.VERSION));
+// One version for the widget and the app: Cli.js must follow plugin.json
+const manifest = JSON.parse(new TextDecoder().decode(imports.gi.GLib.file_get_contents(
+    imports.gi.GLib.path_get_dirname(imports.system.programPath) + "/../plugin.json")[1]));
+eq("VERSION follows plugin.json", C.VERSION, manifest.version);
 
 // --- Refusals carry a short message and the guide anchor ---
 let r = p(["frobnicate"]);
@@ -51,10 +55,17 @@ ok("a control character in a file is refused", !p(["send", "atlas", "/a\nb"]).ok
 ok("a NUL byte is refused", !p(["send", "atlas", "/a\u0000b"]).ok);
 ok("an overlong argument is refused", !p(["send", "atlas", "/" + "a".repeat(5000)]).ok);
 
+// The working directory arrives over IPC too (control characters, length, relative)
+ok("a control character in the cwd is refused", !p(["send", "atlas", "/a"], "/a\nb").ok);
+ok("a relative cwd is refused", !p(["map"], "work").ok);
+ok("an overlong cwd is refused", !p(["map"], "/" + "a".repeat(5000)).ok);
+eq("an empty cwd still opens the home", p([], "").view, "home");
+
 // --- Caps ---
 const many = n => Array.from({ length: n }, (_, i) => "/f" + i);
 eq("100 files pass", p(["send", "atlas"].concat(many(100))).files.length, 100);
 ok("101 files refused", !p(["send", "atlas"].concat(many(101))).ok);
+ok("104 arguments refused by count", /Too many arguments/.test(p(["map"].concat(many(103))).error));
 ok("too many arguments refused", !p(["send", "atlas"].concat(many(200))).ok);
 
 // --- Not an array ---

@@ -27,9 +27,18 @@ for word in "$@"; do
     words=${words:+$words$sep}$word
 done
 
-# A running instance takes the request and raises its window
-if qs ipc -p "$APP" call abyss go "$PWD" "$words" >/dev/null 2>&1; then
-    exit 0
+# A running instance takes the request. `--` keeps a word starting with "-" from
+# being read as a qs option. When one is running but refuses the call, report it:
+# starting a second process would break the single instance.
+if qs list -p "$APP" -j 2>/dev/null | grep -q '"pid"'; then
+    answer=$(qs ipc -p "$APP" call -- abyss go "$PWD" "$words" 2>&1) || {
+        echo "abyss: the running instance did not answer." >&2
+        exit 1
+    }
+    [ "$answer" = ok ] && exit 0
+    echo "abyss: $answer" >&2
+    exit 2
 fi
 
-ABYSS_ARGV=$words ABYSS_CWD=$PWD exec qs -p "$APP"
+# QS_APP_ID is the window's app id, which the desktop entry's StartupWMClass names
+ABYSS_ARGV=$words ABYSS_CWD=$PWD QS_APP_ID=abyss exec qs -p "$APP"

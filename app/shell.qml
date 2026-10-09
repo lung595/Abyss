@@ -39,12 +39,13 @@ ShellRoot {
         }
     }
 
-    // `abyss ...` from a second terminal lands here through the launcher
+    // `abyss ...` from a second terminal lands here through the launcher. The
+    // window is already up (closing it quits), and Quickshell has no way to
+    // raise it: the compositor decides focus (Q105).
     // (`qs ipc call abyss go <cwd> <words joined by the unit separator>`)
     IpcHandler {
         function go(cwd: string, words: string): string {
             root.current = Cli.parse(Cli.split(words), cwd);
-            window.visible = true;
             return root.current.ok ? "ok" : root.current.error;
         }
 

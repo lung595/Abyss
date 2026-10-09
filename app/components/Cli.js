@@ -6,7 +6,8 @@
 
 const VERSION = "0.5.2";
 
-const MAX_ARGS = 110;
+// 100 files plus "send", the device name and "--"
+const MAX_ARGS = 103;
 const MAX_ARG_LENGTH = 4096;
 const MAX_FILES = 100;
 
@@ -52,6 +53,9 @@ function _device(word) {
 function parse(argv, cwd) {
     const args = Array.isArray(argv) ? argv.map(a => String(a)) : [];
     const dir = String(cwd === undefined || cwd === null ? "" : cwd);
+    // The directory comes from the launcher, but the IPC door is open to anyone
+    if (dir.length > MAX_ARG_LENGTH || _CONTROL.test(dir) || (dir !== "" && dir.charAt(0) !== "/"))
+        return _fail("The working directory is not an absolute path");
     if (args.length > MAX_ARGS)
         return _fail("Too many arguments");
     for (const a of args) {

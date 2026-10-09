@@ -23,6 +23,8 @@ check "first launch starts one process" "$(count)" 1
 check "second launch creates no second process" "$(count)" 1
 "$tmp/app/abyss" map extra >/dev/null 2>&1
 check "a refused request still creates none" "$(count)" 1
+"$tmp/app/abyss" --wat >/dev/null 2>&1
+check "an option-like word creates no second process" "$(count)" 1
 check "help starts nothing" "$("$tmp/app/abyss" --help | head -n 1)" "Usage: abyss [command]"
 
 # Closing the window quits: a copy whose window closes itself after a moment

@@ -210,11 +210,11 @@ Abyss also runs as an app of its own, without DankMaterialShell: one window, sta
 
 ### Install and remove
 
-From a checkout, run `./install-app.sh`. It copies the app to `~/.local/share/abyss/`, links the `abyss` command in `~/.local/bin/` (add that folder to your `PATH` if it is not there) and adds `abyss.desktop` to `~/.local/share/applications/`. Nothing outside `~/.local`, nothing needs root. `./install-app.sh --uninstall` removes exactly those and the empty folders it made; a command named `abyss` that is not Abyss's is never touched.
+From a checkout, run `./install-app.sh`. It copies the app to `~/.local/share/abyss/`, links the `abyss` command in `~/.local/bin/` (add that folder to your `PATH` if it is not there) and adds `abyss.desktop` to `~/.local/share/applications/`. Nothing outside `~/.local`, nothing needs root. `./install-app.sh --uninstall` removes exactly those and the folders it made (a marker file in the app folder remembers them); a command, an entry or a folder named `abyss` that is not Abyss's is never touched, and the install stops with a message instead of overwriting it.
 
 ### One window
 
-`abyss` starts the app. Run it again, from anywhere, and it hands its request to the window already open instead of starting a second process. Closing the window ends the process: no tray icon, nothing left in the background. Where the compositor refuses to bring a window forward on its own, the request is still delivered and the window is shown; focus it from your taskbar.
+`abyss` starts the app. Run it again, from anywhere, and it hands its request to the window already open instead of starting a second process. Closing the window ends the process: no tray icon, nothing left in the background. The request is delivered to that window, but Quickshell cannot bring it forward: your compositor decides, so focus it from your taskbar if it stays behind. A request the app refuses is printed by `abyss` on the error output (exit code 2).
 
 ### App command line
 

@@ -68,7 +68,7 @@ Abyss/
 ├── AbyssLauncher.qml     # launcher provider
 ├── AbyssSettings.qml     # settings page
 ├── components/           # the scene (.qml) and pure logic (.js)
-├── tests/                # gjs tests (cli.test.js: the app's parser; app.sh: launcher, offscreen)
+├── tests/                # gjs tests (cli.test.js: the app's parser; app.sh: launcher, offscreen; install.sh: installer in a scratch HOME)
 │   └── qml/              # QML integration tests, fake netbird, DMS / Quickshell stand-ins
 ├── app/                  # the standalone app (Quickshell only, no DMS import)
 │   ├── shell.qml         # the window and its IPC entry point
