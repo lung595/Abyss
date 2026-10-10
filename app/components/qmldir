@@ -1,1 +1,5 @@
 singleton Theme 1.0 Theme.qml
+DepthGauge 1.0 DepthGauge.qml
+StationTarget 1.0 StationTarget.qml
+GuideBand 1.0 GuideBand.qml
+GitHubMark 1.0 GitHubMark.qml

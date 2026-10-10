@@ -91,7 +91,9 @@ done
 rm -rf -- "$home_dir"
 mkdir -p -- "$home_dir/components" "$data/applications" "$bin_dir"
 cp -- "$src/app/shell.qml" "$src/app/usage.txt" "$src/app/abyss" "$home_dir/"
-cp -- "$src/app/components/"*.js "$home_dir/components/"
+cp -L -- "$src/app/components/"*.js "$src/app/components/"*.qml "$src/app/components/qmldir" "$home_dir/components/"
+mkdir -p -- "$home_dir/views"
+cp -- "$src/app/views/"*.qml "$home_dir/views/"
 printf '%s\n' "$created" | sed -n 's/^\(..*\)$/dir \1/p' >"$marker"
 ln -sf -- "$home_dir/abyss" "$link"
 
