@@ -6,12 +6,12 @@
 <style>
 :root{ /* DMS Theme tokens, dark "abyss" (design.md §2, D393) */
  --surface:#02040b;--sclowest:#000208;--sclow:#070a14;--sc:#0c1020;--schigh:#131a2e;--schighest:#1b2440;
- --on:#e8ecf6;--onv:#a3acc0;--outline:#58648a;--outline-strong:#8592b8;--primary:#6fe3ff;--onprimary:#04202c;--secondary:#ffc46b;
+ --on:#e8ecf6;--onv:#a3acc0;--outline:#58648a;--outline-strong:var(--onv);--primary:#6fe3ff;--onprimary:#04202c;--secondary:#ffc46b;
  --success:#7ee2a8;--warning:#ffb35c;--error:#ff7b86;
  --w0:var(--schighest);--w200:var(--sc);--w4000:var(--sclowest);
  --gauge:72px;--pad:32px;--r-ctl:12px;--r-card:16px;--r-panel:20px;--descend:200ms;--ascend:150ms;--ease:cubic-bezier(.33,1,.68,1)}
 html[data-theme=light]{--surface:#f3f7fb;--sclowest:#ffffff;--sclow:#e9f0f6;--sc:#dfe8f0;--schigh:#d2dde8;--schighest:#c4d2df;
- --on:#0e1a2b;--onv:#475870;--outline:#6f8097;--outline-strong:#5a6a82;--primary:#0b6f8f;--onprimary:#ffffff;--secondary:#7a4f00;
+ --on:#0e1a2b;--onv:#475870;--outline:#6f8097;--outline-strong:var(--onv);--primary:#0b6f8f;--onprimary:#ffffff;--secondary:#7a4f00;
  --success:#1e7a4a;--warning:#8a5600;--error:#b3263a;--w0:var(--sclowest);--w200:var(--sclow);--w4000:var(--schigh)}
 *{box-sizing:border-box;margin:0}
 body{background:#555;font:15px/1.4 "Noto Sans",system-ui,sans-serif;color:var(--on);padding:24px;display:grid;gap:16px;justify-content:start}
@@ -23,9 +23,10 @@ body{background:#555;font:15px/1.4 "Noto Sans",system-ui,sans-serif;color:var(--
 .scale{position:absolute;left:0;top:40px;width:72px;height:520px}
 .scale i{position:absolute;right:8px;height:1px;background:var(--outline);width:8px;opacity:.4}.scale i.major{width:16px;opacity:1}
 .scale b{position:absolute;right:28px;transform:translateY(-50%);font:11px "Noto Sans Mono",monospace;color:var(--onv);font-weight:400}
-.station{position:absolute;left:2px;width:44px;height:44px;transform:translateY(-50%);border-radius:50%;border:2px solid transparent;cursor:pointer;background:none;padding:0}
-.station::after{content:"";position:absolute;inset:8px;border-radius:50%;border:1px solid var(--outline)}
-.station[aria-current=true]{border-color:var(--primary)}.station[aria-current=true]::after{background:var(--primary);border-color:var(--primary)}
+.station{position:absolute;left:2px;width:44px;height:44px;transform:translateY(-50%);border-radius:50%;border:2px solid transparent;cursor:pointer;background:none;padding:0;isolation:isolate;display:grid;place-items:center;font:11px "Noto Sans Mono",monospace;color:var(--onv)}
+/* a depth that carries a station reads its label inside the ring, never under it */
+.station::after{content:"";position:absolute;inset:8px;border-radius:50%;border:1px solid var(--outline-strong);z-index:-1}
+.station[aria-current=true]{border-color:var(--primary);color:var(--onprimary)}.station[aria-current=true]::after{background:var(--primary);border-color:var(--primary)}
 .station:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
 .readout{position:absolute;left:8px;top:620px;font:11px/20px "Noto Sans Mono",monospace;color:var(--onv);white-space:pre}
 .readout .depth{color:var(--on)}.readout .sig{color:var(--success)}.readout[data-sig=stop] .sig{color:var(--error)}
@@ -111,9 +112,9 @@ h1{font-size:22px;font-weight:600;height:44px;display:flex;align-items:center;ga
 <div class="win" id="win">
  <aside class="gauge">
   <div class="scale" id="scale"></div>
-  <button class="station" style="top:40px" aria-current="true" aria-label="Settings, surface" onclick="dive(0)"></button>
+  <button class="station" style="top:40px" aria-current="true" aria-label="Settings, surface" onclick="dive(0)">0</button>
   <button class="station" style="top:66px" aria-label="Send, 200 m" onclick="dive(1)"></button>
-  <button class="station" style="top:560px" aria-label="Map, 4 000 m" onclick="dive(2)"></button>
+  <button class="station" style="top:560px" aria-label="Map, 4 000 m" onclick="dive(2)">4k</button>
   <div class="darwin" id="darwin" style="top:40px"><svg width="24" height="14" viewBox="0 0 24 14"><path d="M0 7 14 0v14zM14 7l10-6v12z" fill="var(--secondary)"/></svg></div>
   <div class="readout" id="readout" data-sig="ok"><span class="depth" id="rd">    0 m</span>
 <span id="rb">    1 bar</span>
@@ -126,7 +127,7 @@ h1{font-size:22px;font-weight:600;height:44px;display:flex;align-items:center;ga
    <h1>Settings <small>· 0 m</small></h1>
    <input class="search" placeholder="Search settings   /" oninput="search(this.value)" aria-label="Search settings">
    <div class="set"><nav class="cats" id="cats">
-    <button>◉ Network</button><button class="on">↓ Sending</button><button>☼ Appearance</button><button>♪ Sounds</button><button>⌘ Shortcuts</button><button>⚑ Privacy</button></nav>
+    <button><svg width="18" height="18" viewBox="-12 -12 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle r="9"/><circle r="3" fill="currentColor" stroke="none"/></svg> Network</button><button class="on"><svg width="18" height="18" viewBox="-12 -12 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M0 9V-8M-7 -1 0 -9 7 -1"/></svg> Sending</button><button><svg width="18" height="18" viewBox="-12 -12 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle r="9"/><path d="M0 -9A9 9 0 0 0 0 9Z" fill="currentColor" stroke="none"/></svg> Appearance</button><button><svg width="18" height="18" viewBox="-12 -12 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M-9 -4h5l6 -5v18l-6 -5h-5z"/><path d="M4 -5a6 6 0 0 1 0 10"/></svg> Sounds</button><button><svg width="18" height="18" viewBox="-12 -12 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="-10" y="-7" width="20" height="14" rx="3"/><path d="M-5 3h10"/></svg> Shortcuts</button><button><svg width="18" height="18" viewBox="-12 -12 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="-8" y="-1" width="16" height="11" rx="2"/><path d="M-5 -1v-4a5 5 0 0 1 10 0v4"/></svg> Privacy</button></nav>
     <div class="rows" id="rows">
      <div class="row"><div><div class="l">Receive folder</div><div class="h">Where files you receive are saved</div></div><button class="chip">~/Downloads/Abyss</button></div>
      <div class="row"><div><div class="l">Ask before receiving</div><div class="h">A capsule waits for your answer</div></div><button class="sw" role="switch" aria-checked="true" onclick="tog(this)"></button></div>
@@ -207,7 +208,7 @@ const SHAPES={ray:'<path d="M18 0 43 18 18 31 -7 18z"/>',whale:'<ellipse cx="18"
 let cur=0,state_='';
 const scale=document.getElementById('scale');
 for(let i=0;i<=130;i++){const t=document.createElement('i');t.style.top=i*4+'px';if(i%10==0)t.className='major';scale.append(t)}
-for(let d=0;d<=4000;d+=1000){const b=document.createElement('b');b.style.top=(d/4000*520)+'px';b.textContent=d?d/1000+'k':'0';scale.append(b)}
+for(let d=1000;d<4000;d+=1000){const b=document.createElement('b');b.style.top=(d/4000*520)+'px';b.textContent=d?d/1000+'k':'0';scale.append(b)}
 function peers(list,long){const p=document.getElementById('peers');p.innerHTML='';
  if(list.length>8){const g=[['servers',9],['home',8],['lab',7],['other',6]];g.forEach(([n,c],k)=>{p.insertAdjacentHTML('beforeend',`<div class="cave" style="left:${200+k*220}px;top:380px">${n}<br><small>${c} creatures</small></div>`)});
   p.insertAdjacentHTML('beforeend','<div class="list">'+list.slice(0,24).map(([n,,on])=>`<span class="${on?'':'off'}">${on?'●':'○'} ${n}</span>`).join('')+'</div>');return}

@@ -26,9 +26,10 @@ base.font = font  # Board.text/chip/button resolve `font` from their module
 # NotoSans has no geometric symbols: pick the Noto face that owns each glyph
 SYMBOL_FONTS = {"/usr/share/fonts/google-noto/NotoSansSymbols2-Regular.ttf": "●○◐★✕⚠◉⌖☼⌘•",
                 "/usr/share/fonts/google-noto-vf/NotoSansSymbols[wght].ttf": "♪⚑"}
-# One extra role, asked by the review: a border that passes 3:1 on every stratum
-# (`outline` only passes on surface…surfaceContainer). Dividers keep `outline`.
-OUTLINE_STRONG = {False: "#8592b8", True: "#5a6a82"}
+# Strong border role, asked by the review: `Theme.outline` only passes 3:1 on
+# surface…surfaceContainer, so containers and controls borrow `Theme.onSurfaceVariant`
+# (≥ 4.7:1 on every stratum, printed below). No invented value. Dividers keep `outline`.
+OUTLINE_STRONG = "onSurfaceVariant"
 HOVER, PRESSED, DISABLED = "14", "1f", "61"  # onSurface alpha 0.08 / 0.12, 38 % content
 
 W, H, GAUGE, PAD, TITLE = 1280, 800, 72, 32, 44
@@ -44,7 +45,7 @@ class App(Board):
     """One 1280×800 window: depth gauge + one flat stratum per station."""
 
     def __init__(self, t, station, signal="ok"):
-        t = dict(t, outlineStrong=OUTLINE_STRONG[t["isLightMode"]])
+        t = dict(t, outlineStrong=t[OUTLINE_STRONG])
         super().__init__(W, H, t)
         self.station, self.signal = station, signal
         name, depth, dark, light = STATIONS[station]
@@ -98,22 +99,37 @@ class App(Board):
         for i in range(0, 131):  # minor tick every 4 px, major every 100 m
             y = top + i * 4; major = i % 10 == 0
             self.d.line([(GAUGE - 24 if major else GAUGE - 16, y), (GAUGE - 8, y)], fill=t["outline"] if major else t["outline"] + "66")
-        for d in range(0, 4001, 1000):
-            self.text(GAUGE - 28, top + int(d / 4000 * (bottom - top)), f"{d // 1000}k" if d else "0", 11, t["onSurfaceVariant"], mono=True, anchor="rm")
+        stations = {d: k for k, (_, d, _, _) in enumerate(STATIONS)}
+        for d in range(0, 4001, 1000):  # a depth that carries a station reads its label inside the ring
+            label = f"{d // 1000}k" if d else "0"; y = top + int(d / 4000 * (bottom - top))
+            if d not in stations: self.text(GAUGE - 28, y, label, 11, t["onSurfaceVariant"], mono=True, anchor="rm")
         for k, (name, d, _, _) in enumerate(STATIONS):
-            y = top + int(d / 4000 * (bottom - top)); cur = k == self.station
+            y = top + int(d / 4000 * (bottom - top)); cur = k == self.station; label = f"{d // 1000}k" if d >= 1000 else ""
             if cur:
                 self.d.ellipse([2, y - 22, 46, y + 22], outline=t["primary"], width=2)
                 self.d.ellipse([10, y - 14, 38, y + 14], fill=t["primary"])
-                self.darwin(GAUGE + 12, y)
+                self.darwin(GAUGE + 4, y)  # ends at x 100: 4 px clear of the title at x 104
             else:
                 self.d.ellipse([10, y - 14, 38, y + 14], outline=t["outlineStrong"], width=1)
+            if d in (0, 4000): self.text(24, y, "0" if d == 0 else "4k", 11, t["onPrimary"] if cur else t["onSurfaceVariant"], mono=True, anchor="mm")
         # instrument readouts (mono, tabular): the glyph changes with the state, never colour alone
         glyph, col = {"ok": ("●", "success"), "warn": ("◐", "warning"), "stop": ("○", "error")}[self.signal]
         temp = {0: 18, 200: 6, 4000: 2}[depth]
         for j, (s, c) in enumerate([(f"{depth:>5} m", "onSurface"), (f"{depth / 10 + 1:>5.0f} bar", "onSurfaceVariant"),
                                     (f"{temp:>5} °C", "onSurfaceVariant"), (f"{glyph} signal", col)]):
             self.text(8, 682 + j * 20, s, 11, t[c], mono=True)  # mono face owns ●◐○
+
+    def icon(self, cx, cy, name, color=None, size=20):
+        """Settings rubric icons: one family on the 24 grid (scaled to `size`), 2 px stroke, ≤ 2 shapes each."""
+        col = color or self.t["onSurface"]; k = size / 24
+        P = lambda *pts: [(cx + px * k, cy + py * k) for px, py in pts]
+        E = lambda x0, y0, x1, y1: [cx + x0 * k, cy + y0 * k, cx + x1 * k, cy + y1 * k]
+        if name == "network": self.d.ellipse(E(-9, -9, 9, 9), outline=col, width=2); self.d.ellipse(E(-3, -3, 3, 3), fill=col)
+        elif name == "sending": self.d.line(P((0, 9), (0, -8)), fill=col, width=2); self.d.line(P((-7, -1), (0, -9), (7, -1)), fill=col, width=2, joint="curve")
+        elif name == "appearance": self.d.ellipse(E(-9, -9, 9, 9), outline=col, width=2); self.d.pieslice(E(-9, -9, 9, 9), 90, 270, fill=col)
+        elif name == "sounds": self.d.polygon(P((-9, -4), (-4, -4), (2, -9), (2, 9), (-4, 4), (-9, 4)), outline=col, width=2); self.d.arc(E(0, -6, 12, 6), -60, 60, fill=col, width=2)
+        elif name == "shortcuts": self.d.rounded_rectangle(E(-10, -7, 10, 7), 3 * k, outline=col, width=2); self.d.line(P((-5, 3), (5, 3)), fill=col, width=2)
+        elif name == "privacy": self.d.rounded_rectangle(E(-8, -1, 8, 10), 2 * k, outline=col, width=2); self.d.arc(E(-5, -10, 5, 2), 180, 360, fill=col, width=2)
 
     def darwin(self, x, y):
         """The small fish mascot hanging beside the current station (24 px)."""
@@ -221,7 +237,7 @@ def send_screen(t, refused=False, long=False, signal="ok"):
     for i, (name, dev, pct, spd, act) in enumerate(rows):
         ry = yy + i * 56; b.d.line([(x, ry + 55), (x + w, ry + 55)], fill=t["outline"] + "66")
         b.d.rounded_rectangle([x + 2, ry + 20, x + 14, ry + 36], 6, fill=t["primary"] if pct != 100 else t["outline"])
-        b.text(x + 28, ry + 10, name, 15, weight=500); b.text(x + 28, ry + 32, "→ " + dev, 12, t["onSurfaceVariant"])
+        b.text(x + 28, ry + 10, name, 15, weight=500); b.text(x + 28, ry + 32, "→ " + dev, 12, t["onSurfaceVariant"], mono=True)
         tx = x + w - 500; b.rect(tx, ry + 24, 120, 8, fill=t["surfaceContainerHighest"], r=4)
         if pct is None: b.rect(tx + 40, ry + 24, 36, 8, fill=t["primary"], r=4); b.text(tx + 136, ry + 20, "Sending · scp, no progress", 13, mono=True)
         else: b.rect(tx, ry + 24, int(1.2 * pct), 8, fill=t["primary"], r=4); b.d.ellipse([tx + int(1.2 * pct) - 6, ry + 22, tx + int(1.2 * pct) + 6, ry + 34], fill=t["primary"]); b.text(tx + 136, ry + 20, f"{pct:>3} %", 13, mono=True)
@@ -237,9 +253,9 @@ def send_screen(t, refused=False, long=False, signal="ok"):
 def settings_screen(t, signal="ok"):
     b = App(t, 0, signal); x, y, w = GAUGE + PAD, PAD + TITLE + 8, W - GAUGE - 2 * PAD
     b.rect(x, y, w, 44, fill=t["surfaceContainerLow"] if t["isLightMode"] else t["surfaceContainer"], outline=b.t["outlineStrong"], r=12); b.text(x + 16, y + 13, "Search settings   /", 15, t["onSurfaceVariant"])
-    for i, (ic, s) in enumerate([("◉", "Network"), ("↓", "Sending"), ("☼", "Appearance"), ("♪", "Sounds"), ("⌘", "Shortcuts"), ("⚑", "Privacy")]):
+    for i, s in enumerate(["Network", "Sending", "Appearance", "Sounds", "Shortcuts", "Privacy"]):
         on = i == 1; b.rect(x, y + 68 + i * 48, 200, 40, fill=t["primary"] if on else None, r=12)
-        b.glyph(x + 20, y + 88 + i * 48, ic, 14, t["onPrimary"] if on else t["onSurface"], "mm"); b.text(x + 40, y + 78 + i * 48, s, 15, t["onPrimary"] if on else t["onSurface"], 600 if on else 500)
+        b.icon(x + 20, y + 88 + i * 48, s.lower(), t["onPrimary"] if on else t["onSurface"], 18); b.text(x + 40, y + 78 + i * 48, s, 15, t["onPrimary"] if on else t["onSurface"], 600 if on else 500)
     rx = x + 232
     for i, (lab, help_, kind) in enumerate([("Receive folder", "Where files you receive are saved", "~/Downloads/Abyss"), ("Ask before receiving", "A capsule waits for your answer", True),
                                              ("Retry failed sends", "Up to 3 times, 10 s apart", False), ("Parallel transfers", "At most, per device", "2"), ("Play a sound on arrival", "Gentle, rate-limited", True)]):
@@ -306,20 +322,28 @@ def states_screen(t):
     """One board per component: every interaction state side by side (review item 6)."""
     b = App(t, 0); x, y = GAUGE + PAD, PAD + TITLE + 8
     b.text(x + 200, y, "", 13)
-    for j, s in enumerate(STATES): b.text(x + 200 + j * 170, y, "focus-visible" if s == "focus" else s, 12, t["onSurfaceVariant"], 500)
+    COL, ROW = 160, 72  # 6 columns end at x 1224: inside the 32 px margin (review 2, item 3)
+    for j, s in enumerate(STATES): b.text(x + 200 + j * COL, y, "focus-visible" if s == "focus" else s, 12, t["onSurfaceVariant"], 500)
     rows = [("Chip", lambda cx, cy, s: b.chip(cx, cy, "#servers", s == "selected", 120, state=None if s == "selected" else s)),
             ("Button, primary", lambda cx, cy, s: b.button(cx, cy, "Send", True, 120, state=s)),
             ("Button, secondary", lambda cx, cy, s: b.button(cx, cy, "Cancel", False, 120, state=s)),
             ("Zoom control", lambda cx, cy, s: (b.rect(cx, cy, 44, 44, outline=b.t["outlineStrong"], r=12), b.glyph(cx + 22, cy + 22, "+", 18, anchor="mm"), b.state(cx, cy, 44, 44, 12, s))),
             ("Switch", lambda cx, cy, s: (b.rect(cx, cy + 8, 48, 28, fill=t["primary"] if s == "selected" else t["surfaceContainerHighest"], outline=None if s == "selected" else b.t["outlineStrong"], r=14),
                                           b.d.ellipse([cx + (24 if s == "selected" else 4), cy + 12, cx + (44 if s == "selected" else 24), cy + 32], fill=t["onPrimary"] if s == "selected" else b.t["outlineStrong"]), b.state(cx, cy + 8, 48, 28, 14, s))),
-            ("Queue row", lambda cx, cy, s: (b.rect(cx, cy, 150, 44, fill=t["surfaceContainerHigh"] if s == "selected" else None, r=12), b.d.rounded_rectangle([cx + 10, cy + 14, cx + 22, cy + 30], 6, fill=t["primary"]),
-                                             b.text(cx + 34, cy + 4, "notes.md", 13, weight=500), b.text(cx + 34, cy + 24, "→ atlas-server", 11, t["onSurfaceVariant"]), b.state(cx, cy, 150, 44, 12, s))),
+            ("Queue row", lambda cx, cy, s: (b.rect(cx, cy, 120, 44, fill=t["surfaceContainerHigh"] if s == "selected" else None, r=12), b.d.rounded_rectangle([cx + 10, cy + 14, cx + 22, cy + 30], 6, fill=t["primary"]),
+                                             b.text(cx + 34, cy + 4, "notes.md", 13, weight=500), b.text(cx + 34, cy + 24, "→ reef-nas", 11, t["onSurfaceVariant"], mono=True), b.state(cx, cy, 120, 44, 12, s))),
             ("Station (gauge)", lambda cx, cy, s: (b.d.ellipse([cx + 8, cy + 8, cx + 36, cy + 36], fill=t["primary"] if s == "selected" else None, outline=b.t["outlineStrong"]),
                                                    b.d.ellipse([cx, cy, cx + 44, cy + 44], outline=t["primary"], width=2) if s == "selected" else None, b.state(cx, cy, 44, 44, 22, s)))]
     for i, (name, draw) in enumerate(rows):
-        ry = y + 40 + i * 80; b.text(x, ry + 12, name, 15, weight=500)
-        for j, s in enumerate(STATES): draw(x + 200 + j * 170, ry, s)
+        ry = y + 40 + i * ROW; b.text(x, ry + 12, name, 15, weight=500)
+        for j, s in enumerate(STATES): draw(x + 200 + j * COL, ry, s)
+    # loading state of the on-demand throughput test (review 2, item 4): disabled while measuring,
+    # label counts down, a 2 px rail under the label shows the elapsed share; cancel stays available
+    ry = y + 40 + len(rows) * ROW; b.text(x, ry + 12, "Button, loading", 15, weight=500)
+    b.text(x + 200, y + 40 + len(rows) * ROW - 20, "default", 12, t["onSurfaceVariant"], 500); b.text(x + 200 + 2 * COL, ry - 20, "loading (measuring, 3 s elapsed)", 12, t["onSurfaceVariant"], 500)
+    w0 = b.button(x + 200, ry, "Measure throughput (10 s)", True)
+    b.button(x + 200 + 2 * COL, ry, "Measuring… 7 s", True, w0, state="disabled"); b.rect(x + 200 + 2 * COL + 12, ry + 38, int((w0 - 24) * 0.3), 2, fill=t["onPrimary"], r=1)
+    b.button(x + 200 + 2 * COL + w0 + 12, ry, "Cancel", False, 100)
     b.text(x, H - PAD - 48, "hover: onSurface 8 % · pressed: onSurface 12 % · focus-visible: 2 px primary ring, 2 px offset · disabled: 38 % content, no pointer", 12, t["onSurfaceVariant"], mono=True)
     b.text(x, H - PAD - 28, "selected: primary fill + onPrimary text (chip, switch, station) or surfaceContainerHigh (row) · motion: hover 100 ms, press 100 ms, OutCubic", 12, t["onSurfaceVariant"], mono=True)
     return b
@@ -339,8 +363,9 @@ if __name__ == "__main__":
         for name, fn in SCREENS.items():
             fn(t).im.save(os.path.join(out, theme, name + ".png"))
     # every surface a control can sit on (README §5): text ≥ 4.5:1, borders ≥ 3:1
+    print(f"outlineStrong = Theme.{OUTLINE_STRONG} (borders of containers and controls)")
     print("theme surface                  onSurface variant primary outline outlineStrong")
     for theme, t in (("dark", DARK), ("light", LIGHT)):
         for s in ("surface", "surfaceContainerLowest", "surfaceContainerLow", "surfaceContainer", "surfaceContainerHigh", "surfaceContainerHighest"):
-            c = lambda a: contrast(t[a] if a in t else OUTLINE_STRONG[t["isLightMode"]], t[s])
-            print(f"{theme:5} {s:24} {c('onSurface'):9.1f} {c('onSurfaceVariant'):7.1f} {c('primary'):7.1f} {c('outline'):7.2f} {c('outlineStrong'):7.2f}")
+            c = lambda a: contrast(t[a], t[s])
+            print(f"{theme:5} {s:24} {c('onSurface'):9.1f} {c('onSurfaceVariant'):7.1f} {c('primary'):7.1f} {c('outline'):7.2f} {c(OUTLINE_STRONG):7.2f}")

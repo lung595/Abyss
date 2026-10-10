@@ -107,9 +107,12 @@ extension kept, chips ≤ 28 chars + …) · light and dark for all of them.
 | Title row | 44 (40), title 22 DemiBold | all views |
 | Type scale | 11 / 13 / 15 / 22, mono tabular for numbers | all |
 | Radii | 12 control · 16 card · 20 panel | all |
-| Border | 1 px `outlineStrong` on containers and controls (dark `#8592b8`, light `#5a6a82`: ≥ 3.57:1 on every stratum, measured) · `outline` for dividers only | all |
+| Border | 1 px `outlineStrong` = **`Theme.onSurfaceVariant`** on containers and controls (≥ 4.7:1 on every stratum, printed by `render.py`; `Theme.outline` only passes 3:1 up to `surfaceContainer`) · `outline` for dividers only | all |
 | States | hover `onSurface` α 0.08 · pressed α 0.12 · focus-visible 2 px `primary` ring, 2 px offset · selected `primary`/`onPrimary` (row: `surfaceContainerHigh`) · disabled 38 % content, no pointer (`08-states`) | all controls |
 | Creatures | 24 grid scaled by r/12, 2 px stroke, at most 2 details (eye, one fin) | map, tags |
+| Rubric icons | same family: 24 grid at 18 px, 2 px stroke, round caps, ≤ 2 shapes (network, sending, appearance, sounds, shortcuts, privacy) | settings |
+| Gauge labels | 1k · 2k · 3k beside the ticks; 0 and 4k inside their station ring (`onPrimary` when current) | gauge |
+| Loading | `Measure throughput (10 s)` → disabled, label `Measuring… 7 s` counting down, 2 px `onPrimary` rail of elapsed share, Cancel beside | diagnosis |
 | GitHub mark | 24 px, `onSurface` disc, cat silhouette in `surface` → GUIDE anchor, click only | bands |
 | Station target | 44×44, ring 2 px `primary` when current | gauge |
 | Chip | 32 high, 44 hit, 12 padding, fill `surfaceContainerHigh` + 1 px `outlineStrong`; active `primary`, 13 DemiBold | all |
@@ -170,3 +173,18 @@ Every surface a control can sit on and its measured pairs are printed by
 9. `primary` text ≤ 15 px never sits on light `surfaceContainerHigh`
    (4.1:1): secondary buttons only appear on panels and the 0 m / 200 m
    strata (≥ 4.6:1).
+
+## 9. Fixes after review 2 (83 → target 90+)
+
+1. `outlineStrong` is no longer an invented hex: it is `Theme.onSurfaceVariant`
+   (≥ 4.7:1 on all 12 strata, table reprinted by `render.py`); the HTML maps
+   `--outline-strong: var(--onv)`.
+2. `→` in queue rows and the states board is drawn with the mono face (the
+   sans face has no arrow); checked on 2x crop.
+3. Gauge: the `0` and `4k` labels sit inside their station ring instead of
+   under it; `08-states` columns are 160 apart and rows 120 wide, so the last
+   column ends at x 1224 (32 px margin). Darwin ends at x 100, clear of the
+   title at x 104.
+4. Settings rubrics: six icons drawn on the 24 grid, 2 px stroke, same family
+   as the creatures (PNG and inline SVG); `08-states` gains the loading row of
+   `Measure throughput` (`Measuring… 7 s`, disabled, elapsed rail, Cancel).
