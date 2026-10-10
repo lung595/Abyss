@@ -1594,10 +1594,7 @@ Item {
                 out.push({ "text": "Open the admin console", "act": "console" });
         } else if (p) {
             const g = MyGroups.groupOf(mine, p.id);
-            if (p.exit && p.online) {
-                const on = !!source && source.exitNode === p.name && !prefs.exitGroup;
-                out.push({ "text": on ? "Stop using for Internet" : "Use for Internet", "act": "use", "arg": { "peer": on ? "" : p.name, "group": "" } });
-            }
+            // The main send path comes first, above every other entry
             if (p.online) {
                 out.push({
                     "text": "Send a file…",
@@ -1613,6 +1610,10 @@ Item {
                     "act": "send",
                     "arg": true
                 });
+            }
+            if (p.exit && p.online) {
+                const on = !!source && source.exitNode === p.name && !prefs.exitGroup;
+                out.push({ "text": on ? "Stop using for Internet" : "Use for Internet", "act": "use", "arg": { "peer": on ? "" : p.name, "group": "" } });
             }
             mine.filter(x => x !== g).forEach(x => out.push({ "text": "Add to " + x.name, "act": "join", "arg": x.id }));
             out.push({ "text": "New group", "act": "create", "arg": p.id });

@@ -108,6 +108,7 @@ Window {
             const acts = scene.menuActions(it.id, scene.prefs.groups);
             const sends = acts.filter(m => m.act === "send");
             check("both send entries carry their icon and accent", sends.length === 2 && sends[0].icon === "upload_file" && sends[1].icon === "drive_folder_upload" && sends.every(m => m.accent === true), sends);
+            check("the send entries come first, file then folder", acts.length > 2 && acts[0].arg === false && acts[1].arg === true && acts[0].act === "send" && acts[1].act === "send", acts);
             check("no other entry carries an icon or accent", acts.filter(m => m.act !== "send").every(m => m.icon === undefined && m.accent === undefined));
             scene.doMenu({
                 "act": "send",

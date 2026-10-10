@@ -178,7 +178,7 @@ While it sends, progress is shown as a moving mark, not a percentage: `scp` prin
 
 All three play the same short scene (about one second): the file appears, the creature's tentacle reaches it, carries it over and the file drops in; then the send's progress runs along that tentacle, and the creature glows once when it went through. With *Reduce motion* on, the scene is skipped and the progress starts at once.
 
-- **Right-click a creature → Send a file…** (or **Send a folder…**) opens a file picker (`zenity`). The two entries are drawn in the theme's accent with a bold label and an upload icon, so the send path stands out from the rest of the menu. The scene starts beside the creature.
+- **Right-click a creature → Send a file…** (or **Send a folder…**) opens a file picker (`zenity`). The two entries are drawn in the theme's accent with a bold label and an upload icon, so the send path stands out from the rest of the menu, and they come first, above the other entries. The scene starts beside the creature.
 
 ![The same send from the menu](../screenshots/send-menu.gif)
 
