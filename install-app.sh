@@ -14,7 +14,11 @@ src=$(cd -- "$(dirname -- "$0")" && pwd)
 data=${XDG_DATA_HOME:-$HOME/.local/share}
 home_dir=$data/abyss
 bin_dir=$HOME/.local/bin
-config=${XDG_CONFIG_HOME:-$HOME/.config}
+# XDG: a relative XDG_CONFIG_HOME must be ignored (the app does the same)
+case ${XDG_CONFIG_HOME:-} in
+/*) config=$XDG_CONFIG_HOME ;;
+*) config=$HOME/.config ;;
+esac
 settings_dir=$config/abyss
 # The widget is installed when its plugin manifest is in the DMS plugins folder
 widget_manifest=$config/DankMaterialShell/plugins/Abyss/plugin.json

@@ -66,5 +66,13 @@ sh "$root/install-app.sh" >/dev/null 2>&1
 sh "$root/install-app.sh" --uninstall >/dev/null 2>&1
 check "uninstall restores the tree again" "$(tree)" "$before"
 
+# A relative XDG_CONFIG_HOME is ignored: the real folder is the one removed
+sh "$root/install-app.sh" >/dev/null 2>&1
+mkdir -p "$HOME/.config/abyss"
+echo '{}' >"$HOME/.config/abyss/settings.json"
+XDG_CONFIG_HOME=rel sh "$root/install-app.sh" --uninstall >/dev/null 2>&1
+check "a relative XDG_CONFIG_HOME falls back to ~/.config" "$([ -e "$HOME/.config/abyss" ] && echo left || echo gone)" gone
+rmdir "$HOME/.config" 2>/dev/null
+
 [ "$fail" = 0 ] && echo "✓ install: app installer and uninstaller" || echo "install: FAILED"
 exit "$fail"
