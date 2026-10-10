@@ -1,6 +1,6 @@
 .pragma library
-.import "../../components/Send.js" as Send
-.import "../../components/Connect.js" as Connect
+.import "Send.js" as Send
+.import "Connect.js" as Connect
 
 // How one job of the Send queue travels: the rsync command (percentage, rate,
 // resume) when both sides have it, else the scp command of the engine

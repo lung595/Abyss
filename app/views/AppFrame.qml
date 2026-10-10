@@ -144,11 +144,29 @@ Item {
                 easing.type: Easing.OutCubic
             }
 
-            // One placeholder until the views of the other stories exist
-            PlaceholderView {
+            // Send is built; the other stations keep a placeholder until their stories
+            Loader {
                 anchors.fill: parent
-                title: frame.current.title
-                note: Array.isArray(frame.peers) && frame.station === "map" && frame.device !== "" && !frame.deviceUnknown ? "Map · " + frame.device : ""
+                sourceComponent: frame.station === "send" ? sendC : placeholderC
+            }
+
+            Component {
+                id: sendC
+
+                SendView {
+                    device: frame.device
+                    peers: frame.peers
+                    shown: frame.visible
+                }
+            }
+
+            Component {
+                id: placeholderC
+
+                PlaceholderView {
+                    title: frame.current.title
+                    note: Array.isArray(frame.peers) && frame.station === "map" && frame.device !== "" && !frame.deviceUnknown ? "Map · " + frame.device : ""
+                }
             }
         }
     }

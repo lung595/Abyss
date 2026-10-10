@@ -5,9 +5,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## Unreleased
 
-### Fixed
-
-- **Settings never overlap at narrow width**: switches, choice lists and the folder field are the plugin's own rows (titles and descriptions wrap before the control), the Join button drops under the self-hosted check, help lines grow instead of cutting. Saved keys and values are unchanged; a new offscreen test checks every page at 366 px (NAK-423).
+- **App Send view** (`app/views/SendView.qml`, `app/components/{SendQueue.js,SendFlow.js,SendJobRow,DevicePicker,DropZone,SendJobProcess,CliRunner}`): queue of files × devices, one transfer per device at a time, cancel, retry, in-memory capped history, drag and drop, Ctrl+O picker, Ctrl+V paste (one `wl-paste --type text/uri-list` read per keypress), `rsync` progress when available, otherwise `scp` with an indeterminate indicator. Pure logic in `tests/sendQueue.test.js`; QML tests in `tests/qml/SendView.test.qml` (need PySide6).
 
 ### Added
 

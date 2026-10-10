@@ -6,6 +6,9 @@ import Quickshell
 QtObject {
     id: root
     property var command: []
+    property var environment: ({})
+    property var stdout: null
+    property var stderr: null
     property bool running: false
     signal exited(int exitCode, int exitStatus)
 

@@ -38,6 +38,15 @@ class SplitParser(QObject):
     # Lines are handed over once the process ends (enough for the tests:
     # a long-running reader such as `ip monitor` just never reads)
     read = Signal(str)
+    splitMarkerChanged = Signal()
+
+    def _getMarker(self):
+        return getattr(self, '_marker', '\n')
+
+    def _setMarker(self, v):
+        self._marker = v
+
+    splitMarker = Property(str, _getMarker, _setMarker, notify=splitMarkerChanged)
 
 
 class IpcHandler(QObject):

@@ -3,3 +3,8 @@ DepthGauge 1.0 DepthGauge.qml
 StationTarget 1.0 StationTarget.qml
 GuideBand 1.0 GuideBand.qml
 GitHubMark 1.0 GitHubMark.qml
+SendJobProcess 1.0 SendJobProcess.qml
+SendJobRow 1.0 SendJobRow.qml
+DropZone 1.0 DropZone.qml
+DevicePicker 1.0 DevicePicker.qml
+CliRunner 1.0 CliRunner.qml
