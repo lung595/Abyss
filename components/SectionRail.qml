@@ -29,14 +29,17 @@ FocusScope {
     // The section the page shows. Without motion it swaps at once; with it,
     // at half the travel, so the body is faded out when it changes.
     readonly property int shownIndex: reduceMotion || progress > 0.5 ? sel : prev
-    readonly property real markY: 44 * (reduceMotion ? sel : prev + (sel - prev) * progress)
+    readonly property real markY: rowHeight * (reduceMotion ? sel : prev + (sel - prev) * progress)
     readonly property alias travelling: travel.running
 
     readonly property int searchHeight: 40
     readonly property int rowHeight: 44
     readonly property int rowsTop: searchHeight + 12
 
-    implicitWidth: 176
+    readonly property int railWidth: 176
+    readonly property int rowInset: 16
+    readonly property int rowWidth: railWidth - rowInset
+    implicitWidth: railWidth
     implicitHeight: rowsTop + rowHeight * rows.length
     activeFocusOnTab: true
 
@@ -100,6 +103,7 @@ FocusScope {
     // Rows scroll under the fixed search field when they outgrow the height
     Flickable {
         id: flick
+        objectName: "rows"
         y: root.rowsTop
         width: parent.width
         height: Math.max(0, root.height - root.rowsTop)
@@ -134,9 +138,9 @@ FocusScope {
 
         // The open section: wash and weight
         Rectangle {
-            x: 16
+            x: root.rowInset
             y: root.markY
-            width: 160
+            width: root.rowWidth
             height: root.rowHeight
             radius: Theme.cornerRadius
             color: Qt.alpha(Theme.primary, 0.24)
@@ -162,9 +166,9 @@ FocusScope {
                 readonly property bool isPressed: root.pressed === index
                 // Pressed: logo and label sink 1 px
                 readonly property int sink: isPressed ? 1 : 0
-                x: 16
+                x: root.rowInset
                 y: root.rowHeight * index
-                width: 160
+                width: root.rowWidth
                 height: root.rowHeight
 
                 Accessible.role: Accessible.PageTab
@@ -232,6 +236,7 @@ FocusScope {
                     onReleased: root.pressed = -1
                     onCanceled: root.pressed = -1
                     onClicked: {
+                        root.forceActiveFocus();
                         root.pointed = row.index;
                         root.open(row.index);
                     }

@@ -16,7 +16,7 @@ Row {
         width: parent.width - 52 - Theme.spacingM
         spacing: Theme.spacingXS
         anchors.verticalCenter: parent.verticalCenter
-        StyledText { text: root.label; font.pixelSize: Theme.fontSizeLarge; font.weight: Font.Medium; color: Theme.surfaceText }
+        StyledText { text: root.label; width: parent.width; wrapMode: Text.WordWrap; font.pixelSize: Theme.fontSizeLarge; font.weight: Font.Medium; color: Theme.surfaceText }
         StyledText { text: root.description; visible: text !== ""; width: parent.width; wrapMode: Text.WordWrap; font.pixelSize: Theme.fontSizeSmall; color: Theme.surfaceVariantText }
     }
     Rectangle {

@@ -19,7 +19,9 @@ PluginSettings {
     // Filled in by DMS when this page opens from Settings > Desktop Widgets
     property string instanceId: ""
     property var instanceData: null
-    // Section to open first (a Sections.js id, old ids work too); previews use it
+    // Section to open first (a Sections.js id, old ids work too). Nothing stores
+    // a last section today (the old tab lived in memory): only previews set it,
+    // and a legacy id still maps through Sections.indexOf.
     property string section: ""
 
     readonly property var daemon: PluginService.pluginDaemonInstances["abyss"] ?? null
@@ -32,19 +34,9 @@ PluginSettings {
         implicitHeight: Math.max(rail.height, panel.height)
         height: implicitHeight
 
-        // Every section holds at least one setting here; Sections.shown()
-        // would hide one with none, with no gap.
-        readonly property var counts: ({
-                "connect": 1,
-                "appearance": 1,
-                "effects": 1,
-                "bar": 1,
-                "desktop": 1,
-                "alerts": 1,
-                "advanced": 1,
-                "help": 1
-            })
-        readonly property var rows: Sections.shown(counts)
+        // All eight sections hold settings here, so the whole list shows;
+        // Sections.shown(counts) is the filter for a plugin with an empty one.
+        readonly property var rows: Sections.LIST
         // Opened from Desktop Widgets: straight to the desktop section
         readonly property int startIndex: Sections.indexOf(rows, root.section || (root.instanceId ? "desktop" : "connect"))
         readonly property var current: rows[rail.shownIndex]
@@ -53,7 +45,6 @@ PluginSettings {
         // --- Section menu on the left -----------------------------------------
         SectionRail {
             id: rail
-            width: 176
             rows: page.rows
             start: page.startIndex
             reduceMotion: SettingsData.reduceMotion
@@ -62,7 +53,7 @@ PluginSettings {
         // --- The open section's panel ------------------------------------------
         Rectangle {
             id: panel
-            x: rail.width + 24
+            x: rail.implicitWidth + 24
             width: parent.width - x
             height: body.implicitHeight + Theme.spacingL * 2
             radius: Theme.cornerRadius
@@ -793,7 +784,9 @@ PluginSettings {
             description: fx.description
             defaultValue: fx.defaultValue
         }
-        Row {
+        // A Flow, so the cost drops under the chip when the panel is narrow
+        Flow {
+            width: parent.width
             spacing: 8
             Rectangle {
                 width: impactRow.implicitWidth + 16
@@ -824,8 +817,9 @@ PluginSettings {
                 }
             }
             StyledText {
-                anchors.verticalCenter: parent.verticalCenter
+                width: Math.min(implicitWidth, fx.width)
                 text: fx.cost
+                wrapMode: Text.WordWrap
                 font.pixelSize: 11
                 color: Theme.surfaceVariantText
             }
