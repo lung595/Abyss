@@ -5,7 +5,7 @@ approved, and not used by the widget.
 
 | File | View | Space |
 |---|---|---|
-| `darwin-front.svg` | front | 729 px wide, same as `components/assets/darwin/body.png` |
+| `darwin-front.svg` | front | 729 px wide, same as `components/assets/darwin/body.png`; the viewBox adds 12 px on the left for the tail fin, 4 px on the right, 8 px on top |
 | `darwin-swim.svg` | swimming, turned | 680 x 480 |
 | `*@1x.png` | real widget size (25 px wide, `unit` 0.034 in `Goldfish.qml`) | |
 | `*@4x.png` | 100 px wide | |
@@ -28,8 +28,12 @@ done
 | Outline | `#0a0a0a`, 7 px in the 729 space | |
 | Body | `#f47e26` | |
 | Highlight, cheeks | `#f6bc8c` | |
-| Limbs | `#f49c52` | |
+| Band at the tail base (swimming) | `#d9641c` | |
 | Eye white | `#e4e3e8` | |
+
+These are the character's own colours, sampled from the references. They do
+not follow the DMS theme on purpose (decision D420 in the project notes): the
+exception covers Darwin's drawing only.
 
 Contrast, measured on the real scene (the deep stays dark in both themes:
 `#0f0f19` dark, `#0a0914` light): body 7.13:1 and 7.40:1, eye white 14.92:1
@@ -39,15 +43,24 @@ the body colour and the eyes carry the shape. On a plain light surface
 
 ## Known differences from the references
 
-- Front: the body outline is fitted by measurement, 48 rays onto the
-  reference silhouette in the 729 space. Silhouette mask against the
-  reference, legs excluded: bounding box 724 x 453 against 725 x 453 (1 px),
-  0.49 % of the pixels differ (1247 of 256487). Still by eye: the tail fin
-  strokes, the brows (the reference ones sit a few px higher) and the lower
-  cheek arcs (a few px lower on the reference). Pupils are pure ink where
-  the printed frame shows dark grey. Colours come from the swimming frame,
-  the poster being a desaturated print.
-- Swimming: the tail fin is simplified; brows are neutral on purpose (the
-  reference frowns).
+Checked by drawing our ink edges over the reference frame brought into the
+SVG space (front: reference scaled 1.762 from its 1280 px frame, the scale
+being the ratio of the two body masks, 715 px against 406 px wide).
+
+- Front: body outline, eyes, pupils, cheeks, mouth, legs and tail fin lie on
+  the reference lines within about 3 px in the 729 space (looked at on the
+  edge overlay, not computed part by part). The body outline alone was
+  fitted by 48 rays: mask bounding box 724 x 453 against 725 x 453, 0.49 %
+  of the pixels differ. Remaining: brows are a single 18 px stroke where the
+  reference draws a tapered wedge; pupils are pure ink where the printed
+  frame shows dark grey; colours come from the swimming frame, the poster
+  being a desaturated print (body `#d67028` there).
+- Swimming: outline, eyes, cheeks, arm and leg lie on the reference within
+  about 10 px in the 680 space (edge overlay, by eye); our body is 2.8 %
+  shorter. Brows are neutral on purpose (the reference frowns), so the eye
+  tops are not cut by the brow. The mouth is a single curve; the reference
+  has a kink.
 - No three-quarter or true side view: no reference shows one. Shoes are not
   drawn: no reference shows them.
+- `scene-dark.png` and `scene-light.png` were composited before the last
+  front corrections (fin colour, brows, cheeks).

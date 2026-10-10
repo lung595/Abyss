@@ -1,18 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="-4 -8 737 612" width="737" height="612">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-12 -8 745 612" width="745" height="612">
 <title>Darwin, front view, neutral pose</title>
 <path d="M230 455v104a35 35 0 0 0 70 0v-104z" fill="#f47e26" stroke="#0a0a0a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
 <path d="M470 455v104a35 35 0 0 0 70 0v-104z" fill="#f47e26" stroke="#0a0a0a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M120 330C95 312 60 310 38 318C20 326 9 345 8 368c-2 4-2 8 0 12c0 30 10 60 32 80c18 14 45 18 70 12l60-17z" fill="#f49c52" stroke="#0a0a0a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M10 352l38 6M9 386l42-2M20 426l38-12" fill="none" stroke="#0a0a0a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+<g transform="translate(-8 0)"><path d="M120 330C95 312 60 310 38 318C20 326 9 345 8 368c-2 4-2 8 0 12c0 30 10 60 32 80c18 14 45 18 70 12l60-17z" fill="#f47e26" stroke="#0a0a0a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M10 352l38 6M9 386l42-2M20 426l38-12" fill="none" stroke="#0a0a0a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></g>
 <path d="M712 240C718.5 253.8 722.2 269.2 723 284C723.8 298.8 720.7 314.5 717 329C713.3 343.5 708.8 358.3 701 371C693.2 383.7 681.0 395.0 670 405C659.0 415.0 647.8 423.8 635 431C622.2 438.2 606.7 443.3 593 448C579.3 452.7 565.7 455.7 553 459C540.3 462.3 529.2 466.3 517 468C504.8 469.7 491.8 469.0 480 469C468.2 469.0 456.8 468.0 446 468C435.2 468.0 425.2 469.0 415 469C404.8 469.0 395.0 468.0 385 468C375.0 468.0 365.2 469.0 355 469C344.8 469.0 334.8 468.0 324 468C313.2 468.0 301.8 469.0 290 469C278.2 469.0 266.2 468.3 253 468C239.8 467.7 225.2 468.8 211 467C196.8 465.2 183.5 462.8 168 457C152.5 451.2 132.3 442.5 118 432C103.7 421.5 91.3 407.3 82 394C72.7 380.7 66.5 365.3 62 352C57.5 338.7 55.7 325.5 55 314C54.3 302.5 58.2 295.3 58 283C57.8 270.7 53.3 254.2 54 240C54.7 225.8 57.8 211.7 62 198C66.2 184.3 71.8 170.3 79 158C86.2 145.7 95.5 134.3 105 124C114.5 113.7 125.3 104.3 136 96C146.7 87.7 157.8 80.3 169 74C180.2 67.7 191.8 62.8 203 58C214.2 53.2 225.3 48.8 236 45C246.7 41.2 257.0 38.2 267 35C277.0 31.8 286.2 28.7 296 26C305.8 23.3 316.2 21.5 326 19C335.8 16.5 345.2 12.8 355 11C364.8 9.2 374.8 8.8 385 8C395.2 7.2 405.5 6.2 416 6C426.5 5.8 437.5 6.0 448 7C458.5 8.0 468.7 9.3 479 12C489.3 14.7 500.3 18.2 510 23C519.7 27.8 528.5 34.2 537 41C545.5 47.8 553.7 55.8 561 64C568.3 72.2 575.2 81.0 581 90C586.8 99.0 591.8 108.3 596 118C600.2 127.7 598.0 139.2 606 148C614.0 156.8 631.0 162.2 644 171C657.0 179.8 672.7 189.5 684 201C695.3 212.5 705.5 226.2 712 240Z" fill="#f47e26" stroke="#0a0a0a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
 <path d="M112 146c-30 36-36 96-24 140 6 4 14 2 16-6 4-50 18-90 36-122 0-10-18-18-28-12z" fill="#f6bc8c"/>
 <ellipse cx="269.5" cy="184.5" rx="96" ry="90" fill="#e4e3e8" stroke="#0a0a0a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
 <ellipse cx="495.5" cy="173" rx="90" ry="86.5" fill="#e4e3e8" stroke="#0a0a0a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
 <circle cx="285" cy="188" r="47" fill="#0a0a0a"/><circle cx="484" cy="177" r="47" fill="#0a0a0a"/>
 <path d="M178 150l-20-8M172 172l-22 0M176 196l-20 10M584 128l20-10M590 150l22-2M590 174l20 6" fill="none" stroke="#0a0a0a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M224 76c16-18 44-26 66-22M460 40c20-6 44 0 60 18" fill="none" stroke="#0a0a0a" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="1"/>
-<circle cx="286" cy="312" r="61" fill="#f47e26"/><path d="M229.8 288.2A61 61 0 1 1 257.4 365.9" fill="none" stroke="#0a0a0a" stroke-width="7" stroke-linecap="round"/>
-<circle cx="503" cy="299" r="57" fill="#f47e26"/><path d="M552.4 270.5A57 57 0 1 0 529.8 349.3" fill="none" stroke="#0a0a0a" stroke-width="7" stroke-linecap="round"/>
+<path d="M224 76c16-18 44-26 66-22M460 40c20-6 44 0 60 18" fill="none" stroke="#0a0a0a" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="1"/>
+<circle cx="286" cy="314" r="63" fill="#f47e26"/><path d="M228.0 289.4A63 63 0 1 1 256.4 369.6" fill="none" stroke="#0a0a0a" stroke-width="7" stroke-linecap="round"/>
+<circle cx="503" cy="301" r="59" fill="#f47e26"/><path d="M554.1 271.5A59 59 0 1 0 530.7 353.1" fill="none" stroke="#0a0a0a" stroke-width="7" stroke-linecap="round"/>
 <path d="M346 320Q398 352 448 306" fill="none" stroke="#0a0a0a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
 <circle cx="290" cy="307" r="30" fill="#f6bc8c"/><circle cx="492" cy="297" r="30" fill="#f6bc8c"/>
 </svg>
