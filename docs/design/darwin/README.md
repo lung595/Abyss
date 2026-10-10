@@ -71,9 +71,12 @@ being the ratio of the two body masks, 715 px against 406 px wide).
   fitted by 48 rays: mask bounding box 724 x 453 against 725 x 453, 0.49 %
   of the pixels differ. The tail fin is
   redrawn from the reference: fused to the body, the body line curling into
-  it at both ends, two short strokes. Brows are solid tapered wedges and the
-  lashes short 5 px ticks on the upper outer arc of each eye, both placed
-  from a 3x crop of the reference (by eye, about 3 px). Remaining: pupils are pure ink where the printed
+  it at both ends, two short strokes. Brows are the ink blobs of the
+  reference traced every 6 px at half coverage (`BROW_L`, `BROW_R` in
+  `build.py`): 225 of 2032 and 296 of 1746 brow pixels differ from the
+  reference, about 1 px along the edge. Lashes are short 5 px ticks on the
+  upper outer arc of each eye, placed from a 3x crop of the reference (by
+  eye, about 3 px). Remaining: pupils are pure ink where the printed
   frame shows dark grey; colours come from the swimming frame, the poster
   being a desaturated print (body `#d67028` there).
 - Swimming: the body outline is fitted by 48 rays onto the reference
@@ -81,10 +84,17 @@ being the ratio of the two body masks, 715 px against 406 px wide).
   tracing where the leg, the arm or the tail fin hide the edge. Before the
   fit our outline was 9.1 px too far out on average (14.2 px at worst) in
   the 680 space; after it the same measurement gives 0.6 px on average and
-  4.0 px at worst. Eyes, cheeks, arm and leg are still placed by eye, within
-  about 10 px. The low fin is smaller than on the reference and the left
-  eye slightly smaller. Brows are neutral on purpose (the reference
-  frowns). The mouth is a single curve; the reference has a kink.
+  4.0 px at worst. Eyes, pupils and cheek spots are set from the connected
+  regions of the reference (centroid and bounding box): right eye white
+  within 1.6 px, pupils 0.7 px, cheek spots 1.0 px; the left eye white is
+  2.5 px higher than the reference region because the reference brow cuts
+  its top and ours is neutral. Cheek arcs are least-squares circles on the
+  reference ink (mean residual 1.3 px and 1.2 px). The mouth follows the ink
+  read every 6 px, a shallow curve from cheek to cheek. The low fin follows
+  the ink line read every 8 px (`SWIM_FIN`), with the two long strokes and
+  the tick under the arm that the reference shows (it has two strokes, not
+  three). Arm, leg, lashes and brows are still placed by eye. Brows are
+  neutral on purpose (the reference frowns).
 - Outline weight: 7 px in the 729 space and 5 px in the 680 space. The two
   bodies are 670 px and 460 px wide in their spaces, so the stroke is 1.04 %
   and 1.09 % of the body width: the same weight on the character.

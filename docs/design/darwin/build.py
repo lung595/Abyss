@@ -36,6 +36,36 @@ def smooth(pts):
     return d + "Z"
 
 
+def poly(pts):
+    """Closed polygon through points measured on the reference (brows)."""
+    return "M" + "L".join("%d %d" % p for p in pts) + "Z"
+
+
+def chain(pts):
+    """Open Catmull-Rom spline through points measured on the reference."""
+    d = "M%d %d" % pts[0]
+    for i in range(len(pts) - 1):
+        p0, p1, p2, p3 = pts[max(i - 1, 0)], pts[i], pts[i + 1], pts[min(i + 2, len(pts) - 1)]
+        d += "C%.1f %.1f %.1f %.1f %d %d" % (p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6,
+                                             p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6, p2[0], p2[1])
+    return d
+
+
+# Front brows: top then bottom edge of each ink blob of the reference, read
+# every 6 px where the printed line is half covered (red channel under 125).
+BROW_L = [(220, 70), (226, 61), (232, 56), (238, 54), (244, 51), (250, 49), (256, 47), (262, 46), (268, 46),
+          (274, 46), (280, 47), (286, 48), (292, 50), (298, 52), (302, 59), (302, 61), (298, 68), (292, 71),
+          (286, 71), (280, 70), (274, 69), (268, 68), (262, 69), (256, 71), (250, 73), (244, 75), (238, 79),
+          (232, 81), (226, 80), (220, 73)]
+BROW_R = [(458, 41), (464, 34), (470, 33), (476, 32), (482, 32), (488, 32), (494, 32), (500, 33), (506, 35),
+          (512, 37), (518, 40), (524, 43), (530, 48), (533, 54), (533, 58), (530, 63), (524, 66), (518, 65),
+          (512, 63), (506, 60), (500, 57), (494, 55), (488, 54), (482, 54), (476, 54), (470, 55), (464, 55),
+          (458, 47)]
+# Swimming low fin: centre of the ink line of the reference, read every 8 px.
+SWIM_FIN = [(146, 350), (138, 366), (136, 382), (139, 396), (145, 408), (151, 420), (158, 429), (165, 436),
+            (177, 444), (192, 452), (205, 455), (217, 452), (230, 444), (238, 434), (250, 410)]
+
+
 def cheek(cx, cy, r, a1, a2, sweep):
     """Cheek bump: a body-coloured disc that overlaps the eye, outlined on
     the arc from angle a1 to a2 (degrees, y down), open on the outer side."""
@@ -66,10 +96,8 @@ def front(small=False):
         '<circle cx="285" cy="188" r="47" fill="%s"/><circle cx="484" cy="177" r="47" fill="%s"/>' % (INK, INK),
         # Lashes: short, thin ticks on the upper outer arc of each eye.
         '<path d="M193 124l-10-12M180 147l-12-7M175 171l-13-3M555 99l8-11M575 119l10-7M586 142l12-4" fill="none" %s/>' % s.replace('"7"', '"5"'),
-        # Brows are solid wedges on the reference: blunt towards the nose
-        # side of the head, tapered to a point on the other.
-        '<path d="M220 74C217 62 230 51 250 45C270 40 292 45 304 54C290 57 272 60 254 67C242 72 228 84 220 74Z'
-        'M458 48C455 36 470 26 490 27C512 28 530 43 540 61C524 54 508 51 492 51C478 51 462 60 458 48Z" fill="%s"/>' % INK,
+        # Brows are solid shapes on the reference, traced from its ink.
+        '<path d="%s%s" fill="%s"/>' % (poly(BROW_L), poly(BROW_R), INK),
         cheek(286, 314, 63, 203, 118, 1), cheek(503, 301, 59, -30, 62, 0),
         '<path d="M346 320Q398 352 448 306" fill="none" %s/>' % s,
         '<circle cx="290" cy="307" r="30" fill="%s"/><circle cx="492" cy="297" r="30" fill="%s"/>' % (LIGHT, LIGHT),
@@ -101,21 +129,22 @@ def swim(small=False):
         '<path d="M158 222c-14 20-12 52 4 70 8 4 14-2 12-10-8-18-8-36 0-52-2-8-10-12-16-8z" fill="%s"/>' % LIGHT,
         # Tail fin under the arm, then the arm reaching forward; both open
         # paths so the joint with the body carries no outline.
-        '<path d="M150 352c-28 30-10 80 30 92 36 10 66-6 70-36" fill="%s" %s/>' % (BODY, s),
-        '<path d="M158 392l22 12M170 408l22 12M184 422l22 12" fill="none" %s/>' % s,
-        '<path d="M218 318C160 288 92 288 50 320c-35 25-30 65 0 70 35 2 60-25 100-40L200 372" fill="%s" %s/>' % (BODY, s),
+        '<path d="%s" fill="%s" %s/>' % (chain(SWIM_FIN), BODY, s),
+        # Two long strokes across the fin and a tick under the arm, as measured.
+        '<path d="M150 405L169 395M181 443L195 423M175 355l6 5" fill="none" %s/>' % s,
+        '<path d="M218 318C160 288 92 288 50 320c-35 25-30 65 0 70 35 2 60-25 93-42L197 358" fill="%s" %s/>' % (BODY, s),
     ]
     detail = [
-        '<ellipse cx="275" cy="205" rx="70" ry="56" transform="rotate(-12 275 205)" fill="%s" %s/>' % (WHITE, s),
-        '<ellipse cx="418" cy="155" rx="67" ry="62" fill="%s" %s/>' % (WHITE, s),
-        '<circle cx="297" cy="198" r="22" fill="%s"/><circle cx="437" cy="140" r="21" fill="%s"/>' % (INK, INK),
-        '<path d="M210 186l-12-4M208 206l-13 3M432 96l2-12M452 102l6-11" fill="none" %s/>' % s,
+        '<ellipse cx="272.5" cy="217" rx="67" ry="64" fill="%s" %s/>' % (WHITE, s),
+        '<ellipse cx="416.5" cy="156" rx="64" ry="61.5" fill="%s" %s/>' % (WHITE, s),
+        '<circle cx="296.5" cy="198.4" r="20.5" fill="%s"/><circle cx="437.6" cy="140.6" r="19.6" fill="%s"/>' % (INK, INK),
+        '<path d="M207 200l-12-4M205 220l-13 3M432 96l2-12M452 102l6-11" fill="none" %s/>' % s,
         # Neutral brows: the reference frame frowns, the model sheet does not.
-        '<path d="M236 136c16-12 40-16 60-10M372 84c18-12 42-12 58-2" fill="none" %s/>' % s.replace('"5"', '"8"'),
-        cheek(318, 291, 37, 205, 110, 1).replace('width="7"', 'width="5"'),
-        cheek(447, 236, 37, -40, 70, 0).replace('width="7"', 'width="5"'),
-        '<path d="M354 287C372 292 396 270 412 262" fill="none" %s/>' % s,
-        '<circle cx="318" cy="289" r="21" fill="%s"/><circle cx="443" cy="233" r="21" fill="%s"/>' % (LIGHT, LIGHT),
+        '<path d="M234 140c16-12 40-16 60-10M372 84c18-12 42-12 58-2" fill="none" %s/>' % s.replace('"5"', '"8"'),
+        cheek(310, 298, 43, 189, 96, 1).replace('width="7"', 'width="5"'),
+        cheek(454, 237, 41, -64, 49, 0).replace('width="7"', 'width="5"'),
+        '<path d="M353 282Q384 266 413 259" fill="none" %s/>' % s,
+        '<circle cx="314" cy="291" r="18" fill="%s"/><circle cx="443" cy="235" r="19" fill="%s"/>' % (LIGHT, LIGHT),
     ]
     return "\n".join(base if small else base + detail)
 
@@ -140,9 +169,10 @@ FRONT_25 = "".join([px(8, 15, 2, 5, BODY, 1), px(16, 15, 2, 5, BODY, 1),
                     px(6, 3, 6, 6, WHITE, 3), px(14, 3, 6, 6, WHITE, 3),
                     px(8, 5, 3, 3, INK, 1), px(15, 5, 3, 3, INK, 1),
                     px(9, 10, 2, 2, LIGHT, 1), px(16, 10, 2, 2, LIGHT, 1)])
-# One pixel of body is kept between the two eyes so they do not merge.
+# One pixel of body is kept between the two eyes so they do not merge; the
+# pupils are square so that they stay solid ink on whole pixels.
 SWIM_25 = "".join([px(7, 5, 5, 5, WHITE, 2.5), px(13, 3, 5, 5, WHITE, 2.5),
-                   px(10, 6, 2, 2, INK, 1), px(15, 4, 2, 2, INK, 1),
+                   px(10, 6, 2, 2, INK), px(15, 4, 2, 2, INK),
                    px(11, 10, 1, 1, LIGHT), px(16, 8, 1, 1, LIGHT)])
 
 

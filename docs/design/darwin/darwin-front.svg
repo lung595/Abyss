@@ -10,7 +10,7 @@
 <ellipse cx="495.5" cy="173" rx="90" ry="86.5" fill="#e4e3e8" stroke="#0a0a0a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
 <circle cx="285" cy="188" r="47" fill="#0a0a0a"/><circle cx="484" cy="177" r="47" fill="#0a0a0a"/>
 <path d="M193 124l-10-12M180 147l-12-7M175 171l-13-3M555 99l8-11M575 119l10-7M586 142l12-4" fill="none" stroke="#0a0a0a" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M220 74C217 62 230 51 250 45C270 40 292 45 304 54C290 57 272 60 254 67C242 72 228 84 220 74ZM458 48C455 36 470 26 490 27C512 28 530 43 540 61C524 54 508 51 492 51C478 51 462 60 458 48Z" fill="#0a0a0a"/>
+<path d="M220 70L226 61L232 56L238 54L244 51L250 49L256 47L262 46L268 46L274 46L280 47L286 48L292 50L298 52L302 59L302 61L298 68L292 71L286 71L280 70L274 69L268 68L262 69L256 71L250 73L244 75L238 79L232 81L226 80L220 73ZM458 41L464 34L470 33L476 32L482 32L488 32L494 32L500 33L506 35L512 37L518 40L524 43L530 48L533 54L533 58L530 63L524 66L518 65L512 63L506 60L500 57L494 55L488 54L482 54L476 54L470 55L464 55L458 47Z" fill="#0a0a0a"/>
 <circle cx="286" cy="314" r="63" fill="#f47e26"/><path d="M228.0 289.4A63 63 0 1 1 256.4 369.6" fill="none" stroke="#0a0a0a" stroke-width="7" stroke-linecap="round"/>
 <circle cx="503" cy="301" r="59" fill="#f47e26"/><path d="M554.1 271.5A59 59 0 1 0 530.7 353.1" fill="none" stroke="#0a0a0a" stroke-width="7" stroke-linecap="round"/>
 <path d="M346 320Q398 352 448 306" fill="none" stroke="#0a0a0a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
