@@ -91,10 +91,22 @@ function signal(state) {
     case "connected":
         return { "glyph": "●", "role": "success", "label": "signal" };
     case "stopped":
-        return { "glyph": "◐", "role": "warning", "label": "stopped" };
+        return { "glyph": "◐", "role": "warning", "label": "off" };
     case "missing":
-        return { "glyph": "✕", "role": "error", "label": "no NetBird" };
+        return { "glyph": "✕", "role": "error", "label": "absent" };
     default:
-        return { "glyph": "○", "role": "onSurfaceVariant", "label": "no signal" };
+        return { "glyph": "○", "role": "onSurfaceVariant", "label": "n/a" };
     }
+}
+
+// A device name in a message: the middle is elided so that the instruction
+// after it (what to do) is never the part that gets cut off.
+const NAME_MAX = 32;
+
+function shortName(name) {
+    const s = String(name);
+    if (s.length <= NAME_MAX)
+        return s;
+    const head = Math.ceil((NAME_MAX - 1) / 2);
+    return s.slice(0, head) + "…" + s.slice(s.length - (NAME_MAX - 1 - head));
 }

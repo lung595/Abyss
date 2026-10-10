@@ -76,6 +76,13 @@ Window {
             keyClick(Qt.Key_Space);
             win.check("Space activates Map", frame.station === "map", frame.station);
 
+            // The signal line (glyph included) stays inside the 8 px side margins
+            for (const st of ["connected", "stopped", "missing", "unknown"]) {
+                frame.netbirdState = st;
+                win.check("signal line fits the gauge: " + st, frame.signalWidth <= frame.gaugeWidth - 16, frame.signalWidth);
+            }
+            frame.netbirdState = "unknown";
+
             // The dive: 200 ms down, 150 ms up, back to rest when it ends
             frame.show("send");
             frame.show("map");

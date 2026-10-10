@@ -44,4 +44,8 @@ eq("connected is success", S.signal("connected").role, "success");
 eq("stopped is warning", S.signal("stopped").role, "warning");
 eq("missing is error", S.signal("missing").role, "error");
 ok("every state has a glyph", ["connected", "stopped", "missing", "x"].every(s => S.signal(s).glyph.length > 0));
+ok("signal labels fit 8 mono chars with the glyph", ["connected", "stopped", "missing", "x"].every(s => S.signal(s).label.length <= 6));
+eq("short name kept", S.shortName("atlas"), "atlas");
+const long = "workstation-with-a-very-long-name.netbird.cloud";
+ok("long name capped, ends kept", S.shortName(long).length === 32 && S.shortName(long).includes("…") && S.shortName(long).endsWith("cloud"));
 done("stations");

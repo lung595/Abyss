@@ -22,6 +22,7 @@ Item {
     readonly property int pad: compact ? 24 : 32
     readonly property int titleHeight: compact ? 40 : 44
     readonly property alias gaugeWidth: gauge.width
+    readonly property alias signalWidth: gauge.signalWidth
     // The dive, for tests: running, its length and the view's offset
     readonly property alias diving: slide.running
     readonly property alias diveDuration: slide.duration
@@ -112,7 +113,7 @@ Item {
                 right: parent.right
                 top: titleRow.bottom
             }
-            message: "No device called “" + frame.device + "” on your network."
+            message: "No device called “" + Stations.shortName(frame.device) + "” on your network."
             anchor: "a-device-is-not-found"
         }
 

@@ -33,6 +33,9 @@ Rectangle {
     readonly property var _readouts: Stations.readouts(_depth)
     readonly property var _signal: Stations.signal(netbirdState)
 
+    // For tests: the signal line must fit the 8 px side margins
+    readonly property alias signalWidth: signalLine.implicitWidth
+
     signal chosen(string stationId)
 
     function centerY(depth: real): real {
@@ -87,7 +90,7 @@ Rectangle {
         Text {
             required property int modelData
             // Right-aligned just above its long tick, clear of the targets
-            x: gauge.width - 1 - gauge._tickGap - width
+            x: gauge.width - 1 - gauge._majorTick - gauge._tickGap - width
             y: gauge._top + Stations.fraction(modelData) * gauge._span - height
             text: modelData / 1000 + "k"
             color: Theme.onSurfaceVariant
@@ -112,9 +115,9 @@ Rectangle {
         }
     }
 
-    // Darwin beside the current target; he hangs half over the content padding
+    // Darwin beside the current target, wholly outside the gauge so he hides no tick
     Image {
-        x: gauge.width - 12
+        x: gauge.width + 4
         y: gauge.centerY(gauge._depth) - height / 2
         z: 3
         width: 24
@@ -151,7 +154,10 @@ Rectangle {
         }
 
         Text {
+            id: signalLine
+
             anchors.right: parent.right
+            Accessible.name: "NetBird " + gauge._signal.label
             // The word does not fit 56 px: the glyph alone says it, as it does by shape
             text: gauge.compact ? gauge._signal.glyph : gauge._signal.glyph + " " + gauge._signal.label
             color: Theme[gauge._signal.role]
