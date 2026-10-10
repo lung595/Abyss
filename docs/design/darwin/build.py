@@ -63,7 +63,7 @@ def front():
 
 
 # Swimming view, traced in the 680x480 crop of the swimming reference.
-SWIM_PTS = [(380, 48), (430, 56), (468, 88), (500, 108), (545, 118), (580, 150), (598, 200),
+SWIM_PTS = [(380, 48), (430, 56), (462, 80), (484, 106), (508, 104), (545, 116), (580, 150), (598, 200),
             (596, 250), (570, 295), (525, 332), (470, 360), (410, 385), (350, 402), (290, 412),
             (240, 405), (195, 380), (160, 340), (142, 290), (140, 240), (155, 190), (190, 140),
             (240, 100), (300, 68), (340, 54)]
@@ -80,7 +80,7 @@ def swim():
         # paths so the joint with the body carries no outline.
         '<path d="M150 352c-28 30-10 80 30 92 36 10 66-6 70-36" fill="%s" %s/>' % (BODY, s),
         '<path d="M158 392l26 12M192 420l14 22" fill="none" %s/>' % s,
-        '<path d="M205 316C150 286 90 290 50 320c-35 25-30 65 0 70 35 2 60-25 100-40l45-4" fill="%s" %s/>' % (BODY, s),
+        '<path d="M218 318C160 288 92 288 50 320c-35 25-30 65 0 70 35 2 60-25 100-40" fill="%s" %s/>' % (BODY, s),
         '<ellipse cx="275" cy="205" rx="70" ry="56" transform="rotate(-12 275 205)" fill="%s" %s/>' % (WHITE, s),
         '<ellipse cx="418" cy="155" rx="67" ry="62" fill="%s" %s/>' % (WHITE, s),
         '<circle cx="297" cy="198" r="22" fill="%s"/><circle cx="437" cy="140" r="21" fill="%s"/>' % (INK, INK),
@@ -89,7 +89,7 @@ def swim():
         '<path d="M236 136c16-12 40-16 60-10M372 84c18-12 42-12 58-2" fill="none" %s/>' % s.replace('"5"', '"8"'),
         cheek(318, 291, 37, 205, 110, 1).replace('width="7"', 'width="5"'),
         cheek(447, 236, 37, -40, 70, 0).replace('width="7"', 'width="5"'),
-        '<path d="M355 284Q386 280 412 256" fill="none" %s/>' % s,
+        '<path d="M354 287C372 292 396 270 412 262" fill="none" %s/>' % s,
         '<circle cx="318" cy="289" r="21" fill="%s"/><circle cx="443" cy="233" r="21" fill="%s"/>' % (LIGHT, LIGHT),
     ])
 

@@ -31,7 +31,7 @@ dark ones (1.07:1).
 
 - Front: legs are thinner and closer together, with a darker outline; tail
   fin shape and stripes are approximate; lower cheek arcs sit a few px high.
-- Swimming: the top-right notch where the leg meets the body is missing; the
+- Swimming: the top-right notch is shallower than the reference; the
   arm joins the body with a visible corner; the tail fin is simplified; the
   mouth is a single curve; brows are neutral on purpose (the reference frowns).
 - No three-quarter view yet. Shoes are not drawn: no reference shows them.
