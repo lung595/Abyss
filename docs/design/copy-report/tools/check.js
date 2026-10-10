@@ -23,12 +23,12 @@ for(const theme of ['stock','sea','wall'])for(const mode of ['dark','light'])for
    if(ra.right>B.right+.5||ra.left<B.left-.5)out.bad.push(tag+' overflow '+a.className);
    if(a.scrollWidth>a.clientWidth+1&&!a.classList.contains('ent'))out.bad.push(tag+' clipped '+a.className);
    els.slice(i+1).forEach(b=>{if(!a.contains(b)&&!b.contains(a)&&hit(ra,R(b)))out.bad.push(tag+' overlap '+a.className+' x '+b.className);});});
-  for(const c of box.querySelectorAll('.cr')){const r=R(c);if(!c.classList.contains('f-press')&&(r.height!==44||r.width!==120))out.bad.push(tag+' button size '+r.width+'x'+r.height);
+  for(const c of box.querySelectorAll('.cr')){const r=R(c);if(!c.classList.contains('f-press')&&(r.height!==44||r.width!==112))out.bad.push(tag+' button size '+r.width+'x'+r.height);
    for(const s of c.querySelectorAll('span')){const q=R(s);if(q.left<r.left+12||q.right>r.right-12)out.bad.push(tag+' label past padding');}}
   for(const g of box.querySelectorAll('.gh'))if(g.offsetParent&&!g.classList.contains('f-press')){const r=R(g);if(r.width!==44||r.height!==44)out.bad.push(tag+' gh size');}}
  if(document.getElementById('contrast').textContent.includes('FAIL'))out.bad.push(tag+' contrast');
  if(theme==='stock'&&mode==='dark'&&(st==='live'||st==='none')){const row=document.getElementById('row'),t=R(row.querySelector('.txt')),c=R(row.querySelector('.cr'));
-  out.geo[w+'/'+st]={content:R(document.getElementById('content')).width,txt:[t.width,t.height],btn:[c.width,c.height],mark:(m=>[m.left-c.right,m.top-c.top,m.width])(R(row.querySelector('.gi'))),tipFits:(q=>q.left>=R(document.getElementById('content')).left&&q.right<=R(document.getElementById('content')).right&&q.bottom<=R(document.getElementById('panel')).bottom)(R(row.querySelector('.tip'))),sameLine:c.top<t.bottom,btnLeftMinusTxtLeft:c.left-t.left,gapY:c.top-t.bottom,note:st==='none'?[R(row.querySelector('.hn')).width,R(row.querySelector('.hn')).height]:null};}}
+  out.geo[w+'/'+st]={content:R(document.getElementById('content')).width,txt:[t.width,t.height],btn:[c.width,c.height],tip:(q=>[q.top-c.bottom,getComputedStyle(row.querySelector('.tip')).borderRadius])(R(row.querySelector('.tip'))),mark:(m=>[m.left-c.right,m.top-c.top,m.width])(R(row.querySelector('.gi'))),tipFits:(q=>q.left>=R(document.getElementById('content')).left&&q.right<=R(document.getElementById('content')).right&&q.bottom<=R(document.getElementById('panel')).bottom)(R(row.querySelector('.tip'))),sameLine:c.top<t.bottom,btnLeftMinusTxtLeft:c.left-t.left,gapY:c.top-t.bottom,note:st==='none'?[R(row.querySelector('.hn')).width,R(row.querySelector('.hn')).height]:null};}}
 out.dash=/[\\u2013\\u2014]/.test(document.documentElement.outerHTML);
 out.net=/https?:|src=|href=|@import|url\\(/.test(document.documentElement.outerHTML);
 return JSON.stringify(out);})()`;

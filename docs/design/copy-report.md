@@ -1,13 +1,15 @@
-# Abyss - "Copy report" row in settings Help (NAK-521, D371, D450)
+# Abyss - "Copy report" row in settings Help (NAK-521, D371, D453)
 
 Mockup: `docs/design/copy-report/index.html` (one page, opens from a local file; switches for theme, light / dark, width, reduce motion, clipboard tool and state; every state also drawn side by side).
 Check: `gjs docs/design/copy-report/tools/check.js "$PWD/docs/design/copy-report/index.html"` (240 cases: 3 themes x 2 modes x 4 widths x 10 states; overlap, overflow, clipped text, target sizes, contrast, dash and network checks; 0 failure at the time of writing).
+
+Model (D453): the row approved on Sands (Sands commit `5ce1046`, `docs/design/copy-report.md`, section "GitHub mark beside the button"). Same layout and behaviour; only the colours and the "Copied" picture (water and bubbles instead of the sand heap) are Abyss' own. Kept from Abyss, admitted at review: button hover fill `surfaceContainerHighest`, DemiBold title, a pressed state drawn on the mark.
 
 Built by the engineer in NAK-473. Nothing here is production code.
 
 ## Idea
 
-In Abyss what is done comes up from the deep. "Copied" is not a toast nor a green tick: water rises in the pill and three bubbles climb its right edge, then it leaves by itself.
+In Abyss what is done comes up from the deep. "Copied" is not a toast nor a green tick: water rises in the button and three bubbles climb its right edge, then it leaves by itself.
 
 ## Where
 
@@ -22,17 +24,17 @@ Help section ("Quick guide") of `AbyssSettings.qml`, last child of the Help colu
 | Title | `Theme.fontSizeMedium` (14), DemiBold, line 20, wraps | `Theme.surfaceText` |
 | Help line | `Theme.fontSizeSmall` (12), line 16, wraps | `Theme.surfaceVariantText` |
 | Controls | button, 8 px, GitHub mark; they wrap too: the mark drops under the button, left aligned, 8 px below | |
-| Button "Copy report" | 44 high, minimum 120 wide, padding 16, radius 22 (pill), 1 px border | border `Theme.outline` (full, not 35 %: a UI part needs 3:1), fill transparent, label `Theme.surfaceText` DemiBold 14 |
-| Button hover fill | whole pill | `Theme.surfaceContainerHighest` |
-| Copied water | whole pill | `Theme.primary` at 14 % (`Theme.withAlpha`) |
+| Button "Copy report" | 44 high, fixed 112 wide, label centred, radius `Theme.cornerRadius` (12, as the guide cards), 1 px border | border `Theme.outline` (full, not 35 %: a UI part needs 3:1), fill transparent, label `Theme.surfaceText` DemiBold 14 |
+| Button hover fill | whole button | `Theme.surfaceContainerHighest` |
+| Copied water | whole button | `Theme.primary` at 14 % (`Theme.withAlpha`) |
 | Copied bubbles | 8 x 28 px at 8 px from the right and top edges; circles r 3, 2, 1.25, stroke 1.5 | `Theme.primary` |
 | Copied check | 16 px, stroke 1.5, 8 px before the label | `Theme.primary` |
-| GitHub mark button | 44 x 44 target, radius 22, existing `GitHubMark` at size 18 | glyph `Theme.surfaceVariantText`; hover, pressed and after copy `Theme.primary`; hover fill `Theme.surfaceContainerHighest` |
-| Mark label (tooltip) | 12 px text, padding 4 x 8, radius 8, 4 px under the controls, never wider than the row | fill `Theme.surfaceContainerHighest`, text `Theme.surfaceText` |
+| GitHub mark button | 44 x 44 target, 8 px to the right of the button, always visible, existing `GitHubMark` at size 18 | glyph `Theme.surfaceVariantText`; hover, pressed, focus and after copy `Theme.primary`; no hover fill |
+| Mark label (tooltip) | 12 / 16 px text, padding 4 / 8, radius `Theme.cornerRadius` (12), 4 px under the controls, wraps and never leaves the column | fill `Theme.surfaceContainerHigh`, 1 px edge `Theme.withAlpha(Theme.outline, 0.24)`, text `Theme.surfaceText` |
 | Guided message | full row width under the controls, radius 12, padding 8 top and bottom, 16 left, 4 right; reason DemiBold 14, hint 12; its own `GitHubMark` 18 in a 44 x 44 target | fill `Theme.surfaceContainerHigh` (same as the guide cards), reason `Theme.surfaceText`, hint `Theme.surfaceVariantText`, mark `Theme.surfaceVariantText`, hover `Theme.primary` |
 | Focus ring | 2 px, 2 px outside the control | `Theme.primary` |
 
-The button width is fixed by its widest label so it never changes between "Copy report", "Collecting…" and "Copied".
+The button width is fixed (112 px, the model of D453) so it never changes between "Copy report", "Collecting…" and "Copied".
 
 ## Widths
 
@@ -50,9 +52,9 @@ Nothing overlaps or is clipped at any of them (checked).
 | State | Button | Mark | Help line |
 |---|---|---|---|
 | Rest | outline, "Copy report" | variant colour | help |
-| Hover | highest fill | (its own hover: highest fill, primary glyph, label shown) | |
+| Hover | highest fill | (its own hover: primary glyph alone, no fill, label shown) | |
 | Pressed | highest fill, scale 0.97 | (its own: scale 0.97, primary glyph) | |
-| Focus-visible | 2 px primary ring | ring, label shown | |
+| Focus-visible | 2 px primary ring | 2 px primary ring, 2 px offset, primary glyph, label shown | |
 | Collecting (2 s at most) | "Collecting…" in variant colour, no hover, press ignored (`aria-disabled`, keeps focus) | unchanged | |
 | Copied (4 s, then back to rest alone) | primary border, 14 % primary water, check + "Copied", bubbles | primary glyph: the next step | "Report copied. Read it, then paste it in a GitHub issue." |
 | No clipboard tool | back to rest | unchanged | guided message under the row; it stays until the next press or until the section is left |
@@ -64,7 +66,8 @@ Long text: title and help wrap (`wrapMode: Text.WordWrap`), never elide.
 
 | What | Property | In | Out |
 |---|---|---|---|
-| Hover fill (button, mark) | opacity | 150 ms | 100 ms |
+| Hover fill (button) | opacity | 150 ms | 100 ms |
+| Mark hover | glyph colour to primary | 150 ms | 100 ms |
 | Press | scale to 0.97 | 100 ms | 100 ms |
 | Label swap | opacity | 150 ms | 100 ms |
 | Water rises | scaleY 0.2 to 1 from the bottom, opacity | 200 ms | 100 ms |
@@ -86,19 +89,19 @@ Cost: brief transitions on a direct gesture only. Nothing moves at rest and no t
 | Help line once copied | Report copied. Read it, then paste it in a GitHub issue. |
 | Guided message, reason | The report could not be copied |
 | Guided message, what to do | Install wl-clipboard, or run dms ipc call abyss diagnostics in a terminal. |
-| Mark beside the button, accessible name | Open the Abyss issues page on GitHub |
-| Mark beside the button, label on hover or focus | Report a problem on GitHub |
+| Mark beside the button, accessible name | Open a new issue for Abyss on GitHub |
+| Mark beside the button, label on hover or focus | Open an issue on GitHub |
 | Mark in the guided message, accessible name | Open the guide: Report a problem |
 
 ## Links (on click only, `Qt.openUrlExternally`; the plugin never touches the network)
 
-- Mark beside the button: `https://github.com/lung595/Abyss/issues` (D450). If the owner approves another target on the Sands page (NAK-535, D451), use that one; only the address changes.
+- Mark beside the button: `https://github.com/lung595/Abyss/issues/new/choose` (D453, the model of every plugin; assumption Q153: what GitHub shows at this address while the repo has no bug form is not checked here). Constant address: the report is never put in it, nothing is prefilled.
 - Mark in the guided message: `docs/GUIDE.md`, section "Report a problem" (anchor `#report-a-problem`, to be written with NAK-473).
 
 ## Accessibility
 
 - Contrast: measured in the page for the palette shown (table "Contrast"), text pairs at 4.5:1 or more, UI parts at 3:1 or more, in the three fictitious themes, light and dark; the check fails on any value below.
-- Targets: button 120 x 44, both marks 44 x 44.
+- Targets: button 112 x 44, both marks 44 x 44.
 - Focus order: "Full user guide", "Copy report", mark, then the mark of the guided message when shown.
 - The help line and the guided message are announced when they change (`Accessible.announce` or equivalent); the state never rests on colour alone (label, check, text change).
 

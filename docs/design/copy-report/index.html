@@ -29,7 +29,7 @@ button:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
 .rows{z-index:0}
 .float{position:absolute;left:-4px;width:8px;height:28px;border-radius:4px;background:var(--primary)}
 .logo{fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
-.content{flex:1 1 0;min-width:0;padding:0 0 28px 24px;display:flex;flex-direction:column;gap:8px}
+.content{flex:1 1 0;min-width:0;padding:0 0 32px 24px;display:flex;flex-direction:column;gap:8px}
 .content h3{margin:0;font-size:20px;font-weight:600;line-height:28px;overflow-wrap:anywhere}
 .sub{font-size:12px;line-height:16px;color:var(--variant);margin:0 0 8px;overflow-wrap:anywhere}
 /* The six guide cards, as built: one line of description, elided. */
@@ -42,10 +42,10 @@ button:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
 .txt{flex:1 1 160px;min-width:0}
 .txt b{display:block;font-weight:600;line-height:20px;overflow-wrap:anywhere}.txt small{display:block;font-size:12px;line-height:16px;color:var(--variant);overflow-wrap:anywhere}
 .ctl{position:relative;flex:0 1 auto;min-width:0;max-width:100%;display:flex;flex-wrap:wrap;gap:8px}
-/* Abyss buttons are pills. The two labels share one grid cell, so the width never changes between states. */
+/* Same button as the model row (D453): radius 12 like the guide cards, fixed 112 px. The labels share one grid cell, so the width never changes between states. The guide button keeps its built pill. */
 .seg,.cr{font:inherit;font-size:14px;font-weight:600;line-height:20px;height:44px;padding:0 16px;border-radius:22px;border:1px solid var(--outline);background:none;color:var(--text);cursor:pointer;max-width:100%;display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
 .seg{align-self:flex-start}
-.cr{position:relative;overflow:hidden;min-width:120px;display:grid;place-items:center;transition:transform .1s var(--ease)}
+.cr{position:relative;overflow:hidden;width:112px;padding:0;border-radius:var(--r);display:grid;place-items:center;transition:transform .1s var(--ease)}
 .cr::before{content:"";position:absolute;inset:0;background:var(--highest);opacity:0;transition:opacity .1s var(--ease)}
 .cr:hover::before,.cr.f-hover::before,.cr.f-press::before{opacity:1;transition-duration:.15s}
 .cr:active,.cr.f-press{transform:scale(.97)}
@@ -53,7 +53,7 @@ button:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
 .cr>span{grid-area:1/1;position:relative;display:inline-flex;align-items:center;gap:8px;transition:opacity .1s var(--ease)}
 .cr .l-busy,.cr .l-done{opacity:0}
 .cr .l-done svg{color:var(--primary)}
-/* Copied: the report has surfaced. Water rises in the pill and three bubbles climb its right edge. */
+/* Copied: the report has surfaced. Water rises in the button and three bubbles climb its right edge. */
 .cr .tintc{position:absolute;inset:0;background:var(--primary);opacity:0;transform:scaleY(.2);transform-origin:50% 100%;transition:opacity .1s var(--ease),transform .1s var(--ease)}
 .cr .bub{position:absolute;right:8px;top:8px;width:8px;height:28px;color:var(--primary);opacity:0;transform:translateY(8px);transition:opacity .1s var(--ease),transform .1s var(--ease)}
 .s-busy .cr{cursor:default;color:var(--variant)}.s-busy .cr::before{opacity:0}.s-busy .cr:active{transform:none}
@@ -69,16 +69,13 @@ button:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
 .hn div{flex:1 1 0;min-width:0}
 .hn b{display:block;font-weight:600;line-height:20px;overflow-wrap:anywhere}
 .hn small{display:block;font-size:12px;line-height:16px;color:var(--variant);overflow-wrap:anywhere}
-/* The GitHub mark (GitHubMark.qml): one monochrome glyph, tinted with a Theme role, in a 44 px round target. */
-.gh{position:relative;flex:0 0 44px;width:44px;height:44px;border:0;border-radius:22px;background:none;color:var(--variant);cursor:pointer;display:grid;place-items:center;transition:transform .1s var(--ease)}
-.gh::before{content:"";position:absolute;inset:0;border-radius:22px;background:var(--highest);opacity:0;transition:opacity .1s var(--ease)}
-.gh svg{position:relative}
-.gi:hover::before,.gi.f-hover::before,.gi.f-press::before{opacity:1;transition-duration:.15s}
-.gh:hover,.gh.f-hover,.gh.f-press{color:var(--primary)}
+/* The GitHub mark (GitHubMark.qml): one monochrome glyph, tinted with a Theme role, in a 44 x 44 target. Hover is the primary colour alone, no fill (D453). */
+.gh{position:relative;flex:0 0 44px;width:44px;height:44px;border:0;border-radius:var(--r);background:none;color:var(--variant);cursor:pointer;display:grid;place-items:center;transition:transform .1s var(--ease),color .1s var(--ease)}
+.gh:hover,.gh.f-hover,.gh.f-press{color:var(--primary);transition-duration:.1s,.15s}
 .gi:active,.gi.f-press{transform:scale(.97)}
 /* Once the report is copied the mark takes the primary colour: the next step shows itself. */
 .s-copied .gi{color:var(--primary)}
-.tip{position:absolute;z-index:2;left:0;top:calc(100% + 4px);padding:4px 8px;border-radius:8px;background:var(--highest);color:var(--text);font-size:12px;line-height:16px;width:max-content;max-width:100%;overflow-wrap:anywhere;pointer-events:none;opacity:0;transition:opacity .1s var(--ease)}
+.tip{position:absolute;z-index:2;left:0;top:calc(100% + 4px);padding:4px 8px;border-radius:var(--r);background:var(--high);border:1px solid color-mix(in srgb,var(--outline) 24%,transparent);color:var(--text);font-size:12px;line-height:16px;width:max-content;max-width:100%;overflow-wrap:anywhere;pointer-events:none;opacity:0;transition:opacity .1s var(--ease)}
 .gi:hover~.tip,.gi:focus-visible~.tip,.g-tip .tip{opacity:1;transition-duration:.15s}
 @keyframes fade{from{opacity:0}}
 /* Reduce motion: states swap with a 150 ms fade, nothing scales, rises or climbs. */
@@ -94,7 +91,7 @@ table{border-collapse:collapse;font-size:14px;max-width:100%}th,td{text-align:le
 </style>
 <body>
 <h1>Abyss · NAK-521 · The "Copy report" row in Help</h1>
-<p>The anonymous diagnostics report, as the last row of the Help section ("Quick guide") of the built settings, under the six guide cards. Press the button: the report rises to the clipboard, water fills the pill and three bubbles climb its edge, then it all leaves by itself. Beside the button the GitHub mark is always there: it opens the Abyss issues page, where the report is pasted. Once the report is copied the mark takes the primary colour. Switch "Clipboard tool" to "Missing" to see the guided message. Every state is also drawn side by side under the panel.</p>
+<p>The anonymous diagnostics report, as the last row of the Help section ("Quick guide") of the built settings, under the six guide cards. Press the button: the report rises to the clipboard, water fills the button and three bubbles climb its edge, then it all leaves by itself. Beside the button the GitHub mark is always there: it opens a new issue for Abyss, where the report is pasted. Once the report is copied the mark takes the primary colour. Switch "Clipboard tool" to "Missing" to see the guided message. Every state is also drawn side by side under the panel.</p>
 <p>Why it is not generic: the confirmation is neither a toast nor a green tick. In Abyss what is done comes up from the deep, so "copied" reads as water rising and bubbles reaching the surface.</p>
 <div class="switches" id="sw"></div>
 <div id="stage"><div id="panel"></div></div>
@@ -119,7 +116,7 @@ let live="rest",timer=0;
 const C={title:"Anonymous report",help:"Versions, states and error codes only. It stays on this PC until you paste it.",
  button:"Copy report",busy:"Collecting…",done:"Copied",helpDone:"Report copied. Read it, then paste it in a GitHub issue.",
  noneTitle:"The report could not be copied",noneHint:"Install wl-clipboard, or run dms ipc call abyss diagnostics in a terminal.",
- gh:"Open the guide: Report a problem",issue:"Open the Abyss issues page on GitHub",tip:"Report a problem on GitHub"};
+ gh:"Open the guide: Report a problem",issue:"Open a new issue for Abyss on GitHub",tip:"Open an issue on GitHub"};
 // 20 px drawings on one 1.5 px stroke, standing in for SectionLogo and the cards' icons (static, not the subject here).
 const LOGO={connect:"M8 12l4-4M6.5 9.5l-2 2a3 3 0 0 0 4 4l2-2M13.5 10.5l2-2a3 3 0 0 0-4-4l-2 2",
 appearance:"M2.5 10c2.5-4 5-5 7.5-5s5 1 7.5 5c-2.5 4-5 5-7.5 5s-5-1-7.5-5zM10 7.5a2.5 2.5 0 1 0 0 5a2.5 2.5 0 0 0 0-5z",
@@ -173,8 +170,8 @@ function pairs(t){const s=rgb(t.surface),h=rgb(t.high),hh=rgb(t.highest),p=rgb(t
  ["Collecting label (surfaceVariantText) / surface",4.5,cr(v,s)],["Copied label (surfaceText) / primary tint 14 %",4.5,cr(tx,ti)],["Check and bubbles (primary) / primary tint 14 %",3,cr(p,ti)],
  ["Button outline (outline) / surface",3,cr(o,s)],["Copied outline and focus ring (primary) / surface",3,cr(p,s)],
  ["Note reason (surfaceText) / note fill (surfaceContainerHigh)",4.5,cr(tx,h)],["Note hint (surfaceVariantText) / note fill (surfaceContainerHigh)",4.5,cr(v,h)],
- ["GitHub mark at rest (surfaceVariantText) / surface",3,cr(v,s)],["GitHub mark hover and pressed (primary) / hover fill (surfaceContainerHighest)",3,cr(p,hh)],["GitHub mark after copy (primary) / surface",3,cr(p,s)],
- ["Mark label (surfaceText) / label fill (surfaceContainerHighest)",4.5,cr(tx,hh)],["GitHub mark in the note (surfaceVariantText) / note fill",3,cr(v,h)],["GitHub mark in the note, hover (primary) / note fill",3,cr(p,h)]];}
+ ["GitHub mark at rest (surfaceVariantText) / surface",3,cr(v,s)],["GitHub mark hover, pressed, focus and after copy (primary) / surface",3,cr(p,s)],
+ ["Mark label (surfaceText) / label fill (surfaceContainerHigh)",4.5,cr(tx,h)],["GitHub mark in the note (surfaceVariantText) / note fill",3,cr(v,h)],["GitHub mark in the note, hover (primary) / note fill",3,cr(p,h)]];}
 function render(){const t=TH[S.theme][S.mode],de=document.documentElement;for(const k in t)de.style.setProperty("--"+k,t[k]);
  $("sw").innerHTML=SW.map(g=>`<div class="grp" role="group" aria-label="${g[1]||g[0]}">${g[1]?`<span>${g[1]}</span>`:""}${g[2].map(o=>`<button aria-pressed="${S[g[0]]===o[0]}" data-sw="${g[0]}" data-v="${o[0]}">${o[1]}</button>`).join("")}</div>`).join("");
  const p=$("panel");p.style.width=S.w+"px";document.body.className=S.rm?"rm":"";
@@ -184,16 +181,16 @@ ${SECS.map(s=>`<div class="ent${s[0]==="help"?" on":""}">${lg(s[0])}<span>${s[1]
  content();
  const cw=S.w-32-176-24;
  $("sheet").innerHTML=STATES.map(s=>`<div class="cell"><i>${s[1]}</i><div style="width:${cw}px">${rowHTML(s[0],false)}</div></div>`).join("");
- $("motion").innerHTML=`<table><tr><th>What moves</th><th>Property</th><th>Duration</th><th>Easing</th></tr>${[["Hover: fill appears under the label or the mark","opacity","150 ms in, 100 ms out"],["Press: button or mark shrinks to 97 %","transform scale","100 ms in, 100 ms out"],["Copied: label swaps to the check and \"Copied\"","opacity","150 ms in, 100 ms out"],["Copied: water rises in the pill","transform scaleY .2 to 1, opacity","200 ms in, 100 ms out"],["Copied: three bubbles climb 8 px","transform translateY, opacity","200 ms in, 100 ms out"],["Guided message appears","opacity","150 ms in, 100 ms out"],["GitHub mark: label on hover or focus","opacity","150 ms in, 100 ms out"]].map(r=>`<tr>${r.map(c=>`<td class="num">${c}</td>`).join("")}<td class="num">OutCubic</td></tr>`).join("")}<tr><td>Reduce motion</td><td>opacity only</td><td class="num">150 ms</td><td>nothing scales, rises or climbs</td></tr><tr><td>At rest</td><td colspan="3">nothing moves and no timer runs; the 4 s timer exists only while "Copied" is shown</td></tr></table>`;
+ $("motion").innerHTML=`<table><tr><th>What moves</th><th>Property</th><th>Duration</th><th>Easing</th></tr>${[["Hover: fill appears under the button label","opacity","150 ms in, 100 ms out"],["GitHub mark hover: glyph turns primary, no fill","colour of the glyph","150 ms in, 100 ms out"],["Press: button or mark shrinks to 97 %","transform scale","100 ms in, 100 ms out"],["Copied: label swaps to the check and \"Copied\"","opacity","150 ms in, 100 ms out"],["Copied: water rises in the button","transform scaleY .2 to 1, opacity","200 ms in, 100 ms out"],["Copied: three bubbles climb 8 px","transform translateY, opacity","200 ms in, 100 ms out"],["Guided message appears","opacity","150 ms in, 100 ms out"],["GitHub mark: label on hover or focus","opacity","150 ms in, 100 ms out"]].map(r=>`<tr>${r.map(c=>`<td class="num">${c}</td>`).join("")}<td class="num">OutCubic</td></tr>`).join("")}<tr><td>Reduce motion</td><td>opacity only</td><td class="num">150 ms</td><td>nothing scales, rises or climbs</td></tr><tr><td>At rest</td><td colspan="3">nothing moves and no timer runs; the 4 s timer exists only while "Copied" is shown</td></tr></table>`;
  $("contrast").innerHTML=`<table><tr><th>Pair</th><th>Need</th><th>${S.theme} dark</th><th>${S.theme} light</th></tr>${pairs(TH[S.theme].dark).map((r,i)=>{const l=pairs(TH[S.theme].light)[i][2];return`<tr><td>${r[0]}</td><td class="num">${r[1]}:1</td><td class="num">${r[2].toFixed(2)}${r[2]<r[1]?" FAIL":""}</td><td class="num">${l.toFixed(2)}${l<r[1]?" FAIL":""}</td></tr>`}).join("")}</table>`;
  $("dest").innerHTML=`<table><tr><th>Drawn here</th><th>Opens</th><th>Why</th></tr>
-<tr><td>Issues page (D450)</td><td>github.com/lung595/Abyss/issues</td><td>the report is in the clipboard, the next gesture is to paste it in an issue</td></tr></table>
-<p>If the Sands page (NAK-535) is approved with another target (the new issue form), Abyss follows it: only the address changes, the row stays as drawn. The page opens in the browser on click only; the plugin itself never touches the network.</p>`;
+<tr><td>New issue (D453, model of every plugin)</td><td>github.com/lung595/Abyss/issues/new/choose</td><td>the report is in the clipboard, the next gesture is to paste it</td></tr></table>
+<p>Same target as the row approved on Sands (assumption Q153: what GitHub shows at this address while the repo has no bug form is not checked here). Constant address: the report is never put in it and nothing is prefilled. The page opens in the browser on click or key press only; the plugin itself never touches the network.</p>`;
  $("copy").innerHTML=`<table><tr><th>Part</th><th>Text</th></tr>${[["Title",C.title],["Help line",C.help],["Button",C.button],["Button while collecting",C.busy],["Button once copied",C.done],["Help line once copied",C.helpDone],["Guided message, reason",C.noneTitle],["Guided message, what to do",C.noneHint],["GitHub mark beside the button, accessible name",C.issue],["GitHub mark beside the button, label on hover or focus",C.tip],["GitHub mark in the guided message, accessible name",C.gh]].map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join("")}</table>`;}
 document.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
  if(b.dataset.sw){const k=b.dataset.sw,raw=b.dataset.v;S[k]=k==="w"?+raw:k==="rm"?raw==="true":raw;clearTimeout(timer);live="rest";render();const n=document.querySelector(`[data-sw="${k}"][aria-pressed=true]`);if(n)n.focus();return;}
  if(b.id==="cr"){press();return;}
- if(b.classList.contains("gh")||b.classList.contains("seg"))$("said").textContent=b.classList.contains("gi")?"In the plugin: opens github.com/lung595/Abyss/issues in your browser, on click only. This page opens nothing.":b.classList.contains("gh")?"In the plugin: opens docs/GUIDE.md, section \"Report a problem\", in your browser. This page opens nothing.":"In the plugin: opens the guide in your browser. This page opens nothing.";});
+ if(b.classList.contains("gh")||b.classList.contains("seg"))$("said").textContent=b.classList.contains("gi")?"In the plugin: opens github.com/lung595/Abyss/issues/new/choose in your browser, on click only. This page opens nothing.":b.classList.contains("gh")?"In the plugin: opens docs/GUIDE.md, section \"Report a problem\", in your browser. This page opens nothing.":"In the plugin: opens the guide in your browser. This page opens nothing.";});
 render();
 </script>
 </body></html>
