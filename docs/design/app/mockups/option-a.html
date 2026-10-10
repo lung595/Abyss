@@ -6,12 +6,12 @@
 <style>
 :root{ /* DMS Theme tokens, dark "abyss" (design.md §2, D393) */
  --surface:#02040b;--sclowest:#000208;--sclow:#070a14;--sc:#0c1020;--schigh:#131a2e;--schighest:#1b2440;
- --on:#e8ecf6;--onv:#a3acc0;--outline:#58648a;--primary:#6fe3ff;--onprimary:#04202c;--secondary:#ffc46b;
+ --on:#e8ecf6;--onv:#a3acc0;--outline:#58648a;--outline-strong:#8592b8;--primary:#6fe3ff;--onprimary:#04202c;--secondary:#ffc46b;
  --success:#7ee2a8;--warning:#ffb35c;--error:#ff7b86;
  --w0:var(--schighest);--w200:var(--sc);--w4000:var(--sclowest);
- --gauge:72px;--pad:32px;--r-ctl:12px;--r-card:16px;--r-panel:20px;--descend:240ms;--ascend:180ms;--ease:cubic-bezier(.33,1,.68,1)}
+ --gauge:72px;--pad:32px;--r-ctl:12px;--r-card:16px;--r-panel:20px;--descend:200ms;--ascend:150ms;--ease:cubic-bezier(.33,1,.68,1)}
 html[data-theme=light]{--surface:#f3f7fb;--sclowest:#ffffff;--sclow:#e9f0f6;--sc:#dfe8f0;--schigh:#d2dde8;--schighest:#c4d2df;
- --on:#0e1a2b;--onv:#475870;--outline:#6f8097;--primary:#0b6f8f;--onprimary:#ffffff;--secondary:#7a4f00;
+ --on:#0e1a2b;--onv:#475870;--outline:#6f8097;--outline-strong:#5a6a82;--primary:#0b6f8f;--onprimary:#ffffff;--secondary:#7a4f00;
  --success:#1e7a4a;--warning:#8a5600;--error:#b3263a;--w0:var(--sclowest);--w200:var(--sclow);--w4000:var(--schigh)}
 *{box-sizing:border-box;margin:0}
 body{background:#555;font:15px/1.4 "Noto Sans",system-ui,sans-serif;color:var(--on);padding:24px;display:grid;gap:16px;justify-content:start}
@@ -40,9 +40,9 @@ body{background:#555;font:15px/1.4 "Noto Sans",system-ui,sans-serif;color:var(--
 @keyframes arrive{from{transform:translateY(40px);opacity:0}}@keyframes arriveUp{from{transform:translateY(-40px);opacity:0}}
 h1{font-size:22px;font-weight:600;height:44px;display:flex;align-items:center;gap:12px}h1 small{font:13px "Noto Sans Mono",monospace;color:var(--onv)}
 /* controls */
-.chip{display:inline-flex;align-items:center;height:32px;padding:0 12px;border-radius:16px;background:var(--schigh);color:var(--on);font-size:13px;font-weight:500;border:0;cursor:pointer;max-width:240px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;position:relative}
+.chip{display:inline-flex;align-items:center;height:32px;padding:0 12px;border-radius:16px;background:var(--schigh);color:var(--on);font-size:13px;font-weight:500;border:1px solid var(--outline-strong);cursor:pointer;max-width:240px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;position:relative}
 .chip::before{content:"";position:absolute;inset:-6px 0}/* 44 px hit */
-.chip.on{background:var(--primary);color:var(--onprimary);font-weight:600}.chip:hover{filter:brightness(1.12)}.chip:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.chip.on{background:var(--primary);color:var(--onprimary);font-weight:600;border-color:transparent}.chip:hover{filter:brightness(1.12)}.chip:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
 .btn{height:44px;padding:0 16px;border-radius:var(--r-ctl);border:1px solid var(--outline);background:none;color:var(--primary);font-size:14px;font-weight:600;cursor:pointer}
 .btn.primary{background:var(--primary);color:var(--onprimary);border-color:var(--primary)}.btn:active{transform:scale(.97)}.btn:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
 .btn[disabled]{opacity:.38;cursor:not-allowed}
@@ -53,7 +53,7 @@ h1{font-size:22px;font-weight:600;height:44px;display:flex;align-items:center;ga
 /* map */
 .map{flex:1;border:1px solid var(--outline);border-radius:var(--r-card);position:relative;background:var(--w4000)}
 .filters{position:absolute;left:16px;top:16px;display:flex;gap:8px}.zoom{position:absolute;right:16px;top:16px;display:grid;gap:4px}
-.zoom button{width:44px;height:44px;border-radius:var(--r-ctl);border:1px solid var(--outline);background:none;color:var(--on);font-size:18px;cursor:pointer}
+.zoom button{width:44px;height:44px;border-radius:var(--r-ctl);border:1px solid var(--outline-strong);background:none;color:var(--on);font-size:18px;cursor:pointer}
 .creature{position:absolute;width:120px;transform:translate(-50%,-50%);text-align:center;font-size:13px;font-weight:500;cursor:pointer}
 .creature svg{display:block;margin:0 auto 10px;overflow:visible}.creature.off{color:var(--onv)}.creature.off svg *{stroke:var(--outline)}
 .creature.online svg circle.halo{fill:var(--primary);fill-opacity:.13;transition:transform 150ms var(--ease);transform-origin:center}.creature:hover circle.halo{transform:scale(1.25)}
@@ -146,7 +146,7 @@ h1{font-size:22px;font-weight:600;height:44px;display:flex;align-items:center;ga
    <div class="to">To <button class="chip on">atlas-server</button><button class="chip on">reef-nas</button><button class="chip" id="toLong">nova-laptop</button></div>
    <div class="queue" id="queue">
     <div class="q"><i class="cap"></i><div><div class="n" id="qn0">quarterly-report-final-v3.pdf</div><div class="d" id="qd0">→ atlas-server</div></div><div class="track" style="--p:.42"><i></i><b></b></div><span class="pct">42 %</span><span class="spd">8.1 MB/s</span><button class="btn">Cancel</button></div>
-    <div class="q"><i class="cap"></i><div><div class="n">holiday-photos-2026.tar</div><div class="d">→ reef-nas</div></div><div class="track scp"><i></i></div><span class="pct">Sending…</span><span class="spd">scp · no progress</span><button class="btn">Cancel</button></div>
+    <div class="q"><i class="cap"></i><div><div class="n">holiday-photos-2026.tar</div><div class="d">→ reef-nas</div></div><div class="track scp"><i></i></div><span class="pct">Sending · scp, no progress</span><span class="spd"></span><button class="btn">Cancel</button></div>
     <div class="q done"><i class="cap"></i><div><div class="n">notes.md</div><div class="d">→ atlas-server</div></div><div class="track" style="--p:1"><i></i><b></b></div><span class="pct">100 %</span><span class="spd">done</span><button class="btn">Dismiss</button></div>
    </div>
    <div class="band error" id="refused" hidden>✕ <span>Send refused: reef-nas does not accept files from you. Ask its owner to allow your key.</span><button class="act">Retry</button><a class="gh" href="#guide-send-refused" title="Open the guide: send refused">G</a></div>

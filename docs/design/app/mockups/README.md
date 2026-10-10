@@ -107,30 +107,34 @@ extension kept, chips ≤ 28 chars + …) · light and dark for all of them.
 | Title row | 44 (40), title 22 DemiBold | all views |
 | Type scale | 11 / 13 / 15 / 22, mono tabular for numbers | all |
 | Radii | 12 control · 16 card · 20 panel | all |
-| Border | 1 px `outline` | containers |
+| Border | 1 px `outlineStrong` on containers and controls (dark `#8592b8`, light `#5a6a82`: ≥ 3.57:1 on every stratum, measured) · `outline` for dividers only | all |
+| States | hover `onSurface` α 0.08 · pressed α 0.12 · focus-visible 2 px `primary` ring, 2 px offset · selected `primary`/`onPrimary` (row: `surfaceContainerHigh`) · disabled 38 % content, no pointer (`08-states`) | all controls |
+| Creatures | 24 grid scaled by r/12, 2 px stroke, at most 2 details (eye, one fin) | map, tags |
+| GitHub mark | 24 px, `onSurface` disc, cat silhouette in `surface` → GUIDE anchor, click only | bands |
 | Station target | 44×44, ring 2 px `primary` when current | gauge |
-| Chip | 32 high, 44 hit, 12 padding, 13 DemiBold when active | all |
+| Chip | 32 high, 44 hit, 12 padding, fill `surfaceContainerHigh` + 1 px `outlineStrong`; active `primary`, 13 DemiBold | all |
 | Switch | 48×28 | settings |
 | Drop zone | content width × 120 | send |
 | Capsule track | 120×8, knob 12 | send |
 | Peer card | 300×240 | map |
 | Panel | 560 wide (width − 64 at 900), radius 20 | wizard, diagnosis, tags |
 | Halo | `primary` α 0.13, 32 px blur budget | map |
-| Dive transition | descend 240 ms, ascend 180 ms, OutCubic, `transform` only | views |
+| Dive transition | descend 200 ms, ascend 150 ms (kit scale), OutCubic, `transform` only | views |
 | Chips / card / panel | 100 / 150 / 200 ms enter, exit 150 ms | all |
 | Reduced motion | final state, no travel; snow and bubbles off | all |
-| Contrast (measured) | text ≥ 4.5:1, UI ≥ 3:1 on every stratum (see `render.py --table`) | all |
+| Contrast (measured) | text ≥ 4.5:1, borders ≥ 3:1 on every stratum (table printed by `render.py`); `primary` as text ≤ 15 px only on strata ≥ 4.5:1 (light: never on `surfaceContainerHigh`/`Highest`) | all |
 
-Strata used as text backgrounds and their measured pairs are printed by
-`render.py --table`; a stratum that fails AA gets its text on a panel.
+Every surface a control can sit on and its measured pairs are printed by
+`render.py`; a stratum that fails AA gets its text on a panel.
 
 ## 6. Files
 
 - `option-a.html` — direction C pushed: strata + instrument gauge (above).
-- `option-b.html` — same idea, continuous light falloff and a single tall
-  column scrolled by the gauge (costlier: three backgrounds to measure).
+- Option B (continuous light falloff) was dropped after the Design Director's
+  review: its captures carried no proof of the idea and it costs ~1.5× for
+  the same information. Option A is the only candidate.
 - `render.py` — real-size PNG renderer sharing the same token values
-  (`option-a/<dark|light>/<screen>.png`; `--option-b` writes `option-b/`); no browser exists on the machine,
+  (`option-a/<dark|light>/<screen>.png`); no browser exists on the machine,
   so the screenshots the owner sees are rendered by this script, not from
   the HTML (assumption recorded in the knowledge base `questions.md`).
 
@@ -143,6 +147,26 @@ Strata used as text backgrounds and their measured pairs are printed by
 - Send queue columns: name · track 120 · percentage 72 · speed 160 · action
   100, 16 px gaps; `scp · no progress` no longer touches the Cancel button.
 - Depth labels on the gauge: `0 · 1k · 2k · 3k · 4k`, mono 11.
-- Option B costs more to build (one 2 400 px column, 16 band colours to
-  measure instead of 3 strata) and the scrim must be sticky; option A is
-  recommended.
+
+## 8. Fixes after the Design Director's review (73 → target 90+)
+
+1. Search field, zoom buttons, cards, panels, switches: 1 px `outlineStrong`
+   (≥ 3.57:1 on every stratum, printed by `render.py`); `outline` kept for
+   dividers only.
+2. Station 0 m: gauge scale starts at y 64, so the ring top sits at y 42 and
+   the readouts end at y 758: same margin at both ends.
+3. Zoom column: exactly 3 buttons (`+`, `−`, `⌖`), every one with a glyph
+   (the old code iterated a string and drew its spaces).
+4. GitHub mark drawn (disc + cat silhouette, 24 px); creatures share one
+   stroke on the 24 grid (2 px, eye + one fin at most).
+5. `08-states.png`: chip, primary and secondary button, zoom control,
+   switch, queue row and station in default / hover / focus-visible /
+   pressed / selected / disabled.
+6. Durations on the kit scale: descend 200 ms, ascend 150 ms.
+7. Inactive chips have a visible container (fill + border); the kerning
+   gap (`#hom e`) came from the raqm engine on variable-font instances, the
+   renderer now uses the basic layout.
+8. Copy: `Sending · scp, no progress`.
+9. `primary` text ≤ 15 px never sits on light `surfaceContainerHigh`
+   (4.1:1): secondary buttons only appear on panels and the 0 m / 200 m
+   strata (≥ 4.6:1).
