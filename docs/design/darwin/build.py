@@ -52,11 +52,10 @@ def chain(pts):
     return d
 
 
-def outline(pts, centre, a0, harmonics, xs=lambda x: x):
-    """Smooth closed outline from the measured rays. The 48 radii are a
-    periodic function of the angle: keeping only its low harmonics removes the
-    1 px wobble of the measurement, and 24 anchors with analytic tangents give
-    one continuous curve with no corner (see README, Smoothness)."""
+def radial(pts, centre, a0, harmonics, xs=lambda x: x):
+    """The measured rays as a smooth closed curve: the 48 radii are a periodic
+    function of the angle, and keeping only its low harmonics removes the 1 px
+    wobble of the measurement. Returns the curve as a function of t (turns)."""
     n = len(pts)
     r = [math.hypot(x - centre[0], y - centre[1]) for x, y in pts]
     co = [(sum(r[i] * math.cos(2 * math.pi * k * i / n) for i in range(n)) * (1 if k == 0 else 2) / n,
@@ -74,6 +73,13 @@ def outline(pts, centre, a0, harmonics, xs=lambda x: x):
         e = 1e-3  # xs is piecewise linear: its slope is read numerically
         return xs(x), y, dx * (xs(x + e) - xs(x - e)) / (2 * e), dy
 
+    return at
+
+
+def outline(pts, centre, a0, harmonics, xs=lambda x: x):
+    """Path of the smooth outline: 24 anchors with analytic tangents give one
+    continuous curve with no corner (see README, Smoothness)."""
+    at = radial(pts, centre, a0, harmonics, xs)
     m = 24
     p = [at(i / m) for i in range(m + 1)]
     d = "M%.1f %.1f" % p[0][:2]
@@ -122,6 +128,16 @@ DEPTH = 0.6
 YAW = {"front": 0, "three-quarter": 40, "profile": 90}
 
 
+def right_edge(at, y):
+    """Rightmost x of a closed curve at height y (2000 samples, 1.5 px band)."""
+    return max(p[0] for p in (at(i / 2000) for i in range(2000)) if abs(p[1] - y) < 1.5)
+
+
+# Face parts of the turned views stay this far inside the body line, so that a
+# full stroke width of body shows between them and the outline.
+INSET = 2 * STROKE
+
+
 def lashes(cx, cy, rx, ry, angles):
     """Short ticks leaving the eye outline at the given angles (degrees)."""
     d = ""
@@ -154,9 +170,11 @@ def front(small=False, view="front"):
     s = 'stroke="%s" stroke-width="%d" stroke-linecap="round" stroke-linejoin="round"' % (INK, STROKE)
     leg = '<path d="M%.1f 455v104a35 35 0 0 0 70 0v-104z" fill="%s" %s/>'
     fin = [(xs(x), y) for x, y in FIN]
+    # Far leg first: the near one overlaps it when the body turns. In profile
+    # both legs are on the view axis: the far one only shows behind the near.
+    legs = (xs(CENTRE[0]) - 57, xs(CENTRE[0]) - 35) if view == "profile" else (xs(470), xs(230))
     base = [
-        # Far leg first: the near one overlaps it when the body turns.
-        leg % (xs(470), BODY, s), leg % (xs(230), BODY, s),
+        leg % (legs[0], BODY, s), leg % (legs[1], BODY, s),
         '<path d="%s" fill="%s" %s/>' % (outline(BODY_PTS, CENTRE, 0, 12, xs), BODY, s),
         '<path d="M%.1f %.1f%s" fill="%s" %s/>' % (fin[0] + ("".join(
             "C" + " ".join("%.1f %.1f" % p for p in fin[i:i + 3]) for i in range(1, len(fin), 3)), BODY, s)),
@@ -183,29 +201,46 @@ def front(small=False, view="front"):
         # Every face part of the front view, moved onto the turned surface:
         # the near eye keeps almost its width, the far one narrows.
         (lx, lk), (rx, rk) = face(269.5), face(495.5)
+        # The far eye is pulled back until it clears the body line over its
+        # whole height; its pupil, brow and cheek move with it.
+        at = radial(BODY_PTS, CENTRE, 0, 12, xs)
+        far = min(0, min(right_edge(at, y) - INSET - rx - 90 * rk * math.sqrt(1 - ((y - 173) / 86.5) ** 2)
+                         for y in range(90, 260, 5)))
+        rx += far
         detail += [
             '<ellipse cx="%.1f" cy="184.5" rx="%.1f" ry="90" fill="%s" %s/>' % (lx, 96 * lk, WHITE, s),
             '<ellipse cx="%.1f" cy="173" rx="%.1f" ry="86.5" fill="%s" %s/>' % (rx, 90 * rk, WHITE, s),
             '<ellipse cx="%.1f" cy="188" rx="%.1f" ry="47" fill="%s"/>' % (face(285)[0] + 6, 47 * lk, INK),
-            '<ellipse cx="%.1f" cy="177" rx="%.1f" ry="47" fill="%s"/>' % (face(484)[0] + 4, 47 * rk, INK),
-            '<path d="%s%s" fill="none" %s/>' % (lashes(lx, 184.5, 96 * lk, 90, (215, 195, 178)),
-                                                 lashes(rx, 173, 90 * rk, 86.5, (-58, -35, -15)), thin),
-            '<path d="%s%s" fill="%s"/>' % (blob(fx(BROW_L)), blob(fx(BROW_R)), INK),
-            cheek(face(286)[0], 314, 63, 203, 118, 1), cheek(face(503)[0], 301, 50, -30, 62, 0),
+            '<ellipse cx="%.1f" cy="177" rx="%.1f" ry="47" fill="%s"/>' % (face(484)[0] + 4 + far, 47 * rk, INK),
+            # The far eye's lashes are on the side turned away: hidden. The far
+            # brow wraps round the head and stops at the body line.
+            '<path d="%s" fill="none" %s/>' % (lashes(lx, 184.5, 96 * lk, 90, (215, 195, 178)), thin),
+            '<clipPath id="body"><path d="%s"/></clipPath>' % outline(BODY_PTS, CENTRE, 0, 12, xs),
+            '<path d="%s" fill="%s"/><path d="%s" fill="%s" clip-path="url(#body)"/>'
+            % (blob(fx(BROW_L)), INK, blob([(x + far, y) for x, y in fx(BROW_R)]), INK),
+            cheek(face(286)[0], 314, 63, 203, 118, 1), cheek(face(503)[0] + far, 301, 50, -30, 62, 0),
             '<path d="M%.1f 320Q%.1f 352 %.1f 306" fill="none" %s/>' % (face(346)[0], face(398)[0], face(448)[0], s),
             '<circle cx="%.1f" cy="307" r="30" fill="%s"/>' % (face(290)[0], LIGHT),
-            '<ellipse cx="%.1f" cy="297" rx="%.1f" ry="30" fill="%s"/>' % (face(492)[0], 30 * max(rk, 0.7), LIGHT),
+            '<ellipse cx="%.1f" cy="297" rx="%.1f" ry="30" fill="%s"/>' % (face(492)[0] + far, 30 * max(rk, 0.7), LIGHT),
         ]
     else:
         # Profile: one eye, one cheek, the mouth ends on the outline. The eye
         # keeps its height and takes the body's own narrowing (DEPTH).
         edge = xs(712)
-        ex, erx = xs(640) - 10 - 96 * DEPTH, 96 * DEPTH  # 640: the outline at eye height
+        at = radial(BODY_PTS, CENTRE, 0, 12, xs)
+        erx = 96 * DEPTH
+        # The eye sits as far forward as the body line allows over its whole
+        # height, the brow likewise over its own.
+        ex = min(right_edge(at, y) - INSET - erx * math.sqrt(1 - ((y - 184.5) / 90) ** 2)
+                 for y in range(100, 270, 5))
+        brow = [(ex + (x - 269.5) * DEPTH, y) for x, y in BROW_L]
+        back = min(0, min(right_edge(at, y) - INSET - x for x, y in brow))
+        brow = [(x + back, y) for x, y in brow]
         detail += [
             '<ellipse cx="%.1f" cy="184.5" rx="%.1f" ry="90" fill="%s" %s/>' % (ex, erx, WHITE, s),
             '<ellipse cx="%.1f" cy="188" rx="%.1f" ry="47" fill="%s"/>' % (ex + 16, 47 * 0.75, INK),
             '<path d="%s" fill="none" %s/>' % (lashes(ex, 184.5, erx, 90, (215, 195, 178)), thin),
-            '<path d="%s" fill="%s"/>' % (blob([(ex + (x - 269.5) * DEPTH, y) for x, y in BROW_L]), INK),
+            '<path d="%s" fill="%s"/>' % (blob(brow), INK),
             cheek(ex + 10, 314, 50, 203, 118, 1),
             '<path d="M%.1f 322Q%.1f 340 %.1f 312" fill="none" %s/>' % (edge - 78, edge - 46, edge - 18, s),
             '<circle cx="%.1f" cy="307" r="26" fill="%s"/>' % (ex + 12, LIGHT),
@@ -257,16 +292,16 @@ def swim(small=False):
     return "\n".join(base if small else base + detail)
 
 
-def optical(view, w, h, box, snapped):
+def optical(view, w, h, box, base, snapped):
     """25 px wide variant for the real widget size: the silhouette is the
     drawing scaled down, the parts that would fall between pixels (eyes,
     pupils, cheeks, legs) are redrawn on whole pixels, and the lashes, brows
     and mouth, thinner than a third of a pixel there, are left out."""
-    k = 25 / box[2]
+    k = 25 / box[2]  # box[2]: the width that maps to 25 px, the same for every view of one space
     return ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 %d %d" width="%d" height="%d">\n'
             '<title>Darwin, %s, 25 px optical size</title>\n'
             '<g transform="scale(%.5f) translate(%d %d)">\n%s\n</g>\n%s\n</svg>\n'
-            % (w, h, w, h, view, k, -box[0], -box[1], (front if view == "front view" else swim)(True), snapped))
+            % (w, h, w, h, view, k, -box[0], -box[1], base, snapped))
 
 
 def px(x, y, w, h, fill, r=0):
@@ -277,6 +312,14 @@ FRONT_25 = "".join([px(8, 15, 2, 5, BODY, 1), px(16, 15, 2, 5, BODY, 1),
                     px(6, 3, 6, 6, WHITE, 3), px(14, 3, 6, 6, WHITE, 3),
                     px(8, 5, 3, 3, INK, 1), px(15, 5, 3, 3, INK, 1),
                     px(9, 10, 2, 2, LIGHT, 1), px(16, 10, 2, 2, LIGHT, 1)])
+# Turned views at the front view's scale (25 / 745): 22 and 17 px wide. One
+# pixel of body is kept between the two eyes of the three-quarter view.
+THREE_QUARTER_25 = "".join([px(7, 15, 2, 5, BODY, 1), px(14, 15, 2, 5, BODY, 1),
+                            px(8, 3, 5, 6, WHITE, 2.5), px(14, 3, 4, 6, WHITE, 2),
+                            px(10, 5, 3, 3, INK, 1), px(15, 5, 2, 3, INK),
+                            px(11, 10, 2, 2, LIGHT, 1), px(15, 10, 1, 2, LIGHT)])
+PROFILE_25 = "".join([px(7, 15, 2, 5, BODY, 1), px(8, 15, 2, 5, BODY, 1),
+                      px(9, 3, 4, 6, WHITE, 2), px(11, 5, 2, 3, INK), px(11, 10, 2, 2, LIGHT, 1)])
 # One pixel of body is kept between the two eyes so they do not merge; the
 # pupils are square so that they stay solid ink on whole pixels.
 SWIM_25 = "".join([px(7, 5, 5, 5, WHITE, 2.5), px(13, 3, 5, 5, WHITE, 2.5),
@@ -297,5 +340,9 @@ if __name__ == "__main__":
     open(out + "/darwin-swim.svg", "w").write(
         '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 480" width="680" height="480">\n'
         '<title>Darwin, side view, swimming</title>\n%s\n</svg>\n' % swim())
-    open(out + "/darwin-front-25.svg", "w").write(optical("front view", 25, 21, (-12, -8, 745), FRONT_25))
-    open(out + "/darwin-swim-25.svg", "w").write(optical("swimming view", 25, 18, (0, 0, 680), SWIM_25))
+    open(out + "/darwin-front-25.svg", "w").write(optical("front view", 25, 21, (-12, -8, 745), front(True), FRONT_25))
+    open(out + "/darwin-three-quarter-25.svg", "w").write(
+        optical("three-quarter view", 22, 21, (-12, -8, 745), front(True, "three-quarter"), THREE_QUARTER_25))
+    open(out + "/darwin-profile-25.svg", "w").write(
+        optical("profile view", 17, 21, (-12, -8, 745), front(True, "profile"), PROFILE_25))
+    open(out + "/darwin-swim-25.svg", "w").write(optical("swimming view", 25, 18, (0, 0, 680), swim(True), SWIM_25))

@@ -7,23 +7,26 @@ approved, and not used by the widget.
 |---|---|---|
 | `darwin-front.svg` | front | 729 px wide, same as `components/assets/darwin/body.png`; the viewBox adds 12 px on the left for the tail fin, 4 px on the right, 8 px on top |
 | `darwin-swim.svg` | swimming, turned | 680 x 480 |
-| `darwin-front-25.svg`, `darwin-swim-25.svg` | optical variants for the real widget size | 25 x 21 and 25 x 18, one unit = one pixel |
+| `darwin-three-quarter.svg`, `darwin-profile.svg` | three-quarter and profile, deduced from the front view | the front space, 660 and 500 wide |
+| `darwin-front-25.svg`, `darwin-three-quarter-25.svg`, `darwin-profile-25.svg`, `darwin-swim-25.svg` | optical variants for the real widget size | 25 x 21, 22 x 21, 17 x 21 and 25 x 18, one unit = one pixel |
 | `*@1x.png` | the optical variants rendered 1:1 (25 px wide, `unit` 0.034 in `Goldfish.qml`) | |
-| `*@4x.png` | 100 px wide | |
-| `scene-dark.png`, `scene-light.png`, `scene-wallpaper.png` | both views at real size in the real desktop bowl (`scripts/preview/render.sh desk`, `desk-light`, and `desk` with a made-up warm wallpaper palette in the preview `Theme`), composited at +328+356 and +398+357, with a 6x unsmoothed zoom below | |
+| `*@4x.png` | four times the real size: front and swimming 100 px wide, three-quarter 89, profile 67 (one scale, 100 / 745, for the three views of the front space) | |
+| `scene-dark.png`, `scene-light.png`, `scene-wallpaper.png` | the four views at real size in the real desktop bowl (`scripts/preview/render.sh desk`, `desk-light`, and `desk` with a made-up warm wallpaper palette in the preview `Theme`), composited at +328+356 (front), +360+356 (three-quarter), +389+356 (profile) and +413+357 (swimming), with a 6x unsmoothed zoom below | |
 
 Rebuild:
 
 ```sh
 python3 build.py .
-for v in front swim; do
-  magick -background none darwin-$v-25.svg darwin-$v@1x.png
-  magick -background none darwin-$v.svg -resize 100x darwin-$v@4x.png
+for v in front:100 three-quarter:89 profile:67 swim:100; do
+  magick -background none darwin-${v%:*}-25.svg darwin-${v%:*}@1x.png
+  magick -background none darwin-${v%:*}.svg -resize ${v#*:}x darwin-${v%:*}@4x.png
 done
 # scenes: <mode> is desk, desk-light, or desk with the wallpaper palette below
 ../../../scripts/preview/render.sh <mode> top.png
 magick top.png darwin-front@1x.png -geometry +328+356 -composite \
-  darwin-swim@1x.png -geometry +398+357 -composite top.png
+  darwin-three-quarter@1x.png -geometry +360+356 -composite \
+  darwin-profile@1x.png -geometry +389+356 -composite \
+  darwin-swim@1x.png -geometry +413+357 -composite top.png
 magick top.png \( top.png -crop 130x60+312+336 +repage -filter point -resize 600% \) \
   -append -strip scene-<name>.png
 ```
@@ -159,6 +162,19 @@ pupils, cheeks and both brows sit on the reference ink.
   and colours are the front ones; face parts are the front ones moved onto the
   turned surface (far eye narrower). In profile one eye, one cheek and the end
   of the mouth are shown.
-- Not done yet: 25 px optical variants of the two new views;
-  `scene-wallpaper.png` still shows the previous outline (dark and light are
-  re-composited); the far brow of the three-quarter view touches the outline.
+- **Turned views, second pass (score 83, 2026-10-10).** Three-quarter: the far
+  eye is pulled back until it clears the body line by two stroke widths over
+  its whole height (computed on the outline, `right_edge()` in `build.py`), its
+  pupil, cheek and brow move with it, the far brow is cut at the body line and
+  the far lashes, on the side turned away, are not drawn. Profile: the eye and
+  the brow are set the same way, two stroke widths inside the body line; both
+  legs are on the view axis, the far one shows 22 px behind the near one.
+- 25 px optical variants of both turned views, at the front view's scale
+  (22 and 17 px wide); the four views are in the three scenes. Contrast
+  measured again on every backdrop pixel of the 130 x 60 zone outside the four
+  drawings (6006 pixels per scene): body 6.25 to 7.18:1 (dark), 6.63 to 7.44:1
+  (light), 6.23 to 7.19:1 (wallpaper theme); eye white 13.04 to 15.57:1;
+  outline 1.00 to 1.19:1 (invisible, the body carries the shape).
+- Not done: the 0.6 depth ratio is an assumption; the profile keeps the front
+  tail fin seen flat (a real profile would show it edge-on or fanned, no
+  reference says which).
