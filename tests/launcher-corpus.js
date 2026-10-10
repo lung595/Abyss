@@ -3,7 +3,7 @@
 // directions: Abyss claims none of the timer phrases, Sands finds no timer in
 // the Abyss phrases.
 
-// Abyss: phrase -> the device it names ("" = none). "vega" and "nas" are peers
+// Abyss: phrase -> the device it names (null = none). "vega" and "nas" are peers
 const SEND = [
     ["send file", null],
     ["send a file", null],

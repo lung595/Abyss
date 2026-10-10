@@ -1,6 +1,5 @@
 import QtQuick
 import Quickshell
-import Quickshell.Io
 import qs.Services
 import "components"
 import "components/LauncherItems.js" as LauncherItems
@@ -59,8 +58,14 @@ Item {
         const route = LauncherItems.route(query, source.view.peers, prefixed);
         if (!route)
             return [];
+        // A send sentence reads the peers once, or a device named right after
+        // the shell started would not be found (the rows are asked again then)
+        if (route.ask)
+            _fresh();
         if (route.send !== undefined)
             return [LauncherItems.sendEntry(route.send)];
+        if (route.ask)
+            return [];
         _fresh();
         const v = source.view;
         return LauncherItems.items({
@@ -92,7 +97,7 @@ Item {
             // With the app installed it opens on sending; without it, the picker
             // opens once the launcher has closed, or it would be lost behind it
             sender.device = data;
-            sender.probe();
+            sender.start();
         } else if (type === "ssh") {
             const p = daemon.findPeer(data);
             if (p)
@@ -107,34 +112,22 @@ Item {
 
     // "Send a file…": the `abyss` command when it is installed (argument list,
     // the name already validated), otherwise the picker of the widget
-    Item {
+    AppLookup {
         id: sender
         property string device: ""
 
-        function probe() {
-            lookup.running = true;
-        }
-        function _fallback() {
+        onFound: installed => {
+            const argv = SendIntent.appCommand(sender.device);
+            // Detached: the app must outlive the launcher, and the shell
+            if (installed && argv) {
+                Quickshell.execDetached(argv);
+                return;
+            }
             picker.peer = root.daemon.findPeer(sender.device);
             if (picker.peer)
                 picker.start();
             else
                 opener.start();
-        }
-
-        Process {
-            id: lookup
-            // The name travels as a positional parameter, never in the string
-            command: ["sh", "-c", "command -v -- \"$1\"", "sh", "abyss"]
-            onExited: (exitCode, exitStatus) => {
-                const argv = SendIntent.appCommand(sender.device);
-                // Detached: the app must outlive the launcher, and the shell
-                if (exitCode === 0 && argv) {
-                    Quickshell.execDetached(argv);
-                } else {
-                    sender._fallback();
-                }
-            }
         }
     }
 

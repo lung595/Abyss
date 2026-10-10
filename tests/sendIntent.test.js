@@ -25,6 +25,18 @@ eq("bad input", S.claim(undefined, peers), null);
 eq("too long is ignored", S.claim("send file to " + "v".repeat(100), peers), null);
 eq("too many words is ignored", S.claim("send a file to a b c d e f g", peers), null);
 
+ok("fits: send file to anyone", S.fits("send file to zed"));
+ok("fits: send to a name", S.fits("envoyer à zed"));
+ok("does not fit: a timer", !S.fits("timer 20 min"));
+ok("does not fit: a lone verb", !S.fits("send"));
+ok("does not fit: a long text", !S.fits("send file " + "x".repeat(100)));
+
+// One device rule for the launcher and the app's command line
+const cli = GLib.file_get_contents(GLib.path_get_dirname(imports.system.programPath) + "/../app/components/Cli.js")[1];
+const rule = /^const _DEVICE = (.*);$/m;
+const sendSrc = GLib.file_get_contents(GLib.path_get_dirname(imports.system.programPath) + "/../components/SendIntent.js")[1];
+eq("same device rule as the app's Cli.js", rule.exec(new TextDecoder().decode(sendSrc))[1], rule.exec(new TextDecoder().decode(cli))[1]);
+
 eq("the app command with a device", S.appCommand("vega").join(" "), "abyss send vega");
 eq("the app command without a device", S.appCommand(null).join(" "), "abyss");
 eq("a name the app refuses is not tried", S.appCommand("-x"), null);
@@ -49,4 +61,4 @@ if (!GLib.file_test(sands, GLib.FileTest.EXISTS)) {
         S.claim("firefox browser", peers);
     print("- claim: " + ((Date.now() - t1) * 1000 / 2000).toFixed(1) + " µs per call (other search)");
 }
-done();
+done("sendIntent");

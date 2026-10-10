@@ -134,6 +134,8 @@ The test lab lives in memory and never touches NetBird; its title sums it up in 
 
 ## Command line and keybindings
 
+From the launcher (Super+Space), a sentence such as `send file to vega` or `envoie un fichier au nas` offers *Send a file to vega…*, which runs `abyss send vega` when the app is installed and opens the widget's picker otherwise. DMS gives Abyss a launcher prefix (`abyss`) by default; clear it in DMS Settings → Launcher so sentences reach Abyss without it ([details](docs/GUIDE.md#send-from-the-launcher)).
+
 ```sh
 dms ipc call abyss open            # open the deep from the bar
 dms ipc call abyss status          # "connected · 8/10 online · Internet through studio"

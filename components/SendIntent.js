@@ -70,9 +70,22 @@ function claim(query, peers) {
     return null;
 }
 
+// True when the query has the shape of a send sentence, whatever the device
+// is: the launcher then reads the peers once, so a device named right after
+// the shell started can be found (a cold source has none yet)
+function fits(query) {
+    const text = String(query === undefined || query === null ? "" : query);
+    const w = text.length > MAX_INPUT ? [] : _words(text);
+    if (w.length < 2 || w.length > MAX_TOKENS || VERB.indexOf(w[0]) < 0)
+        return false;
+    return NOUN.indexOf(w[DETERMINER.indexOf(w[1]) >= 0 ? 2 : 1]) >= 0 || (PREPOSITION.indexOf(w[1]) >= 0 && w.length > 2);
+}
+
 // The app's command for a send, as an argument list (never a shell string):
 // `abyss send <device>`, or `abyss` alone when no device was named. The app
-// refuses any other name, so one it would refuse is not even tried (null)
+// refuses any other name, so one it would refuse is not even tried (null).
+// Same rule as app/components/Cli.js (tests/sendIntent.test.js keeps them equal).
+// No "--" before the device: the name is charset-checked, so it cannot start with "-"
 const _DEVICE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,62}$/;
 
 function appCommand(device) {

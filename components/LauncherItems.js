@@ -58,7 +58,9 @@ function _internet(s) {
 // hands over every search: only the "abyss" word (everything below) or a
 // plain "send a file" sentence gets an answer, so Abyss stays out of every
 // other search. With a prefix set, DMS has already stripped it: all is ours.
-// Returns { all: <query for items()> }, { send: <device or null> } or null.
+// Returns { all: <query for items()> }, { send: <device or null>, ask: true }
+// or null. `ask` means the sentence has the shape of a send: the launcher
+// reads the peers once. `send` is absent when no peer was resolved yet.
 function route(query, peers, prefixed) {
     const text = String(query === undefined || query === null ? "" : query).trim();
     if (prefixed)
@@ -67,7 +69,9 @@ function route(query, peers, prefixed) {
     if (word)
         return { "all": (word[1] || "").trim() };
     const intent = SendIntent.claim(text, peers);
-    return intent ? { "send": intent.device } : null;
+    if (intent)
+        return { "send": intent.device, "ask": true };
+    return SendIntent.fits(text) ? { "ask": true } : null;
 }
 
 // The one entry of a send sentence: "Send a file to vega…" or "Send a file…"
