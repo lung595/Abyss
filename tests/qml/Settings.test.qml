@@ -9,7 +9,7 @@ import "../.."
 // the keys move through the rail, and a rail shorter than its rows scrolls
 // under the fixed search field and keeps the pointed row in view.
 // Run (no PySide6 needed; the preview stand-ins supply Theme and widgets):
-//   qmltestrunner-qt6 -import scripts/preview/imports -input tests/qml/Settings.test.qml
+//   qmltestrunner-qt6 -platform offscreen -import scripts/preview/imports -input tests/qml/Settings.test.qml
 Item {
     id: host
     width: 600
@@ -93,7 +93,24 @@ Item {
         name: "Page"
         when: windowShown
 
+        function findRail(item) {
+            if (item.objectName === "rail")
+                return item;
+            for (const c of item.children) {
+                const r = findRail(c);
+                if (r)
+                    return r;
+            }
+            return null;
+        }
         function test_opening_and_browsing_writes_nothing() {
+            // Real-looking stored keys, so an accidental rewrite would show
+            SettingsData.pluginSettings = {
+                "abyss": {
+                    "barStyle": "ring",
+                    "lastSeen": 3
+                }
+            };
             const before = JSON.stringify(SettingsData.pluginSettings);
             let saves = 0;
             const count = () => saves++;
@@ -102,7 +119,16 @@ Item {
                 "section": "deep"
             });
             verify(page);
-            wait(50);
+            const pageRail = findRail(page);
+            verify(pageRail);
+            // The old "deep" id opens Appearance, whose title stays "The deep"
+            compare(pageRail.rows[pageRail.sel].id, "appearance");
+            compare(pageRail.rows[pageRail.shownIndex].title, "The deep");
+            for (const i of [2, 5]) {
+                mouseClick(pageRail, 40, pageRail.rowsTop + pageRail.rowHeight * i + 10);
+                compare(pageRail.sel, i);
+            }
+            wait(400);
             PluginService.pluginDataChanged.disconnect(count);
             compare(saves, 0);
             compare(JSON.stringify(SettingsData.pluginSettings), before);

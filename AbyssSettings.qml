@@ -34,8 +34,7 @@ PluginSettings {
         implicitHeight: Math.max(rail.height, panel.height)
         height: implicitHeight
 
-        // All eight sections hold settings here, so the whole list shows;
-        // Sections.shown(counts) is the filter for a plugin with an empty one.
+        // All eight sections hold settings here, so the whole list shows
         readonly property var rows: Sections.LIST
         // Opened from Desktop Widgets: straight to the desktop section
         readonly property int startIndex: Sections.indexOf(rows, root.section || (root.instanceId ? "desktop" : "connect"))
@@ -45,27 +44,23 @@ PluginSettings {
         // --- Section menu on the left -----------------------------------------
         SectionRail {
             id: rail
+            objectName: "rail"
             rows: page.rows
             start: page.startIndex
             reduceMotion: SettingsData.reduceMotion
         }
 
         // --- The open section's panel ------------------------------------------
-        Rectangle {
+        // No card: the approved render puts the body straight on the page
+        Item {
             id: panel
             x: rail.implicitWidth + 24
             width: parent.width - x
-            height: body.implicitHeight + Theme.spacingL * 2
-            radius: Theme.cornerRadius
-            color: Theme.surfaceContainer
-            border.width: 1
-            border.color: Qt.rgba(Theme.outline.r, Theme.outline.g, Theme.outline.b, 0.18)
+            height: body.implicitHeight
 
             Column {
                 id: body
-                x: Theme.spacingL
-                y: Theme.spacingL
-                width: parent.width - Theme.spacingL * 2
+                width: parent.width
                 spacing: Theme.spacingL
                 opacity: SettingsData.reduceMotion ? 1 : Math.abs(2 * rail.progress - 1)
 
