@@ -20,6 +20,36 @@ for v in front swim; do
   magick -background none darwin-$v-25.svg darwin-$v@1x.png
   magick -background none darwin-$v.svg -resize 100x darwin-$v@4x.png
 done
+# scenes: <mode> is desk, desk-light, or desk with the wallpaper palette below
+../../../scripts/preview/render.sh <mode> top.png
+magick top.png darwin-front@1x.png -geometry +328+356 -composite \
+  darwin-swim@1x.png -geometry +398+357 -composite top.png
+magick top.png \( top.png -crop 130x60+312+336 +repage -filter point -resize 600% \) \
+  -append -strip scene-<name>.png
+```
+
+The offscreen scene is alive (the demo mesh moves), so two renders differ by
+about 0.5 % of their pixels: the scenes are composited on fresh renders,
+never patched in place. Checked after compositing: every opaque pixel of both
+`@1x` files is found unchanged in the three scenes (0 differing pixels).
+
+Wallpaper-generated theme: the preview has no wallpaper mode, so its `Theme`
+stub is given this made-up warm palette for one render, then restored:
+primary `#ffb77c`, primaryText `#4d2700`, secondary `#e3c0a5`, tertiary
+`#c8ca94`, surface `#1a120c`, surfaceContainer `#271e17`, High `#322821`,
+Highest `#3d332b`, surfaceText `#f0dfd4`, surfaceVariantText `#d6c3b6`,
+outline `#9e8e81`.
+
+The measured front overlay (outside the repository, it holds the reference):
+
+```sh
+magick <poster frame> -virtual-pixel white -define distort:viewport=745x612+0+0 \
+  -distort SRT '666.35,207.92 1.762 0 0,0' +repage ref.png
+magick -background none darwin-front.svg -alpha remove -background white -fuzz 12% \
+  -fill white +opaque '#0A0A0A' -fill black -opaque '#0A0A0A' -negate \
+  -morphology EdgeIn Diamond:1 edge.png
+magick ref.png \( -size 745x612 xc:'#00E5FF' edge.png -alpha off \
+  -compose CopyOpacity -composite \) -composite front-overlay-measured.png
 ```
 
 ## Optical size (25 px)
@@ -49,11 +79,14 @@ exception covers Darwin's drawing only.
 Contrast, measured on the real scene (the deep stays dark whatever the
 theme):
 
-| Backdrop sampled next to Darwin | Body | Eye white | Outline |
+| Backdrop, six samples around both views (darkest to lightest) | Body | Eye white | Outline |
 |---|---|---|---|
-| dark theme, `#10101a` | 7.07:1 | 14.81:1 | 1.05:1 |
-| light theme, `#0b0a15` | 7.36:1 | 15.40:1 | 1.01:1 |
-| warm wallpaper-generated theme (made-up palette, primary `#ffb77c`, surface `#1a120c`), `#131013` | 7.07:1 | 14.81:1 | 1.05:1 |
+| dark theme, `#0f0f19` to `#181823` | 7.13 to 6.58:1 | 14.92 to 13.78:1 | 1.04 to 1.13:1 |
+| light theme, `#0a0914` to `#14131d` | 7.40 to 6.89:1 | 15.49 to 14.42:1 | 1.00 to 1.08:1 |
+| warm wallpaper-generated theme, `#110e12` to `#1c181b` | 7.17 to 6.57:1 | 15.02 to 13.76:1 | 1.03 to 1.13:1 |
+
+The lightest samples are on the thread that crosses the deep behind Darwin;
+the worst case stays above 4.5:1 for the body and the eyes.
 
 The outline is invisible in the deep; the body colour and the eyes carry the
 shape (outline on body: 7.41:1). On a plain light surface (`#f3f6f9`) the
@@ -64,6 +97,8 @@ body is 2.46:1 and the outline 18.25:1.
 Checked by drawing our ink edges over the reference frame brought into the
 SVG space (front: reference scaled 1.762 from its 1280 px frame, the scale
 being the ratio of the two body masks, 715 px against 406 px wide).
+The overlay was rebuilt from the final drawing and looked at: outline, eyes,
+pupils, cheeks and both brows sit on the reference ink.
 
 - Front: body outline, eyes, pupils, cheeks, mouth, legs and tail fin lie on
   the reference lines within about 3 px in the 729 space (looked at on the
