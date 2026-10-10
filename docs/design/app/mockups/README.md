@@ -5,6 +5,11 @@ navigation**, pushed much further into the deep-sea universe. Fictional data
 only. Everything below uses the palette and rules of the knowledge base
 `design.md` §2 (D393) and the Theme API of DMS; no other colour exists.
 
+**Approved by the owner on 2026-10-10: option A, commit `2ef1a5b` (D396).** The
+mockups are frozen as they are; the screen spec derived from them lives in the
+knowledge base `design.md` §2.9 (NAK-301). Gaps found while writing the spec are
+recorded there as questions (Q108–Q112), not fixed in the images.
+
 ## 1. The one idea: the window is a dive
 
 Three stations, one per view. Moving between views **is** descending or

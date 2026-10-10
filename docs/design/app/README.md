@@ -1,5 +1,10 @@
 # Abyss app — visual directions (reference wireframes)
 
+> **Superseded.** These wireframes (A, B, C) were the input of the direction
+> choice (D393). The approved pixel mockups are in `mockups/option-a/`
+> (option A, D396, 2026-10-10); build from `mockups/README.md` and the knowledge
+> base spec, not from these folders. Kept for the record of the reasoning.
+
 Three candidate directions for the standalone Abyss app, drawn as schematic
 wireframes from fictional data. They are not mockups: they fix layout, tokens
 and states so that pixel mockups can follow. Regenerate with
