@@ -46,26 +46,35 @@ def cheek(cx, cy, r, a1, a2, sweep):
             % (x1, y1, r, r, sweep, x2, y2, INK, STROKE))
 
 
-def front():
+def front(small=False):
     s = 'stroke="%s" stroke-width="%d" stroke-linecap="round" stroke-linejoin="round"' % (INK, STROKE)
     leg = '<path d="M%d 455v104a35 35 0 0 0 70 0v-104z" fill="%s" %s/>'
-    return "\n".join([
+    base = [
         leg % (230, BODY, s), leg % (470, BODY, s),
-        # The fin is the body colour on the reference and reaches 8 px further
-        # left than the first tracing, hence the shift and the wider viewBox.
-        '<g transform="translate(-8 0)"><path d="M120 330C95 312 60 310 38 318C20 326 9 345 8 368c-2 4-2 8 0 12c0 30 10 60 32 80c18 14 45 18 70 12l60-17z" fill="%s" %s/>' % (BODY, s),
-        '<path d="M10 352l38 6M9 386l42-2M20 426l38-12" fill="none" %s/></g>' % s,
         '<path d="%s" fill="%s" %s/>' % (smooth(BODY_PTS), BODY, s),
+        # Tail fin, measured on the reference: it is fused to the body (drawn
+        # over the body outline, open on the body side), the body line curls a
+        # little way into it at both ends, and it carries two short strokes.
+        '<path d="M56 309C40 306 26 310 18 317C6 326-3 340-4 360C-6 385-2 410 6 428C14 448 26 462 40 472'
+        'C52 482 70 486 88 482C102 479 112 472 118 467C124 462 130 457 134 452" fill="%s" %s/>' % (BODY, s),
         '<path d="M112 146c-30 36-36 96-24 140 6 4 14 2 16-6 4-50 18-90 36-122 0-10-18-18-28-12z" fill="%s"/>' % LIGHT,
+    ]
+    detail = [
+        '<path d="M56 300Q58 322 68 337M113 431Q122 443 136 453M3 387l32-6M26 452l32-21" fill="none" %s/>' % s,
         '<ellipse cx="269.5" cy="184.5" rx="96" ry="90" fill="%s" %s/>' % (WHITE, s),
         '<ellipse cx="495.5" cy="173" rx="90" ry="86.5" fill="%s" %s/>' % (WHITE, s),
         '<circle cx="285" cy="188" r="47" fill="%s"/><circle cx="484" cy="177" r="47" fill="%s"/>' % (INK, INK),
-        '<path d="M178 150l-20-8M172 172l-22 0M176 196l-20 10M584 128l20-10M590 150l22-2M590 174l20 6" fill="none" %s/>' % s,
-        '<path d="M224 76c16-18 44-26 66-22M460 40c20-6 44 0 60 18" fill="none" %s stroke-opacity="1"/>' % s.replace('"7"', '"18"'),
+        # Lashes: short, thin ticks on the upper outer arc of each eye.
+        '<path d="M193 124l-10-12M180 147l-12-7M175 171l-13-3M555 99l8-11M575 119l10-7M586 142l12-4" fill="none" %s/>' % s.replace('"7"', '"5"'),
+        # Brows are solid wedges on the reference: blunt towards the nose
+        # side of the head, tapered to a point on the other.
+        '<path d="M220 74C217 62 230 51 250 45C270 40 292 45 304 54C290 57 272 60 254 67C242 72 228 84 220 74Z'
+        'M458 48C455 36 470 26 490 27C512 28 530 43 540 61C524 54 508 51 492 51C478 51 462 60 458 48Z" fill="%s"/>' % INK,
         cheek(286, 314, 63, 203, 118, 1), cheek(503, 301, 59, -30, 62, 0),
         '<path d="M346 320Q398 352 448 306" fill="none" %s/>' % s,
         '<circle cx="290" cy="307" r="30" fill="%s"/><circle cx="492" cy="297" r="30" fill="%s"/>' % (LIGHT, LIGHT),
-    ])
+    ]
+    return "\n".join(base if small else base + detail)
 
 
 # Swimming view, in the 680x480 crop of the swimming reference. Body outline:
@@ -81,9 +90,9 @@ SWIM_PTS = [(370, 55), (393, 55), (416, 59), (437, 67), (455, 82), (470, 100), (
             (286, 85), (306, 75), (326, 67), (348, 59)]
 
 
-def swim():
+def swim(small=False):
     s = 'stroke="%s" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"' % INK
-    return "\n".join([
+    base = [
         # Leg kicked up behind the body.
         '<path d="M520 125C535 70 570 35 620 28c35-3 50 27 30 50-20 17-50 17-65 62" fill="%s" %s/>' % (BODY, s),
         # Darker band where the leg leaves the body, as on the reference.
@@ -95,6 +104,8 @@ def swim():
         '<path d="M150 352c-28 30-10 80 30 92 36 10 66-6 70-36" fill="%s" %s/>' % (BODY, s),
         '<path d="M158 392l22 12M170 408l22 12M184 422l22 12" fill="none" %s/>' % s,
         '<path d="M218 318C160 288 92 288 50 320c-35 25-30 65 0 70 35 2 60-25 100-40L200 372" fill="%s" %s/>' % (BODY, s),
+    ]
+    detail = [
         '<ellipse cx="275" cy="205" rx="70" ry="56" transform="rotate(-12 275 205)" fill="%s" %s/>' % (WHITE, s),
         '<ellipse cx="418" cy="155" rx="67" ry="62" fill="%s" %s/>' % (WHITE, s),
         '<circle cx="297" cy="198" r="22" fill="%s"/><circle cx="437" cy="140" r="21" fill="%s"/>' % (INK, INK),
@@ -105,7 +116,34 @@ def swim():
         cheek(447, 236, 37, -40, 70, 0).replace('width="7"', 'width="5"'),
         '<path d="M354 287C372 292 396 270 412 262" fill="none" %s/>' % s,
         '<circle cx="318" cy="289" r="21" fill="%s"/><circle cx="443" cy="233" r="21" fill="%s"/>' % (LIGHT, LIGHT),
-    ])
+    ]
+    return "\n".join(base if small else base + detail)
+
+
+def optical(view, w, h, box, snapped):
+    """25 px wide variant for the real widget size: the silhouette is the
+    drawing scaled down, the parts that would fall between pixels (eyes,
+    pupils, cheeks, legs) are redrawn on whole pixels, and the lashes, brows
+    and mouth, thinner than a third of a pixel there, are left out."""
+    k = 25 / box[2]
+    return ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 %d %d" width="%d" height="%d">\n'
+            '<title>Darwin, %s, 25 px optical size</title>\n'
+            '<g transform="scale(%.5f) translate(%d %d)">\n%s\n</g>\n%s\n</svg>\n'
+            % (w, h, w, h, view, k, -box[0], -box[1], (front if view == "front view" else swim)(True), snapped))
+
+
+def px(x, y, w, h, fill, r=0):
+    return '<rect x="%d" y="%d" width="%d" height="%d" rx="%s" fill="%s"/>' % (x, y, w, h, r, fill)
+
+
+FRONT_25 = "".join([px(8, 15, 2, 5, BODY, 1), px(16, 15, 2, 5, BODY, 1),
+                    px(6, 3, 6, 6, WHITE, 3), px(14, 3, 6, 6, WHITE, 3),
+                    px(8, 5, 3, 3, INK, 1), px(15, 5, 3, 3, INK, 1),
+                    px(9, 10, 2, 2, LIGHT, 1), px(16, 10, 2, 2, LIGHT, 1)])
+# One pixel of body is kept between the two eyes so they do not merge.
+SWIM_25 = "".join([px(7, 5, 5, 5, WHITE, 2.5), px(13, 3, 5, 5, WHITE, 2.5),
+                   px(10, 6, 2, 2, INK, 1), px(15, 4, 2, 2, INK, 1),
+                   px(11, 10, 1, 1, LIGHT), px(16, 8, 1, 1, LIGHT)])
 
 
 if __name__ == "__main__":
@@ -116,3 +154,5 @@ if __name__ == "__main__":
     open(out + "/darwin-swim.svg", "w").write(
         '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 480" width="680" height="480">\n'
         '<title>Darwin, side view, swimming</title>\n%s\n</svg>\n' % swim())
+    open(out + "/darwin-front-25.svg", "w").write(optical("front view", 25, 21, (-12, -8, 745), FRONT_25))
+    open(out + "/darwin-swim-25.svg", "w").write(optical("swimming view", 25, 18, (0, 0, 680), SWIM_25))
