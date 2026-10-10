@@ -11,7 +11,11 @@ FocusScope {
     required property string label
     property bool current: false
     // 2 px ring on the current station and on the one focused by keyboard
-    readonly property int ringWidth: activeFocus || current ? 2 : 0
+    readonly property int ringWidth: focusVisible || current ? 2 : 0
+    // Keyboard focus only: a click focuses the target but must not restyle its ring
+    readonly property bool focusVisible: activeFocus && !_byPointer
+    readonly property bool hovered: area.containsMouse
+    property bool _byPointer: false
 
     signal activated(string stationId)
 
@@ -23,6 +27,10 @@ FocusScope {
     Keys.onReturnPressed: activated(stationId)
     Keys.onEnterPressed: activated(stationId)
     Keys.onSpacePressed: activated(stationId)
+    onActiveFocusChanged: {
+        if (!activeFocus)
+            _byPointer = false;
+    }
 
     // Ring: the current station always, the focused one when reached by keyboard
     Rectangle {
@@ -30,7 +38,7 @@ FocusScope {
         radius: width / 2
         color: "transparent"
         border.width: target.ringWidth
-        border.color: target.activeFocus ? Theme.surfaceText : Theme.primary
+        border.color: target.focusVisible ? Theme.surfaceText : Theme.primary
     }
 
     Rectangle {
@@ -38,9 +46,17 @@ FocusScope {
         width: 32
         height: 32
         radius: 16
-        color: target.current ? Theme.primary : Theme.surfaceContainerHigh
+        // Hover: one container step up; pressed: a brief transform-only squeeze
+        color: target.current ? Theme.primary : target.hovered ? Theme.surfaceContainerHighest : Theme.surfaceContainerHigh
         border.width: target.current ? 0 : 1
-        border.color: Theme.outline
+        border.color: Theme.outlineStrong
+        scale: area.pressed ? 0.96 : 1
+
+        Behavior on scale {
+            NumberAnimation {
+                duration: Theme.shortDuration
+            }
+        }
 
         Text {
             anchors.centerIn: parent
@@ -52,8 +68,12 @@ FocusScope {
     }
 
     MouseArea {
+        id: area
+
         anchors.fill: parent
+        hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
+        onPressed: target._byPointer = true
         onClicked: {
             target.forceActiveFocus(Qt.MouseFocusReason);
             target.activated(target.stationId);

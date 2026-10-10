@@ -145,6 +145,9 @@ Window {
             tryVerify(() => frame.width === 900, 2000);
             win.check("compact: gauge 56, padding 24, title row 40", frame.compact && frame.gaugeWidth === 56 && frame.pad === 24 && frame.titleHeight === 40);
             win.check("compact: targets stay 44 x 44 inside the gauge", map.width === 44 && map.x >= 0 && map.x + map.width <= 56, map.x);
+            win.check("compact: Send keeps 44 px below Settings", send.y - settings.y >= 44, send.y - settings.y);
+            mouseClick(send, 22, 22);
+            win.check("a click does not draw the keyboard ring", send.activeFocus && !send.focusVisible);
             win.width = 1280;
             win.height = 800;
             tryVerify(() => frame.width === 1280, 2000);

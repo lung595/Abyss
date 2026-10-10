@@ -95,6 +95,6 @@ function signal(state) {
     case "missing":
         return { "glyph": "✕", "role": "error", "label": "no NetBird" };
     default:
-        return { "glyph": "○", "role": "outline", "label": "no signal" };
+        return { "glyph": "○", "role": "onSurfaceVariant", "label": "no signal" };
     }
 }
