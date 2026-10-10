@@ -5,6 +5,8 @@ import "../../app/views"
 // The app window content with fictitious state, saved as a PNG:
 //   scripts/preview/app.sh <dark|light> <station> <out.png> [compact] [state]
 Window {
+    id: root
+
     visible: true
     // "compact" renders the 900 x 600 minimum
     readonly property bool compact: Qt.application.arguments[Qt.application.arguments.length - 4] === "compact"
@@ -20,9 +22,9 @@ Window {
 
         anchors.fill: parent
         station: Qt.application.arguments[Qt.application.arguments.length - 3]
-        netbirdState: ["stopped", "missing", "unknown"].includes(scene) ? scene : "connected"
-        device: scene === "longname" ? "workstation-with-a-very-long-device-name.netbird.cloud" : ""
-        peers: scene === "longname" ? [] : null
+        netbirdState: ["stopped", "missing", "unknown"].includes(root.scene) ? root.scene : "connected"
+        device: root.scene === "longname" ? "workstation-with-a-very-long-device-name.netbird.cloud" : ""
+        peers: root.scene === "longname" ? [] : null
     }
 
     Timer {
