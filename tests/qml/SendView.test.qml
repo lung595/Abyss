@@ -107,7 +107,18 @@ Item {
         check("the refusal is a guided message", view.failure !== null && view.failure.guide.indexOf("send-a-file") > 0, view.failure);
         const reef = view.q.history.find(j => j.state === "failed");
         check("the band's Retry targets the failed job", view.lastFailed !== null && view.lastFailed.id === reef.id, view.lastFailed);
-        view.act(reef, "retry");
+        // Another message replaces the failure: the band must not keep a Retry for the old job
+        const shown = view.failure;
+        view.say({
+            "kind": "clipboard",
+            "title": "Nothing to paste",
+            "advice": "",
+            "guide": shown.guide
+        }, 0);
+        check("a later message drops the band's Retry", view.lastFailed === null, view.lastFailed);
+        view.say(shown, reef.id);
+        // What the band's button does: retry the job its message belongs to
+        view.act(view.lastFailed, "retry");
         check("retry clears the band", view.failure === null && view.lastFailed === null, view.failure);
         check("retry queues it again", view.q.jobs.length === 1 || view.q.history.length >= 1);
         until(() => view.q.jobs.length === 0, afterRetry, "retry ends");

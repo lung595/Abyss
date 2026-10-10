@@ -53,7 +53,6 @@ Item {
     readonly property bool busy: q.jobs.some(j => j.state === "queued" || j.state === "sending")
     // The height of the "History" heading: a 44 px target like the buttons
     readonly property int headerHeight: 44
-    // The newest failed or cancelled job: what the band's Retry sends again
     // The job the shown failure belongs to (0 for none): the band's Retry sends that one
     property int failedId: 0
     readonly property var lastFailed: failedId > 0 ? q.history.find(j => j.id === failedId) ?? null : null
@@ -65,6 +64,12 @@ Item {
         "advice": "Close the window again to cancel them, or wait.",
         "guide": Send.GUIDE
     } : failure
+
+    // The one way to set the band: the message and the job its Retry sends (0 for none)
+    function say(message, jobId) {
+        failure = message;
+        failedId = jobId;
+    }
 
     // The job object a row shows, from its model roles
     function rowJob(m) {
@@ -89,10 +94,10 @@ Item {
     function addItems(items, only) {
         const clean = Send.cleanPaths(items);
         if (!clean.ok) {
-            failure = Send.refusal(clean.reason);
+            say(Send.refusal(clean.reason), 0);
             return;
         }
-        failure = null;
+        say(null, 0);
         if (only) {
             _enqueue(clean.paths, [only]);
             return;
@@ -120,10 +125,8 @@ Item {
             q = Queue.cancel(q, job.id, Date.now());
         else if (kind === "retry") {
             q = Queue.retry(q, job.id);
-            if (job.id === failedId) {
-                failure = null;
-                failedId = 0;
-            }
+            if (job.id === failedId)
+                say(null, 0);
         } else
             q = Queue.dismiss(q, job.id);
         _pump();
@@ -140,7 +143,7 @@ Item {
         _ask(Flow.pasteCommand(), 10000, (out, code) => {
             const fail = Flow.pasteFailure(code, out);
             if (fail)
-                failure = fail;
+                say(fail, 0);
             else
                 addItems(Flow.pastedItems(out));
         });
@@ -150,7 +153,7 @@ Item {
         _ask(Flow.pickCommand("", false), 600000, (out, code) => {
             const fail = Flow.pickFailure(code);
             if (fail)
-                failure = fail;
+                say(fail, 0);
             else if (out.trim() !== "")
                 addItems(out.split("\n").filter(l => l !== ""));
         });
@@ -160,12 +163,12 @@ Item {
         const r = Queue.add(q, paths, devices);
         q = r.state;
         if (r.skipped > 0)
-            failure = {
+            say({
                 "kind": "cap",
                 "title": r.skipped + " already queued or over the limit",
                 "advice": "Wait for the queue to empty, then add them again.",
                 "guide": Send.GUIDE
-            };
+            }, 0);
         _pump();
     }
 
@@ -228,8 +231,7 @@ Item {
         const plan = Transfer.plan(prog, host, {}, [path], "");
         if (!plan.ok) {
             q = Queue.fail(q, id, plan.reason, Date.now());
-            failure = Send.refusal(plan.reason);
-            failedId = id;
+            say(Send.refusal(plan.reason), id);
             _pump();
             return;
         }
@@ -249,8 +251,7 @@ Item {
         } else {
             const why = Send.explain(code, stderr, peer ? peer.name : job.device, false);
             q = Queue.fail(q, id, why.title, Date.now());
-            failure = why;
-            failedId = id;
+            say(why, id);
         }
         _pump();
     }
