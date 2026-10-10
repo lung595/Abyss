@@ -27,7 +27,7 @@ sh "$root/install-app.sh" --uninstall >/dev/null 2>&1
 check "uninstall restores the tree" "$(tree)" "$before"
 
 # The shared settings file: kept while the widget is installed, removed after it
-check "the install ships the settings store" "$(sh "$root/install-app.sh" >/dev/null 2>&1; ls "$HOME/.local/share/abyss/components/settings" | tr '\n' ' ')" "qmldir SettingsFile.qml Store.js "
+check "the install ships the settings store" "$(sh "$root/install-app.sh" >/dev/null 2>&1; ls "$HOME/.local/share/abyss/components/settings" | LC_ALL=C sort | tr '\n' ' ')" "SettingsFile.qml Store.js qmldir "
 mkdir -p "$HOME/.config/abyss" "$HOME/.config/DankMaterialShell/plugins/Abyss"
 echo '{}' >"$HOME/.config/abyss/settings.json"
 touch "$HOME/.config/DankMaterialShell/plugins/Abyss/plugin.json"
