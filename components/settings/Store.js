@@ -1,4 +1,5 @@
 .pragma library
+.import "../Connect.js" as Connect
 
 // The Abyss settings shared by the widget and the app. Pure: no global, no
 // side effect. The file is data from outside (the other program, the user's
@@ -113,10 +114,11 @@ function _check(rule, v) {
             const l = v[id];
             if (!_isObject(l) || _text(id) === null || id === "__proto__")
                 continue;
-            const user = _text(l.user ?? "");
-            const port = _text(String(l.port ?? ""));
-            if (user !== null && port !== null)
-                out[id] = { "user": user, "port": port };
+            // Both end up as ssh/scp arguments: the widget's own rules decide
+            const user = l.user ?? "";
+            const port = l.port ?? "";
+            if (typeof user === "string" && (user === "" || Connect.validUser(user)) && (port === "" || Connect.validPort(port)))
+                out[id] = { "user": String(user), "port": String(port) };
         }
         return out;
     }
@@ -128,7 +130,7 @@ function _check(rule, v) {
             if (!_isObject(g) || _text(g.id) === null || _text(g.name) === null || !Array.isArray(g.members))
                 continue;
             const members = g.members.slice(0, MAX_MEMBERS).filter(m => _text(m) !== null);
-            out.push(Object.assign({}, g, { "id": g.id, "name": g.name, "members": members }));
+            out.push({ "id": g.id, "name": g.name, "members": members });
         }
         return out;
     }

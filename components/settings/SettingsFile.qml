@@ -11,22 +11,27 @@ Scope {
     id: root
 
     // The settings, always valid: defaults until the file is read
-    property var values: Store.defaults()
+    readonly property var values: root._values
     // True once the file (or the defaults) has been settled
-    property bool ready: false
+    readonly property bool ready: root._ready
 
-    readonly property string dir: (Quickshell.env("XDG_CONFIG_HOME") || (Quickshell.env("HOME") + "/.config")) + "/abyss"
+    property var _values: Store.defaults()
+    property bool _ready: false
+
+    // XDG: a relative XDG_CONFIG_HOME is ignored
+    readonly property string configRoot: (Quickshell.env("XDG_CONFIG_HOME") || "").startsWith("/") ? Quickshell.env("XDG_CONFIG_HOME") : Quickshell.env("HOME") + "/.config"
+    readonly property string dir: configRoot + "/abyss"
     readonly property string path: dir + "/settings.json"
     // Where the widget's settings live in DMS (read only)
-    readonly property string legacyPath: (Quickshell.env("XDG_CONFIG_HOME") || (Quickshell.env("HOME") + "/.config")) + "/DankMaterialShell/plugin_settings.json"
+    readonly property string legacyPath: configRoot + "/DankMaterialShell/plugin_settings.json"
 
     // Changes one value; `deferred` (a slider drag) waits for the gesture to
     // pause so a drag costs one write, not one per pixel.
     function set(key, value, deferred) {
-        const next = Store.sanitize(Object.assign({}, values, {
+        const next = Store.sanitize(Object.assign({}, root._values, {
             [key]: value
         }));
-        values = next;
+        root._values = next;
         if (deferred)
             writeTimer.restart();
         else
@@ -35,7 +40,7 @@ Scope {
 
     function _write() {
         writeTimer.stop();
-        _lastText = Store.serialize(values);
+        _lastText = Store.serialize(root._values);
         _prepare.running = true;
     }
 
@@ -45,8 +50,8 @@ Scope {
     function _adopt(text) {
         if (text === _lastText)
             return;
-        values = Store.parse(text);
-        _lastText = Store.serialize(values);
+        root._values = Store.parse(text);
+        _lastText = Store.serialize(root._values);
     }
 
     // The folder 0700 and the file 0600 before anything is written; paths are
@@ -78,16 +83,19 @@ Scope {
         id: file
 
         path: root.path
+        printErrors: false
         watchChanges: true
         atomicWrites: true
         onFileChanged: reload()
         onLoaded: {
             root._adopt(text());
-            root.ready = true;
+            root._ready = true;
         }
-        // No file yet: first run, or the first run of the app after the widget
-        onLoadFailed: {
-            legacy.active = true;
+        // Migrate only when the file is missing at start: a file deleted or
+        // unreadable while running keeps the values held in memory
+        onLoadFailed: error => {
+            if (!root._ready && error === FileViewError.FileNotFound)
+                legacy.active = true;
         }
         onSaved: _seal.running = true
     }
@@ -99,6 +107,7 @@ Scope {
         property bool active: false
 
         path: active ? root.legacyPath : ""
+        printErrors: false
         onLoaded: {
             let all = {};
             try {
@@ -106,8 +115,8 @@ Scope {
             } catch (e) {
                 all = {};
             }
-            root.values = Store.migrate(all.abyss ?? null);
-            root.ready = true;
+            root._values = Store.migrate(all.abyss ?? null);
+            root._ready = true;
             // Written at once: a second start finds the file and never migrates again
             root._write();
             active = false;
@@ -115,7 +124,7 @@ Scope {
         onLoadFailed: {
             // Without DMS the defaults apply, silently
             active = false;
-            root.ready = true;
+            root._ready = true;
         }
     }
 }

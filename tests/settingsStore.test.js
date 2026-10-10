@@ -28,7 +28,14 @@ eq("key order follows the schema", Object.keys(JSON.parse(S.serialize(custom)).s
 
 // Validation
 const bad = k => S.parse(JSON.stringify({ "settings": k }));
-eq("unknown keys dropped", Object.keys(bad({ "evil": 1, "__proto__": {}, "maxItems": 4 })), S.KEYS);
+eq("unknown keys dropped", Object.keys(bad({ "evil": 1, "maxItems": 4 })), S.KEYS);
+// Raw text: an object literal would set the prototype instead of the key
+eq("__proto__ keys dropped", S.parse('{"settings":{"__proto__":{},"muted":{"__proto__":"x"}}}'), S.defaults());
+eq("unknown group field dropped", bad({ "groups": [{ "id": "g", "name": "G", "members": [], "evil": { "a": 1 } }] }).groups,
+    [{ "id": "g", "name": "G", "members": [] }]);
+eq("bad port refused", bad({ "links": { "a": { "user": "u", "port": "99999" } } }).links, {});
+eq("bad user refused", bad({ "links": { "a": { "user": "-oProxyCommand=x", "port": "22" } } }).links, {});
+eq("empty user and port kept", bad({ "links": { "a": { "user": "", "port": "" } } }).links, { "a": { "user": "", "port": "" } });
 eq("out-of-range capped high", bad({ "maxItems": 999 }).maxItems, 10);
 eq("out-of-range capped low", bad({ "labPeers": -5 }).labPeers, 1);
 eq("numeric text accepted", bad({ "labLatency": "120" }).labLatency, 120);

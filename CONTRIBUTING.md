@@ -59,7 +59,9 @@ Settings are read through `components/Prefs.qml`, a reactive view shared by ever
 
 ### Shared settings
 
-`components/settings/Store.js` (pure, tested by `tests/settingsStore.test.js`) owns the schema of the settings shared by the widget and the app; `SettingsFile.qml` is the only file that touches `~/.config/abyss/settings.json` (watch, atomic write, one-time read-only migration from the DMS plugin settings). `app/components/settings` is a symlink to it, dereferenced by `install-app.sh`. Any new setting is one line in the `SCHEMA` of `Store.js`.
+`components/settings/Store.js` (pure, tested by `tests/settingsStore.test.js`) owns the schema of the settings shared by the widget and the app; `SettingsFile.qml` is the only file that touches `~/.config/abyss/settings.json` (watch, atomic write, one-time read-only migration from the DMS plugin settings). `app/components/settings` is a symlink to it, dereferenced by `install-app.sh`. Any new setting is one line in the `SCHEMA` of `Store.js`. `Store.js` reuses the widget's `Connect.js` rules for SSH user and port (`app/components/Connect.js` is a symlink to it).
+
+Uninstall rule (value 12): the app's uninstall removes `~/.config/abyss/` only when the widget is no longer installed. The same rule the other way applies to the widget: when the widget is removed, it deletes the folder only if the app is not installed (`~/.local/share/abyss`). It is to be implemented in the widget switch-over story.
 
 ## Project layout
 
@@ -72,6 +74,7 @@ Abyss/
 ├── AbyssLauncher.qml     # launcher provider
 ├── AbyssSettings.qml     # settings page
 ├── components/           # the scene (.qml) and pure logic (.js)
+│   └── settings/         # Store.js (schema, validation) and SettingsFile.qml (shared settings file)
 ├── tests/                # gjs tests (cli.test.js: the app's parser; app.sh: launcher, offscreen; install.sh: installer in a scratch HOME)
 │   └── qml/              # QML integration tests, fake netbird, DMS / Quickshell stand-ins
 ├── app/                  # the standalone app (Quickshell only, no DMS import)
@@ -122,7 +125,7 @@ Abyss must cost nothing while nobody looks at it. Keep these rules when changing
 
 - **Language**: code, comments, UI and docs in English.
 - **Comments**: each file starts with a short comment saying what it is and why.
-- **Privacy**: the plugin never talks to the network and has no telemetry. Nothing written to disk except settings through DMS. Commands are argv lists, never shell lines; anything that comes from another machine (peer names, route ids) goes after `--`.
+- **Privacy**: the plugin never talks to the network and has no telemetry. Nothing written to disk except settings (through DMS for the widget, `~/.config/abyss/settings.json` for the app). Commands are argv lists, never shell lines; anything that comes from another machine (peer names, route ids) goes after `--`.
 - **QML**: qualify every property access (`root.x`, not `x`), above all inside callbacks, where an unqualified write can miss the object.
 - **Never refuse in silence**: anything the user cannot do shows a `HelpNote` saying why, linked to a README section.
 - **Docs**: user-facing changes go in `docs/GUIDE.md` (and the README if they change installation or the basics), plus an entry in `CHANGELOG.md`.
