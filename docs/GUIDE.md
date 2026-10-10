@@ -244,6 +244,8 @@ The window is a dive. On the left, the **depth gauge** is a vertical scale with 
 The **Send** station (200 m) is a queue. Pick one or more devices, then give it files and folders; each file and device pair becomes a job.
 
 - **Add files**: drop files or folders on the view or on a device, press **Ctrl+O** for the file picker, or press **Ctrl+V** to add what you copied in your file manager. A paste works like a drop on the view: jobs for the ticked devices, and with no device ticked the device choice opens first. Ctrl+V inside a text field keeps its normal meaning. An empty clipboard, or a missing `wl-paste`, shows a short message with the GitHub mark that opens this section.
+- **Close during a transfer**: closing the window while something is sending asks once to finish or cancel; cancelling stops every transfer. The Send view keeps running when you switch to another station.
+- **From the command line**: `abyss send <device> [files…]` opens the view with the device chosen and the files queued (the number of files is capped). Large files go through `rsync` when the device has it (probed once per device), otherwise `scp` with an indeterminate indicator.
 - **Several devices**: tick as many as you like. A device receives one transfer at a time; the others wait their turn.
 - **Progress**: with `rsync` on both sides you see a percentage and a rate, and an interrupted transfer resumes. Otherwise `scp` runs with an "in progress" indicator: Abyss never invents a percentage.
 - **Cancel and retry**: a job can be cancelled while it waits or runs (the program stops with it); a failed or cancelled job can be retried.
