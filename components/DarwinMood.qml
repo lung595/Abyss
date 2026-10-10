@@ -24,10 +24,11 @@ Item {
     property var hides: []
     property int seed: 7
 
-    // Inputs: the device list ([{ id, online }]) is diffed on every change
+    // Inputs: the device list ([{ id, online }]) is diffed on every change;
+    // hunger and dirt (0..1) are fed by the caller and steer the needs
     property var peers: []
-    // "started", "succeeded", "failed" or anything else for none
-    property string sendPhase: ""
+    property real hunger: 0
+    property real dirt: 0
 
     // Outputs, refreshed by each tick: a Mood.js mood index and its weight
     readonly property int mood: _mood
@@ -42,10 +43,17 @@ Item {
     property real _gx: 0
     property real _gy: 0
     property double _last: 0
-    readonly property var _state: Mood.create(bounds, hides, seed)
+    // Created on first use and never rebuilt: a resize must not reset the mood
+    property var _state: null
     readonly property var _events: Events.create()
+    // Reused by every step: nothing is allocated per tick
+    readonly property var _env: ({
+            "hunger": 0,
+            "dirt": 0
+        })
 
-    // Relay blink, click on Darwin and lamp moves come from the view
+    // Events come from the view as calls, so a repeat (two sends ending the
+    // same way) still counts. phase: "started", "succeeded" or "failed"
     function relay(x, y) {
         _emit(Events.relay(_events, _now(), x, y));
     }
@@ -53,17 +61,23 @@ Item {
         _emit(Events.click(_events, _now(), x, y));
     }
     function rush(x, y) {
-        Mood.event(_state, "rush", x, y);
+        _emit(Events.rush(_events, _now(), x, y));
+    }
+    function send(phase, x, y) {
+        _emit(Events.send(_events, phase, _now(), x, y));
     }
     function lampMoved(x, y) {
-        Mood.lamp(_state, x, y);
+        Mood.lamp(_st(), x, y);
     }
     function pointerMoved(x, y) {
-        Mood.pointer(_state, x, y);
+        Mood.pointer(_st(), x, y);
     }
-    // Hunger and dirt (0..1) are fed by the caller; they steer the needs
-    property real hunger: 0
-    property real dirt: 0
+
+    function _st() {
+        if (!_state)
+            _state = Mood.create(bounds, hides, seed);
+        return _state;
+    }
 
     // Seconds on a clock that runs even while the timer is stopped, so the
     // cooldowns of MoodEvents.js expire
@@ -71,37 +85,44 @@ Item {
         return Date.now() / 1000;
     }
 
+    // Events that happen while inactive are dropped: a device that went away
+    // hours ago must not scare him when the view opens
     function _emit(ev) {
-        if (ev)
-            Mood.event(_state, ev.kind, ev.x, ev.y);
+        if (ev && active)
+            Mood.event(_st(), ev.kind, ev.x, ev.y);
     }
 
-    function _apply(list) {
+    onPeersChanged: {
+        // Diffed even while inactive, so the known devices stay right
+        const list = Events.devices(_events, peers, _now());
         for (let i = 0; i < list.length; i++)
             _emit(list[i]);
     }
-
-    onPeersChanged: _apply(Events.devices(_events, peers, _now()))
-    onSendPhaseChanged: _emit(Events.send(_events, sendPhase, _now()))
+    onBoundsChanged: if (_state)
+        Mood.resize(_state, bounds, hides)
+    onHidesChanged: if (_state)
+        Mood.resize(_state, bounds, hides)
 
     function _step() {
         const now = Date.now();
-        // A long gap (resumed after being inactive) must not jump the fish
-        const dt = Math.min((now - _last) / 1000, 0.25);
+        // A long gap (resumed after being inactive) must not jump the fish, and
+        // the wall clock stepping back must not run the mood backwards; the cap
+        // is twice the slowest tick so a late tick at 4 Hz loses no time
+        const dt = Math.max(0, Math.min((now - _last) / 1000, 0.5));
         _last = now;
-        Mood.step(_state, dt, {
-            "hunger": hunger,
-            "dirt": dirt
-        });
-        const w = _state.w;
+        _env.hunger = hunger;
+        _env.dirt = dirt;
+        const st = _st();
+        Mood.step(st, dt, _env);
+        const w = st.w;
         let best = 0;
         for (let i = 1; i < w.length; i++)
             if (w[i] > w[best])
                 best = i;
         _mood = best;
         _intensity = w[best];
-        _gx = _state.gx;
-        _gy = _state.gy;
+        _gx = st.gx;
+        _gy = st.gy;
     }
 
     onActiveChanged: if (active)

@@ -69,6 +69,15 @@ function create(bounds, hides, seed) {
     return s;
 }
 
+// The water or hiding spots changed (the view was resized): keep the mood and
+// only move the limits; a hiding spot that no longer exists is forgotten
+function resize(s, bounds, hides) {
+    s.b = bounds;
+    s.hides = hides || [];
+    if (s.hide >= s.hides.length)
+        s.hide = -1;
+}
+
 function _finite(x, y) {
     return Number.isFinite(x) && Number.isFinite(y);
 }

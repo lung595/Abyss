@@ -58,8 +58,28 @@ eq("send failed startles him", E.send(st, "failed", 2).kind, "deviceDown");
 eq("unknown phase ignored", E.send(st, "idle", 3), null);
 eq("same phase twice inside the gap", E.send(st, "succeeded", 1.2), null);
 
+// An empty list before the first real one does not count as the seed
+st = E.create();
+E.devices(st, [], 0);
+eq("first real list after an empty one is silent", E.devices(st, [dev("a", true)], 5), []);
+
+// A partial or empty list followed by the full one is not a rejoin
+st = E.create();
+E.devices(st, [dev("a", true), dev("b", true)], 0);
+eq("empty list is silent", E.devices(st, [], 10), []);
+eq("refill after empty is silent", E.devices(st, [dev("a", true), dev("b", true)], 20), []);
+eq("a device missing from one list does not rejoin", E.devices(st, [dev("a", true)], 30).concat(E.devices(st, [dev("a", true), dev("b", true)], 40)), []);
+eq("a missing device is not reported down", E.devices(st, [dev("a", true)], 50), []);
+eq("an id like __proto__ is just an id", kinds(E.devices(E.create(), [dev("__proto__", true)], 0)), []);
+
+// A clock stepping back must not freeze the cooldowns
+st = E.create();
+eq("click at 100", E.click(st, 100).kind, "click");
+eq("clock back: gate expired", E.click(st, 50).kind, "click");
+
 // Click
 st = E.create();
 eq("click", E.click(st, 0, 5, 6).kind, "click");
 eq("double click inside the gap", E.click(st, 0.1), null);
-done();
+eq("rush gated", [E.rush(st, 0, 1, 2).kind, E.rush(st, 0.1)], ["rush", null]);
+done("moodEvents");
