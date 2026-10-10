@@ -31,7 +31,7 @@ const SCARED_T = 1.2, HIDE_MIN = 2.5, HIDE_SPAN = 1.5, CAUTIOUS_T = 3, JOY_T = 2
 // Idle seconds before he gets bored (drowsy) and falls asleep
 const IDLE_SLEEP = 45;
 // The pointer steers his gaze while it is fresh (seconds), then the lamp does
-const POINTER_FRESH = 5, GAZE_EASE = 6;
+const POINTER_FRESH = 5, GAZE_TAU = 1 / 6;
 // A needs level (0..1) that makes him look for food or glass to scrub
 const NEED = 0.5, NEED_DONE = 0.1;
 // Breath and fin rates (rad/s) for calm and for a fright, blended by weights
@@ -53,6 +53,8 @@ function create(bounds, hides, seed) {
         "pointerAge": 1e9,
         "px": cx, "py": cy,
         "lx": cx, "ly": cy,
+        // What caught his eye (relay, new device, file), looked at only while curious
+        "ix": cx, "iy": cy,
         "hunger": 0,
         "dirt": 0,
         // Outputs, rewritten in place at every step
@@ -62,7 +64,13 @@ function create(bounds, hides, seed) {
         "finPhase": 0, "breathPhase": 0,
         "finRate": FIN_CALM, "breathRate": BREATH_CALM
     };
+    // The first draw is near zero for small seeds; skip it so seeds differ at once
+    Goldfish.random(s);
     return s;
+}
+
+function _finite(x, y) {
+    return Number.isFinite(x) && Number.isFinite(y);
 }
 
 function _enter(s, state) {
@@ -94,27 +102,29 @@ function _scare(s, x, y) {
 
 // Pointer position (the gaze) and lamp position: not events that disturb him
 function pointer(s, x, y) {
+    if (!_finite(x, y))
+        return;
     s.px = x;
     s.py = y;
     s.pointerAge = 0;
 }
 
 function lamp(s, x, y) {
+    if (!_finite(x, y))
+        return;
     s.lx = x;
     s.ly = y;
-}
-
-// Needs from the bowl (Goldfish.js): crumbs in the water, glass cloudy
-function needs(s, hunger, dirt) {
-    s.hunger = hunger;
-    s.dirt = dirt;
 }
 
 // kind: "rush" (the pointer dashes at him, from x, y), "deviceDown", "relay"
 // (a relay blinks), "join" (a new device), "file" (a file passes in a
 // tentacle at x, y), "success" (a connection or a send worked), "click"
+const EVENTS = ["rush", "deviceDown", "relay", "join", "file", "success", "click"];
+
 function event(s, kind, x, y) {
     const st = s.state;
+    if (EVENTS.indexOf(kind) < 0)
+        return s;
     s.idle = 0;
     if (kind === "rush") {
         _scare(s, x === undefined ? s.px : x, y === undefined ? s.py : y);
@@ -128,12 +138,12 @@ function event(s, kind, x, y) {
     } else if (kind === "success") {
         _enter(s, S_JOY);
     } else if (kind === "relay" || kind === "join" || kind === "file") {
-        if (st !== S_JOY)
+        // A repeated blink must not restart the timer, nor pull him off a need
+        if (st !== S_JOY && st !== S_CURIOUS && st !== S_HUNGRY && st !== S_CLEANING)
             _enter(s, S_CURIOUS);
-        if (x !== undefined) {
-            s.lx = x;
-            s.ly = y;
-            s.pointerAge = 1e9;
+        if (_finite(x, y)) {
+            s.ix = x;
+            s.iy = y;
         }
     }
     return s;
@@ -141,12 +151,12 @@ function event(s, kind, x, y) {
 
 // What he does next once the current state has run its course
 function _settle(s) {
-    if (s.idle >= IDLE_SLEEP)
-        _enter(s, S_SLEEPY);
-    else if (s.hunger >= NEED)
+    if (s.hunger >= NEED)
         _enter(s, S_HUNGRY);
     else if (s.dirt >= NEED)
         _enter(s, S_CLEANING);
+    else if (s.idle >= IDLE_SLEEP)
+        _enter(s, S_SLEEPY);
     else
         _enter(s, S_CALM);
 }
@@ -168,8 +178,9 @@ function _advance(s) {
             _settle(s);
     } else if (st === S_HUNGRY && s.hunger < NEED_DONE || st === S_CLEANING && s.dirt < NEED_DONE) {
         _enter(s, S_CALM);
-    } else if (st === S_SLEEPY && s.idle < IDLE_SLEEP) {
-        _enter(s, S_CALM);
+    } else if (st === S_SLEEPY && (s.hunger >= NEED || s.dirt >= NEED)) {
+        // A need wakes him: events are rare on a quiet mesh
+        _settle(s);
     }
 }
 
@@ -196,13 +207,12 @@ function step(s, dt, env) {
         w[i] = _ease(w[i], target[i], dt, target[i] > w[i] ? rise : FADE);
     }
 
-    // Gaze: the fresh pointer, else the lamp; asleep he looks down
-    const fresh = s.pointerAge < POINTER_FRESH;
-    const tx = s.state === S_SLEEPY ? s.b.l + (s.b.r - s.b.l) / 2 : fresh ? s.px : s.lx;
-    const ty = s.state === S_SLEEPY ? s.b.bottom : fresh ? s.py : s.ly;
-    const k = Math.min(1, dt * GAZE_EASE);
-    s.gx += (tx - s.gx) * k;
-    s.gy += (ty - s.gy) * k;
+    // Gaze: what caught his eye while curious, else the fresh pointer, else the lamp; asleep he looks down
+    const fresh = s.pointerAge < POINTER_FRESH, st = s.state;
+    const tx = st === S_SLEEPY ? s.b.l + (s.b.r - s.b.l) / 2 : st === S_CURIOUS ? s.ix : fresh ? s.px : s.lx;
+    const ty = st === S_SLEEPY ? s.b.bottom : st === S_CURIOUS ? s.iy : fresh ? s.py : s.ly;
+    s.gx = _ease(s.gx, tx, dt, GAZE_TAU);
+    s.gy = _ease(s.gy, ty, dt, GAZE_TAU);
 
     // Breath and fins speed up with fright and slow down asleep
     const fright = w[SCARED], sleepy = w[SLEEPY];

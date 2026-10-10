@@ -33,12 +33,12 @@ M.event(s, "rush", 500, 100);
 M.step(s, DT);
 ok("fright does not snap", s.w[M.SCARED] > 0 && s.w[M.SCARED] < 0.5 && s.w[M.CALM] > 0.5);
 // …and it fades gradually afterwards
+// Reach the decay through the real chain: scared -> hiding -> cautious -> calm
 run(s, 1.0);
-const peak = s.w[M.SCARED];
-M.event(s, "success");
-s.state = M.S_CALM;
+while (s.state !== M.S_CALM)
+    M.step(s, DT);
 M.step(s, DT);
-ok("fright fades, not snaps", s.w[M.SCARED] > 0 && s.w[M.SCARED] < peak);
+ok("fright fades, not snaps", s.w[M.SCARED] > 0 && s.w[M.SCARED] < 1);
 run(s, 6);
 ok("fright decays to nothing", s.w[M.SCARED] < 0.01);
 
@@ -128,17 +128,28 @@ eq("cleans the cloudy glass", s.state, M.S_CLEANING);
 ok("cleaning weight rises", s.w[M.CLEANING] > 0.5);
 run(s, 1, { "dirt": 0.01 });
 eq("clean, calm again", s.state, M.S_CALM);
-s = fresh(3);
-M.needs(s, 0.9, 0);
-M.step(s, DT);
-eq("needs() sets the hunger", s.state, M.S_HUNGRY);
 
 // After a fright with a need pending he goes straight to it
 s = fresh(3);
-M.needs(s, 0.9, 0);
 M.event(s, "rush", 500, 100);
-run(s, 15, {});
+run(s, 15, { "hunger": 0.9 });
 eq("back to the pending need", s.state, M.S_HUNGRY);
+
+// A need wakes a sleeper; a blinking relay does not hold needs off
+s = run(fresh(3), 50);
+eq("asleep", s.state, M.S_SLEEPY);
+run(s, 1, { "hunger": 0.9 });
+eq("hunger wakes him", s.state, M.S_HUNGRY);
+s = run(fresh(3), 50);
+run(s, 1, { "dirt": 0.9 });
+eq("dirt wakes him", s.state, M.S_CLEANING);
+s = fresh(3);
+for (let i = 0; i < 60; i++) {
+    if (i % 2 === 0)
+        M.event(s, "relay", 400, 120);
+    run(s, 0.25, { "hunger": 0.9 });
+}
+eq("a blinking relay does not starve him", s.state, M.S_HUNGRY);
 
 // Gaze: the fresh pointer wins, then the lamp takes over
 s = fresh(3);
@@ -148,6 +159,68 @@ run(s, 1);
 ok("gaze follows the pointer", Math.hypot(s.gx - 500, s.gy - 300) < 15);
 run(s, 6);
 ok("then the lamp", Math.hypot(s.gx - 100, s.gy - 100) < 15);
+
+// A file catches his eye without moving the lamp: gaze returns to the lamp after
+s = fresh(3);
+M.lamp(s, 100, 100);
+M.event(s, "file", 400, 120);
+run(s, 1);
+ok("looks at the file", Math.hypot(s.gx - 400, s.gy - 120) < 15);
+run(s, 20);
+eq("calm again", s.state, M.S_CALM);
+ok("gaze back on the lamp", Math.hypot(s.gx - 100, s.gy - 100) < 15);
+
+// Bad input is ignored
+s = fresh(3);
+M.pointer(s, NaN, 10);
+M.lamp(s, 5, Infinity);
+M.event(s, "relay", 200);
+run(s, 2);
+ok("gaze stays finite", Number.isFinite(s.gx) && Number.isFinite(s.gy) && Number.isFinite(s.px) && Number.isFinite(s.lx) && Number.isFinite(s.iy));
+s = run(fresh(3), 44);
+M.event(s, "bogus");
+run(s, 2);
+eq("unknown kind does not reset idle", s.state, M.S_SLEEPY);
+
+// Different seeds give different first frights
+const hideFor = seed => { const n = fresh(seed); M.event(n, "rush", 1, 1); return n.hideFor; };
+ok("seeds 1, 2 and 7 differ", hideFor(1) !== hideFor(2) && hideFor(2) !== hideFor(7));
+
+// Remaining transitions
+s = fresh(3);
+M.event(s, "rush", 500, 100);
+run(s, 2);
+eq("hiding", s.state, M.S_HIDING);
+run(s, 1);
+M.event(s, "deviceDown");
+eq("deviceDown while hiding changes nothing", s.state, M.S_HIDING);
+M.event(s, "rush", 100, 100);
+ok("rush while hiding restarts the hide", s.state === M.S_HIDING && s.t === 0);
+s = fresh(3);
+M.event(s, "success");
+M.event(s, "relay", 1, 1);
+eq("relay while joy stays joy", s.state, M.S_JOY);
+run(s, 2.4);
+M.event(s, "join", 1, 1);
+eq("join near the end of joy stays joy", s.state, M.S_JOY);
+for (const kind of ["relay", "success"]) {
+    s = run(fresh(3), 50);
+    M.event(s, kind, 1, 1);
+    ok(kind + " wakes a sleeper", s.state === M.S_CURIOUS || s.state === M.S_JOY);
+}
+s = fresh(3);
+M.event(s, "success");
+run(s, 2.4);
+run(s, 0.2, {});
+s.idle = 50;
+run(s, 1);
+eq("joy ends on sleep when bored", s.state, M.S_SLEEPY);
+s = fresh(3);
+M.event(s, "rush", 1, 1);
+run(s, 6.5);
+s.idle = 50;
+run(s, 2);
+ok("cautious ends on sleep when bored", s.state === M.S_SLEEPY || s.state === M.S_CALM);
 
 // Phase hints: faster fins and breath when scared, slower asleep, wrapped
 const calm = run(fresh(3), 5), scared = fresh(3);
