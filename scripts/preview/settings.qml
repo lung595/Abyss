@@ -4,31 +4,44 @@ import qs.Common
 import qs.Services
 import "../.."
 
-// Offscreen render of the settings page, one tab per shot, from DMS-like
-// stand-ins (imports/qs/Modules). Usage: settings.sh <tab> <out.png>
-// (tabs: connect, deep, effects, bar, desktop, source, help)
+// Offscreen render of the settings page, one section per shot, from DMS-like
+// stand-ins (imports/qs/Modules). Usage, from scripts/preview:
+//   qml-qt6 -I imports settings.qml -- <section>[:light][:narrow] <out.png>
+// (sections: connect, appearance, effects, bar, desktop, alerts, advanced, help)
 Window {
     id: win
     readonly property var args: Qt.application.arguments
-    readonly property string tab: args[args.length - 2]
+    // "<section>[:light][:narrow]" selects the theme and the 366 px case
+    readonly property var spec: args[args.length - 2].split(":")
+    readonly property string tab: spec[0]
     readonly property string out: args[args.length - 1]
-    width: 600
+    width: spec.indexOf("narrow") >= 0 ? 406 : 600
     height: Math.max(400, Math.min(1400, settings.height + 40))
     visible: true
     color: Theme.surface
+
+    Component.onCompleted: {
+        Theme.isLightMode = spec.indexOf("light") >= 0;
+    }
+
+    // grabToImage skips the window colour: paint the backdrop so washes show true
+    Rectangle {
+        anchors.fill: parent
+        color: Theme.surface
+    }
 
     AbyssSettings {
         id: settings
         x: 20
         y: 20
-        width: 560
+        width: win.spec.indexOf("narrow") >= 0 ? 366 : 560
+        section: win.tab
     }
 
     Timer {
         interval: 900
         running: true
         onTriggered: {
-            settings.children[0].children[0].tab = win.tab;
             shot.start();
         }
     }

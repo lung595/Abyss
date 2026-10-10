@@ -4,12 +4,14 @@ import qs.Services
 import qs.Widgets
 import qs.Modules.Plugins
 import "components"
+import "components/Sections.js" as Sections
 import "components/Send.js" as Send
 import "components/Terminal.js" as Terminal
 
-// Plugin settings, as tabs: one short subject each, a title with an icon,
-// and one plain line under every option. Anything that costs battery or
-// smoothness says so right under it (⚡). Everything works out of the box.
+// Plugin settings: a rail of sections on the left, the open section on the
+// right, one short subject each and one plain line under every option.
+// Anything that costs battery or smoothness says so right under it (⚡).
+// Everything works out of the box.
 PluginSettings {
     id: root
     pluginId: "abyss"
@@ -17,6 +19,10 @@ PluginSettings {
     // Filled in by DMS when this page opens from Settings > Desktop Widgets
     property string instanceId: ""
     property var instanceData: null
+    // Section to open first (a Sections.js id, old ids work too). Nothing stores
+    // a last section today (the old tab lived in memory): only previews set it,
+    // and a legacy id still maps through Sections.indexOf.
+    property string section: ""
 
     readonly property var daemon: PluginService.pluginDaemonInstances["abyss"] ?? null
     readonly property var src: daemon ? daemon.source : null
@@ -25,115 +31,54 @@ PluginSettings {
     Item {
         id: page
         width: parent ? parent.width : 0
-        implicitHeight: tabs.height + Theme.spacingM + panel.height
+        implicitHeight: Math.max(rail.height, panel.height)
         height: implicitHeight
 
-        // Opened from Desktop Widgets: straight to the desktop tab
-        property string tab: root.instanceId ? "desktop" : "connect"
+        // All eight sections hold settings here, so the whole list shows
+        readonly property var rows: Sections.LIST
+        // Opened from Desktop Widgets: straight to the desktop section
+        readonly property int startIndex: Sections.indexOf(rows, root.section || (root.instanceId ? "desktop" : "connect"))
+        readonly property var current: rows[rail.shownIndex]
+        readonly property string tab: current.id
 
-        readonly property var tabList: [
-            { "id": "connect", "icon": "hub", "text": "Connect", "title": "Connections", "sub": "Join a mesh, let your devices in, and how Abyss opens them" },
-            { "id": "deep", "icon": "water", "text": "The deep", "title": "The deep", "sub": "What the sea shows, and how much of it at once" },
-            { "id": "effects", "icon": "bolt", "text": "Effects & battery", "title": "Effects & battery", "sub": "Every moving thing, and what it costs. Off = calmer and longer battery" },
-            { "id": "bar", "icon": "toolbar", "text": "Bar & alerts", "title": "Bar & alerts", "sub": "The small jellyfish in your bar, and when Abyss speaks up" },
-            { "id": "desktop", "icon": "desktop_windows", "text": "Desktop", "title": "Desktop fishbowl", "sub": "The round jar on your wallpaper" },
-            { "id": "source", "icon": "science", "text": "Source & lab", "title": "Source & test lab", "sub": "Your real NetBird, or a made-up mesh to try things on" },
-            { "id": "help", "icon": "menu_book", "text": "Help", "title": "Quick guide", "sub": "Everything in Abyss, in one minute" }
-        ]
-        readonly property var current: tabList.find(t => t.id === tab) || tabList[0]
-
-        // --- Tabs: chips that wrap, the chosen one lit -----------------------
-        Flow {
-            id: tabs
-            width: parent.width
-            spacing: Theme.spacingS
-            Repeater {
-                model: page.tabList
-                Rectangle {
-                    required property var modelData
-                    readonly property bool on: page.tab === modelData.id
-                    height: 36
-                    width: tabRow.implicitWidth + 28
-                    radius: 18
-                    color: on ? Qt.tint(Theme.surfaceContainerHigh, Qt.rgba(Theme.primary.r, Theme.primary.g, Theme.primary.b, 0.16)) : tabArea.containsMouse ? Theme.surfaceContainerHighest : Theme.surfaceContainerHigh
-                    border.width: on ? 1.5 : 0
-                    border.color: Theme.primary
-                    Behavior on color {
-                        ColorAnimation {
-                            duration: 120
-                        }
-                    }
-                    Row {
-                        id: tabRow
-                        anchors.centerIn: parent
-                        spacing: 7
-                        DankIcon {
-                            anchors.verticalCenter: parent.verticalCenter
-                            name: modelData.icon
-                            size: 17
-                            color: parent.parent.on ? Theme.primary : Theme.surfaceText
-                        }
-                        StyledText {
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: modelData.text
-                            font.pixelSize: Theme.fontSizeMedium
-                            font.weight: parent.parent.on ? Font.DemiBold : Font.Normal
-                            color: parent.parent.on ? Theme.primary : Theme.surfaceText
-                        }
-                    }
-                    MouseArea {
-                        id: tabArea
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: page.tab = modelData.id
-                    }
-                }
-            }
+        // --- Section menu on the left -----------------------------------------
+        SectionRail {
+            id: rail
+            objectName: "rail"
+            rows: page.rows
+            start: page.startIndex
+            reduceMotion: SettingsData.reduceMotion
         }
 
-        // --- The chosen tab's panel ------------------------------------------
-        Rectangle {
+        // --- The open section's panel ------------------------------------------
+        // No card: the approved render puts the body straight on the page
+        Item {
             id: panel
-            y: tabs.height + Theme.spacingM
-            width: parent.width
-            height: body.implicitHeight + Theme.spacingL * 2
-            radius: Theme.cornerRadius * 1.5
-            color: Theme.surfaceContainer
-            border.width: 1
-            border.color: Qt.rgba(Theme.outline.r, Theme.outline.g, Theme.outline.b, 0.18)
+            x: rail.implicitWidth + 24
+            width: parent.width - x
+            height: body.implicitHeight
 
             Column {
                 id: body
-                x: Theme.spacingL
-                y: Theme.spacingL
-                width: parent.width - Theme.spacingL * 2
+                width: parent.width
                 spacing: Theme.spacingL
+                opacity: SettingsData.reduceMotion ? 1 : Math.abs(2 * rail.progress - 1)
 
-                // Title with its icon, and what the tab is about
+                // The open section's title and what it is about; the body
+                // fades out and in around a section change
                 Column {
                     width: parent.width
                     spacing: 4
-                    Row {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        spacing: 8
-                        DankIcon {
-                            anchors.verticalCenter: parent.verticalCenter
-                            name: page.current.icon
-                            size: 20
-                            color: Theme.primary
-                        }
-                        StyledText {
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: page.current.title
-                            font.pixelSize: Theme.fontSizeLarge + 2
-                            font.weight: Font.Bold
-                            color: Theme.surfaceText
-                        }
+                    StyledText {
+                        width: parent.width
+                        text: page.current.title
+                        elide: Text.ElideRight
+                        font.pixelSize: Theme.fontSizeXLarge
+                        font.weight: Font.DemiBold
+                        color: Theme.surfaceText
                     }
                     StyledText {
                         width: parent.width
-                        horizontalAlignment: Text.AlignHCenter
                         text: page.current.sub
                         font.pixelSize: Theme.fontSizeSmall
                         color: Theme.surfaceVariantText
@@ -320,7 +265,7 @@ PluginSettings {
 
                 // ===== The deep ==================================================
                 Column {
-                    visible: page.tab === "deep"
+                    visible: page.tab === "appearance"
                     width: parent.width
                     spacing: Theme.spacingL
 
@@ -446,7 +391,7 @@ PluginSettings {
                     }
                 }
 
-                // ===== Bar & alerts ==============================================
+                // ===== Bar ==============================================
                 Column {
                     visible: page.tab === "bar"
                     width: parent.width
@@ -484,18 +429,26 @@ PluginSettings {
                         description: "A middle click on the jellyfish connects or disconnects"
                         defaultValue: true
                     }
-                    ToggleSetting {
-                        settingKey: "notifications"
-                        label: "Notifications"
-                        description: "When a device comes online or goes offline (muted ones stay quiet)"
-                        defaultValue: false
-                    }
                     StyledText {
                         width: parent.width
                         text: "Hover the jellyfish for a summary; click it to open the deep; right-click for the menu."
                         font.pixelSize: Theme.fontSizeSmall
                         color: Theme.surfaceVariantText
                         wrapMode: Text.WordWrap
+                    }
+                }
+
+                // ===== Alerts & sounds ===========================================
+                Column {
+                    visible: page.tab === "alerts"
+                    width: parent.width
+                    spacing: Theme.spacingL
+
+                    ToggleSetting {
+                        settingKey: "notifications"
+                        label: "Notifications"
+                        description: "When a device comes online or goes offline (muted ones stay quiet)"
+                        defaultValue: false
                     }
                 }
 
@@ -529,7 +482,7 @@ PluginSettings {
 
                 // ===== Source & test lab =========================================
                 Column {
-                    visible: page.tab === "source"
+                    visible: page.tab === "advanced"
                     width: parent.width
                     spacing: Theme.spacingL
 
@@ -719,14 +672,7 @@ PluginSettings {
                     spacing: Theme.spacingS
 
                     Repeater {
-                        model: [
-                            ["touch_app", "Click the jellyfish", "Connect or disconnect. Right-click: profile, sharing, admin console"],
-                            ["pets", "Click a creature", "Its card: Terminal, Files, Screen, Desktop, copy its address"],
-                            ["search", "Type anywhere", "Search devices by name or by what they are (phones, slow…), or type a command (add, share, disconnect)"],
-                            ["add_circle", "The + at the top", "Add this computer or your phone, step by step, with a QR code"],
-                            ["wb_sunny", "Drag the light of the surface", "Onto a device that can lend Internet: you go out through it"],
-                            ["keyboard", "From a terminal", "dms ipc call abyss ssh <device>  ·  files · vnc · rdp · join · share on"]
-                        ]
+                        model: [["touch_app", "Click the jellyfish", "Connect or disconnect. Right-click: profile, sharing, admin console"], ["pets", "Click a creature", "Its card: Terminal, Files, Screen, Desktop, copy its address"], ["search", "Type anywhere", "Search devices by name or by what they are (phones, slow…), or type a command (add, share, disconnect)"], ["add_circle", "The + at the top", "Add this computer or your phone, step by step, with a QR code"], ["wb_sunny", "Drag the light of the surface", "Onto a device that can lend Internet: you go out through it"], ["keyboard", "From a terminal", "dms ipc call abyss ssh <device>  ·  files · vnc · rdp · join · share on"]]
                         Rectangle {
                             required property var modelData
                             width: parent.width
@@ -833,7 +779,9 @@ PluginSettings {
             description: fx.description
             defaultValue: fx.defaultValue
         }
-        Row {
+        // A Flow, so the cost drops under the chip when the panel is narrow
+        Flow {
+            width: parent.width
             spacing: 8
             Rectangle {
                 width: impactRow.implicitWidth + 16
@@ -864,8 +812,9 @@ PluginSettings {
                 }
             }
             StyledText {
-                anchors.verticalCenter: parent.verticalCenter
+                width: Math.min(implicitWidth, fx.width)
                 text: fx.cost
+                wrapMode: Text.WordWrap
                 font.pixelSize: 11
                 color: Theme.surfaceVariantText
             }
