@@ -255,4 +255,17 @@ for (let i = 0; i < 200000; i++)
 const us = (Date.now() - t0) * 1000 / 200000;
 ok("step is cheap (" + us.toFixed(2) + " µs)", us < 20);
 
+// A resize keeps the mood and moves only the limits
+{
+    const r = M.create({ "l": 0, "r": 100, "top": 0, "bottom": 100 }, [{ "x": 1, "y": 1 }], 3);
+    M.event(r, "deviceDown", 10, 10);
+    M.step(r, 0.1);
+    const st = r.state, w = r.w.slice();
+    M.resize(r, { "l": 0, "r": 300, "top": 0, "bottom": 200 }, []);
+    eq("resize keeps the state", r.state, st);
+    eq("resize keeps the weights", r.w, w);
+    eq("resize moves the limits", r.b.r, 300);
+    eq("resize forgets a vanished hiding spot", r.hide, -1);
+}
+
 done("mood");
