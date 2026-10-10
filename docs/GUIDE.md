@@ -213,11 +213,24 @@ With the [Abyss app](#the-abyss-app) installed, the entry runs `abyss send vega`
 
 ## The Abyss app
 
-Abyss also runs as an app of its own, without DankMaterialShell: one window, started by the `abyss` command or from the application menu. It needs only Quickshell (`qs`). The window is a placeholder for now (a title and what was asked); the views come next.
+Abyss also runs as an app of its own, without DankMaterialShell: one window, started by the `abyss` command or from the application menu. It needs only Quickshell (`qs`). The window holds the depth gauge and three stations; their views come next (see below).
 
 ### Install and remove
 
 From a checkout, run `./install-app.sh`. It copies the app to `~/.local/share/abyss/`, links the `abyss` command in `~/.local/bin/` (add that folder to your `PATH` if it is not there) and adds `abyss.desktop` to `~/.local/share/applications/`. Nothing outside `~/.local`, nothing needs root. `./install-app.sh --uninstall` removes exactly those and the folders it made (a marker file in the app folder remembers them); a command, an entry or a folder named `abyss` that is not Abyss's is never touched, and the install stops with a message instead of overwriting it.
+
+### The depth gauge and the stations
+
+The window is a dive. On the left, the **depth gauge** is a vertical scale with three round targets, one per station: **Settings** at 0 m, **Send** at 200 m and **Map** at 4 000 m. The current station is filled and ringed, and Darwin swims beside it. Under the scale, four readouts follow the depth: depth, pressure, temperature and the NetBird signal (a glyph as well as a colour: ● connected, ◐ stopped, ✕ missing, ○ unknown).
+
+- **Switch station**: click a target, or press Tab until one is ringed and then Enter, Space or numpad Enter. The view changes with a brief dive (200 ms going down, 150 ms going up, nothing else moves); with Reduce motion on, it changes at once.
+- **From the command line**: `abyss map`, `abyss settings`, `abyss send <device>` and `abyss peer <device>` land on the right station (`peer` opens the map).
+- **Narrow window**: down to 900×600 the gauge narrows to 56 px and the padding to 24 px; the signal readout then shows its glyph only.
+- **Settings and Send** are empty for now: only their title, until their own views land.
+
+#### A device is not found
+
+When the peers are read and `abyss peer <device>` names none of them, the window opens on the map with a short message and the GitHub mark that opens this section; nothing is guessed. The window does not read the peers yet (the map view comes next), so for now no device is called unknown.
 
 ### One window
 

@@ -10,6 +10,8 @@ FocusScope {
     required property string mark
     required property string label
     property bool current: false
+    // 2 px ring on the current station and on the one focused by keyboard
+    readonly property int ringWidth: activeFocus || current ? 2 : 0
 
     signal activated(string stationId)
 
@@ -27,7 +29,7 @@ FocusScope {
         anchors.fill: parent
         radius: width / 2
         color: "transparent"
-        border.width: target.activeFocus ? 2 : (target.current ? 1 : 0)
+        border.width: target.ringWidth
         border.color: target.activeFocus ? Theme.surfaceText : Theme.primary
     }
 

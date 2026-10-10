@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import "../components"
 import "../components/Stations.js" as Stations
@@ -15,6 +17,15 @@ Item {
     // The peers once read; null while unknown, so nothing is called unknown yet
     property var peers: null
     property string netbirdState: "unknown"
+    // 900 x 600 and below: gauge 56, padding 24, title row 40 (else 72 / 32 / 44)
+    readonly property bool compact: width < 1100
+    readonly property int pad: compact ? 24 : 32
+    readonly property int titleHeight: compact ? 40 : 44
+    readonly property alias gaugeWidth: gauge.width
+    // The dive, for tests: running, its length and the view's offset
+    readonly property alias diving: slide.running
+    readonly property alias diveDuration: slide.duration
+    readonly property alias diveShift: shift.y
     readonly property var current: Stations.byId(station)
     readonly property bool deviceUnknown: device !== "" && Array.isArray(peers) && Stations.findPeer(peers, device) === null
 
@@ -51,6 +62,7 @@ Item {
             top: parent.top
             bottom: parent.bottom
         }
+        compact: frame.compact
         current: frame.station
         netbirdState: frame.netbirdState
         onChosen: id => frame.show(id)
@@ -64,14 +76,14 @@ Item {
             right: parent.right
             top: parent.top
             bottom: parent.bottom
-            margins: Theme.spacingXL
+            margins: frame.pad
         }
         clip: true
 
         Row {
             id: titleRow
 
-            height: 40
+            height: frame.titleHeight
             spacing: Theme.spacingS
 
             Text {
@@ -101,7 +113,7 @@ Item {
                 top: titleRow.bottom
             }
             message: "No device called “" + frame.device + "” on your network."
-            anchor: "app-command-line"
+            anchor: "a-device-is-not-found"
         }
 
         Item {
@@ -131,36 +143,12 @@ Item {
                 easing.type: Easing.OutCubic
             }
 
-            Loader {
+            // One placeholder until the views of the other stories exist
+            PlaceholderView {
                 anchors.fill: parent
-                // The sandbox: only the current station's view exists
-                sourceComponent: frame.station === "settings" ? settingsView : (frame.station === "send" ? sendView : mapView)
+                title: frame.current.title
+                note: Array.isArray(frame.peers) && frame.station === "map" && frame.device !== "" && !frame.deviceUnknown ? "Map · " + frame.device : ""
             }
-        }
-    }
-
-    Component {
-        id: settingsView
-
-        PlaceholderView {
-            title: "Settings"
-        }
-    }
-
-    Component {
-        id: sendView
-
-        PlaceholderView {
-            title: "Send"
-        }
-    }
-
-    Component {
-        id: mapView
-
-        PlaceholderView {
-            title: "Map"
-            note: frame.device !== "" && !frame.deviceUnknown ? "Map · " + frame.device : ""
         }
     }
 }

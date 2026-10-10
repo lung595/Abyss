@@ -29,6 +29,7 @@ eq("fraction mid", S.fraction(2000), 0.5);
 
 eq("readouts at 4000 m", JSON.stringify(S.readouts(4000)),
     JSON.stringify({ "depth": "4000 m", "pressure": "401 bar", "temperature": "2 °C" }));
+eq("temperature 18 / 6 / 2 at the stations", [0, 200, 4000].map(d => S.readouts(d).temperature).join(), "18 °C,6 °C,2 °C");
 eq("readouts at the surface", S.readouts(0).pressure, "1 bar");
 
 eq("depth label groups thousands", S.depthLabel(4000), "4\u202F000 m");
@@ -43,4 +44,4 @@ eq("connected is success", S.signal("connected").role, "success");
 eq("stopped is warning", S.signal("stopped").role, "warning");
 eq("missing is error", S.signal("missing").role, "error");
 ok("every state has a glyph", ["connected", "stopped", "missing", "x"].every(s => S.signal(s).glyph.length > 0));
-done();
+done("stations");

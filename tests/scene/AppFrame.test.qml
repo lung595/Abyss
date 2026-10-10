@@ -61,8 +61,12 @@ Window {
             win.check("click on Send switches", frame.station === "send", frame.station);
             win.check("the target takes the ring", send.current && !map.current);
 
+            // Real Tab presses from the clicked target: Send -> Map, and back
             keyClick(Qt.Key_Tab);
-            send.forceActiveFocus(Qt.TabFocusReason);
+            win.check("Tab reaches the next target", map.activeFocus, map.activeFocus);
+            win.check("focus ring is 2 px", map.ringWidth === 2);
+            keyClick(Qt.Key_Backtab);
+            win.check("Shift+Tab goes back", send.activeFocus && !map.activeFocus);
             keyClick(Qt.Key_Return);
             win.check("Enter on a focused target keeps it", frame.station === "send");
             settings.forceActiveFocus(Qt.TabFocusReason);
@@ -72,23 +76,79 @@ Window {
             keyClick(Qt.Key_Space);
             win.check("Space activates Map", frame.station === "map", frame.station);
 
-            frame.go({ "ok": true, "view": "settings", "device": "", "files": [], "category": "" });
+            // The dive: 200 ms down, 150 ms up, back to rest when it ends
+            frame.show("send");
+            frame.show("map");
+            win.check("descending dive is 200 ms", frame.diveDuration === 200 && frame.diving, frame.diveDuration);
+            tryVerify(() => !frame.diving, 1000);
+            win.check("the view is back at rest", frame.diveShift === 0, frame.diveShift);
+            frame.show("send");
+            win.check("ascending dive is 150 ms", frame.diveDuration === 150, frame.diveDuration);
+            tryVerify(() => !frame.diving, 1000);
+            win.check("rest again", frame.diveShift === 0);
+            frame.show("map");
+            tryVerify(() => !frame.diving, 1000);
+
+            frame.go({
+                "ok": true,
+                "view": "settings",
+                "device": "",
+                "files": [],
+                "category": ""
+            });
             win.check("settings target lands on Settings", frame.station === "settings");
-            frame.go({ "ok": true, "view": "send", "device": "atlas", "files": [], "category": "" });
+            frame.go({
+                "ok": true,
+                "view": "send",
+                "device": "atlas",
+                "files": [],
+                "category": ""
+            });
             win.check("send target lands on Send with the device", frame.station === "send" && frame.device === "atlas");
-            frame.go({ "ok": true, "view": "map", "device": "", "files": [], "category": "" });
+            frame.go({
+                "ok": true,
+                "view": "map",
+                "device": "",
+                "files": [],
+                "category": ""
+            });
             win.check("map target lands on Map", frame.station === "map");
 
-            frame.peers = [{ "name": "atlas" }];
-            frame.go({ "ok": true, "view": "peer", "device": "atlas", "files": [], "category": "" });
+            frame.peers = [
+                {
+                    "name": "atlas"
+                }
+            ];
+            frame.go({
+                "ok": true,
+                "view": "peer",
+                "device": "atlas",
+                "files": [],
+                "category": ""
+            });
             win.check("known peer: map, card device kept, no message", frame.station === "map" && frame.device === "atlas" && !frame.deviceUnknown);
-            frame.go({ "ok": true, "view": "peer", "device": "ghost", "files": [], "category": "" });
+            frame.go({
+                "ok": true,
+                "view": "peer",
+                "device": "ghost",
+                "files": [],
+                "category": ""
+            });
             win.check("unknown peer: map with the guided message", frame.station === "map" && frame.deviceUnknown);
             frame.peers = null;
             win.check("peers not read yet: nothing is called unknown", !frame.deviceUnknown);
 
-            Qt.quit();
-            win.check("done", true);
+            // Geometry: full size, then the 900 x 600 minimum
+            win.check("full size: gauge 72, padding 32, title row 44", frame.gaugeWidth === 72 && frame.pad === 32 && frame.titleHeight === 44);
+            win.width = 900;
+            win.height = 600;
+            tryVerify(() => frame.width === 900, 2000);
+            win.check("compact: gauge 56, padding 24, title row 40", frame.compact && frame.gaugeWidth === 56 && frame.pad === 24 && frame.titleHeight === 40);
+            win.check("compact: targets stay 44 x 44 inside the gauge", map.width === 44 && map.x >= 0 && map.x + map.width <= 56, map.x);
+            win.width = 1280;
+            win.height = 800;
+            tryVerify(() => frame.width === 1280, 2000);
+            win.check("full size again", !frame.compact && frame.gaugeWidth === 72);
         }
     }
 

@@ -165,7 +165,7 @@ abyss settings [category]      # open the settings
 abyss --help | --version
 ```
 
-Install it with `./install-app.sh` (only under `~/.local`; `./install-app.sh --uninstall` removes it). Details and limits in the [guide](docs/GUIDE.md#the-abyss-app). The window is a placeholder for now.
+Install it with `./install-app.sh` (only under `~/.local`; `./install-app.sh --uninstall` removes it). Details and limits in the [guide](docs/GUIDE.md#the-abyss-app). The window has its depth gauge and switches between three stations (Settings, Send, Map); the views themselves come next.
 
 Bind them in your compositor, for example in niri: `Mod+A { spawn "dms" "ipc" "call" "abyss" "open"; }`, or in Hyprland: `bind = SUPER, A, exec, dms ipc call abyss open`.
 

@@ -47,6 +47,21 @@ Rectangle {
         Accessible.role: Accessible.Link
         Accessible.name: "Open the guide"
         Keys.onReturnPressed: Qt.openUrlExternally(band.url)
+        Keys.onEnterPressed: Qt.openUrlExternally(band.url)
+        Keys.onSpacePressed: Qt.openUrlExternally(band.url)
+
+        // Focus-visible ring, as on the station targets
+        Rectangle {
+            anchors {
+                fill: parent
+                margins: -4
+            }
+            radius: width / 2
+            color: "transparent"
+            border.width: 2
+            border.color: Theme.surfaceText
+            visible: mark.activeFocus
+        }
 
         MouseArea {
             anchors.fill: parent

@@ -59,14 +59,28 @@ function transitionMs(fromId, toId, reduceMotion) {
     return indexOf(toId) > indexOf(fromId) ? 200 : 150;
 }
 
-// Instrument readouts at a depth: sea water gains 1 bar per 10 m, and cools
-// from 20 °C at the surface to 2 °C at 4 000 m (a picture, not a measure).
+// Water temperature (°C) at the three stations, as the design spec gives it;
+// between them it is interpolated (a picture, not a measure).
+const TEMPERATURES = [[0, 18], [200, 6], [4000, 2]];
+
+function temperature(depth) {
+    const d = Math.max(0, Math.min(MAX_DEPTH, depth));
+    for (let i = 1; i < TEMPERATURES.length; i++) {
+        const [d0, t0] = TEMPERATURES[i - 1];
+        const [d1, t1] = TEMPERATURES[i];
+        if (d <= d1)
+            return t0 + (t1 - t0) * (d - d0) / (d1 - d0);
+    }
+    return TEMPERATURES[TEMPERATURES.length - 1][1];
+}
+
+// Instrument readouts at a depth: sea water gains 1 bar per 10 m.
 function readouts(depth) {
     const d = Math.max(0, Math.min(MAX_DEPTH, depth));
     return {
         "depth": Math.round(d) + " m",
         "pressure": Math.round(1 + d / 10) + " bar",
-        "temperature": Math.round(20 - 18 * d / MAX_DEPTH) + " °C"
+        "temperature": Math.round(temperature(d)) + " °C"
     };
 }
 
