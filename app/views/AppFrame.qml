@@ -44,6 +44,8 @@ Item {
     function confirmClose() {
         if (sending && !closeAsked) {
             closeAsked = true;
+            // The question is shown by the Send view: bring it up
+            show("send");
             return false;
         }
         if (sendView)

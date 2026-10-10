@@ -153,7 +153,10 @@ Item {
 
     function closeIt() {
         check("abyss send <device> <file> queues the file", frame.sendView.q.jobs.length === 1 && frame.sendView.chosen.join() === "slow");
-        check("the first close only asks", frame.confirmClose() === false && frame.closeAsked);
+        check("no false duplicate notice", frame.sendView.failure === null);
+        frame.show("map");
+        check("closing from another station brings Send back", frame.confirmClose() === false && frame.station === "send");
+        check("the first close only asks", frame.closeAsked);
         check("the view says so", frame.sendView.notice.title.indexOf("still running") > 0);
         check("the second close lets go", frame.confirmClose() === true);
         sh.run(["sh", "-c", "pid=$(cat \"$1/slow.pid\"); sleep 0.5; kill -0 $pid 2>/dev/null && echo alive || echo gone", "sh", fakeDir], out => {

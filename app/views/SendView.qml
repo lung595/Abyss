@@ -208,6 +208,10 @@ Item {
         // Cancelled while the probe ran: nothing to start
         if (!q.jobs.some(j => j.id === id && j.state === "sending"))
             return;
+        // Retried while its first probe was still running: already started
+        for (let i = 0; i < running.count; i++)
+            if (running.get(i).jid === id)
+                return;
         const plan = Transfer.plan(prog, host, {}, [path], "");
         if (!plan.ok) {
             q = Queue.fail(q, id, plan.reason);
@@ -287,11 +291,8 @@ Item {
     onPeersChanged: _adopt()
     onFilesChanged: if (files.length > 0)
         addItems(files)
-    Component.onCompleted: {
-        _adopt();
-        if (files.length > 0)
-            addItems(files);
-    }
+    // The files arrive through onFilesChanged (it fires at creation too)
+    Component.onCompleted: _adopt()
 
     Shortcut {
         sequence: "Ctrl+V"
