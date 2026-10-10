@@ -1,6 +1,7 @@
 .pragma library
 .import "MyGroups.js" as MyGroups
 .import "Query.js" as Query
+.import "SendIntent.js" as SendIntent
 
 // What typing "abyss" in the launcher (Super+Space) offers. First the deep
 // itself — the whole scene, with everything it can do — then the quick
@@ -53,6 +54,31 @@ function _internet(s) {
     return out.filter(i => i.action !== "none:");
 }
 
+// What a launcher query asks of Abyss. With no prefix set in DMS, the launcher
+// hands over every search: only the "abyss" word (everything below) or a
+// plain "send a file" sentence gets an answer, so Abyss stays out of every
+// other search. With a prefix set, DMS has already stripped it: all is ours.
+// Returns { all: <query for items()> }, { send: <device or null>, ask: true }
+// or null. `ask` means the sentence has the shape of a send: the launcher
+// reads the peers once. `send` is absent when no peer was resolved yet.
+function route(query, peers, prefixed) {
+    const text = String(query === undefined || query === null ? "" : query).trim();
+    if (prefixed)
+        return { "all": text };
+    const word = /^abyss(?:\s+(.*))?$/i.exec(text);
+    if (word)
+        return { "all": (word[1] || "").trim() };
+    const intent = SendIntent.claim(text, peers);
+    if (intent)
+        return { "send": intent.device, "ask": true };
+    return SendIntent.fits(text) ? { "ask": true } : null;
+}
+
+// The one entry of a send sentence: "Send a file to vega…" or "Send a file…"
+function sendEntry(device) {
+    return _item(device ? "Send a file to " + device + "…" : "Send a file…", "upload_file", "Choose what to send", "send:" + (device || ""));
+}
+
 // The whole list for a query ("" shows the essentials)
 function items(s, query) {
     const q = String(query || "").trim().toLowerCase();
@@ -81,7 +107,7 @@ function items(s, query) {
         if (!verb || verb === "ssh")
             out.push(_item("SSH to " + p.name, "terminal", p.ip, "ssh:" + p.name));
         if (!verb || verb === "send")
-            out.push(_item("Send a file to " + p.name + "…", "upload_file", "Choose what to send", "send:" + p.name));
+            out.push(sendEntry(p.name));
         return out;
     };
     if (smart) {

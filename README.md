@@ -101,7 +101,7 @@ In **Settings → Plugins**, turn **Abyss** on. The launcher entry works right a
 
 **Search**: the field at the top (or just type anywhere). Empty, it offers one-click shortcuts (Online, Phones, Slow, Can lend Internet…); it also understands commands: `add`, `share`, `disconnect`, `console`… (Enter runs the first). **Add a device**: the **+** at the top: this computer (paste a setup key) or your phone (QR codes for the NetBird app, click one to enlarge it); the new device is spotted and celebrated the moment it joins. **Open a device**: its card has four doors, **Terminal** (SSH), **Files** (SFTP), **Screen** (VNC) and **Desktop** (RDP); a device that does not answer, or a viewer that is missing, gets a note saying how to fix it, with the command to copy. **Bar**: hover the jellyfish for a summary, middle-click to connect or disconnect; a coloured dot tells the state. **Control Center**: your starred devices along the bottom, one click from their terminal or files.
 
-**Find a peer**: just type its name. **A big mesh** (12 peers or more): the list icon in the top bar shows everyone as one line each. **Launcher**: Super+Space, `abyss`, then connect, choose where Internet goes out, or `abyss vega` to copy or SSH. The launcher understands the deep's search words too: `abyss >100ms`, `abyss ssh nas`, `abyss copy phones`, `abyss ssh direct <5ms`.
+**Find a peer**: just type its name. **A big mesh** (12 peers or more): the list icon in the top bar shows everyone as one line each. **Launcher**: Super+Space, `send file to vega` (or `envoie un fichier au nas`) sends a file; `abyss`, then connect, choose where Internet goes out, or `abyss vega` to copy or SSH. The launcher understands the deep's search words too: `abyss >100ms`, `abyss ssh nas`, `abyss copy phones`, `abyss ssh direct <5ms`.
 
 ### Internet through a peer
 
@@ -133,6 +133,8 @@ In **Settings → Plugins**, turn **Abyss** on. The launcher entry works right a
 The test lab lives in memory and never touches NetBird; its title sums it up in one line and *Reset* brings back the quiet home mesh.
 
 ## Command line and keybindings
+
+From the launcher (Super+Space), a sentence such as `send file to vega` or `envoie un fichier au nas` offers *Send a file to vega…*, which runs `abyss send vega` when the app is installed and opens the widget's picker otherwise. DMS gives Abyss a launcher prefix (`abyss`) by default; clear it in DMS Settings → Launcher so sentences reach Abyss without it ([details](docs/GUIDE.md#send-from-the-launcher)).
 
 ```sh
 dms ipc call abyss open            # open the deep from the bar

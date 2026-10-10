@@ -198,6 +198,19 @@ When Abyss cannot start a send it says why next to the creature, with a link her
 
 Press Super+Space and type `abyss`: "Open Abyss" opens the deep from the bar; below it, connect, choose where Internet goes out (a sun marks the one in use), and, as you type a name (`abyss vega`), copy its address or SSH to it. The same words as the search in the deep pick peers by what they are: a speed (`abyss >100ms`, `abyss <20ms`), a state (`direct`, `relay`, `slow`, `busy`), a kind (`nas`, `phones`, `vps`) or a relay (`eu`); start with `ssh`, `copy` or `send` to keep one action (`abyss ssh nas`, `abyss copy >100ms`, `abyss send nas` to pick a file for it, see [Send a file](#send-a-file)).
 
+## Send from the launcher
+
+Type a sentence in Super+Space, in English or French, and Abyss offers one entry: **Send a file to vega…** when the sentence names a device Abyss knows, **Send a file…** otherwise. Accents and case do not matter.
+
+- `send file`, `send a file to vega`, `send the file to nas`, `send to vega`
+- `envoie un fichier`, `envoie un fichier au nas`, `envoyer des fichiers vers vega`, `envoyer à nas`
+
+A name is matched exactly, then by a unique start (`ve` finds `vega` if nothing else starts with `ve`); an unknown or ambiguous name gives *Send a file…* and never a guess. Only a whole sentence of this shape is taken: a timer phrase for Sands (`rappel envoyer le fichier dans 10 min`) is never claimed, and no other Abyss entry shows in a plain search. Everything else stays behind the `abyss` word (see above).
+
+With the [Abyss app](#the-abyss-app) installed, the entry runs `abyss send vega` and the app opens on the sending; without a device it runs `abyss`. Without the app, the file picker of the widget opens instead.
+
+**A prefix gets in the way.** Sentences only reach Abyss when the plugin has no prefix in DMS. The manifest ships `abyss`, and DMS cannot take an empty one from a manifest, so clear it once in DMS Settings → Launcher → Abyss (the plugin never writes DMS settings). The Abyss settings say so while a prefix is set. With a prefix set, everything keeps working behind it.
+
 ## The Abyss app
 
 Abyss also runs as an app of its own, without DankMaterialShell: one window, started by the `abyss` command or from the application menu. It needs only Quickshell (`qs`). The window is a placeholder for now (a title and what was asked); the views come next.

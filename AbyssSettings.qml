@@ -237,6 +237,37 @@ PluginSettings {
                         }
                     }
 
+                    // Sentences like "send file to vega" only reach Abyss with no prefix
+                    // set in DMS; Abyss never writes DMS settings, so it only says how
+                    Group {
+                        id: launcherHint
+                        readonly property string prefix: (PluginService.getPluginTrigger("abyss") ?? "").trim()
+                        visible: prefix !== ""
+                        icon: "keyboard_command_key"
+                        title: "Launcher sentences"
+                        sub: "“send file to vega” works in Super+Space when Abyss has no prefix"
+                        Row {
+                            width: parent.width
+                            spacing: Theme.spacingS
+                            StyledText {
+                                width: parent.width - Theme.spacingS - 18
+                                text: "Abyss has the prefix “" + launcherHint.prefix + "”. To type a sentence without it, clear the prefix in DMS Settings → Launcher → Abyss."
+                                font.pixelSize: Theme.fontSizeSmall
+                                color: Theme.surfaceVariantText
+                                wrapMode: Text.WordWrap
+                            }
+                            GitHubMark {
+                                size: 18
+                                color: Theme.primary
+                                MouseArea {
+                                    anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: Qt.openUrlExternally("https://github.com/lung595/Abyss/blob/main/docs/GUIDE.md#send-from-the-launcher")
+                                }
+                            }
+                        }
+                    }
+
                     Group {
                         icon: "key"
                         title: "Saved logins"
