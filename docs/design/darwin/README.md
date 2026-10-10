@@ -79,14 +79,18 @@ exception covers Darwin's drawing only.
 Contrast, measured on the real scene (the deep stays dark whatever the
 theme):
 
-| Backdrop, six samples around both views (darkest to lightest) | Body | Eye white | Outline |
+| Backdrop, every pixel of the 130x60 px zone around both views, Darwin excluded (darkest to lightest) | Body | Eye white | Outline |
 |---|---|---|---|
-| dark theme, `#0f0f19` to `#181823` | 7.13 to 6.58:1 | 14.92 to 13.78:1 | 1.04 to 1.13:1 |
-| light theme, `#0a0914` to `#14131d` | 7.40 to 6.89:1 | 15.49 to 14.42:1 | 1.00 to 1.08:1 |
-| warm wallpaper-generated theme, `#110e12` to `#1c181b` | 7.17 to 6.57:1 | 15.02 to 13.76:1 | 1.03 to 1.13:1 |
+| dark theme, `#0e0e18` to `#1d1d27` | 7.18 to 6.25:1 | 15.03 to 13.09:1 | 1.03 to 1.19:1 |
+| light theme, `#090814` to `#171622` | 7.44 to 6.69:1 | 15.57 to 14.01:1 | 1.00 to 1.11:1 |
+| warm wallpaper-generated theme, `#100e11` to `#211d20` | 7.19 to 6.23:1 | 15.05 to 13.04:1 | 1.03 to 1.19:1 |
 
-The lightest samples are on the thread that crosses the deep behind Darwin;
-the worst case stays above 4.5:1 for the body and the eyes.
+Zone: origin (310,336) in each 780x980 scene frame, 7199 backdrop pixels per
+scene. The lightest pixels are on the thread that crosses the deep behind
+Darwin. An independent measurement on a slightly different zone found
+`#1f1e29` as the lightest pixel of the dark scene: body 6.16:1, eye white
+12.89:1. That is the worst case to quote; it stays above 4.5:1 for the body
+and the eyes.
 
 The outline is invisible in the deep; the body colour and the eyes carry the
 shape (outline on body: 7.41:1). On a plain light surface (`#f3f6f9`) the
