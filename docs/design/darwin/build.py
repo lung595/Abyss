@@ -11,10 +11,10 @@ import sys
 INK, BODY, LIGHT, LIMB, WHITE = "#0a0a0a", "#f47e26", "#f6bc8c", "#f49c52", "#e4e3e8"
 STROKE = 7  # outline weight measured on the reference, in this space
 
-# Silhouette, clockwise from the snout; the bottom is closed with a round
-# belly because the reference hides it.
-BODY_PTS = [(722, 260), (723, 317), (704, 371), (666, 414), (618, 443), (568, 462), (510, 478),
-            (440, 490), (370, 494), (300, 492), (230, 482), (165, 460), (105, 420), (62, 370),
+# Silhouette, clockwise from the snout; the belly is nearly flat, as on the
+# reference.
+BODY_PTS = [(722, 260), (723, 317), (704, 371), (666, 414), (618, 443), (568, 460), (510, 468),
+            (440, 472), (370, 473), (300, 472), (230, 467), (165, 452), (105, 420), (62, 370),
             (48, 315), (51, 260), (57, 200), (83, 145), (125, 101), (172, 69), (221, 47),
             (268, 31), (312, 18), (356, 9), (400, 3), (445, 4), (490, 12), (532, 31), (566, 62),
             (591, 100), (608, 140), (647, 170), (694, 208)]
@@ -44,11 +44,11 @@ def cheek(cx, cy, r, a1, a2, sweep):
 
 def front():
     s = 'stroke="%s" stroke-width="%d" stroke-linecap="round" stroke-linejoin="round"' % (INK, STROKE)
-    leg = '<path d="M%d 470v95a30 30 0 0 0 60 0v-95z" fill="%s" %s/>'
+    leg = '<path d="M%d 455v104a35 35 0 0 0 70 0v-104z" fill="%s" %s/>'
     return "\n".join([
-        leg % (228, LIMB, s), leg % (452, LIMB, s),
-        '<path d="M120 318C60 290 4 330 6 392c2 60 40 84 96 80 40-3 66-20 80-40z" fill="%s" %s/>' % (LIMB, s),
-        '<path d="M14 372l52 6M22 424l50-10" fill="none" %s/>' % s,
+        leg % (230, BODY, s), leg % (470, BODY, s),
+        '<path d="M120 318C70 296 14 316 10 360c-2 14 8 24 22 27c-16 5-26 16-24 32c4 44 44 58 94 53c40-4 66-20 80-40z" fill="%s" %s/>' % (LIMB, s),
+        '<path d="M32 387l46 3M24 430l48-10" fill="none" %s/>' % s,
         '<path d="%s" fill="%s" %s/>' % (smooth(BODY_PTS), BODY, s),
         '<path d="M112 146c-30 36-36 96-24 140 6 4 14 2 16-6 4-50 18-90 36-122 0-10-18-18-28-12z" fill="%s"/>' % LIGHT,
         '<ellipse cx="269.5" cy="184.5" rx="96" ry="90" fill="%s" %s/>' % (WHITE, s),

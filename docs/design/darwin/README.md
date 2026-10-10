@@ -9,7 +9,7 @@ approved, and not used by the widget.
 | `darwin-swim.svg` | swimming, turned | 680 x 480 |
 | `*@1x.png` | real widget size (25 px wide, `unit` 0.034 in `Goldfish.qml`) | |
 | `*@4x.png` | 100 px wide | |
-| `scene-dark.png`, `scene-light.png` | both views on a plain dark and light backdrop | stand-in, not the real scene |
+| `scene-dark.png`, `scene-light.png` | both views at real size in the real desktop bowl (`scripts/preview/render.sh desk`, `desk-light`), composited, with a 6x zoom below | |
 
 Rebuild: `python3 build.py .` then render the SVG files with ImageMagick.
 
@@ -23,15 +23,20 @@ Rebuild: `python3 build.py .` then render the SVG files with ImageMagick.
 | Limbs | `#f49c52` | |
 | Eye white | `#e4e3e8` | |
 
-Contrast of the body colour: 6.94:1 on `#0e1418`, 2.46:1 on `#f3f6f9`; the
-outline carries the shape on light backdrops (18.25:1) and disappears on
-dark ones (1.07:1).
+Contrast, measured on the real scene (the deep stays dark in both themes:
+`#0f0f19` dark, `#0a0914` light): body 7.13:1 and 7.40:1, eye white 14.92:1
+and 15.49:1, outline 1.04:1 and 1.00:1. The outline is invisible in the deep;
+the body colour and the eyes carry the shape. On a plain light surface
+(`#f3f6f9`) the body is 2.46:1 and the outline 18.25:1.
 
 ## Known differences from the references
 
-- Front: legs are thinner and closer together, with a darker outline; tail
-  fin shape and stripes are approximate; lower cheek arcs sit a few px high.
-- Swimming: the top-right notch is shallower than the reference; the
-  arm joins the body with a visible corner; the tail fin is simplified; the
-  mouth is a single curve; brows are neutral on purpose (the reference frowns).
-- No three-quarter view yet. Shoes are not drawn: no reference shows them.
+- Front (against the poster frame, overlay registered by eye): our drawing is
+  about 2 to 3 % wider, so the right edge and the top-right bump sit a few px
+  outside; the tail fin lobes are approximate; pupils are pure ink where the
+  printed frame shows dark grey. Colours come from the swimming frame, the
+  poster being a desaturated print.
+- Swimming: the tail fin is simplified; brows are neutral on purpose (the
+  reference frowns).
+- No three-quarter or true side view: no reference shows one. Shoes are not
+  drawn: no reference shows them.
