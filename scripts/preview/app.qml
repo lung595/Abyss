@@ -56,10 +56,15 @@ Window {
         const long = root.scene === "send-long";
         const names = long ? ["/x/quarterly-report-final-version-2-reviewed-by-everyone-and-signed-off.pdf", "/x/holiday-photos-from-the-long-weekend-in-the-mountains-2026.zip"] : ["/x/report.pdf", "/x/photos.zip", "/x/notes.txt"];
         let q = Queue.add(Queue.empty(), names, ["laptop-anna", "nas-box"]).state;
-        q = Queue.start(q, 1);
-        q = Queue.progress(q, 1, 0.42);
-        q = Queue.start(q, 2);
-        q = Queue.fail(Queue.start(q, 2), 2, "Connection refused");
+        // 1: rsync with a meter, 2: done (stays until dismissed), 4: scp without
+        // progress, 5: failed (goes to the history)
+        q = Queue.progress(Queue.start(q, 1), 1, 0.42);
+        q = Queue.finish(Queue.start(q, 2), 2, Date.now());
+        q = Queue.start(q, 4);
+        q = Queue.fail(Queue.start(q, 5), 5, "Connection refused", Date.now() - 300000);
+        frame.sendView.rates = {
+            "1": "3.1 MB/s"
+        };
         frame.sendView.q = q;
         frame.sendView.chosen = ["laptop-anna"];
         if (root.scene === "send-refused")
