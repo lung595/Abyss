@@ -55,10 +55,17 @@ being the ratio of the two body masks, 715 px against 406 px wide).
   reference draws a tapered wedge; pupils are pure ink where the printed
   frame shows dark grey; colours come from the swimming frame, the poster
   being a desaturated print (body `#d67028` there).
-- Swimming: outline, eyes, cheeks, arm and leg lie on the reference within
-  about 10 px in the 680 space (edge overlay, by eye); our body is 2.8 %
-  shorter. Brows are neutral on purpose (the reference frowns), so the eye
-  tops are not cut by the brow. The mouth is a single curve; the reference
-  has a kink.
+- Swimming: the body outline is fitted by 48 rays onto the reference
+  (`SWIM_PTS` in `build.py`), 39 rays measured and 9 kept from the hand
+  tracing where the leg, the arm or the tail fin hide the edge. Before the
+  fit our outline was 9.1 px too far out on average (14.2 px at worst) in
+  the 680 space; after it the same measurement gives 0.6 px on average and
+  4.0 px at worst. Eyes, cheeks, arm and leg are still placed by eye, within
+  about 10 px. The low fin is smaller than on the reference and the left
+  eye slightly smaller. Brows are neutral on purpose (the reference
+  frowns). The mouth is a single curve; the reference has a kink.
+- Outline weight: 7 px in the 729 space and 5 px in the 680 space. The two
+  bodies are 670 px and 460 px wide in their spaces, so the stroke is 1.04 %
+  and 1.09 % of the body width: the same weight on the character.
 - No three-quarter or true side view: no reference shows one. Shoes are not
   drawn: no reference shows them.

@@ -68,11 +68,17 @@ def front():
     ])
 
 
-# Swimming view, traced in the 680x480 crop of the swimming reference.
-SWIM_PTS = [(380, 48), (430, 56), (462, 80), (484, 106), (508, 104), (545, 116), (580, 150), (598, 200),
-            (596, 250), (570, 295), (525, 332), (470, 360), (410, 385), (350, 402), (290, 412),
-            (240, 405), (195, 380), (160, 340), (142, 290), (140, 240), (155, 190), (190, 140),
-            (240, 100), (300, 68), (340, 54)]
+# Swimming view, in the 680x480 crop of the swimming reference. Body outline:
+# 48 rays cast every 7.5 degrees from (370, 230), clockwise from the top, onto
+# the reference outline, inset by half the stroke. Rays that leave through the
+# leg, the arm or the tail fin (8 of 48) keep the hand-traced radius.
+SWIM_PTS = [(370, 55), (393, 55), (416, 59), (437, 67), (455, 82), (470, 100), (489, 111), (529, 108), (555,
+            123), (575, 145), (588, 172), (595, 200), (596, 230), (584, 258), (569, 283), (545,
+            303), (524, 319), (501, 331), (481, 341), (461, 349), (445, 359), (427, 367), (409,
+            374), (390, 381), (370, 387), (348, 396), (324, 403), (296, 409), (266, 411), (237,
+            404), (210, 390), (185, 372), (165, 348), (151, 321), (142, 291), (147, 259), (152,
+            230), (162, 203), (177, 178), (193, 157), (211, 138), (231, 123), (249, 109), (267, 96),
+            (286, 85), (306, 75), (326, 67), (348, 59)]
 
 
 def swim():
@@ -87,7 +93,7 @@ def swim():
         # Tail fin under the arm, then the arm reaching forward; both open
         # paths so the joint with the body carries no outline.
         '<path d="M150 352c-28 30-10 80 30 92 36 10 66-6 70-36" fill="%s" %s/>' % (BODY, s),
-        '<path d="M158 392l26 12M172 408l20 18M192 420l14 22" fill="none" %s/>' % s,
+        '<path d="M158 392l22 12M170 408l22 12M184 422l22 12" fill="none" %s/>' % s,
         '<path d="M218 318C160 288 92 288 50 320c-35 25-30 65 0 70 35 2 60-25 100-40L200 372" fill="%s" %s/>' % (BODY, s),
         '<ellipse cx="275" cy="205" rx="70" ry="56" transform="rotate(-12 275 205)" fill="%s" %s/>' % (WHITE, s),
         '<ellipse cx="418" cy="155" rx="67" ry="62" fill="%s" %s/>' % (WHITE, s),
