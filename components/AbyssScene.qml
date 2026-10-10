@@ -15,6 +15,7 @@ import "Grips.js" as Grips
 import "Goldfish.js" as Fish
 import "Commands.js" as Commands
 import "Connect.js" as Connect
+import "SendTone.js" as SendTone
 
 // The deep, shared by the popout, the Control Center and the desktop.
 //
@@ -74,11 +75,6 @@ Item {
     function mix(a, b, k) {
         return Qt.rgba(a.r + (b.r - a.r) * k, a.g + (b.g - a.g) * k, a.b + (b.b - a.b) * k, 1);
     }
-    // WCAG relative luminance of a colour (sRGB channels linearised)
-    function _lum(c) {
-        const lin = v => v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
-        return 0.2126 * lin(c.r) + 0.7152 * lin(c.g) + 0.0722 * lin(c.b);
-    }
     readonly property color _night: "#02040b"
     readonly property color _white: "#ffffff"
     readonly property color _grey: "#8a8fa0"
@@ -91,7 +87,10 @@ Item {
     readonly property color sunColor: mix(Theme.warning, _white, 0.4)
     // The least white that reads on the dark menu: the raw role when it is
     // bright enough, a mix with white when the theme is light
-    readonly property color sendColor: _lum(Theme.primary) >= 0.32 ? Theme.primary : mix(Theme.primary, _white, 0.4)
+    readonly property color sendColor: {
+        const t = SendTone.sendTone(Theme.primary);
+        return Qt.rgba(t.r, t.g, t.b, 1);
+    }
     readonly property color groupColor: mix(Theme.primary, Theme.tertiary, 0.35)
     readonly property var tints: [Theme.primary, Theme.tertiary, Theme.success, Theme.secondary, mix(Theme.primary, Theme.tertiary, 0.5), mix(Theme.tertiary, Theme.success, 0.5), mix(Theme.primary, Theme.success, 0.5), mix(Theme.secondary, Theme.tertiary, 0.5)]
     // Stable colour per peer name
@@ -2732,6 +2731,8 @@ Item {
                         radius: 8
                         readonly property bool accent: !!modelData.accent
                         color: rowArea.pressed ? Qt.rgba(root.ink.r, root.ink.g, root.ink.b, 0.16) : rowArea.containsMouse ? Qt.rgba(root.ink.r, root.ink.g, root.ink.b, 0.1) : "transparent"
+                        // Ready for keyboard navigation (Q114): no row takes focus
+                        // yet, the spec only fixes the look once one does
                         border.width: activeFocus && accent ? 2 : 0
                         border.color: root.sendColor
                         StyledText {
