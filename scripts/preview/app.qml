@@ -24,7 +24,11 @@ Window {
         station: Qt.application.arguments[Qt.application.arguments.length - 3]
         netbirdState: ["stopped", "missing", "unknown"].includes(root.scene) ? root.scene : "connected"
         device: root.scene === "longname" ? "workstation-with-a-very-long-device-name.netbird.cloud" : ""
-        peers: root.scene === "longname" ? [] : null
+        peers: root.scene === "longname" ? [] : [
+            { id: "p1", name: "laptop-anna", fqdn: "laptop-anna.netbird.cloud", ip: "100.64.0.11", online: true },
+            { id: "p2", name: "nas-box", fqdn: "nas-box.netbird.cloud", ip: "100.64.0.12", online: true },
+            { id: "p3", name: "phone-tab", fqdn: "phone-tab.netbird.cloud", ip: "100.64.0.13", online: false }
+        ]
     }
 
     Timer {
