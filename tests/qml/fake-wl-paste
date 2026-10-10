@@ -1,6 +1,8 @@
 #!/bin/sh
 # Stands in for wl-paste in the QML tests. With $FAKE_NB/paste.empty there
-# is nothing copied (exit 1, like the real one); otherwise it prints the
-# GNOME-style list: "copy", then $FAKE_NB/a.txt as a file:// URL.
+# is nothing copied (exit 1, like the real one); with paste.dir a folder is
+# copied; otherwise it prints the GNOME-style list: "copy", then
+# $FAKE_NB/a.txt as a file:// URL.
 [ -e "$FAKE_NB/paste.empty" ] && exit 1
+[ -e "$FAKE_NB/paste.dir" ] && { printf 'copy\nfile://%s/folder' "$FAKE_NB"; exit 0; }
 printf 'copy\nfile://%s/a.txt' "$FAKE_NB"

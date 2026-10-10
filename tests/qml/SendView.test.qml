@@ -134,7 +134,7 @@ Item {
         view.toggle("atlas");
         view.toggle("slow");
         view.addItems([fakeDir + "/a.txt"]);
-        until(() => view.q.jobs.length === 1 && view.q.jobs[0].state === "sending" && view.argvs[view.q.jobs[0].id] !== undefined, cancelIt, "slow job sends");
+        until(() => view.q.jobs.length === 1 && view.q.jobs[0].state === "sending" && view.runningCount === 1, cancelIt, "slow job sends");
     }
 
     function cancelIt() {

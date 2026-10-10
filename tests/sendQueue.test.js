@@ -12,8 +12,6 @@ eq("files x devices", r.state.jobs.length, 4);
 eq("drop order is device then file", r.state.jobs.map(j => j.device + j.path).join(), "atlasa,atlasb,kitea,kiteb");
 eq("nothing skipped", r.skipped, 0);
 eq("all start queued", r.state.jobs.every(j => j.state === "queued"), true);
-ok("a queue is active", Q.active(r.state));
-ok("an empty queue is not", !Q.active(Q.empty()));
 
 let s = r.state;
 eq("one per device, devices in parallel", Q.startable(s).join(), "1,3");
@@ -21,7 +19,6 @@ s = Q.start(s, 1);
 eq("a busy device does not start another", Q.startable(s).join(), "3");
 s = Q.start(s, 3);
 eq("nothing else while both are busy", Q.startable(s).length, 0);
-eq("sending count", Q.sendingCount(s), 2);
 eq("start on a sending job is a no-op", Q.start(s, 1), s);
 
 s = Q.progress(s, 1, 0.4);

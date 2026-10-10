@@ -35,8 +35,8 @@ class StdioCollector(QObject):
 
 
 class SplitParser(QObject):
-    # Lines are handed over once the process ends (enough for the tests:
-    # a long-running reader such as `ip monitor` just never reads)
+    # Pieces are handed over as the process writes them (Process feeds
+    # them), so a test sees a meter move while the program still runs
     read = Signal(str)
     splitMarkerChanged = Signal()
 
@@ -123,6 +123,9 @@ class Process(QObject):
             self._p = p
             p.finished.connect(self._done)
             p.errorOccurred.connect(self._error)
+            self._pending = ""
+            if isinstance(self._out, SplitParser):
+                p.readyReadStandardOutput.connect(self._stream)
             env = QProcessEnvironment.systemEnvironment()
             for k, v in self._env.items():
                 env.insert(k, str(v))
@@ -147,6 +150,18 @@ class Process(QObject):
             self._p = None
             self.runningChanged.emit()
 
+    def _pieces(self, text, last):
+        marker = self._out.splitMarker or "\n"
+        self._pending += text
+        parts = self._pending.split(marker)
+        self._pending = "" if last else parts.pop()
+        for part in parts:
+            if part != "":
+                self._out.read.emit(part)
+
+    def _stream(self):
+        self._pieces(bytes(self._p.readAllStandardOutput()).decode(), False)
+
     def _done(self, code, status):
         p = self._p
         self._p = None
@@ -156,8 +171,7 @@ class Process(QObject):
         self.exited.emit(code, 0)
         for c, t in ((self._out, out), (self._err, err)):
             if isinstance(c, SplitParser):
-                for line in t.splitlines():
-                    c.read.emit(line)
+                self._pieces(t, True)
             elif c is not None:
                 c._text = t
                 c.textChanged.emit()
@@ -175,6 +189,7 @@ def main():
     # The wake program and ssh are fakes too (see their files)
     os.symlink(os.path.join(HERE, "fake-wakeonlan"), os.path.join(bin_dir, "wakeonlan"))
     os.symlink(os.path.join(HERE, "fake-ssh"), os.path.join(bin_dir, "ssh"))
+    os.symlink(os.path.join(HERE, "fake-rsync"), os.path.join(bin_dir, "rsync"))
     # The clipboard reader and the file picker are fakes too (see their files)
     os.symlink(os.path.join(HERE, "fake-wl-paste"), os.path.join(bin_dir, "wl-paste"))
     os.symlink(os.path.join(HERE, "fake-zenity"), os.path.join(bin_dir, "zenity"))

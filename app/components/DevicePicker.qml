@@ -12,6 +12,8 @@ Row {
     property var chosen: []
 
     signal toggled(string name)
+    // Files dropped on one chip go to that device alone
+    signal droppedOn(string name, var urls)
 
     spacing: Theme.spacingS
 
@@ -55,6 +57,14 @@ Row {
 
             TapHandler {
                 onTapped: picker.toggled(chip.modelData)
+            }
+
+            DropArea {
+                anchors.fill: parent
+                onDropped: event => {
+                    if (event.hasUrls)
+                        picker.droppedOn(chip.modelData, event.urls.map(u => u.toString()));
+                }
             }
         }
     }

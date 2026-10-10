@@ -25,9 +25,15 @@ ShellRoot {
         implicitHeight: 800
         minimumSize: Qt.size(900, 600)
         color: Theme.surface
-        // A closed window (its close button or the compositor) ends the process
-        onVisibleChanged: if (!visible)
-            Qt.quit()
+        // A closed window (its close button or the compositor) ends the process,
+        // unless a transfer runs: it comes back once, saying so, and the next
+        // close cancels the transfers and quits
+        onVisibleChanged: if (!visible) {
+            if (frame.confirmClose())
+                Qt.quit();
+            else
+                visible = true;
+        }
 
         AppFrame {
             id: frame

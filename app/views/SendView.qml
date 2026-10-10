@@ -19,13 +19,15 @@ Item {
     property var peers: null
     // The device the command line or the peer card asked for; "" for none
     property string device: ""
-    property string sendFolder: ""
+    // The files of `abyss send <device> files...`, already resolved and capped
+    property var files: []
     // False sends with scp only, without looking for rsync on either side
     property bool preferRsync: true
-    // Per-device ssh settings ({ user, port }); the app has none yet
-    property var linkOf: id => ({})
-    // False while the window is hidden: the indeterminate segment stops
+    // False while the window is hidden: the indeterminate segment and the
+    // meter stop
     property bool shown: true
+    // Set by the window after a first close attempt during a transfer
+    property bool closeAsked: false
     // The queue state (SendQueue.js); replaced, never edited
     property var q: Queue.empty()
     property var chosen: []
@@ -33,31 +35,65 @@ Item {
     property var pending: []
     // The guided message on the last refusal or failure, or null
     property var failure: null
-    // Meter text per job id, and the commands per job id
+    // Meter text per job id
     property var rates: ({})
-    property var argvs: ({})
+    // rsync/scp per device name, and whether this machine has rsync
+    property var programs: ({})
+    property var localRsync: null
+    // The probes in flight (stopped by cancelAll) and who waits for each
+    property var probes: []
+    property var waiting: ({})
 
+    // False while a text field has the focus: it keeps its own paste
+    readonly property bool pasteIsOurs: !(Window.activeFocusItem && Window.activeFocusItem.hasOwnProperty("selectedText"))
+    readonly property bool busy: q.jobs.length > 0
+    // The height of the "History" heading: a 44 px target like the buttons
+    readonly property int headerHeight: 44
+    readonly property int runningCount: running.count
     readonly property var online: (Array.isArray(peers) ? peers : []).filter(p => p.online)
     readonly property var names: online.map(p => p.name)
+    readonly property var notice: closeAsked ? {
+        "title": "Transfers are still running",
+        "advice": "Close the window again to cancel them, or wait.",
+        "guide": Send.GUIDE
+    } : failure
+
+    // The job object a row shows, from its model roles
+    function rowJob(m) {
+        return {
+            "id": m.jid,
+            "device": m.device,
+            "path": m.path,
+            "state": m.state,
+            "progress": m.progress < 0 ? null : m.progress,
+            "reason": m.reason
+        };
+    }
 
     function peerOf(name) {
-        return online.find(p => p.name === name) ?? null;
+        // `online` is not bound yet when the first property is set at creation
+        return (online ?? []).find(p => p.name === name) ?? null;
     }
 
     // Files and folders (paths or file:// URLs) from a drop, the picker or Ctrl+V
-    function addItems(items) {
+    // `only`: a device name when the files were dropped on its chip
+    function addItems(items, only) {
         const clean = Send.cleanPaths(items);
         if (!clean.ok) {
             failure = Send.refusal(clean.reason);
             return;
         }
         failure = null;
+        if (only) {
+            _enqueue(clean.paths, [only]);
+            return;
+        }
         if (chosen.length === 0) {
             // The device choice opens first; the files wait for it
             pending = clean.paths;
             return;
         }
-        _enqueue(clean.paths);
+        _enqueue(clean.paths, chosen);
     }
 
     function toggle(name) {
@@ -66,7 +102,7 @@ Item {
         if (pending.length > 0 && chosen.length > 0) {
             const paths = pending;
             pending = [];
-            _enqueue(paths);
+            _enqueue(paths, chosen);
         }
     }
 
@@ -80,7 +116,9 @@ Item {
         _pump();
     }
 
+    // Window closing: every job ends and no program or probe is left behind
     function cancelAll() {
+        _stopProbes();
         q = Queue.cancelAll(q);
     }
 
@@ -105,8 +143,8 @@ Item {
         });
     }
 
-    function _enqueue(paths) {
-        const r = Queue.add(q, paths, chosen);
+    function _enqueue(paths, devices) {
+        const r = Queue.add(q, paths, devices);
         q = r.state;
         if (r.skipped > 0)
             failure = {
@@ -128,76 +166,136 @@ Item {
                 q = Queue.fail(q, id, "offline");
                 continue;
             }
-            _begin(id, peer, job.path);
+            _program(peer, prog => _plan(id, prog, peer.fqdn || peer.ip, job.path));
         }
     }
 
-    // rsync when both ends have it (checked once per job), else scp
-    function _begin(id, peer, path) {
-        const host = peer.fqdn || peer.ip;
-        const link = linkOf(peer.id);
-        if (!preferRsync) {
-            _plan(id, "scp", host, link, path);
+    // rsync when both ends have it, else scp; looked up once per device
+    function _program(peer, done) {
+        const known = programs[peer.name];
+        if (known !== undefined) {
+            done(known);
             return;
         }
-        _ask(["which", "rsync"], 5000, (o, localCode) => {
-            const go = prog => _plan(id, prog, host, link, path);
-            if (localCode !== 0)
-                go("scp");
-            else
-                _ask(Transfer.remoteProbe(host, link), 15000, (out, code) => go(Transfer.program(true, code === 0 && out.trim() !== "")));
-        });
+        if (!preferRsync) {
+            done("scp");
+            return;
+        }
+        const queue = waiting[peer.name];
+        if (queue) {
+            queue.push(done);
+            return;
+        }
+        waiting[peer.name] = [done];
+        const settle = prog => {
+            programs[peer.name] = prog;
+            const callbacks = waiting[peer.name] ?? [];
+            delete waiting[peer.name];
+            callbacks.forEach(cb => cb(prog));
+        };
+        const remote = () => _ask(Transfer.remoteProbe(peer.fqdn || peer.ip, {}), 15000, (out, code) => settle(Transfer.program(true, code === 0 && out.trim() !== "")), true);
+        if (localRsync !== null) {
+            localRsync ? remote() : settle("scp");
+            return;
+        }
+        _ask(["which", "rsync"], 5000, (o, code) => {
+            localRsync = code === 0;
+            localRsync ? remote() : settle("scp");
+        }, true);
     }
 
-    function _plan(id, prog, host, link, path) {
-        const plan = Transfer.plan(prog, host, link, [path], sendFolder);
+    function _plan(id, prog, host, path) {
+        // Cancelled while the probe ran: nothing to start
+        if (!q.jobs.some(j => j.id === id && j.state === "sending"))
+            return;
+        const plan = Transfer.plan(prog, host, {}, [path], "");
         if (!plan.ok) {
             q = Queue.fail(q, id, plan.reason);
             failure = Send.refusal(plan.reason);
             _pump();
             return;
         }
-        const a = Object.assign({}, argvs);
-        a[id] = plan.argv;
-        argvs = a;
+        running.append({
+            "jid": id,
+            "argvJson": JSON.stringify(plan.argv)
+        });
     }
 
-    function _ended(job, code, stderr) {
+    function _ended(id, code, stderr) {
+        const job = q.jobs.find(j => j.id === id);
+        if (!job)
+            return;
         const peer = peerOf(job.device);
         if (code === 0) {
-            q = Queue.finish(q, job.id);
+            q = Queue.finish(q, id);
         } else {
             const why = Send.explain(code, stderr, peer ? peer.name : job.device, false);
-            q = Queue.fail(q, job.id, why.title);
+            q = Queue.fail(q, id, why.title);
             failure = why;
         }
         _pump();
     }
 
-    function _ask(argv, timeout, done) {
+    // Keeps the rows, the programs and the meters in step with the queue: a
+    // program whose job left the live list (done, failed, cancelled) is
+    // removed here, which destroys its delegate and with it the process
+    onQChanged: {
+        liveRows.sync(q.jobs);
+        historyRows.sync(q.history);
+        const sending = new Set(q.jobs.filter(j => j.state === "sending").map(j => j.id));
+        for (let i = running.count - 1; i >= 0; i--)
+            if (!sending.has(running.get(i).jid))
+                running.remove(i);
+        const kept = {};
+        for (const id in rates)
+            if (sending.has(Number(id)))
+                kept[id] = rates[id];
+        if (Object.keys(kept).length !== Object.keys(rates).length)
+            rates = kept;
+    }
+
+    // tracked: a probe that cancelAll must stop (ssh may wait up to 15 s)
+    function _ask(argv, timeout, done, tracked) {
         const run = runnerC.createObject(view, {
             "timeout": timeout
         });
+        if (tracked)
+            probes.push(run);
         run.run(argv, (out, err, code) => {
+            probes = probes.filter(r => r !== run);
             run.destroy();
             done(out, code);
         });
     }
 
+    function _stopProbes() {
+        for (const run of probes) {
+            run.stop();
+            run.destroy();
+        }
+        probes = [];
+        waiting = {};
+    }
+
     // The device the command line asked for is ticked once the mesh knows it
     function _adopt() {
         if (device !== "" && peerOf(device) && chosen.indexOf(device) < 0)
-            chosen = chosen.concat([device]);
+            toggle(device);
     }
 
     onDeviceChanged: _adopt()
     onPeersChanged: _adopt()
-    Component.onCompleted: _adopt()
+    onFilesChanged: if (files.length > 0)
+        addItems(files)
+    Component.onCompleted: {
+        _adopt();
+        if (files.length > 0)
+            addItems(files);
+    }
 
     Shortcut {
         sequence: "Ctrl+V"
-        // A text field keeps its own paste
-        enabled: !(view.Window.activeFocusItem && view.Window.activeFocusItem.hasOwnProperty("selectedText"))
+        enabled: view.pasteIsOurs
         onActivated: view.paste()
     }
 
@@ -225,20 +323,21 @@ Item {
         names: view.names
         chosen: view.chosen
         onToggled: name => view.toggle(name)
+        onDroppedOn: (name, urls) => view.addItems(urls, name)
     }
 
     GuideBand {
         id: band
 
-        visible: view.failure !== null
+        visible: view.notice !== null
         anchors {
             left: parent.left
             right: parent.right
             top: to.bottom
             topMargin: Theme.spacingM
         }
-        message: view.failure ? view.failure.title + ". " + view.failure.advice : ""
-        anchor: view.failure ? Flow.anchor(view.failure) : ""
+        message: view.notice ? view.notice.title + ". " + view.notice.advice : ""
+        anchor: view.notice ? Flow.anchor(view.notice) : ""
     }
 
     Column {
@@ -252,22 +351,24 @@ Item {
         clip: true
 
         Repeater {
-            model: view.q.jobs
+            model: liveRows
 
             SendJobRow {
-                required property var modelData
+                id: liveRow
+
+                required property var model
 
                 width: view.width
-                job: modelData
-                rate: view.rates[modelData.id] ?? ""
+                job: view.rowJob(liveRow.model)
+                rate: view.rates[liveRow.model.jid] ?? ""
                 animate: view.shown
-                onAction: kind => view.act(modelData, kind)
+                onAction: kind => view.act(job, kind)
             }
         }
 
         Text {
-            visible: view.q.history.length > 0
-            height: visible ? 44 : 0
+            visible: historyRows.count > 0
+            height: visible ? view.headerHeight : 0
             verticalAlignment: Text.AlignVCenter
             text: "History"
             color: Theme.surfaceText
@@ -276,37 +377,55 @@ Item {
         }
 
         Repeater {
-            model: view.q.history
+            model: historyRows
 
             SendJobRow {
-                required property var modelData
+                id: pastRow
+
+                required property var model
 
                 width: view.width
-                job: modelData
-                onAction: kind => view.act(modelData, kind)
+                job: view.rowJob(pastRow.model)
+                onAction: kind => view.act(job, kind)
             }
         }
     }
 
-    // One process per sending job, alive only while it sends; removing the
-    // job (cancel) destroys the delegate and with it the program
+    JobList {
+        id: liveRows
+    }
+
+    JobList {
+        id: historyRows
+    }
+
+    // One process per sending job, alive only while it sends. The model holds
+    // the job id and its command, so a meter line or another job coming and
+    // going never recreates a delegate (and never restarts a transfer).
+    ListModel {
+        id: running
+    }
+
     Repeater {
-        model: view.q.jobs.filter(j => j.state === "sending" && view.argvs[j.id])
+        model: running
 
         SendJobProcess {
             id: proc
 
-            required property var modelData
+            required property var model
 
-            argv: view.argvs[modelData.id]
+            argv: JSON.parse(proc.model.argvJson)
             running: true
             onProgressed: (fraction, rate) => {
-                view.q = Queue.progress(view.q, proc.modelData.id, fraction);
+                // Hidden window: no meter work at all (value 6)
+                if (!view.shown)
+                    return;
+                view.q = Queue.progress(view.q, proc.model.jid, fraction);
                 const r = Object.assign({}, view.rates);
-                r[proc.modelData.id] = rate;
+                r[proc.model.jid] = rate;
                 view.rates = r;
             }
-            onEnded: (code, stderr) => view._ended(proc.modelData, code, stderr)
+            onEnded: (code, stderr) => view._ended(proc.model.jid, code, stderr)
         }
     }
 

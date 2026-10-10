@@ -124,12 +124,3 @@ function cancelAll(state) {
 function clearHistory(state) {
     return { "jobs": state.jobs, "history": [], "nextId": state.nextId };
 }
-
-// Nothing to poll or refresh when no job lives: the view gates its timer on it.
-function active(state) {
-    return state.jobs.length > 0;
-}
-
-function sendingCount(state) {
-    return state.jobs.filter(j => j.state === SENDING).length;
-}

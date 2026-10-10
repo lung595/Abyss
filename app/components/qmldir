@@ -8,3 +8,4 @@ SendJobRow 1.0 SendJobRow.qml
 DropZone 1.0 DropZone.qml
 DevicePicker 1.0 DevicePicker.qml
 CliRunner 1.0 CliRunner.qml
+JobList 1.0 JobList.qml
