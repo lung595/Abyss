@@ -2,3 +2,5 @@
 /*.png
 !/screenshot.png
 .claude/
+# Python bytecode of the design render scripts, never published
+__pycache__/
