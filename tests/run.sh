@@ -32,8 +32,10 @@ tests/install.sh || failed=1
 # The settings page and rail tests are QtTest cases over the preview stand-ins
 # (Theme, widgets), which the PySide6 runner above does not have
 if command -v qmltestrunner-qt6 >/dev/null; then
-    out=$(QT_QPA_PLATFORM=offscreen timeout 120 qmltestrunner-qt6 -platform offscreen -import scripts/preview/imports -input tests/qml/Settings.test.qml 2>&1) || { failed=1; printf '%s\n' "$out" | grep -E '^(FAIL|XFAIL|Totals)|Actual|Expected'; }
-    printf '%s\n' "$out" | grep '^Totals'
+    for t in Settings SettingsOverlap; do
+        out=$(QT_QPA_PLATFORM=offscreen timeout 120 qmltestrunner-qt6 -platform offscreen -import scripts/preview/imports -input tests/qml/$t.test.qml 2>&1) || { failed=1; printf '%s\n' "$out" | grep -E '^(FAIL|XFAIL|Totals)|Actual|Expected'; }
+        printf '%s\n' "$out" | grep '^Totals'
+    done
 else
     echo "- Settings tests skipped: qmltestrunner-qt6 not found"
 fi

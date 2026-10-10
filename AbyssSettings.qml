@@ -4,6 +4,7 @@ import qs.Services
 import qs.Widgets
 import qs.Modules.Plugins
 import "components"
+import "components/settings"
 import "components/Sections.js" as Sections
 import "components/Send.js" as Send
 import "components/Terminal.js" as Terminal
@@ -108,17 +109,17 @@ PluginSettings {
                             width: parent.width
                             placeholder: "Your server, e.g. https://netbird.example.org"
                         }
-                        Item {
+                        // A Flow: the Join button drops under the check when the
+                        // page is too narrow for both
+                        Flow {
                             width: parent.width
-                            height: 34
+                            spacing: Theme.spacingM
                             Check {
                                 id: selfHosted
-                                anchors.verticalCenter: parent.verticalCenter
+                                width: Math.min(implicitWidth, parent.width)
                                 text: "I host my own NetBird server"
                             }
                             Button {
-                                anchors.right: parent.right
-                                anchors.verticalCenter: parent.verticalCenter
                                 icon: "login"
                                 text: "Join"
                                 primary: true
@@ -147,7 +148,7 @@ PluginSettings {
                         icon: "login"
                         title: "Let my devices into this computer"
                         sub: "Your phone and other peers can open a terminal here. Uses NetBird's own SSH: nothing else to install"
-                        ToggleSetting {
+                        SettingToggleRow {
                             settingKey: "shareSsh"
                             label: "Allow SSH into this computer"
                             description: "Only devices of your mesh, as NetBird's access rules allow"
@@ -159,14 +160,14 @@ PluginSettings {
                         icon: "terminal"
                         title: "Opening a device"
                         sub: "Terminal, Files, Screen and Desktop on a device's card"
-                        SelectionSetting {
+                        SettingChoiceRow {
                             settingKey: "terminal"
                             label: "Terminal"
                             description: "Used by Terminal and SFTP. Automatic picks the first one installed"
                             options: Terminal.options()
                             defaultValue: "auto"
                         }
-                        StringSetting {
+                        SettingTextRow {
                             settingKey: "sendFolder"
                             label: "Folder files are sent to"
                             description: "On the device receiving them. ~ is its home. Letters, digits, spaces and . _ - / @ % + = , only"
@@ -277,7 +278,7 @@ PluginSettings {
                         minimum: 3
                         maximum: 10
                     }
-                    SelectionSetting {
+                    SettingChoiceRow {
                         settingKey: "groupOpen"
                         label: "Open groups"
                         description: "Carrying the Internet light, resting on a group always opens it"
@@ -297,13 +298,13 @@ PluginSettings {
                         ]
                         defaultValue: "both"
                     }
-                    ToggleSetting {
+                    SettingToggleRow {
                         settingKey: "showOffline"
                         label: "Show offline devices"
                         description: "Asleep on the sea floor; off hides them"
                         defaultValue: true
                     }
-                    ToggleSetting {
+                    SettingToggleRow {
                         settingKey: "searchHints"
                         label: "Search suggestions"
                         description: "Shortcuts like Phones or Slow under the empty search bar"
@@ -397,7 +398,7 @@ PluginSettings {
                     width: parent.width
                     spacing: Theme.spacingL
 
-                    SelectionSetting {
+                    SettingChoiceRow {
                         settingKey: "pill"
                         label: "Beside the jellyfish"
                         description: "What the bar shows next to the small jellyfish"
@@ -417,13 +418,13 @@ PluginSettings {
                         ]
                         defaultValue: "peers"
                     }
-                    ToggleSetting {
+                    SettingToggleRow {
                         settingKey: "statusDot"
                         label: "Status dot"
                         description: "Green connected, orange needs you, red off: readable at a glance"
                         defaultValue: true
                     }
-                    ToggleSetting {
+                    SettingToggleRow {
                         settingKey: "middleToggle"
                         label: "Middle-click connects"
                         description: "A middle click on the jellyfish connects or disconnects"
@@ -444,7 +445,7 @@ PluginSettings {
                     width: parent.width
                     spacing: Theme.spacingL
 
-                    ToggleSetting {
+                    SettingToggleRow {
                         settingKey: "notifications"
                         label: "Notifications"
                         description: "When a device comes online or goes offline (muted ones stay quiet)"
@@ -486,7 +487,7 @@ PluginSettings {
                     width: parent.width
                     spacing: Theme.spacingL
 
-                    SelectionSetting {
+                    SettingChoiceRow {
                         id: source
                         settingKey: "source"
                         label: "Mesh source"
@@ -545,7 +546,7 @@ PluginSettings {
                         }
                     }
 
-                    SelectionSetting {
+                    SettingChoiceRow {
                         id: labMesh
                         visible: lab.visible
                         settingKey: "labMesh"
@@ -594,7 +595,7 @@ PluginSettings {
                         unit: "ms"
                     }
 
-                    SelectionSetting {
+                    SettingChoiceRow {
                         id: labTrouble
                         visible: lab.visible
                         settingKey: "labTrouble"
@@ -633,7 +634,7 @@ PluginSettings {
                         defaultValue: "none"
                     }
 
-                    SelectionSetting {
+                    SettingChoiceRow {
                         id: labTraffic
                         visible: lab.visible
                         settingKey: "labTraffic"
@@ -655,7 +656,7 @@ PluginSettings {
                         defaultValue: "normal"
                     }
 
-                    ToggleSetting {
+                    SettingToggleRow {
                         id: labLazy
                         visible: lab.visible
                         settingKey: "labLazy"
@@ -676,7 +677,7 @@ PluginSettings {
                         Rectangle {
                             required property var modelData
                             width: parent.width
-                            height: 54
+                            height: Math.max(54, helpWords.implicitHeight + 20)
                             radius: 12
                             color: Theme.surfaceContainerHigh
                             DankIcon {
@@ -687,10 +688,12 @@ PluginSettings {
                                 color: Theme.primary
                             }
                             Column {
+                                id: helpWords
                                 x: 50
                                 width: parent.width - 62
                                 anchors.verticalCenter: parent.verticalCenter
                                 StyledText {
+                                    width: parent.width
                                     text: modelData[1]
                                     font.pixelSize: Theme.fontSizeMedium
                                     font.weight: Font.DemiBold
@@ -701,7 +704,6 @@ PluginSettings {
                                     text: modelData[2]
                                     font.pixelSize: Theme.fontSizeSmall
                                     color: Theme.surfaceVariantText
-                                    elide: Text.ElideRight
                                 }
                             }
                         }
@@ -745,6 +747,7 @@ PluginSettings {
                 }
                 StyledText {
                     anchors.verticalCenter: parent.verticalCenter
+                    width: inner.width - 26
                     text: grp.title
                     font.pixelSize: Theme.fontSizeMedium + 1
                     font.weight: Font.Bold
@@ -773,7 +776,7 @@ PluginSettings {
         readonly property color hue: impact === "high" ? Theme.error : impact === "medium" ? Theme.warning : Theme.primary
         width: parent ? parent.width : 0
         spacing: 6
-        ToggleSetting {
+        SettingToggleRow {
             settingKey: fx.settingKey
             label: fx.label
             description: fx.description
@@ -826,7 +829,7 @@ PluginSettings {
         property alias text: input.text
         property string placeholder
         property bool secret: false
-        height: 40
+        height: Math.max(40, hint.implicitHeight + 16)
         radius: 10
         color: Theme.surfaceContainerHighest
         border.width: input.activeFocus ? 2 : 1
@@ -846,7 +849,9 @@ PluginSettings {
             clip: true
         }
         StyledText {
+            id: hint
             x: 12
+            width: parent.width - 24
             anchors.verticalCenter: parent.verticalCenter
             visible: input.text === ""
             text: parent.placeholder
@@ -900,11 +905,14 @@ PluginSettings {
     }
 
     // A small check box with its words
-    component Check: Row {
+    component Check: Item {
         id: chk
         property bool on: false
         property string text
-        spacing: 8
+        // The unwrapped width, so a Flow can ask for it without a loop
+        implicitWidth: 28 + chkText.implicitWidth
+        implicitHeight: Math.max(20, chkText.implicitHeight)
+        height: implicitHeight
         Rectangle {
             width: 20
             height: 20
@@ -922,8 +930,12 @@ PluginSettings {
             }
         }
         StyledText {
+            id: chkText
+            x: 28
             anchors.verticalCenter: parent.verticalCenter
+            width: Math.max(0, chk.width - 28)
             text: chk.text
+            wrapMode: Text.WordWrap
             font.pixelSize: Theme.fontSizeSmall
             color: Theme.surfaceText
         }
