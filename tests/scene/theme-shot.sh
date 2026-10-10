@@ -9,7 +9,9 @@ tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
 cp app/components/Palette.js app/components/qmldir "$tmp/"
 sed -e '/^import Quickshell/d' \
     -e "s/Quickshell.env(\"ABYSS_SCHEME\") ?? \"\"/\"$scheme\"/" \
-    -e 's/Quickshell.env("ABYSS_REDUCE_MOTION") ?? ""/""/' app/components/Theme.qml > "$tmp/Theme.qml"
+    -e 's/Quickshell.env("ABYSS_REDUCE_MOTION")/""/' app/components/Theme.qml > "$tmp/Theme.qml"
+# A substitution that did not apply would leave a Quickshell call behind: fail loudly.
+! grep -q Quickshell "$tmp/Theme.qml" || { echo "theme-shot: Theme.qml still uses Quickshell" >&2; exit 1; }
 cat > "$tmp/shot.qml" <<QML
 import QtQuick
 import QtQuick.Window
@@ -26,10 +28,10 @@ Window {
                 width: 480; height: 52; radius: Theme.cornerRadiusLarge
                 color: Theme[modelData]; border.color: Theme.outlineStrong
                 Text { x: Theme.spacingL; anchors.verticalCenter: parent.verticalCenter; text: parent.modelData
-                    color: Theme.surfaceText; font.family: Theme.monoFontFamily; font.pixelSize: Theme.fontSizeMedium }
+                    color: Theme.onSurface; font.family: Theme.monoFontFamily; font.pixelSize: Theme.fontSizeMedium }
                 Rectangle { anchors { right: parent.right; rightMargin: Theme.spacingL; verticalCenter: parent.verticalCenter }
                     width: 40; height: 24; radius: Theme.cornerRadius; color: Theme.primary
-                    Text { anchors.centerIn: parent; text: "ok"; color: Theme.primaryText; font.pixelSize: Theme.fontSizeSmall } }
+                    Text { anchors.centerIn: parent; text: "ok"; color: Theme.onPrimary; font.pixelSize: Theme.fontSizeSmall } }
             }
         }
         Text { text: "Abyss"; color: Theme.primary; font.pixelSize: Theme.fontSizeXLarge; font.weight: Font.DemiBold }

@@ -6,15 +6,16 @@ import "Palette.js" as Palette
 
 // The app's own Theme, with the API of the DMS one so the shared components
 // render here unchanged. Colours come only from Palette.js. DMS is never read
-// (Q110): no event-driven, read-only source exists, so the Abyss palette applies.
+// (Q121): no event-driven, read-only source exists, so the Abyss palette applies.
 QtObject {
     id: root
 
     // Follows the system preference live (the style hints signal), no polling.
-    // ABYSS_SCHEME=light|dark overrides it, for offscreen captures.
+    // ABYSS_SCHEME=light|dark overrides it, for offscreen captures;
+    // ABYSS_REDUCE_MOTION=1 zeroes the durations.
     readonly property string _forced: Quickshell.env("ABYSS_SCHEME") ?? ""
     readonly property bool isLightMode: _forced === "light" || (_forced !== "dark" && Application.styleHints.colorScheme === Qt.ColorScheme.Light)
-    readonly property bool reduceMotion: (Quickshell.env("ABYSS_REDUCE_MOTION") ?? "") !== ""
+    readonly property bool reduceMotion: Quickshell.env("ABYSS_REDUCE_MOTION") === "1"
     readonly property var _c: Palette.colors(isLightMode)
 
     readonly property color surface: _c.surface
@@ -23,15 +24,17 @@ QtObject {
     readonly property color surfaceContainer: _c.surfaceContainer
     readonly property color surfaceContainerHigh: _c.surfaceContainerHigh
     readonly property color surfaceContainerHighest: _c.surfaceContainerHighest
-    // No on* names: QML reads a property called onXxx as a signal handler and it
-    // resolves to black, so the DMS *Text names are the only text roles.
-    readonly property color secondaryText: _c.onSecondary
-    readonly property color surfaceText: _c.onSurface
-    readonly property color surfaceVariantText: _c.onSurfaceVariant
+    // Text roles under both DMS names: the on* ones and their *Text aliases.
+    readonly property color onSurface: _c.onSurface
+    readonly property color surfaceText: onSurface
+    readonly property color onSurfaceVariant: _c.onSurfaceVariant
+    readonly property color surfaceVariantText: onSurfaceVariant
+    readonly property color onSecondary: _c.onSecondary
     readonly property color outline: _c.outline
     readonly property color outlineStrong: _c.outlineStrong
     readonly property color primary: _c.primary
-    readonly property color primaryText: _c.onPrimary
+    readonly property color onPrimary: _c.onPrimary
+    readonly property color primaryText: onPrimary
     readonly property color secondary: _c.secondary
     readonly property color tertiary: _c.tertiary
     readonly property color success: _c.success
