@@ -33,7 +33,7 @@ function add(state, paths, devices) {
                 skipped++;
                 continue;
             }
-            jobs.push({ "id": id++, "device": device, "path": path, "state": QUEUED, "progress": null, "reason": "" });
+            jobs.push({ "id": id++, "device": device, "path": path, "state": QUEUED, "progress": null, "reason": "", "at": 0 });
         }
     }
     return { "state": { "jobs": jobs, "history": state.history, "nextId": id }, "skipped": skipped };
@@ -61,7 +61,9 @@ function _find(state, id) {
     return state.jobs.find(j => j.id === id) ?? null;
 }
 
-// A finished job leaves the live list for the history, newest first, capped.
+// A closed job leaves the live list for the history, newest first, capped.
+// `at` (ms since epoch, given by the caller to stay pure) dates the entry for
+// the "5 min ago" line; it lives in memory only.
 function _retire(state, id, change) {
     const job = _find(state, id);
     if (!job)
@@ -88,20 +90,27 @@ function progress(state, id, fraction) {
     return _patch(state, id, { "progress": value });
 }
 
-function finish(state, id) {
+// A done job stays in the queue at 100 % until it is dismissed (mockup 02),
+// then it moves to the history.
+function finish(state, id, now) {
     const job = _find(state, id);
-    return job && job.state === SENDING ? _retire(state, id, { "state": DONE, "progress": 1 }) : state;
+    return job && job.state === SENDING ? _patch(state, id, { "state": DONE, "progress": 1, "at": now ?? 0 }) : state;
 }
 
-function fail(state, id, reason) {
+function dismiss(state, id) {
     const job = _find(state, id);
-    return job && job.state === SENDING ? _retire(state, id, { "state": FAILED, "reason": String(reason ?? "") }) : state;
+    return job && job.state === DONE ? _retire(state, id, {}) : state;
+}
+
+function fail(state, id, reason, now) {
+    const job = _find(state, id);
+    return job && job.state === SENDING ? _retire(state, id, { "state": FAILED, "reason": String(reason ?? ""), "at": now ?? 0 }) : state;
 }
 
 // A queued or a sending job. The caller stops the process of a sending one.
-function cancel(state, id) {
+function cancel(state, id, now) {
     const job = _find(state, id);
-    return job && (job.state === QUEUED || job.state === SENDING) ? _retire(state, id, { "state": CANCELLED, "progress": null }) : state;
+    return job && (job.state === QUEUED || job.state === SENDING) ? _retire(state, id, { "state": CANCELLED, "progress": null, "at": now ?? 0 }) : state;
 }
 
 // A failed or cancelled job of the history goes back to the end of the queue.
@@ -109,7 +118,7 @@ function retry(state, id) {
     const old = state.history.find(j => j.id === id);
     if (!old || (old.state !== FAILED && old.state !== CANCELLED) || state.jobs.length >= MAX_JOBS)
         return state;
-    const job = Object.assign({}, old, { "state": QUEUED, "progress": null, "reason": "" });
+    const job = Object.assign({}, old, { "state": QUEUED, "progress": null, "reason": "", "at": 0 });
     return {
         "jobs": state.jobs.concat([job]),
         "history": state.history.filter(j => j.id !== id),
@@ -117,8 +126,8 @@ function retry(state, id) {
     };
 }
 
-function cancelAll(state) {
-    return state.jobs.reduce((s, j) => cancel(s, j.id), state);
+function cancelAll(state, now) {
+    return state.jobs.reduce((s, j) => cancel(s, j.id, now), state);
 }
 
 function clearHistory(state) {

@@ -30,8 +30,10 @@ eq("NaN is indeterminate", Q.progress(s, 1, NaN).jobs[0].progress, null);
 eq("progress of a queued job is ignored", Q.progress(s, 2, 0.5), s);
 
 s = Q.finish(s, 1);
-eq("done goes to the history", st(s, 1), "done");
-eq("done is no longer live", s.jobs.some(j => j.id === 1), false);
+eq("done stays in the queue until dismissed", st(s, 1), "done");
+s = Q.dismiss(s, 1);
+eq("dismissed goes to the history", s.history[0].state, "done");
+eq("dismissed is no longer in the queue", s.jobs.some(j => j.id === 1), false);
 eq("next job of the device can start", Q.startable(s).join(), "2");
 eq("finish on a queued job is a no-op", Q.finish(s, 2), s);
 

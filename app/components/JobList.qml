@@ -13,7 +13,8 @@ ListModel {
             "state": job.state,
             // -1 for "unknown": a ListModel role cannot hold null
             "progress": job.progress === null ? -1 : job.progress,
-            "reason": job.reason
+            "reason": job.reason,
+            "at": job.at ?? 0
         };
     }
 

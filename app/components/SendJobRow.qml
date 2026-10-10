@@ -10,6 +10,10 @@ Item {
 
     required property var job
     property string rate: ""
+    // A history row: name, then "→ device · age", and no button unless it can retry
+    property bool history: false
+    // Rows of the same session; the age is relative to it (memory only)
+    property real now: Date.now()
     // Drives the indeterminate segment; the view stops it with the window
     property bool animate: false
 
@@ -17,6 +21,11 @@ Item {
 
     readonly property bool live: job.state === "queued" || job.state === "sending"
     readonly property string actionLabel: live ? "Cancel" : job.state === "done" ? "Dismiss" : "Retry"
+    readonly property bool hasAction: !history || job.state === "failed" || job.state === "cancelled"
+    readonly property string age: {
+        const min = Math.max(0, Math.round((now - (job.at ?? 0)) / 60000));
+        return min < 1 ? "just now" : min < 60 ? min + " min ago" : Math.floor(min / 60) + " h ago";
+    }
 
     height: 56
 
@@ -53,7 +62,7 @@ Item {
     Text {
         x: 28
         y: 32
-        text: "→ " + Transfer.middle(row.job.device, 10, 8)
+        text: "→ " + Transfer.middle(row.job.device, 10, 8) + (row.history ? " · " + row.age : "")
         color: Theme.onSurfaceVariant
         font.family: Theme.monoFontFamily
         font.pixelSize: 12
@@ -62,13 +71,13 @@ Item {
     Rectangle {
         id: track
 
-        x: parent.width - 100 - 12 - 120 - 130
+        x: parent.width - 100 - 12 - 120 - 160
         y: 24
         width: 120
         height: 8
         radius: 4
         color: Theme.surfaceContainerHighest
-        visible: row.job.state === "sending" || row.job.state === "done"
+        visible: !row.history && (row.job.state === "sending" || row.job.state === "done")
         clip: true
 
         Rectangle {
@@ -95,9 +104,10 @@ Item {
     }
 
     Text {
+        visible: !row.history
         x: track.x + 130
         y: 16
-        width: 100
+        width: 150
         text: row.job.state === "sending" ? (row.job.progress === null ? "Sending · scp, no progress" : Math.round(row.job.progress * 100) + " %  " + row.rate) : row.job.state === "failed" ? "Failed" : row.job.state === "cancelled" ? "Cancelled" : row.job.state === "done" ? "Done" : "Waiting"
         color: Theme.onSurfaceVariant
         font.family: Theme.monoFontFamily
@@ -111,6 +121,7 @@ Item {
             top: parent.top
             topMargin: 6
         }
+        visible: row.hasAction
         width: 100
         height: 44
         radius: Theme.cornerRadius

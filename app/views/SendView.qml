@@ -46,9 +46,11 @@ Item {
 
     // False while a text field has the focus: it keeps its own paste
     readonly property bool pasteIsOurs: !(Window.activeFocusItem && Window.activeFocusItem.hasOwnProperty("selectedText"))
-    readonly property bool busy: q.jobs.length > 0
+    readonly property bool busy: q.jobs.some(j => j.state === "queued" || j.state === "sending")
     // The height of the "History" heading: a 44 px target like the buttons
     readonly property int headerHeight: 44
+    // The newest failed or cancelled job: what the band's Retry sends again
+    readonly property var lastFailed: q.history.find(j => j.state === "failed" || j.state === "cancelled") ?? null
     readonly property int runningCount: running.count
     readonly property var online: (Array.isArray(peers) ? peers : []).filter(p => p.online)
     readonly property var names: online.map(p => p.name)
@@ -66,7 +68,8 @@ Item {
             "path": m.path,
             "state": m.state,
             "progress": m.progress < 0 ? null : m.progress,
-            "reason": m.reason
+            "reason": m.reason,
+            "at": m.at
         };
     }
 
@@ -108,18 +111,18 @@ Item {
 
     function act(job, kind) {
         if (kind === "cancel")
-            q = Queue.cancel(q, job.id);
+            q = Queue.cancel(q, job.id, Date.now());
         else if (kind === "retry")
             q = Queue.retry(q, job.id);
         else
-            q = Queue.clearHistory(q);
+            q = Queue.dismiss(q, job.id);
         _pump();
     }
 
     // Window closing: every job ends and no program or probe is left behind
     function cancelAll() {
         _stopProbes();
-        q = Queue.cancelAll(q);
+        q = Queue.cancelAll(q, Date.now());
     }
 
     // Ctrl+V: the clipboard is read once, here, and nothing of it is kept
@@ -163,7 +166,7 @@ Item {
             const peer = peerOf(job.device);
             q = Queue.start(q, id);
             if (!peer) {
-                q = Queue.fail(q, id, "offline");
+                q = Queue.fail(q, id, "offline", Date.now());
                 continue;
             }
             _program(peer, prog => _plan(id, prog, peer.fqdn || peer.ip, job.path));
@@ -214,7 +217,7 @@ Item {
                 return;
         const plan = Transfer.plan(prog, host, {}, [path], "");
         if (!plan.ok) {
-            q = Queue.fail(q, id, plan.reason);
+            q = Queue.fail(q, id, plan.reason, Date.now());
             failure = Send.refusal(plan.reason);
             _pump();
             return;
@@ -231,10 +234,10 @@ Item {
             return;
         const peer = peerOf(job.device);
         if (code === 0) {
-            q = Queue.finish(q, id);
+            q = Queue.finish(q, id, Date.now());
         } else {
             const why = Send.explain(code, stderr, peer ? peer.name : job.device, false);
-            q = Queue.fail(q, id, why.title);
+            q = Queue.fail(q, id, why.title, Date.now());
             failure = why;
         }
         _pump();
@@ -327,25 +330,11 @@ Item {
         onDroppedOn: (name, urls) => view.addItems(urls, name)
     }
 
-    GuideBand {
-        id: band
-
-        visible: view.notice !== null
-        anchors {
-            left: parent.left
-            right: parent.right
-            top: to.bottom
-            topMargin: Theme.spacingM
-        }
-        message: view.notice ? view.notice.title + ". " + view.notice.advice : ""
-        anchor: view.notice ? Flow.anchor(view.notice) : ""
-    }
-
     Column {
         anchors {
             left: parent.left
             right: parent.right
-            top: band.visible ? band.bottom : to.bottom
+            top: to.bottom
             topMargin: Theme.spacingXL
             bottom: parent.bottom
         }
@@ -367,6 +356,16 @@ Item {
             }
         }
 
+        GuideBand {
+            visible: view.notice !== null
+            width: view.width
+            error: view.notice !== null && view.notice === view.failure
+            actionLabel: error && view.lastFailed !== null ? "Retry" : ""
+            message: view.notice ? view.notice.title + ". " + view.notice.advice : ""
+            anchor: view.notice ? Flow.anchor(view.notice) : ""
+            onActed: view.act(view.lastFailed, "retry")
+        }
+
         Text {
             visible: historyRows.count > 0
             height: visible ? view.headerHeight : 0
@@ -386,6 +385,7 @@ Item {
                 required property var model
 
                 width: view.width
+                history: true
                 job: view.rowJob(pastRow.model)
                 onAction: kind => view.act(job, kind)
             }

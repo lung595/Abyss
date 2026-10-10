@@ -89,10 +89,17 @@ Item {
         view.toggle("reef");
         view.addItems([fakeDir + "/a.txt"]);
         check("two devices ticked give two jobs", view.q.jobs.length === 2 && view.pending.length === 0, view.q);
-        until(() => view.q.history.length === 2, afterFirst, "two jobs end");
+        until(() => !view.busy && view.q.jobs.length + view.q.history.length === 2, afterFirst, "two jobs end");
+    }
+
+    // A done job stays in the queue until dismissed
+    function dismissDone() {
+        for (const j of view.q.jobs.filter(j => j.state === "done"))
+            view.act(j, "dismiss");
     }
 
     function afterFirst() {
+        dismissDone();
         const done = view.q.history.filter(j => j.state === "done").map(j => j.device);
         const failed = view.q.history.filter(j => j.state === "failed").map(j => j.device);
         check("atlas arrived", done.join() === "atlas", view.q.history);
@@ -113,11 +120,12 @@ Item {
         });
         view.failure = null;
         view.paste();
-        until(() => view.q.history.length === 1, afterPaste, "a paste is sent");
+        until(() => !view.busy && view.q.jobs.length === 1, afterPaste, "a paste is sent");
     }
 
     function afterPaste() {
-        check("paste sends the copied file", view.q.history[0].device === "atlas" && view.q.history[0].state === "done", view.q.history);
+        check("paste sends the copied file", view.q.jobs[0].device === "atlas" && view.q.jobs[0].state === "done", view.q.jobs);
+        dismissDone();
         view.q = Object.assign({}, view.q, {
             "history": []
         });

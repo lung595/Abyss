@@ -5,6 +5,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## Unreleased
 
+- Send view matches the mockups more closely: a finished job stays in the queue at 100 % with *Dismiss*, the failure band is red with *Retry* and sits under the queue, history rows show `→ device · age` (age since the send, this session only).
+
 - **App Send view** (`app/views/SendView.qml`, `app/components/{SendQueue.js,SendFlow.js,SendJobRow,DevicePicker,DropZone,SendJobProcess,CliRunner}`): queue of files × devices, one transfer per device at a time, cancel, retry, in-memory capped history, drag and drop, Ctrl+O picker, Ctrl+V paste (one `wl-paste --type text/uri-list` read per keypress), `rsync` progress when available, otherwise `scp` with an indeterminate indicator. Pure logic in `tests/sendQueue.test.js`; QML tests in `tests/qml/SendView.test.qml` (need PySide6).
 
 ### Fixed

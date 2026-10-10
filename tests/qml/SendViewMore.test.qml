@@ -132,7 +132,7 @@ Item {
             launches(n => {
                 check("two devices run rsync once each", n === 2 && view.runningCount === 2, n);
                 view.addItems([fakeDir + "/b.txt"]);
-                until(() => view.q.history.length >= 4 && view.q.jobs.length === 0, () => launches(m => {
+                until(() => !view.busy && view.q.jobs.length + view.q.history.length >= 4, () => launches(m => {
                         check("a meter line or a second drop restarts nothing", m === 4, m);
                         commandLine();
                     }), "queue empties");
