@@ -514,6 +514,7 @@ PluginSettings {
                     // here touches NetBird.
                     LabHeader {
                         id: lab
+                        objectName: "labPanel"
                         visible: source.value === "demo"
                         summary: {
                             const mesh = ({
@@ -538,11 +539,11 @@ PluginSettings {
                         // Back to a quiet home mesh, in one click
                         dirty: labMesh.value !== "home" || labLatency.value !== 0 || labTrouble.value !== "none" || labTraffic.value !== "normal" || labLazy.value
                         onReset: {
-                            labMesh.value = "home";
+                            labMesh.set("home");
                             labLatency.value = 0;
-                            labTrouble.value = "none";
-                            labTraffic.value = "normal";
-                            labLazy.value = false;
+                            labTrouble.set("none");
+                            labTraffic.set("normal");
+                            labLazy.set(false);
                         }
                     }
 

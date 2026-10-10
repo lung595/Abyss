@@ -10,7 +10,8 @@ import "../.."
 // under another text, nothing elided or truncated, nothing past the page edge.
 // The width is the page of the DMS settings window at its narrowest, 366 px
 // (a 700 px window minus the section rail and the margins; the same number as
-// the `:narrow` previews and P230 in the knowledge base).
+// the `:narrow` previews and P230 in the knowledge base). The approved settings
+// mockups' narrow form is not narrower than that, so one width covers both.
 // Run: qmltestrunner-qt6 -platform offscreen -import scripts/preview/imports -input tests/qml/SettingsOverlap.test.qml
 Item {
     id: host
@@ -80,11 +81,23 @@ Item {
                 "h": isText ? item.contentHeight : item.height
             };
         }
-        function name(item) {
+        // Text inside a control (pill labels) stays out of the pairwise check but must not be cut
+        function cutTexts(item, out) {
+            if (!item.visible)
+                return out;
+            if (item.truncated)
+                out.push(item.text);
+            for (const c of item.children)
+                cutTexts(c, out);
+            return out;
+        }
+        function label(item) {
             return item.objectName || item.text || "?";
         }
 
-        function check_section(id) {
+        function check_section(id, stored) {
+            // The preview PluginService keeps the plugin's keys flat
+            SettingsData.pluginSettings = stored || {};
             const page = createTemporaryObject(pageComponent, host, {
                 "width": host.narrow,
                 "section": id
@@ -99,19 +112,21 @@ Item {
                 const a = boxes[i];
                 // StyledText elides on the right by default (as in DMS): `truncated` is the real cut
                 if (all[i].truncated)
-                    problems.push("elided: " + name(all[i]));
+                    problems.push("elided: " + label(all[i]));
                 if (a.w < 1 || a.h < 1)
                     continue;
                 if (a.x + a.w > host.narrow + 0.5)
-                    problems.push("past the page edge: " + name(all[i]) + " ends at " + Math.round(a.x + a.w));
+                    problems.push("past the page edge: " + label(all[i]) + " ends at " + Math.round(a.x + a.w));
                 for (let j = i + 1; j < all.length; j++) {
                     const b = boxes[j];
                     if (b.w < 1 || b.h < 1)
                         continue;
                     if (a.x < b.x + b.w - 0.5 && b.x < a.x + a.w - 0.5 && a.y < b.y + b.h - 0.5 && b.y < a.y + a.h - 0.5)
-                        problems.push("overlap: " + name(all[i]) + " / " + name(all[j]));
+                        problems.push("overlap: " + label(all[i]) + " / " + label(all[j]));
                 }
             }
+            for (const t of cutTexts(page, []))
+                problems.push("truncated: " + t);
             compare(problems.join("; "), "", id);
         }
 
@@ -134,7 +149,11 @@ Item {
             check_section("alerts");
         }
         function test_advanced() {
-            check_section("advanced");
+            // The demo source shows the lab rows, hidden by default
+            check_section("advanced", {
+                "source": "demo",
+                "labMesh": "lab"
+            });
         }
         function test_help() {
             check_section("help");
@@ -163,8 +182,49 @@ Item {
             choice.forceActiveFocus();
             keyClick(Qt.Key_Right);
             compare(choice.value, "2");
+            choice.forceActiveFocus();
+            keyClick(Qt.Key_Right);
             PluginService.pluginDataChanged.disconnect(rec);
             compare(saves.join("|"), '{"rowSwitch":false}|{"rowSwitch":false,"rowChoice":"2"}');
+        }
+    }
+
+    TestCase {
+        name: "LabReset"
+        when: windowShown
+
+        // Reset must write the four lab keys back, not only repaint the rows
+        function test_reset_saves_the_quiet_values() {
+            SettingsData.pluginSettings = {
+                "source": "demo",
+                "labMesh": "lab",
+                "labTrouble": "flap",
+                "labTraffic": "rush",
+                "labLazy": true
+            };
+            const page = createTemporaryObject(pageComponent, host, {
+                "width": host.narrow,
+                "section": "advanced"
+            });
+            wait(150);
+            const lab = findByName(page, "labPanel");
+            verify(lab, "lab panel");
+            lab.reset();
+            const s = SettingsData.pluginSettings;
+            compare(s.labMesh, "home");
+            compare(s.labTrouble, "none");
+            compare(s.labTraffic, "normal");
+            compare(s.labLazy, false);
+        }
+        function findByName(item, n) {
+            if (item.objectName === n)
+                return item;
+            for (const c of item.children) {
+                const r = findByName(c, n);
+                if (r)
+                    return r;
+            }
+            return null;
         }
     }
 }

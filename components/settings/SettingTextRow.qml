@@ -36,23 +36,11 @@ Column {
     spacing: Theme.spacingXS
     Component.onCompleted: Qt.callLater(load)
 
-    StyledText {
-        objectName: "title"
+    SettingWords {
         width: parent.width
-        text: root.label
-        wrapMode: Text.WordWrap
-        font.pixelSize: Theme.fontSizeMedium
-        font.weight: Font.Medium
-        color: Theme.surfaceText
-    }
-    StyledText {
-        objectName: "description"
-        width: parent.width
-        visible: root.description !== ""
-        text: root.description
-        wrapMode: Text.WordWrap
-        font.pixelSize: Theme.fontSizeSmall
-        color: Theme.surfaceVariantText
+        label: root.label
+        description: root.description
+        titleSize: Theme.fontSizeMedium
     }
     Rectangle {
         objectName: "control"
@@ -77,7 +65,7 @@ Column {
                 root.commit()
         }
         // The hint is clipped by the field, not wrapped: it is not a word to read
-        Text {
+        StyledText {
             x: 12
             width: parent.width - 24
             anchors.verticalCenter: parent.verticalCenter

@@ -28,44 +28,29 @@ Item {
             value = s.loadValue(settingKey, defaultValue);
     }
     // Only a gesture saves, so opening the page writes nothing
-    function toggle() {
-        value = !value;
+    function set(v) {
+        value = v;
         const s = Host.find(root.parent);
         if (s)
             s.saveValue(settingKey, value);
+    }
+    function toggle() {
+        set(!value);
     }
 
     Component.onCompleted: Qt.callLater(load)
     Keys.onSpacePressed: toggle()
     Keys.onReturnPressed: toggle()
+    Keys.onEnterPressed: toggle()
 
-    Column {
+    SettingWords {
         id: words
-        objectName: "words"
         anchors.left: parent.left
         anchors.right: track.left
         anchors.rightMargin: root.gap
         anchors.verticalCenter: parent.verticalCenter
-        spacing: Theme.spacingXS
-
-        StyledText {
-            objectName: "title"
-            width: parent.width
-            text: root.label
-            wrapMode: Text.WordWrap
-            font.pixelSize: Theme.fontSizeLarge
-            font.weight: Font.Medium
-            color: Theme.surfaceText
-        }
-        StyledText {
-            objectName: "description"
-            width: parent.width
-            visible: root.description !== ""
-            text: root.description
-            wrapMode: Text.WordWrap
-            font.pixelSize: Theme.fontSizeSmall
-            color: Theme.surfaceVariantText
-        }
+        label: root.label
+        description: root.description
     }
 
     Rectangle {

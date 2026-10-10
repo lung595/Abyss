@@ -28,11 +28,16 @@ Column {
             value = s.loadValue(settingKey, defaultValue);
     }
     // Only a gesture saves, so opening the page writes nothing
-    function choose(i) {
-        value = valueOf(options[i]);
+    function set(v) {
+        if (v === value)
+            return;
+        value = v;
         const s = Host.find(root.parent);
         if (s)
             s.saveValue(settingKey, value);
+    }
+    function choose(i) {
+        set(valueOf(options[i]));
     }
     function step(d) {
         let i = options.findIndex(o => valueOf(o) === value);
@@ -46,23 +51,10 @@ Column {
     Keys.onRightPressed: step(1)
     Component.onCompleted: Qt.callLater(load)
 
-    StyledText {
-        objectName: "title"
+    SettingWords {
         width: parent.width
-        text: root.label
-        wrapMode: Text.WordWrap
-        font.pixelSize: Theme.fontSizeLarge
-        font.weight: Font.Medium
-        color: Theme.surfaceText
-    }
-    StyledText {
-        objectName: "description"
-        width: parent.width
-        visible: root.description !== ""
-        text: root.description
-        wrapMode: Text.WordWrap
-        font.pixelSize: Theme.fontSizeSmall
-        color: Theme.surfaceVariantText
+        label: root.label
+        description: root.description
     }
     Flow {
         objectName: "control"
