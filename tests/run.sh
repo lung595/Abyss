@@ -16,6 +16,8 @@ done
 
 if "$PYTHON" -c "import PySide6" 2>/dev/null; then
     for t in tests/qml/*.test.qml; do
+        # A QtTest file: it needs the preview stand-ins, see below
+        [ "$t" = tests/qml/Settings.test.qml ] && continue
         out=$(QT_QPA_PLATFORM=offscreen "$PYTHON" tests/qml/qmltest.py "$t" 2>&1) || { failed=1; printf '%s\n' "$out" | grep -v '^qml: ✓'; }
         printf '%s\n' "$out" | tail -n 1
     done
@@ -26,6 +28,15 @@ fi
 # The app launcher: single instance and quit on close, offscreen
 tests/app.sh || failed=1
 tests/install.sh || failed=1
+
+# The settings page and rail tests are QtTest cases over the preview stand-ins
+# (Theme, widgets), which the PySide6 runner above does not have
+if command -v qmltestrunner-qt6 >/dev/null; then
+    out=$(QT_QPA_PLATFORM=offscreen timeout 120 qmltestrunner-qt6 -platform offscreen -import scripts/preview/imports -input tests/qml/Settings.test.qml 2>&1) || { failed=1; printf '%s\n' "$out" | grep -E '^(FAIL|XFAIL|Totals)|Actual|Expected'; }
+    printf '%s\n' "$out" | grep '^Totals'
+else
+    echo "- Settings tests skipped: qmltestrunner-qt6 not found"
+fi
 
 # The scene tests need qml-qt6 and the DMS Material Symbols font (see tests/scene/run.sh)
 if command -v qml-qt6 >/dev/null; then
