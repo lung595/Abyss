@@ -33,6 +33,25 @@ about 0.5 % of their pixels: the scenes are composited on fresh renders,
 never patched in place. Checked after compositing: every opaque pixel of both
 `@1x` files is found unchanged in the three scenes (0 differing pixels).
 
+The profile board (outside the repository, with the other boards): the full
+size profile on a dark and a light panel, and the 25 px profile of the three
+scenes at 6x, unsmoothed. Two 598 x 644 panels and three 384 x 240 zooms on a
+1232 x 920 canvas, 12 px margins and gutters (28 px between the zooms):
+
+```sh
+for c in d:10101a l:bcd3e6; do
+  magick -background "#${c#*:}" darwin-profile.svg -alpha remove \
+    -bordercolor "#${c#*:}" -border 16 +repage p${c%:*}.png
+done
+for n in dark light wallpaper; do
+  magick scene-$n.png -crop 64x40+346+347 +repage -filter point -resize 600% z-$n.png
+done
+magick -size 1232x920 xc:'#5c6670' \
+  pd.png -geometry +12+12 -composite pl.png -geometry +622+12 -composite \
+  z-dark.png -geometry +12+668 -composite z-light.png -geometry +424+668 -composite \
+  z-wallpaper.png -geometry +836+668 -composite -strip -depth 8 profile-board.png
+```
+
 Wallpaper-generated theme: the preview has no wallpaper mode, so its `Theme`
 stub is given this made-up warm palette for one render, then restored:
 primary `#ffb77c`, primaryText `#4d2700`, secondary `#e3c0a5`, tertiary
@@ -101,18 +120,20 @@ exception covers Darwin's drawing only.
 Contrast, measured on the real scene (the deep stays dark whatever the
 theme):
 
-| Backdrop, every pixel of the 130x60 px zone around both views, Darwin excluded (darkest to lightest) | Body | Eye white | Outline |
+| Backdrop, every pixel of the 130x60 px zone around the profile, Darwin excluded (darkest to lightest) | Body | Eye white | Outline |
 |---|---|---|---|
 | dark theme, `#0e0e18` to `#1d1d27` | 7.18 to 6.25:1 | 15.03 to 13.09:1 | 1.03 to 1.19:1 |
-| light theme, `#090814` to `#171622` | 7.44 to 6.69:1 | 15.57 to 14.01:1 | 1.00 to 1.11:1 |
+| light theme, `#090814` to `#181722` | 7.44 to 6.63:1 | 15.57 to 13.89:1 | 1.00 to 1.12:1 |
 | warm wallpaper-generated theme, `#100e11` to `#211d20` | 7.19 to 6.23:1 | 15.05 to 13.04:1 | 1.03 to 1.19:1 |
 
-Zone: origin (310,336) in each 780x980 scene frame, 7199 backdrop pixels per
-scene. The lightest pixels are on the thread that crosses the deep behind
-Darwin. An independent measurement on a slightly different zone found
-`#1f1e29` as the lightest pixel of the dark scene: body 6.16:1, eye white
-12.89:1. That is the worst case to quote; it stays above 4.5:1 for the body
-and the eyes.
+Zone: 130x60 at origin (312,336) in each 780x980 scene frame, the profile
+alone at +368+356. Of its 7800 pixels, 7549 are backdrop once every pixel
+the drawing touches (alpha above 0) is left out; an independent count that
+leaves out a wider margin (7317 pixels) gives the same ranges. The lightest
+pixels are on the thread that crosses the deep behind Darwin. Worst case to
+quote: body 6.23:1, eye white 13.04:1, both above 4.5:1. The table of the
+earlier four-view scenes (origin 310, worst case 6.16:1) no longer applies:
+those scenes were replaced.
 
 The outline is invisible in the deep; the body colour and the eyes carry the
 shape (outline on body: 7.41:1). On a plain light surface (`#f3f6f9`) the
@@ -207,9 +228,9 @@ pupils, cheeks and both brows sit on the reference ink.
   smile, from the corner under the cheek out to the body line at the snout.
   Outline, colours, proportions, eye, cheek and legs are unchanged. The 25 px
   variant is 19 x 21 (everything shifted 3 px right for the fin).
-- Profile-only scenes, contrast on all 7800 backdrop pixels of the 130 x 60
-  zone: body 6.25 to 7.18:1 (dark), 6.63 to 7.44:1 (light), 6.23 to 7.19:1
+- Profile-only scenes, contrast on the 7549 backdrop pixels of the 130 x 60
+  zone (7800 less the drawing): body 6.25 to 7.18:1 (dark), 6.63 to 7.44:1 (light), 6.23 to 7.19:1
   (wallpaper theme); eye white 13.09, 13.89 and 13.04:1 at worst; outline
-  1.12 to 1.19:1 at worst (invisible, the body carries the shape).
+  1.00 to 1.19:1 (invisible, the body carries the shape).
 - Not done: the 0.6 depth ratio is an assumption (Q129); the side-on fin has
   no reference; the fin's top edge keeps a slight wave at full size.
