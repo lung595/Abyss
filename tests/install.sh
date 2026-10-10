@@ -13,7 +13,7 @@ scratch=$(mktemp -d)
 trap 'rm -rf "$scratch"' EXIT
 # A space in HOME exercises the quoting of Exec
 export HOME="$scratch/my home"
-unset XDG_DATA_HOME
+unset XDG_DATA_HOME XDG_CONFIG_HOME   # the runner may set them: the test must not depend on the machine
 mkdir -p "$HOME/.local/bin"   # already there before the install: must survive
 tree() { find "$HOME" -printf '%P %y\n' | sort; }
 
