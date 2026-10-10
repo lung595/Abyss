@@ -62,5 +62,3 @@ being the ratio of the two body masks, 715 px against 406 px wide).
   has a kink.
 - No three-quarter or true side view: no reference shows one. Shoes are not
   drawn: no reference shows them.
-- `scene-dark.png` and `scene-light.png` were composited before the last
-  front corrections (fin colour, brows, cheeks).
