@@ -58,6 +58,7 @@ var _RULES = [
     // Links with credentials, then e-mail addresses
     [/\b([a-z][a-z0-9+.-]*:\/\/)[^\s\/@]+@/gi, "$1<secret>@"],
     [/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g, "<email>"],
+    // Also rewrites any "word@x" ("Abyss@1.2"): deliberate, the safe side
     // The user of an ssh/scp target ("user@100.64.0.2", "user@peer")
     [/\b[A-Za-z_][A-Za-z0-9._-]*@(?=[A-Za-z0-9.:\[<-])/g, "<user>@"],
     // Hardware and network addresses: Bluetooth (colon, dash and BlueZ
@@ -73,8 +74,10 @@ var _RULES = [
     // The account name lives in the home folder and in the runtime folder
     [/(?:\/var)?\/home\/[^\/\s:'"]+/g, "~"],
     [/\/Users\/[^\/\s:'"]+/g, "~"],
-    // A file the user sent or opened sits under one of these folders
-    [/(~\/(?:Documents|Downloads|Pictures|Videos|Music|Desktop))\/[^\s:'"]+/g, "$1/<file>"],
+    // Anything under the home folder that is not a dot-folder is the user's own
+    // (documents, a chosen send folder, a localized name): hide it to the end of
+    // the line, because a name with spaces or quotes cannot be delimited safely
+    [/~\/(?!\.)[^\n]*/g, "~/<path>"],
     [/\/root\b/g, "~"],
     [/\/run\/user\/\d+/g, "/run/user/<uid>"]
 ];

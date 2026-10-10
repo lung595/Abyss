@@ -68,6 +68,10 @@ const secrets = {
     "mac": "wake " + MAC,
     "home path": "QML Plug at file://\x2fhome/jdoe/.config/DankMaterialShell/plugins/x/Plug.qml[4:1]",
     "send folder": "scp \x2fhome/jdoe/Documents/tax-2026.pdf jdoe@" + NB4 + ":~/Received",
+    "spaces in name": "\x2fhome/jdoe/Documents/My Tax Return 2026.pdf",
+    "quote in name": "'\x2fhome/jdoe/Documents/it's mine.pdf'",
+    "send folder itself": "\x2fhome/jdoe/Received/tax-2026.pdf",
+    "localized folder": "\x2fhome/jdoe/Téléchargements/secret.pdf",
     "silverblue home": "/var\x2fhome/jdoe/Documents/a.txt",
     "runtime dir": "/run/user/1000/quickshell/by-id/abc",
     "setup key": "netbird up --setup-key " + KEY,
@@ -81,7 +85,7 @@ const secrets = {
     "ssh user at host": "jdoe@" + FQDN,
     "url credentials": HT + "s://jdoe:hunter2@example.org/path"
 };
-const forbidden = [MAC, MAC.toLowerCase(), NB4, "192.168.7.23", "fd7a:115c", "fe80::1ff", "jdoe", "hunter2", "tskey-auth", "abcDEF123456", "eyJhbGci", "ghp_16C7", "0123456789abcdef", "laptop-jdoe", "nas.home", "tail1234", "netbird.cloud", "tax-2026", "6B2F1C9A", "6b2f1c9a", "1000/quickshell"];
+const forbidden = [MAC, MAC.toLowerCase(), NB4, "192.168.7.23", "fd7a:115c", "fe80::1ff", "jdoe", "hunter2", "tskey-auth", "abcDEF123456", "eyJhbGci", "ghp_16C7", "0123456789abcdef", "laptop-jdoe", "nas.home", "tail1234", "netbird.cloud", "tax-2026", "Tax Return", "it's mine", "Received", "Téléchargements", "secret.pdf", "6B2F1C9A", "6b2f1c9a", "1000/quickshell"];
 for (const what in secrets) {
     const out = Redact.text(secrets[what]);
     eq("no leak: " + what, forbidden.filter(f => out.indexOf(f) >= 0), []);
@@ -272,6 +276,7 @@ eq("the omitted settings are all real ones (a rename is noticed)", OMITTED.filte
 eq("the real terminals are all allowed words", loadConst("components/Terminal.js").TERMINALS.filter(t => Codes.SETTINGS.terminal.indexOf(t) < 0), []);
 
 // --- Gather.js: what the report is made of -----------------------------------------
+eq("every copy tool name is an allowed tool word", Gather.COPY_TOOLS.map(t => Allow.value(Codes.FIELDS.tool, t.tool)), Gather.COPY_TOOLS.map(t => t.tool));
 eq("versions come out of each tool's own line", [Gather.parse("dms", "dms v1.6.3\n"), Gather.parse("niri", "niri 26.04 (8ed0da4)"), Gather.parse("quickshell", "Quickshell 0.3.1 (revision , distributed by Someone)")], ["1.6.3", "26.04", "0.3.1"]);
 eq("a tool that said nothing usable gives an empty version", [Gather.parse("dms", ""), Gather.parse("niri", "error: \x2fhome/bob/x not found"), Gather.parse("dms", null)], ["", "", ""]);
 eq("the distribution is the pretty name of os-release", Gather.parse("distro", 'NAME="Fedora Linux"\nPRETTY_NAME="Fedora Linux 44 (Workstation Edition)"\nID=fedora\n'), "Fedora Linux 44 (Workstation Edition)");

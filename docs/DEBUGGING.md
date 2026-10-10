@@ -16,7 +16,7 @@ For someone who has a problem and wants to tell the maintainer about it without 
 An anonymous text you read before you paste it into a GitHub issue. Abyss never sends it anywhere: it stays on your machine until you decide to share it.
 
 - **In it:** the time (UTC), the versions of Abyss, DMS, Quickshell, Qt and niri, the distribution, which surfaces are active, the settings that choose a behaviour, a few counts (peers, groups, timers, helper programs running), the shell's CPU over one second, the last events Abyss recorded and the lines Abyss left in the DMS journal.
-- **Never in it:** a peer name, a NetBird address or host name, your login, an SSH user, a folder you chose, a path under your home folder, a setup key, a token or any text you typed. Events are built from a fixed list of codes and words; whatever else reaches them is replaced by `?`, and every line is cleaned a second time before it is kept.
+- **Never in it:** a peer name, a NetBird address or host name, your login, an SSH user, a file or folder of yours (anything under your home folder except hidden config folders), your login inside a path, a setup key, a token or any text you typed. Events are built from a fixed list of codes and words; whatever else reaches them is replaced by `?`, and every line is cleaned a second time before it is kept.
 - **Not kept:** the events live in memory, at most 200, and vanish with the shell (a restart, a crash, a log out). Nothing is written to disk and nothing runs while nobody asks for a report.
 
 The CPU figure is the **whole shell** (DMS and every plugin together) over one second, measured only when a report is built. The shell is one process, so Abyss's own share cannot be told apart from it.
@@ -39,7 +39,7 @@ A code is `ABY-` followed by a level letter (`E` error, `W` warning, `I` info, `
 |---|---|---|---|
 | `ABY-E001` | error | Reading the mesh from NetBird failed | `reason` |
 | `ABY-E002` | error | A peer action (connect, disconnect, ping, ssh, send, wake, exit, share_ssh, join) failed | `action`, `reason` |
-| `ABY-E003` | error | A helper program (`netbird`, `ip`, `ssh`, `scp`, `ping`, `wakeonlan`, `xdg-open`, `wl-copy`, `dms`, `sh`) stopped unexpectedly | `tool`, `code` (its exit status) |
+| `ABY-E003` | error | A helper program (`netbird`, `ip`, `ssh`, `scp`, `ping`, `wakeonlan`, `xdg-open`, `wl_copy`, `dms`, `sh`) stopped unexpectedly | `tool`, `code` (its exit status) |
 | `ABY-E004` | error | Sending a file failed | `reason` |
 | `ABY-W010` | warning | NetBird is not usable (missing, stopped, signed out) | `state` |
 | `ABY-W011` | warning | A helper program is missing | `tool` |

@@ -17,7 +17,7 @@ var PLUGIN = "Abyss";
 var FIELDS = {
     "action": ["connect", "disconnect", "ping", "ssh", "send", "wake", "exit", "share_ssh", "join"],
     "reason": ["timeout", "refused", "not_found", "bad_data", "offline", "signed_out", "stopped", "relay", "management", "killed", "unknown"],
-    "tool": ["netbird", "ip", "ssh", "scp", "ping", "wakeonlan", "xdg-open", "wl-copy", "dms", "sh"],
+    "tool": ["netbird", "ip", "ssh", "scp", "ping", "wakeonlan", "xdg-open", "wl_copy", "dms", "sh"],
     "state": ["off", "on", "missing", "ready", "stopped", "signed_out", "hidden", "visible", "ambient"],
     "surface": ["widget", "controlCenter", "desktop", "daemon", "launcher", "settings"],
     "via": ["button", "ipc", "script"],
