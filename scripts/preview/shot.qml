@@ -193,6 +193,10 @@ Window {
             sendLoop.start();
             return;
         }
+        if (mode === "bench-menu") {
+            menuLoop.start();
+            return;
+        }
         if (mode === "life" || mode === "life-peek") {
             alive.start();
             return;
@@ -453,6 +457,23 @@ Window {
                 return;
             scene.openMenu(it.id, scene.spotOf(it.id));
             scene.doMenu({ "act": "send", "arg": false });
+        }
+    }
+
+    // bench-menu: the peer's right-click menu opened and closed every 1.5 s
+    // (no picture taken), a worst case for the cost of opening it
+    Timer {
+        id: menuLoop
+        interval: 1500
+        repeat: true
+        onTriggered: {
+            if (scene.menuId !== "") {
+                scene.closeMenu();
+                return;
+            }
+            const it = scene.arr.items.find(i => i.type === "peer" && scene.peerById[i.peerId].online);
+            if (it)
+                scene.openMenu(it.id, scene.spotOf(it.id));
         }
     }
 
