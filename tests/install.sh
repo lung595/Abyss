@@ -26,6 +26,20 @@ check "a second install works" "$?" 0
 sh "$root/install-app.sh" --uninstall >/dev/null 2>&1
 check "uninstall restores the tree" "$(tree)" "$before"
 
+# The shared settings file: kept while the widget is installed, removed after it
+check "the install ships the settings store" "$(sh "$root/install-app.sh" >/dev/null 2>&1; ls "$HOME/.local/share/abyss/components/settings" | tr '\n' ' ')" "qmldir SettingsFile.qml Store.js "
+mkdir -p "$HOME/.config/abyss" "$HOME/.config/DankMaterialShell/plugins/Abyss"
+echo '{}' >"$HOME/.config/abyss/settings.json"
+touch "$HOME/.config/DankMaterialShell/plugins/Abyss/plugin.json"
+sh "$root/install-app.sh" --uninstall >/dev/null 2>&1
+check "the settings stay while the widget is installed" "$([ -f "$HOME/.config/abyss/settings.json" ] && echo kept)" kept
+sh "$root/install-app.sh" >/dev/null 2>&1
+rm -r "$HOME/.config/DankMaterialShell"
+sh "$root/install-app.sh" --uninstall >/dev/null 2>&1
+check "the settings go when the widget is gone" "$([ -e "$HOME/.config/abyss" ] && echo left || echo gone)" gone
+rmdir "$HOME/.config" 2>/dev/null
+check "uninstall restores the tree again" "$(tree)" "$before"
+
 # Foreign files with Abyss's names are never overwritten or removed
 mkdir -p "$HOME/.local/share/abyss"
 echo mine >"$HOME/.local/share/abyss/data"

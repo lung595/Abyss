@@ -57,6 +57,10 @@ Tools: `gjs` (unit tests), Python with PySide6 (integration tests: `pip install 
 
 Settings are read through `components/Prefs.qml`, a reactive view shared by every surface.
 
+### Shared settings
+
+`components/settings/Store.js` (pure, tested by `tests/settingsStore.test.js`) owns the schema of the settings shared by the widget and the app; `SettingsFile.qml` is the only file that touches `~/.config/abyss/settings.json` (watch, atomic write, one-time read-only migration from the DMS plugin settings). `app/components/settings` is a symlink to it, dereferenced by `install-app.sh`. Any new setting is one line in the `SCHEMA` of `Store.js`.
+
 ## Project layout
 
 ```

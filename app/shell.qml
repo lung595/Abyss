@@ -4,11 +4,17 @@ import Quickshell.Io
 import "components"
 import "components/Cli.js" as Cli
 import "views"
+import "components/settings"
 
 // The Abyss app: one window, one process. Closing the window ends it (no tray,
 // nothing left running). Quickshell only: no DMS import anywhere under app/.
 ShellRoot {
     id: root
+
+    // The settings shared with the widget (~/.config/abyss/settings.json)
+    SettingsFile {
+        id: settings
+    }
 
     FloatingWindow {
         id: window

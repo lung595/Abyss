@@ -3,6 +3,8 @@
 #   <data>/abyss/            the app (window, parser, launcher, usage text)
 #   ~/.local/bin/abyss       a link to the launcher
 #   <data>/applications/abyss.desktop
+# The settings file (<config>/abyss/settings.json) is shared with the widget: the
+# install never creates it, the uninstall removes it only when the widget is gone.
 # `install-app.sh --uninstall` removes exactly these and the folders the install
 # itself created, nothing else. Run it from a checkout; nothing is downloaded,
 # nothing needs root.
@@ -12,6 +14,10 @@ src=$(cd -- "$(dirname -- "$0")" && pwd)
 data=${XDG_DATA_HOME:-$HOME/.local/share}
 home_dir=$data/abyss
 bin_dir=$HOME/.local/bin
+config=${XDG_CONFIG_HOME:-$HOME/.config}
+settings_dir=$config/abyss
+# The widget is installed when its plugin manifest is in the DMS plugins folder
+widget_manifest=$config/DankMaterialShell/plugins/Abyss/plugin.json
 link=$bin_dir/abyss
 entry=$data/applications/abyss.desktop
 # Proof the folder is ours; it also lists the folders the install had to create
@@ -43,6 +49,12 @@ case "${1-}" in
     fi
     created=$(sed -n 's/^dir //p' "$marker")
     rm -rf -- "$home_dir"
+    # The shared settings go with the app only when the widget no longer needs
+    # them; the folder only when nothing else lives in it
+    if [ ! -e "$widget_manifest" ]; then
+        rm -f -- "$settings_dir/settings.json"
+        rmdir -- "$settings_dir" 2>/dev/null || true
+    fi
     # Folders the install made, deepest first, and only when nothing else lives in them
     printf '%s\n' "$created" | sort -r | while IFS= read -r dir; do
         [ -n "$dir" ] && rmdir -- "$dir" 2>/dev/null || true
@@ -89,12 +101,13 @@ done
 
 # Only the app's own files: the widget (QML at the repository root) is not part of it
 rm -rf -- "$home_dir"
-mkdir -p -- "$home_dir/components" "$data/applications" "$bin_dir"
+mkdir -p -- "$home_dir/components/settings" "$data/applications" "$bin_dir"
 cp -- "$src/app/shell.qml" "$src/app/usage.txt" "$src/app/abyss" "$home_dir/"
 cp -L -- "$src/app/components/"*.js "$src/app/components/"*.qml "$src/app/components/qmldir" "$home_dir/components/"
 cp -rL -- "$src/app/components/assets" "$home_dir/components/"
 mkdir -p -- "$home_dir/views"
 cp -- "$src/app/views/"*.qml "$home_dir/views/"
+cp -- "$src/components/settings/"* "$home_dir/components/settings/"
 printf '%s\n' "$created" | sed -n 's/^\(..*\)$/dir \1/p' >"$marker"
 ln -sf -- "$home_dir/abyss" "$link"
 
