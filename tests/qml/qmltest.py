@@ -163,6 +163,9 @@ def main():
     os.symlink(os.path.join(HERE, "fake-netbird"), os.path.join(bin_dir, "netbird"))
     # scp is a fake too: it records its arguments and fails on demand
     os.symlink(os.path.join(HERE, "fake-scp"), os.path.join(bin_dir, "scp"))
+    # The wake program and ssh are fakes too (see their files)
+    os.symlink(os.path.join(HERE, "fake-wakeonlan"), os.path.join(bin_dir, "wakeonlan"))
+    os.symlink(os.path.join(HERE, "fake-ssh"), os.path.join(bin_dir, "ssh"))
     # The clipboard reader and the file picker are fakes too (see their files)
     os.symlink(os.path.join(HERE, "fake-wl-paste"), os.path.join(bin_dir, "wl-paste"))
     os.symlink(os.path.join(HERE, "fake-zenity"), os.path.join(bin_dir, "zenity"))
