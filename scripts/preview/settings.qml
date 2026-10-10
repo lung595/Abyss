@@ -6,7 +6,7 @@ import "../.."
 
 // Offscreen render of the settings page, one tab per shot, from DMS-like
 // stand-ins (imports/qs/Modules). Usage: settings.sh <tab> <out.png>
-// (tabs: connect, deep, effects, bar, desktop, source, help)
+// (sections: connect, appearance, effects, bar, desktop, alerts, advanced, help)
 Window {
     id: win
     readonly property var args: Qt.application.arguments
@@ -22,13 +22,13 @@ Window {
         x: 20
         y: 20
         width: 560
+        section: win.tab
     }
 
     Timer {
         interval: 900
         running: true
         onTriggered: {
-            settings.children[0].children[0].tab = win.tab;
             shot.start();
         }
     }
