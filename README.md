@@ -152,6 +152,19 @@ dms ipc call abyss demo <state>    # test lab only: connected, disconnected, con
                                    # needsLogin, stopped, relayDown, relayUp
 ```
 
+### The app (without DMS)
+
+```sh
+abyss                          # open the Abyss window (a second launch wakes the first)
+abyss send <device> [files…]   # send files to a device
+abyss peer <device>            # open a device
+abyss map                      # open the map
+abyss settings [category]      # open the settings
+abyss --help | --version
+```
+
+Install it with `./install-app.sh` (only under `~/.local`; `./install-app.sh --uninstall` removes it). Details and limits in the [guide](docs/GUIDE.md#the-abyss-app). The window is a placeholder for now.
+
 Bind them in your compositor, for example in niri: `Mod+A { spawn "dms" "ipc" "call" "abyss" "open"; }`, or in Hyprland: `bind = SUPER, A, exec, dms ipc call abyss open`.
 
 ## Troubleshooting

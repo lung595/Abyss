@@ -23,6 +23,10 @@ else
     echo "- QML integration tests skipped: $PYTHON has no PySide6 (pip install PySide6-Essentials)"
 fi
 
+# The app launcher: single instance and quit on close, offscreen
+tests/app.sh || failed=1
+tests/install.sh || failed=1
+
 # The scene tests need qml-qt6 and the DMS Material Symbols font (see tests/scene/run.sh)
 if command -v qml-qt6 >/dev/null; then
     tests/scene/run.sh || failed=1

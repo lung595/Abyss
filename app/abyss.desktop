@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Abyss
+GenericName=Mesh network
+Comment=See and reach the devices of your NetBird mesh
+Exec=abyss
+Icon=network-workgroup
+Terminal=false
+Categories=Network;System;
+StartupWMClass=abyss
