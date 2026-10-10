@@ -105,7 +105,11 @@ Window {
             check("this view is counted once on the hub", hubA.viewers === 1, hubA.viewers);
             check("the scene has no file drop target (the menu is the way)", !hasDropArea(scene));
             scene.openMenu(it.id, scene.spotOf(it.id));
-            const texts = scene.menuItems ? scene.menuItems.map(m => m.text) : [];
+            const acts = scene.menuActions(it.id, scene.prefs.groups);
+            const sends = acts.filter(m => m.act === "send");
+            check("both send entries carry their icon and accent", sends.length === 2 && sends[0].icon === "upload_file" && sends[1].icon === "drive_folder_upload" && sends.every(m => m.accent === true), sends);
+            check("the send entries come first, file then folder", acts.length > 2 && acts[0].arg === false && acts[1].arg === true && acts[0].act === "send" && acts[1].act === "send", acts);
+            check("no other entry carries an icon or accent", acts.filter(m => m.act !== "send").every(m => m.icon === undefined && m.accent === undefined));
             scene.doMenu({
                 "act": "send",
                 "arg": false

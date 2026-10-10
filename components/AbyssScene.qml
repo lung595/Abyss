@@ -15,6 +15,7 @@ import "Grips.js" as Grips
 import "Goldfish.js" as Fish
 import "Commands.js" as Commands
 import "Connect.js" as Connect
+import "SendTone.js" as SendTone
 
 // The deep, shared by the popout, the Control Center and the desktop.
 //
@@ -84,6 +85,12 @@ Item {
     readonly property color inkDim: Qt.rgba(ink.r, ink.g, ink.b, 0.62)
     readonly property color sleepColor: mix(Theme.primary, _grey, 0.7)
     readonly property color sunColor: mix(Theme.warning, _white, 0.4)
+    // The least white that reads on the dark menu: the raw role when it is
+    // bright enough, a mix with white when the theme is light
+    readonly property color sendColor: {
+        const t = SendTone.sendTone(Theme.primary);
+        return Qt.rgba(t.r, t.g, t.b, 1);
+    }
     readonly property color groupColor: mix(Theme.primary, Theme.tertiary, 0.35)
     readonly property var tints: [Theme.primary, Theme.tertiary, Theme.success, Theme.secondary, mix(Theme.primary, Theme.tertiary, 0.5), mix(Theme.tertiary, Theme.success, 0.5), mix(Theme.primary, Theme.success, 0.5), mix(Theme.secondary, Theme.tertiary, 0.5)]
     // Stable colour per peer name
@@ -1587,21 +1594,26 @@ Item {
                 out.push({ "text": "Open the admin console", "act": "console" });
         } else if (p) {
             const g = MyGroups.groupOf(mine, p.id);
-            if (p.exit && p.online) {
-                const on = !!source && source.exitNode === p.name && !prefs.exitGroup;
-                out.push({ "text": on ? "Stop using for Internet" : "Use for Internet", "act": "use", "arg": { "peer": on ? "" : p.name, "group": "" } });
-            }
+            // The main send path comes first, above every other entry
             if (p.online) {
                 out.push({
                     "text": "Send a file…",
+                    "icon": "upload_file",
+                    "accent": true,
                     "act": "send",
                     "arg": false
                 });
                 out.push({
                     "text": "Send a folder…",
+                    "icon": "drive_folder_upload",
+                    "accent": true,
                     "act": "send",
                     "arg": true
                 });
+            }
+            if (p.exit && p.online) {
+                const on = !!source && source.exitNode === p.name && !prefs.exitGroup;
+                out.push({ "text": on ? "Stop using for Internet" : "Use for Internet", "act": "use", "arg": { "peer": on ? "" : p.name, "group": "" } });
             }
             mine.filter(x => x !== g).forEach(x => out.push({ "text": "Add to " + x.name, "act": "join", "arg": x.id }));
             out.push({ "text": "New group", "act": "create", "arg": p.id });
@@ -2718,15 +2730,30 @@ Item {
                         width: menuCol.width
                         height: 30
                         radius: 8
-                        color: rowArea.containsMouse ? Qt.rgba(root.ink.r, root.ink.g, root.ink.b, 0.1) : "transparent"
+                        readonly property bool accent: !!modelData.accent
+                        color: rowArea.pressed ? Qt.rgba(root.ink.r, root.ink.g, root.ink.b, 0.16) : rowArea.containsMouse ? Qt.rgba(root.ink.r, root.ink.g, root.ink.b, 0.1) : "transparent"
+                        // Ready for keyboard navigation (Q114): no row takes focus
+                        // yet, the spec only fixes the look once one does
+                        border.width: activeFocus && accent ? 2 : 0
+                        border.color: root.sendColor
                         StyledText {
                             anchors.verticalCenter: parent.verticalCenter
                             x: 10
-                            width: parent.width - 20
+                            width: parent.width - (accent ? 40 : 20)
                             elide: Text.ElideRight
                             text: modelData.text
                             font.pixelSize: 12
-                            color: root.ink
+                            font.weight: accent ? Font.DemiBold : Font.Normal
+                            color: accent ? root.sendColor : root.ink
+                        }
+                        DankIcon {
+                            visible: accent
+                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.right: parent.right
+                            anchors.rightMargin: 10
+                            name: modelData.icon || ""
+                            size: 16
+                            color: root.sendColor
                         }
                         MouseArea {
                             id: rowArea

@@ -193,6 +193,10 @@ Window {
             sendLoop.start();
             return;
         }
+        if (mode === "bench-menu") {
+            menuLoop.start();
+            return;
+        }
         if (mode === "life" || mode === "life-peek") {
             alive.start();
             return;
@@ -416,7 +420,7 @@ Window {
     }
 
     // gif-send-menu: a send started from the creature's menu ("Send a
-    // file…"). Frames every 80 ms from the moment it starts.
+    // file…"). Frames every 80 ms from the moment the menu opens.
     Timer {
         id: sendReel
         property int frame: -1
@@ -428,10 +432,13 @@ Window {
                 if (!it)
                     return;
                 scene.openMenu(it.id, scene.spotOf(it.id));
-                scene.doMenu({ "act": "send", "arg": false });
             }
             const n = ++frame;
-            if (n > 40) {
+            // The menu stays open for 12 frames (about 1 s) so the two
+            // send entries are seen, then "Send a file…" is picked
+            if (n === 12)
+                scene.doMenu({ "act": "send", "arg": false });
+            if (n > 52) {
                 stop();
                 Qt.quit();
                 return;
@@ -450,6 +457,23 @@ Window {
                 return;
             scene.openMenu(it.id, scene.spotOf(it.id));
             scene.doMenu({ "act": "send", "arg": false });
+        }
+    }
+
+    // bench-menu: the peer's right-click menu opened and closed every 1.5 s
+    // (no picture taken), a worst case for the cost of opening it
+    Timer {
+        id: menuLoop
+        interval: 1500
+        repeat: true
+        onTriggered: {
+            if (scene.menuId !== "") {
+                scene.closeMenu();
+                return;
+            }
+            const it = scene.arr.items.find(i => i.type === "peer" && scene.peerById[i.peerId].online);
+            if (it)
+                scene.openMenu(it.id, scene.spotOf(it.id));
         }
     }
 
