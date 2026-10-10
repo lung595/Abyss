@@ -207,6 +207,8 @@ def main():
     eng = QQmlApplicationEngine()
     eng.addImportPath(os.path.join(HERE, "imports"))
     eng.rootContext().setContextProperty("fakeDir", os.environ["FAKE_NB"])
+    # Which scene of the Send bench to run (scripts/preview/bench-send.sh)
+    eng.rootContext().setContextProperty("benchMode", os.environ.get("BENCH_MODE", "idle"))
     eng.load(QUrl.fromLocalFile(test))
     if not eng.rootObjects():
         return 2

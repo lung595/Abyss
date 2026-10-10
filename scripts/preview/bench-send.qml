@@ -4,7 +4,7 @@ import "../../app/views"
 
 // CPU bench scene for the Send view, run through the QML test harness
 // (real processes: rsync is tests/qml/fake-rsync, four meter lines per job).
-// bench-send.sh writes the mode into scripts/preview/mode first.
+// bench-send.sh passes the mode in BENCH_MODE (a context property).
 //   idle:  empty Send view, window shown
 //   rsync: four devices always sending, each job re-queued as soon as it ends
 //   hidden: the same, with the window hidden (shown = false)
@@ -19,10 +19,7 @@ Window {
     visible: true
 
     Component.onCompleted: {
-        const x = new XMLHttpRequest();
-        x.open("GET", Qt.resolvedUrl("mode"), false);
-        x.send();
-        root.mode = x.responseText.trim();
+        root.mode = benchMode;
         view.shown = root.mode !== "hidden";
         if (root.mode !== "idle")
             refill.start();
@@ -49,12 +46,16 @@ Window {
         interval: 200
         repeat: true
         onTriggered: {
+            // Done rows wait for a Dismiss; drop them so the next round can start
+            view.q = Object.assign({}, view.q, {
+                "jobs": view.q.jobs.filter(j => j.state !== "done")
+            });
             if (view.q.jobs.length >= 4)
                 return;
             view.chosen = [];
             for (const n of view.names)
                 view.toggle(n);
-            view.addItems(["/tmp/a.txt"]);
+            view.addItems([fakeDir + "/a.txt"]);
             view.q = Object.assign({}, view.q, {
                 "history": []
             });
