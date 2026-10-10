@@ -25,6 +25,11 @@ eq("bad input", S.claim(undefined, peers), null);
 eq("too long is ignored", S.claim("send file to " + "v".repeat(100), peers), null);
 eq("too many words is ignored", S.claim("send a file to a b c d e f g", peers), null);
 
+eq("the app command with a device", S.appCommand("vega").join(" "), "abyss send vega");
+eq("the app command without a device", S.appCommand(null).join(" "), "abyss");
+eq("a name the app refuses is not tried", S.appCommand("-x"), null);
+eq("a name with a space is not tried", S.appCommand("my box"), null);
+
 // Sands, read-only, from its installed folder
 const sands = GLib.get_home_dir() + "/.config/DankMaterialShell/plugins/Sands/TimeParser.js";
 if (!GLib.file_test(sands, GLib.FileTest.EXISTS)) {

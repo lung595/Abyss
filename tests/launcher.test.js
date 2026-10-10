@@ -57,4 +57,16 @@ eq("a send row carries the peer's name", L.items(smart, "send vega")[0].action, 
 ok("the plain list offers it too", names(L.items(smart, "atlas")).indexOf("Send a file to atlas…") >= 0);
 ok("never for an offline peer", names(L.items(smart, "orion")).every(n => n.indexOf("Send") !== 0));
 
+// Which words reach Abyss when DMS hands over every search (no prefix)
+eq("a plain search is not ours", L.route("firefox", peers, false), null);
+eq("a timer is not ours", L.route("timer 20 min pâtes", peers, false), null);
+eq("the abyss word keeps every row", JSON.stringify(L.route("Abyss vega", peers, false)), '{"all":"vega"}');
+eq("the abyss word alone", JSON.stringify(L.route("abyss", peers, false)), '{"all":""}');
+ok("abyssal is another word", L.route("abyssal", peers, false) === null);
+eq("send a file names the device", JSON.stringify(L.route("envoie un fichier à vega", peers, false)), '{"send":"vega"}');
+eq("send a file without a device", JSON.stringify(L.route("send file", peers, false)), '{"send":null}');
+eq("with a prefix set, DMS stripped it: all is ours", JSON.stringify(L.route("vega", peers, true)), '{"all":"vega"}');
+eq("the entry for a device", L.sendEntry("vega").name + "|" + L.sendEntry("vega").action + "|" + L.sendEntry("vega").icon, "Send a file to vega…|send:vega|material:upload_file");
+eq("the entry without a device", L.sendEntry(null).name + "|" + L.sendEntry(null).action, "Send a file…|send:");
+
 done("launcher");

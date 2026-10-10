@@ -32,13 +32,55 @@ PluginSettings {
         property string tab: root.instanceId ? "desktop" : "connect"
 
         readonly property var tabList: [
-            { "id": "connect", "icon": "hub", "text": "Connect", "title": "Connections", "sub": "Join a mesh, let your devices in, and how Abyss opens them" },
-            { "id": "deep", "icon": "water", "text": "The deep", "title": "The deep", "sub": "What the sea shows, and how much of it at once" },
-            { "id": "effects", "icon": "bolt", "text": "Effects & battery", "title": "Effects & battery", "sub": "Every moving thing, and what it costs. Off = calmer and longer battery" },
-            { "id": "bar", "icon": "toolbar", "text": "Bar & alerts", "title": "Bar & alerts", "sub": "The small jellyfish in your bar, and when Abyss speaks up" },
-            { "id": "desktop", "icon": "desktop_windows", "text": "Desktop", "title": "Desktop fishbowl", "sub": "The round jar on your wallpaper" },
-            { "id": "source", "icon": "science", "text": "Source & lab", "title": "Source & test lab", "sub": "Your real NetBird, or a made-up mesh to try things on" },
-            { "id": "help", "icon": "menu_book", "text": "Help", "title": "Quick guide", "sub": "Everything in Abyss, in one minute" }
+            {
+                "id": "connect",
+                "icon": "hub",
+                "text": "Connect",
+                "title": "Connections",
+                "sub": "Join a mesh, let your devices in, and how Abyss opens them"
+            },
+            {
+                "id": "deep",
+                "icon": "water",
+                "text": "The deep",
+                "title": "The deep",
+                "sub": "What the sea shows, and how much of it at once"
+            },
+            {
+                "id": "effects",
+                "icon": "bolt",
+                "text": "Effects & battery",
+                "title": "Effects & battery",
+                "sub": "Every moving thing, and what it costs. Off = calmer and longer battery"
+            },
+            {
+                "id": "bar",
+                "icon": "toolbar",
+                "text": "Bar & alerts",
+                "title": "Bar & alerts",
+                "sub": "The small jellyfish in your bar, and when Abyss speaks up"
+            },
+            {
+                "id": "desktop",
+                "icon": "desktop_windows",
+                "text": "Desktop",
+                "title": "Desktop fishbowl",
+                "sub": "The round jar on your wallpaper"
+            },
+            {
+                "id": "source",
+                "icon": "science",
+                "text": "Source & lab",
+                "title": "Source & test lab",
+                "sub": "Your real NetBird, or a made-up mesh to try things on"
+            },
+            {
+                "id": "help",
+                "icon": "menu_book",
+                "text": "Help",
+                "title": "Quick guide",
+                "sub": "Everything in Abyss, in one minute"
+            }
         ]
         readonly property var current: tabList.find(t => t.id === tab) || tabList[0]
 
@@ -234,6 +276,37 @@ PluginSettings {
                             font.pixelSize: Theme.fontSizeSmall
                             color: Theme.surfaceVariantText
                             wrapMode: Text.WordWrap
+                        }
+                    }
+
+                    // Sentences like "send file to vega" only reach Abyss with no prefix
+                    // set in DMS; Abyss never writes DMS settings, so it only says how
+                    Group {
+                        id: launcherHint
+                        readonly property string prefix: (PluginService.getPluginTrigger("abyss") ?? "").trim()
+                        visible: prefix !== ""
+                        icon: "keyboard_command_key"
+                        title: "Launcher sentences"
+                        sub: "“send file to vega” works in Super+Space when Abyss has no prefix"
+                        Row {
+                            width: parent.width
+                            spacing: Theme.spacingS
+                            StyledText {
+                                width: parent.width - Theme.spacingS - 18
+                                text: "Abyss has the prefix “" + launcherHint.prefix + "”. To type a sentence without it, clear the prefix in DMS Settings → Launcher → Abyss."
+                                font.pixelSize: Theme.fontSizeSmall
+                                color: Theme.surfaceVariantText
+                                wrapMode: Text.WordWrap
+                            }
+                            GitHubMark {
+                                size: 18
+                                color: Theme.primary
+                                MouseArea {
+                                    anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: Qt.openUrlExternally("https://github.com/lung595/Abyss/blob/main/docs/GUIDE.md#send-from-the-launcher")
+                                }
+                            }
                         }
                     }
 
@@ -688,14 +761,7 @@ PluginSettings {
                     spacing: Theme.spacingS
 
                     Repeater {
-                        model: [
-                            ["touch_app", "Click the jellyfish", "Connect or disconnect. Right-click: profile, sharing, admin console"],
-                            ["pets", "Click a creature", "Its card: Terminal, Files, Screen, Desktop, copy its address"],
-                            ["search", "Type anywhere", "Search devices by name or by what they are (phones, slow…), or type a command (add, share, disconnect)"],
-                            ["add_circle", "The + at the top", "Add this computer or your phone, step by step, with a QR code"],
-                            ["wb_sunny", "Drag the light of the surface", "Onto a device that can lend Internet: you go out through it"],
-                            ["keyboard", "From a terminal", "dms ipc call abyss ssh <device>  ·  files · vnc · rdp · join · share on"]
-                        ]
+                        model: [["touch_app", "Click the jellyfish", "Connect or disconnect. Right-click: profile, sharing, admin console"], ["pets", "Click a creature", "Its card: Terminal, Files, Screen, Desktop, copy its address"], ["search", "Type anywhere", "Search devices by name or by what they are (phones, slow…), or type a command (add, share, disconnect)"], ["add_circle", "The + at the top", "Add this computer or your phone, step by step, with a QR code"], ["wb_sunny", "Drag the light of the surface", "Onto a device that can lend Internet: you go out through it"], ["keyboard", "From a terminal", "dms ipc call abyss ssh <device>  ·  files · vnc · rdp · join · share on"]]
                         Rectangle {
                             required property var modelData
                             width: parent.width

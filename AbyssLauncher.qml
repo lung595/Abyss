@@ -1,13 +1,18 @@
 import QtQuick
+import Quickshell
+import Quickshell.Io
 import qs.Services
 import "components"
 import "components/LauncherItems.js" as LauncherItems
+import "components/SendIntent.js" as SendIntent
 
 // Type "abyss" in the launcher (Super+Space): "Open Abyss" opens the deep
 // from the bar, with everything it can do; below it, the quick steps
 // (connect, where Internet goes out, copy an address, SSH). The launcher
 // shows plain rows only, so the scene itself opens in the bar's popout.
-// Created on the launcher's first opening; nothing runs between two uses.
+// With no prefix set in DMS the launcher hands over every search: Abyss only
+// answers the "abyss" word and a "send a file (to vega)" sentence. Created on
+// the launcher's first opening; nothing runs between two uses.
 Item {
     id: root
 
@@ -49,6 +54,13 @@ Item {
     function getItems(query) {
         if (!source)
             return [];
+        // The prefix DMS strips, if the owner set one (the manifest's default)
+        const prefixed = !!(PluginService.getPluginTrigger("abyss") ?? "").trim();
+        const route = LauncherItems.route(query, source.view.peers, prefixed);
+        if (!route)
+            return [];
+        if (route.send !== undefined)
+            return [LauncherItems.sendEntry(route.send)];
         _fresh();
         const v = source.view;
         return LauncherItems.items({
@@ -60,7 +72,7 @@ Item {
             "relays": v.relays.map(r => r.name),
             "exitNode": source.exitNode,
             "exitGroup": prefs.exitGroup
-        }, query);
+        }, route.all);
     }
 
     function executeItem(item) {
@@ -77,11 +89,10 @@ Item {
         else if (type === "copy")
             daemon.copy(daemon.findPeer(data)?.ip);
         else if (type === "send") {
-            // The picker opens once the launcher has closed, or it would be
-            // lost behind it
-            picker.peer = daemon.findPeer(data);
-            if (picker.peer)
-                picker.start();
+            // With the app installed it opens on sending; without it, the picker
+            // opens once the launcher has closed, or it would be lost behind it
+            sender.device = data;
+            sender.probe();
         } else if (type === "ssh") {
             const p = daemon.findPeer(data);
             if (p)
@@ -92,6 +103,39 @@ Item {
     // dms ipc call plugins toggle abyss: DMS asks the launcher surface first
     function toggle() {
         opener.start();
+    }
+
+    // "Send a file…": the `abyss` command when it is installed (argument list,
+    // the name already validated), otherwise the picker of the widget
+    Item {
+        id: sender
+        property string device: ""
+
+        function probe() {
+            lookup.running = true;
+        }
+        function _fallback() {
+            picker.peer = root.daemon.findPeer(sender.device);
+            if (picker.peer)
+                picker.start();
+            else
+                opener.start();
+        }
+
+        Process {
+            id: lookup
+            // The name travels as a positional parameter, never in the string
+            command: ["sh", "-c", "command -v -- \"$1\"", "sh", "abyss"]
+            onExited: (exitCode, exitStatus) => {
+                const argv = SendIntent.appCommand(sender.device);
+                // Detached: the app must outlive the launcher, and the shell
+                if (exitCode === 0 && argv) {
+                    Quickshell.execDetached(argv);
+                } else {
+                    sender._fallback();
+                }
+            }
+        }
     }
 
     Timer {

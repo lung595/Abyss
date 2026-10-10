@@ -69,3 +69,14 @@ function claim(query, peers) {
     }
     return null;
 }
+
+// The app's command for a send, as an argument list (never a shell string):
+// `abyss send <device>`, or `abyss` alone when no device was named. The app
+// refuses any other name, so one it would refuse is not even tried (null)
+const _DEVICE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,62}$/;
+
+function appCommand(device) {
+    if (!device)
+        return ["abyss"];
+    return _DEVICE.test(device) ? ["abyss", "send", device] : null;
+}
