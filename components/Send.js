@@ -12,7 +12,7 @@
 
 // The device's folder when the setting is empty (~ is the user's home there)
 const DEFAULT_DIR = "~/Downloads";
-// Caps that keep a slip (dropping a whole disk) from becoming a transfer
+// Caps that keep a slip (picking a whole disk) from becoming a transfer
 const MAX_PATHS = 100;
 const MAX_BYTES = 200 * 1024 * 1024 * 1024;
 const MAX_PATH_LENGTH = 4096;

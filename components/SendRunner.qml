@@ -2,7 +2,7 @@ import QtQuick
 import "Send.js" as Send
 
 // Sends files and folders to a peer with scp and reports how it went.
-// send() looks at the items first (du, so a missing item or a huge drop is
+// send() looks at the items first (du, so a missing item or a huge pick is
 // refused before anything leaves), then runs the transfer. Both are
 // CliRunner jobs on a runner made at the first send and dropped at the end:
 // nothing exists or runs until someone sends, and nothing after.

@@ -2,7 +2,7 @@
 
 // The "grab the file" scene, as numbers. A file appears, a tentacle of the
 // creature reaches it, carries it over and the file drops in; then the send
-// shows its progress. One motion for every way of sending (a drop, the
+// shows its progress. One motion for every way of sending (the
 // menu, Ctrl+V, the launcher), so GrabFile.qml only turns time into this.
 // Pure: t is 0..1 over DURATION, the points are scene coordinates.
 
