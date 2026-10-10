@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 480" width="680" height="480">
+<title>Darwin, side view, swimming</title>
+<path d="M520 125C535 70 570 35 620 28c35-3 50 27 30 50-20 17-50 17-65 62" fill="#f47e26" stroke="#0a0a0a" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M524 112l34 22 10-20-36-20z" fill="#d9641c"/>
+<path d="M370.0 55.5C385.2 55.0 400.8 55.0 416.1 57.9C431.4 60.9 444.8 71.0 454.5 83.7C464.2 96.4 473.0 105.7 492.2 107.8C511.3 110.0 539.0 110.7 556.6 122.3C574.1 133.9 581.0 153.2 586.9 171.9C592.8 190.6 598.7 210.3 596.0 230.0C593.3 249.7 580.7 268.0 566.8 282.7C553.0 297.4 539.1 309.7 524.3 319.1C509.4 328.5 493.4 334.2 480.1 340.1C466.8 346.0 456.1 353.1 444.6 359.2C433.1 365.2 420.8 369.4 408.5 373.8C396.3 378.2 383.8 383.2 370.0 388.0C356.2 392.8 341.2 397.7 323.7 402.8C306.2 407.9 285.7 412.5 265.7 410.6C245.8 408.8 227.0 400.9 209.9 390.1C192.7 379.3 176.6 365.6 164.7 348.6C152.7 331.5 145.7 311.2 144.0 290.6C142.3 269.9 145.9 249.0 152.2 230.0C158.5 211.0 166.7 193.6 176.4 178.1C186.0 162.6 198.3 149.3 211.5 138.5C224.7 127.6 237.2 118.3 248.9 108.9C260.6 99.5 273.0 91.3 286.2 84.9C299.5 78.6 312.5 72.5 326.1 66.3C339.8 60.1 354.8 56.1 370.0 55.5Z" fill="#f47e26" stroke="#0a0a0a" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M158 222c-14 20-12 52 4 70 8 4 14-2 12-10-8-18-8-36 0-52-2-8-10-12-16-8z" fill="#f6bc8c"/>
+<path d="M146 350C144.7 352.7 139.7 360.7 138 366C136.3 371.3 135.8 377.0 136 382C136.2 387.0 137.5 391.7 139 396C140.5 400.3 143.0 404.0 145 408C147.0 412.0 148.8 416.5 151 420C153.2 423.5 155.7 426.3 158 429C160.3 431.7 161.8 433.5 165 436C168.2 438.5 172.5 441.3 177 444C181.5 446.7 187.3 450.2 192 452C196.7 453.8 200.8 455.0 205 455C209.2 455.0 212.8 453.8 217 452C221.2 450.2 226.5 447.0 230 444C233.5 441.0 234.7 439.7 238 434C241.3 428.3 248.0 414.0 250 410" fill="#f47e26" stroke="#0a0a0a" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M150 405L169 395M181 443L195 423M175 355l6 5" fill="none" stroke="#0a0a0a" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M218 318C160 288 92 288 50 320c-35 25-30 65 0 70 35 2 60-25 93-42L197 358" fill="#f47e26" stroke="#0a0a0a" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<ellipse cx="272.5" cy="217" rx="67" ry="64" fill="#e4e3e8" stroke="#0a0a0a" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<ellipse cx="416.5" cy="156" rx="64" ry="61.5" fill="#e4e3e8" stroke="#0a0a0a" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="296.5" cy="198.4" r="20.5" fill="#0a0a0a"/><circle cx="437.6" cy="140.6" r="19.6" fill="#0a0a0a"/>
+<path d="M207 200l-12-4M205 220l-13 3M432 96l2-12M452 102l6-11" fill="none" stroke="#0a0a0a" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M234 140c16-12 40-16 60-10M372 84c18-12 42-12 58-2" fill="none" stroke="#0a0a0a" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="310" cy="298" r="43" fill="#f47e26"/><path d="M267.5 291.3A43 43 0 1 1 305.5 340.8" fill="none" stroke="#0a0a0a" stroke-width="5" stroke-linecap="round"/>
+<circle cx="454" cy="237" r="41" fill="#f47e26"/><path d="M472.0 200.1A41 41 0 1 0 480.9 267.9" fill="none" stroke="#0a0a0a" stroke-width="5" stroke-linecap="round"/>
+<path d="M353 282Q384 266 413 259" fill="none" stroke="#0a0a0a" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="314" cy="291" r="18" fill="#f6bc8c"/><circle cx="443" cy="235" r="19" fill="#f6bc8c"/>
+</svg>
