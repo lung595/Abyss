@@ -44,12 +44,15 @@ function plainText(text) {
     return String(text === undefined || text === null ? "" : text).replace(/:\/\//g, ": //");
 }
 
-// argv that prints the first program installed for this kind and exits 0,
-// or exits 1 when there is none; null for an unknown kind
+// argv that prints the first of `names` installed here and exits 0, or exits
+// 1 when none is. The names are arguments of the script, never pasted into it.
+function whichFirst(names) {
+    return ["sh", "-c", "for t in \"$@\"; do command -v \"$t\" >/dev/null 2>&1 && { echo \"$t\"; exit 0; }; done; exit 1", "sh"].concat(names);
+}
+
+// whichFirst for the programs of this kind, or null for an unknown kind
 function lookupCommand(kind) {
-    if (!PROGRAMS[kind])
-        return null;
-    return ["sh", "-c", "for t in \"$@\"; do command -v \"$t\" >/dev/null 2>&1 && { echo \"$t\"; exit 0; }; done; exit 1", "sh"].concat(PROGRAMS[kind].map(p => p[0]));
+    return PROGRAMS[kind] ? whichFirst(PROGRAMS[kind].map(p => p[0])) : null;
 }
 
 // argv for Quickshell.execDetached with the program lookupCommand found, or

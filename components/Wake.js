@@ -14,7 +14,8 @@
 // "lan" below is an opaque key for a network (see lanKey), compared as text.
 
 // The programs that send a magic packet, in order of preference
-const TOOLS = ["wakeonlan", "etherwake"];
+// (ether-wake is left out: it needs root and an interface name)
+const TOOLS = ["wakeonlan", "wol"];
 
 // Where the guide explains each refusal (value 10: say why and how to fix it)
 const GUIDE = "docs/GUIDE.md#wake-a-device";
@@ -102,10 +103,9 @@ function route(target, here, peers) {
 
 // --- The commands ----------------------------------------------------------------------
 
-// argv that prints the first sending program installed here, or exits 1.
-// The names are arguments of the script, never pasted into it.
+// argv that prints the first sending program installed here, or exits 1
 function toolCommand() {
-    return ["sh", "-c", "for t in \"$@\"; do command -v \"$t\" >/dev/null 2>&1 && { echo \"$t\"; exit 0; }; done; exit 1", "sh"].concat(TOOLS);
+    return Connect.whichFirst(TOOLS);
 }
 
 // The program toolCommand printed (one of TOOLS), or "" for anything else
@@ -152,17 +152,20 @@ function routeNote(reason, name) {
     return _note("nomac", "Abyss does not know how to wake " + who + " yet", "It learns the address of " + who + " while it is online on a network you share. Wait until it shows as online once, then try again.");
 }
 
+// The package that holds a sending program, per package manager (see
+// Connect.packageManagerCommand). Fedora ships it as "wol"; a manager not
+// listed gets the generic advice rather than a command that may fail.
+const PACKAGE = { "pacman": "wakeonlan", "apt": "wakeonlan", "dnf": "wol" };
+
 // What to install when no sending program exists. where: "here" or the name
-// of the peer that lacks it; pm: the package manager found (see
-// Connect.packageManagerCommand), "" if unknown.
-const PACKAGE = { "pacman": "wakeonlan", "apt": "wakeonlan", "dnf": "wakeonlan", "zypper": "wakeonlan" };
+// of the peer that lacks it; pm: the package manager found, "" if unknown.
 function toolNote(where, pm) {
     const on = where === "here" || !where ? "on this computer" : "on " + Connect.plainText(where);
     const pkg = PACKAGE[pm] || "";
     return {
         "kind": "notool",
         "title": "No wake program installed " + on,
-        "advice": pkg ? "Install it with the command below, then try again." : "Install wakeonlan (or etherwake) from your software center, then try again.",
+        "advice": pkg ? "Install it with the command below, then try again." : "Install wakeonlan (or wol) from your software center, then try again.",
         "guide": GUIDE,
         "command": pkg ? Connect.INSTALL[pm] + pkg : ""
     };
@@ -179,6 +182,8 @@ function explain(code, via, name, peerName) {
         return toolNote(peerName || "the other device", "");
     if (via === "peer" && code === 255)
         return _note("peer", "Abyss could not reach " + peer + " to wake " + who, "It sends the signal for you. Check that it is online and accepts SSH from this computer, then try again.");
+    if (code === -1 && via === "peer")
+        return _note("stuck", "The wake signal to " + who + " did not go out", "ssh did not start or took too long. Check that ssh is installed on this computer, then try again.");
     if (code === -1)
         return _note("stuck", "The wake signal to " + who + " did not go out", "The program did not start or took too long. Try again.");
     return _note("other", "The wake signal to " + who + " failed", "Try again. If it keeps failing, the guide lists what to check.");
