@@ -5,6 +5,7 @@ import qs.Widgets
 import qs.Modules.Plugins
 import "components"
 import "components/settings"
+import "components/settingrows"
 import "components/Sections.js" as Sections
 import "components/Send.js" as Send
 import "components/Terminal.js" as Terminal

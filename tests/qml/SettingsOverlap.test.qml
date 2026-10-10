@@ -4,6 +4,7 @@ import qs.Common
 import qs.Services
 import qs.Modules.Plugins
 import "../../components/settings"
+import "../../components/settingrows"
 import "../.."
 
 // Every settings page at the narrowest real width: no text under a control or
@@ -87,6 +88,9 @@ Item {
                 return out;
             if (item.truncated)
                 out.push(item.text);
+            // A text taller or wider than the control that holds it is drawn past its edges
+            if (item.text !== undefined && item.parent && item.parent.objectName !== "control" && item.parent.radius !== undefined && (item.contentHeight > item.parent.height + 0.5 || item.contentWidth > item.parent.width + 0.5))
+                out.push("outgrows its control: " + item.text);
             for (const c of item.children)
                 cutTexts(c, out);
             return out;

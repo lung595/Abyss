@@ -16,7 +16,7 @@ Window {
     readonly property string tab: spec[0]
     readonly property string out: args[args.length - 1]
     width: spec.indexOf("narrow") >= 0 ? 406 : 600
-    height: Math.max(400, Math.min(1400, settings.height + 40))
+    height: Math.max(400, Math.min(2400, settings.height + 40))
     visible: true
     color: Theme.surface
 

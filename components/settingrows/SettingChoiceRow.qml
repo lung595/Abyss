@@ -68,7 +68,7 @@ Column {
                 required property int index
                 readonly property bool on: root.valueOf(modelData) === root.value
                 width: Math.min(pillText.implicitWidth + 28, parent.width)
-                height: 34
+                height: Math.max(34, pillText.contentHeight + 12)
                 radius: 17
                 color: on ? Theme.primary : Theme.surfaceContainerHighest
                 border.width: root.activeFocus && on ? 2 : 1
