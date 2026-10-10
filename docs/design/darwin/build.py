@@ -11,13 +11,16 @@ import sys
 INK, BODY, LIGHT, LIMB, WHITE = "#0a0a0a", "#f47e26", "#f6bc8c", "#f49c52", "#e4e3e8"
 STROKE = 7  # outline weight measured on the reference, in this space
 
-# Silhouette, clockwise from the snout; the belly is nearly flat, as on the
-# reference.
-BODY_PTS = [(722, 260), (723, 317), (704, 371), (666, 414), (618, 443), (568, 460), (510, 468),
-            (440, 472), (370, 473), (300, 472), (230, 467), (165, 452), (105, 420), (62, 370),
-            (48, 315), (51, 260), (57, 200), (83, 145), (125, 101), (172, 69), (221, 47),
-            (268, 31), (312, 18), (356, 9), (400, 3), (445, 4), (490, 12), (532, 31), (566, 62),
-            (591, 100), (608, 140), (647, 170), (694, 208)]
+# Silhouette, clockwise from the snout: 48 rays cast every 7.5 degrees from
+# (385, 240) onto the reference outline, inset by half the stroke. The four
+# points hidden behind the tail fin are interpolated.
+BODY_PTS = [(712, 240), (723, 284), (717, 329), (701, 371), (670, 405), (635, 431), (593, 448),
+            (553, 459), (517, 468), (480, 469), (446, 468), (415, 469), (385, 468), (355, 469),
+            (324, 468), (290, 469), (253, 468), (211, 467), (168, 457), (118, 432), (82, 394),
+            (62, 352), (55, 314), (58, 283), (54, 240), (62, 198), (79, 158), (105, 124),
+            (136, 96), (169, 74), (203, 58), (236, 45), (267, 35), (296, 26), (326, 19), (355, 11),
+            (385, 8), (416, 6), (448, 7), (479, 12), (510, 23), (537, 41), (561, 64), (581, 90),
+            (596, 118), (606, 148), (644, 171), (684, 201)]
 
 
 def smooth(pts):
@@ -47,15 +50,15 @@ def front():
     leg = '<path d="M%d 455v104a35 35 0 0 0 70 0v-104z" fill="%s" %s/>'
     return "\n".join([
         leg % (230, BODY, s), leg % (470, BODY, s),
-        '<path d="M120 318C70 296 14 316 10 360c-2 14 8 24 22 27c-16 5-26 16-24 32c4 44 44 58 94 53c40-4 66-20 80-40z" fill="%s" %s/>' % (LIMB, s),
-        '<path d="M32 387l46 3M24 430l48-10" fill="none" %s/>' % s,
+        '<path d="M120 330C95 312 60 310 38 318C20 326 9 345 8 368c-2 4-2 8 0 12c0 30 10 60 32 80c18 14 45 18 70 12l60-17z" fill="%s" %s/>' % (LIMB, s),
+        '<path d="M10 352l38 6M9 386l42-2M20 426l38-12" fill="none" %s/>' % s,
         '<path d="%s" fill="%s" %s/>' % (smooth(BODY_PTS), BODY, s),
         '<path d="M112 146c-30 36-36 96-24 140 6 4 14 2 16-6 4-50 18-90 36-122 0-10-18-18-28-12z" fill="%s"/>' % LIGHT,
         '<ellipse cx="269.5" cy="184.5" rx="96" ry="90" fill="%s" %s/>' % (WHITE, s),
         '<ellipse cx="495.5" cy="173" rx="90" ry="86.5" fill="%s" %s/>' % (WHITE, s),
-        '<circle cx="285" cy="188" r="45" fill="%s"/><circle cx="484" cy="177" r="45" fill="%s"/>' % (INK, INK),
+        '<circle cx="285" cy="188" r="47" fill="%s"/><circle cx="484" cy="177" r="47" fill="%s"/>' % (INK, INK),
         '<path d="M178 150l-20-8M172 172l-22 0M176 196l-20 10M584 128l20-10M590 150l22-2M590 174l20 6" fill="none" %s/>' % s,
-        '<path d="M224 76c16-18 44-26 66-22M460 40c20-6 44 0 60 18" fill="none" %s stroke-opacity="1"/>' % s.replace('"7"', '"11"'),
+        '<path d="M224 76c16-18 44-26 66-22M460 40c20-6 44 0 60 18" fill="none" %s stroke-opacity="1"/>' % s.replace('"7"', '"14"'),
         cheek(286, 312, 61, 203, 118, 1), cheek(503, 299, 57, -30, 62, 0),
         '<path d="M346 320Q398 352 448 306" fill="none" %s/>' % s,
         '<circle cx="290" cy="307" r="30" fill="%s"/><circle cx="492" cy="297" r="30" fill="%s"/>' % (LIGHT, LIGHT),
@@ -80,7 +83,7 @@ def swim():
         # paths so the joint with the body carries no outline.
         '<path d="M150 352c-28 30-10 80 30 92 36 10 66-6 70-36" fill="%s" %s/>' % (BODY, s),
         '<path d="M158 392l26 12M192 420l14 22" fill="none" %s/>' % s,
-        '<path d="M218 318C160 288 92 288 50 320c-35 25-30 65 0 70 35 2 60-25 100-40" fill="%s" %s/>' % (BODY, s),
+        '<path d="M218 318C160 288 92 288 50 320c-35 25-30 65 0 70 35 2 60-25 100-40L200 372" fill="%s" %s/>' % (BODY, s),
         '<ellipse cx="275" cy="205" rx="70" ry="56" transform="rotate(-12 275 205)" fill="%s" %s/>' % (WHITE, s),
         '<ellipse cx="418" cy="155" rx="67" ry="62" fill="%s" %s/>' % (WHITE, s),
         '<circle cx="297" cy="198" r="22" fill="%s"/><circle cx="437" cy="140" r="21" fill="%s"/>' % (INK, INK),
