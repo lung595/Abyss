@@ -71,10 +71,9 @@ ok("opacity and scale stay in range all along", Array.from({ length: 101 }, (_, 
 ok("x moves forward, never back, while carrying", Array.from({ length: 40 }, (_, i) => M.pose(0.4 + i * 0.011, from, to).x).every((x, i, a) => i === 0 || x >= a[i - 1]));
 eq("the tip is at the creature with no reach", M.tip(to, from, 0), to);
 eq("the tip is at the file with full reach", M.tip(to, from, 1), from);
-eq("a drop starts where the pointer let go", M.startPoint({ "x": 80, "y": 90 }, to, { "w": 600, "h": 400 }), { "x": 80, "y": 90 });
-eq("another way starts beside the creature", M.startPoint(null, to, { "w": 600, "h": 400 }), { "x": 190, "y": 110 });
-eq("the start is kept inside the scene", M.startPoint({ "x": -50, "y": 999 }, to, { "w": 600, "h": 400 }), { "x": 24, "y": 376 });
-eq("a start near the corner is kept in", M.startPoint(null, { "x": 20, "y": 20 }, { "w": 600, "h": 400 }), { "x": 24, "y": 24 });
+eq("the file starts beside the creature", M.startPoint(to, { "w": 600, "h": 400 }), { "x": 190, "y": 110 });
+eq("the start is kept inside the scene from below", M.startPoint({ "x": 300, "y": 999 }, { "w": 600, "h": 400 }), { "x": 190, "y": 400 - 24 });
+eq("a start near the corner is kept in", M.startPoint({ "x": 20, "y": 20 }, { "w": 600, "h": 400 }), { "x": 24, "y": 24 });
 eq("the bloom is dark outside its time", [M.bloom(-0.1), M.bloom(0), M.bloom(1), M.bloom(2)], [0, 0, 0, 0]);
 eq("the bloom peaks in the middle", M.bloom(0.5), 1);
 done("sendflow");

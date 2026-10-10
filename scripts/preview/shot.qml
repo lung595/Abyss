@@ -415,9 +415,8 @@ Window {
         }
     }
 
-    // gif-send-drop: a file dropped on a creature; gif-send-menu: the same
-    // send started from the creature's menu ("Send a file…"). Frames every
-    // 80 ms from the moment it starts.
+    // gif-send-menu: a send started from the creature's menu ("Send a
+    // file…"). Frames every 80 ms from the moment it starts.
     Timer {
         id: sendReel
         property int frame: -1
@@ -428,14 +427,8 @@ Window {
                 const it = scene.arr.items.find(i => i.type === "peer" && scene.peerById[i.peerId].online);
                 if (!it)
                     return;
-                const peer = scene.peerById[it.peerId];
-                if (win.mode === "gif-send-drop") {
-                    const at = scene.spotOf(it.id);
-                    find(scene, "sendLayer").dropFiles(peer, ["file:///made/up/report.pdf"], Qt.point(at.x + 120, at.y - 80));
-                } else {
-                    scene.openMenu(it.id, scene.spotOf(it.id));
-                    scene.doMenu({ "act": "send", "arg": false });
-                }
+                scene.openMenu(it.id, scene.spotOf(it.id));
+                scene.doMenu({ "act": "send", "arg": false });
             }
             const n = ++frame;
             if (n > 40) {

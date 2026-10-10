@@ -1,7 +1,7 @@
 .pragma library
 .import "Send.js" as Send
 
-// How a send is asked for, whichever way it comes (a drop, the creature's
+// How a send is asked for, whichever way it comes (the creature's
 // menu, Ctrl+V on its card, the launcher, `dms ipc call abyss send`), as
 // pure functions tested with gjs in tests/. Every way ends in the same call;
 // what differs is only where the items come from, and that is checked here
@@ -81,7 +81,7 @@ function pickCommand(name, folder) {
 function pickFailure(code) {
     if (code !== -1)
         return null;
-    return { "kind": "picker", "title": "The file picker could not open", "advice": "Install zenity, or drop the file on the creature, or copy it and press Ctrl+V on its card.", "guide": GUIDE };
+    return { "kind": "picker", "title": "The file picker could not open", "advice": "Install zenity, or copy the file and press Ctrl+V on its card.", "guide": GUIDE };
 }
 
 // --- Refusals before anything is run ------------------------------------------

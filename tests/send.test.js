@@ -19,7 +19,7 @@ ok("a refusal says why", S.remoteDir("a;b").reason.length > 10);
 
 // Local paths
 eq("a plain path", S.localPath("/mnt/u/a.txt"), "/mnt/u/a.txt");
-eq("a dropped URL is decoded", S.localPath("file:///mnt/u/My%20Pics"), "/mnt/u/My Pics");
+eq("a file URL is decoded", S.localPath("file:///mnt/u/My%20Pics"), "/mnt/u/My Pics");
 eq("a localhost URL too", S.localPath("file://localhost/mnt/u/x"), "/mnt/u/x");
 eq("a trailing slash goes", S.localPath("/mnt/u/dir/"), "/mnt/u/dir");
 eq("a relative path is refused", S.localPath("a:b/c"), null);
@@ -29,7 +29,7 @@ eq("a broken escape is refused", S.localPath("file:///a%E0%A4%A"), null);
 eq("nothing is no path", S.localPath(undefined), null);
 eq("many paths, duplicates once", S.cleanPaths(["/a", "/b", "/a/"]).paths, ["/a", "/b"]);
 eq("one path may come alone", S.cleanPaths("/a").paths, ["/a"]);
-ok("an empty drop says nothing to send", !S.cleanPaths([]).ok && S.cleanPaths([]).reason === "Nothing to send");
+ok("an empty pick says nothing to send", !S.cleanPaths([]).ok && S.cleanPaths([]).reason === "Nothing to send");
 ok("one bad item refuses the lot", !S.cleanPaths(["/a", "rel"]).ok);
 ok("the whole disk is refused", !S.cleanPaths(["/"]).ok);
 ok("too many items are refused", !S.cleanPaths(Array.from({ length: 101 }, (_, i) => "/f" + i)).ok);

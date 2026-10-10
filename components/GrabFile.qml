@@ -5,7 +5,7 @@ import "GrabMotion.js" as Motion
 
 // The "grab the file" scene: a file appears, the creature's tentacle reaches
 // it, carries it over and the file drops in. It is the one scene for every
-// way of sending (a drop, the menu, Ctrl+V, the launcher), so they all look
+// way of sending (the menu, Ctrl+V, the launcher), so they all look
 // the same; play() starts it and landed() says it is over, when the send's
 // own progress takes over. A Timer at 30 Hz runs it, only while it plays: a
 // QML animation would redraw the whole shell for these 0.9 seconds.

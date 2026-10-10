@@ -79,7 +79,7 @@ Item {
         id: prefs
     }
 
-    // Sending files to a peer: one hub for the drop, the menu, Ctrl+V, the
+    // Sending files to a peer: one hub for the menu, Ctrl+V, the
     // launcher and the IPC. Each open view plays the outcome itself; with no
     // view open it comes as a notification instead
     readonly property alias send: hub
@@ -366,7 +366,7 @@ Item {
         return root.reach(kind, p) ? "OK" : "Refused: " + (p.fqdn || p.ip) + " is not a plain host name";
     }
 
-    // dms ipc call abyss send <peer> <path>: the same send as a drop, with a
+    // dms ipc call abyss send <peer> <path>: the same send as the menu's, with a
     // looked-up peer and a path checked and capped (SendFlow.ipcRequest)
     function _sendIpc(pair, path) {
         if (!root.source)

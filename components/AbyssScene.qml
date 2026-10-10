@@ -1253,24 +1253,12 @@ Item {
         else if (actions)
             actions.openUrl(url);
     }
-    // The online peer under a point; any peer when asked (a file dropped on
-    // an offline one is explained, not ignored)
-    // Files let go at (x, y): sent to the creature there, or a note says to
-    // drop right on one
-    function dropUrls(urls, x, y) {
-        if (!urls.length)
-            return;
-        const p = _peerAt(x, y, true);
-        if (p)
-            sendLayer.dropFiles(p, urls, Qt.point(x, y));
-        else
-            explain("Drop it on a creature", "Each creature is a device; let go right on one", "send-a-file", x, y + 30);
-    }
-    function _peerAt(px, py, any) {
+    // The online peer under a point
+    function _peerAt(px, py) {
         let best = null, dist = 46;
         arr.items.forEach(it => {
             const p = it.type === "peer" ? peerById[it.peerId] : null, s = lay.peers[it.id];
-            if (!p || (!p.online && !any) || !s)
+            if (!p || !p.online || !s)
                 return;
             const d = Math.hypot(s.x - px, s.y - py);
             if (d < dist) {
@@ -2804,26 +2792,6 @@ Item {
             sub: root.filters.map(f => f.label).join("  ·  ")
             third: root.arr.hits === 1 ? "Enter: open · Esc: clear" : "Esc: clear"
             ink: root.arr.hits ? root.sunColor : Theme.warning
-        }
-
-        // Files dropped on a creature are sent to it (SendLayer). A drop on
-        // nothing says so; the fallbacks (menu, Ctrl+V, launcher) cover the
-        // views that cannot receive drops at all
-        DropArea {
-            anchors.fill: parent
-            z: 1
-            keys: ["text/uri-list"]
-            enabled: root.looking && !!root.actions && !!root.actions.send
-            onPositionChanged: drag => {
-                const p = root._peerAt(drag.x, drag.y, true);
-                root.dropName = p ? p.name : "";
-            }
-            onExited: root.dropName = ""
-            onDropped: drop => {
-                root.dropName = "";
-                root.dropUrls(drop.urls || [], drop.x, drop.y);
-                drop.accept();
-            }
         }
 
         // Dims the water behind the open card; a click there closes it. In
