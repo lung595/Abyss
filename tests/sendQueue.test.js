@@ -69,5 +69,18 @@ for (let i = 1; i <= 80; i++)
     h = Q.fail(Q.start(h, i), i, "x");
 eq("history is capped", h.history.length, 50);
 eq("history keeps the newest", h.history[0].id, 80);
+// A done row waiting for Dismiss is not a live job
+let d = Q.add(Q.empty(), ["f"], ["a"]).state;
+d = Q.finish(Q.start(d, 1), 1, 5);
+r = Q.add(d, ["f"], ["a"]);
+eq("re-send after done is accepted", r.skipped, 0);
+eq("the done row stays beside the new job", r.state.jobs.length, 2);
+let full = Q.add(Q.empty(), Array.from({ length: 200 }, (_, i) => "f" + i), ["a"]).state;
+for (let i = 1; i <= 200; i++)
+    full = Q.finish(Q.start(full, i), i, 1);
+r = Q.add(full, ["new"], ["a"]);
+eq("done rows never refuse a drop", r.skipped, 0);
+eq("the old done rows moved to the history", r.state.jobs.length, 1);
+eq("history stays capped", r.state.history.length, 50);
 eq("input state is never mutated", Q.empty().jobs.length, 0);
 done();

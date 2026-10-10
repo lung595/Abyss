@@ -40,4 +40,8 @@ eq("garbage", T.parseProgress(undefined), null);
 eq("short name kept", T.middle("a.pdf", 18, 6), "a.pdf");
 eq("long name keeps the extension", T.middle("quarterly-report-final-version-2026-signed.pdf", 18, 6), "quarterly-report-f…ed.pdf");
 eq("base name", T.baseName("/tmp/x/y.txt"), "y.txt");
+eq("age just now", T.age(1000, 1000), "just now");
+eq("age minutes", T.age(5 * 60000, 0), "5 min ago");
+eq("age hours", T.age(150 * 60000, 0), "2 h ago");
+eq("age never negative", T.age(0, 99999), "just now");
 done();

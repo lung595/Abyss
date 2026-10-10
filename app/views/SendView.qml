@@ -26,6 +26,10 @@ Item {
     // False while the window is hidden: the indeterminate segment and the
     // meter stop
     property bool shown: true
+    // "Now" for the history ages: refreshed when the queue changes and when the
+    // window is shown again, so no timer runs for it
+    property real clock: Date.now()
+    onShownChanged: clock = Date.now()
     // Set by the window after a first close attempt during a transfer
     property bool closeAsked: false
     // The queue state (SendQueue.js); replaced, never edited
@@ -50,7 +54,9 @@ Item {
     // The height of the "History" heading: a 44 px target like the buttons
     readonly property int headerHeight: 44
     // The newest failed or cancelled job: what the band's Retry sends again
-    readonly property var lastFailed: q.history.find(j => j.state === "failed" || j.state === "cancelled") ?? null
+    // The job the shown failure belongs to (0 for none): the band's Retry sends that one
+    property int failedId: 0
+    readonly property var lastFailed: failedId > 0 ? q.history.find(j => j.id === failedId) ?? null : null
     readonly property int runningCount: running.count
     readonly property var online: (Array.isArray(peers) ? peers : []).filter(p => p.online)
     readonly property var names: online.map(p => p.name)
@@ -112,9 +118,13 @@ Item {
     function act(job, kind) {
         if (kind === "cancel")
             q = Queue.cancel(q, job.id, Date.now());
-        else if (kind === "retry")
+        else if (kind === "retry") {
             q = Queue.retry(q, job.id);
-        else
+            if (job.id === failedId) {
+                failure = null;
+                failedId = 0;
+            }
+        } else
             q = Queue.dismiss(q, job.id);
         _pump();
     }
@@ -219,6 +229,7 @@ Item {
         if (!plan.ok) {
             q = Queue.fail(q, id, plan.reason, Date.now());
             failure = Send.refusal(plan.reason);
+            failedId = id;
             _pump();
             return;
         }
@@ -239,6 +250,7 @@ Item {
             const why = Send.explain(code, stderr, peer ? peer.name : job.device, false);
             q = Queue.fail(q, id, why.title, Date.now());
             failure = why;
+            failedId = id;
         }
         _pump();
     }
@@ -249,6 +261,7 @@ Item {
     onQChanged: {
         liveRows.sync(q.jobs);
         historyRows.sync(q.history);
+        clock = Date.now();
         const sending = new Set(q.jobs.filter(j => j.state === "sending").map(j => j.id));
         for (let i = running.count - 1; i >= 0; i--)
             if (!sending.has(running.get(i).jid))
@@ -386,6 +399,7 @@ Item {
 
                 width: view.width
                 history: true
+                now: view.clock
                 job: view.rowJob(pastRow.model)
                 onAction: kind => view.act(job, kind)
             }

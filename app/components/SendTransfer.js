@@ -67,3 +67,10 @@ function baseName(path) {
     const p = String(path);
     return p.slice(p.lastIndexOf("/") + 1) || p;
 }
+
+// "just now", "5 min ago", "2 h ago" for a history row. `at` and `now` are ms
+// since the epoch, given by the caller so this stays pure.
+function age(now, at) {
+    const min = Math.max(0, Math.round((now - (at ?? 0)) / 60000));
+    return min < 1 ? "just now" : min < 60 ? min + " min ago" : Math.floor(min / 60) + " h ago";
+}

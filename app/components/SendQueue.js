@@ -20,23 +20,36 @@ function empty() {
     return { "jobs": [], "history": [], "nextId": 1 };
 }
 
+function _live(job) {
+    return job.state === QUEUED || job.state === SENDING;
+}
+
 // Files x devices, in drop order, up to MAX_JOBS live jobs. Duplicates of a
-// live job (same file, same device) are skipped: a double drop sends once.
+// live job (same file, same device) are skipped: a double drop sends once. A
+// done row waiting for its Dismiss is neither a duplicate nor counted, so the
+// file can be sent again; the oldest done rows go to the history instead when
+// the list itself is full.
 function add(state, paths, devices) {
-    const jobs = state.jobs.slice();
+    let history = state.history;
+    let jobs = state.jobs.slice();
+    if (jobs.length >= MAX_JOBS) {
+        const done = jobs.filter(j => j.state === DONE);
+        jobs = jobs.filter(j => j.state !== DONE);
+        history = done.reverse().concat(history).slice(0, MAX_HISTORY);
+    }
     let id = state.nextId;
     let skipped = 0;
     for (const device of devices) {
         for (const path of paths) {
-            const dup = jobs.some(j => j.device === device && j.path === path);
-            if (dup || jobs.length >= MAX_JOBS) {
+            const dup = jobs.some(j => _live(j) && j.device === device && j.path === path);
+            if (dup || jobs.filter(_live).length >= MAX_JOBS) {
                 skipped++;
                 continue;
             }
             jobs.push({ "id": id++, "device": device, "path": path, "state": QUEUED, "progress": null, "reason": "", "at": 0 });
         }
     }
-    return { "state": { "jobs": jobs, "history": state.history, "nextId": id }, "skipped": skipped };
+    return { "state": { "jobs": jobs, "history": history, "nextId": id }, "skipped": skipped };
 }
 
 // Ids to start now: the first queued job of every device that has none
@@ -116,7 +129,7 @@ function cancel(state, id, now) {
 // A failed or cancelled job of the history goes back to the end of the queue.
 function retry(state, id) {
     const old = state.history.find(j => j.id === id);
-    if (!old || (old.state !== FAILED && old.state !== CANCELLED) || state.jobs.length >= MAX_JOBS)
+    if (!old || (old.state !== FAILED && old.state !== CANCELLED) || state.jobs.filter(_live).length >= MAX_JOBS)
         return state;
     const job = Object.assign({}, old, { "state": QUEUED, "progress": null, "reason": "", "at": 0 });
     return {

@@ -22,10 +22,7 @@ Item {
     readonly property bool live: job.state === "queued" || job.state === "sending"
     readonly property string actionLabel: live ? "Cancel" : job.state === "done" ? "Dismiss" : "Retry"
     readonly property bool hasAction: !history || job.state === "failed" || job.state === "cancelled"
-    readonly property string age: {
-        const min = Math.max(0, Math.round((now - (job.at ?? 0)) / 60000));
-        return min < 1 ? "just now" : min < 60 ? min + " min ago" : Math.floor(min / 60) + " h ago";
-    }
+    readonly property string age: Transfer.age(now, job.at)
 
     height: 56
 
@@ -71,7 +68,7 @@ Item {
     Rectangle {
         id: track
 
-        x: parent.width - 100 - 12 - 120 - 160
+        x: parent.width - 100 - 12 - 120 - 240
         y: 24
         width: 120
         height: 8
@@ -107,8 +104,8 @@ Item {
         visible: !row.history
         x: track.x + 130
         y: 16
-        width: 150
-        text: row.job.state === "sending" ? (row.job.progress === null ? "Sending · scp, no progress" : Math.round(row.job.progress * 100) + " %  " + row.rate) : row.job.state === "failed" ? "Failed" : row.job.state === "cancelled" ? "Cancelled" : row.job.state === "done" ? "Done" : "Waiting"
+        width: 230
+        text: row.job.state === "sending" ? (row.job.progress === null ? "Sending · scp, no progress" : Math.round(row.job.progress * 100) + " %  " + row.rate) : row.job.state === "failed" ? "Failed" : row.job.state === "cancelled" ? "Cancelled" : row.job.state === "done" ? "100 %  done" : "Waiting"
         color: Theme.onSurfaceVariant
         font.family: Theme.monoFontFamily
         font.pixelSize: Theme.fontSizeMedium
