@@ -17,8 +17,9 @@ const CRUMB_BITS = 12e6, MAX_CRUMBS = 5, CRUMB_FALL = 14;
 const DIRT_GROWS = 300, SCRUB_TAKES = 3.5, DIRTY = 0.5, CLEAN = 0.02;
 const WAVE_TAKES = 1.8, EAT_TAKES = 0.45;
 
-// A small repeatable random source (the same bowl for the same seed)
-function _rng(s) {
+// A small repeatable random source (the same bowl for the same seed); Mood.js
+// draws from it too, on its own state
+function random(s) {
     s.seed = (s.seed * 16807) % 2147483647;
     return (s.seed - 1) / 2147483646;
 }
@@ -45,10 +46,10 @@ function create(b, seed) {
     // each growing at its own pace
     for (let i = 0; i < 4; i++)
         s.spots.push({
-            "x": b.l + (b.r - b.l) * (0.14 + 0.24 * i + 0.06 * _rng(s)),
-            "y": b.top + (b.bottom - b.top) * (0.3 + 0.5 * _rng(s)),
-            "r": 16 + 10 * _rng(s),
-            "pace": 0.7 + 0.6 * _rng(s),
+            "x": b.l + (b.r - b.l) * (0.14 + 0.24 * i + 0.06 * random(s)),
+            "y": b.top + (b.bottom - b.top) * (0.3 + 0.5 * random(s)),
+            "r": 16 + 10 * random(s),
+            "pace": 0.7 + 0.6 * random(s),
             "dirt": 0
         });
     return s;
@@ -84,7 +85,7 @@ function step(s, dt, env) {
         if (s.feed >= 1) {
             s.feed = 0;
             if (s.crumbs.length < MAX_CRUMBS)
-                s.crumbs.push({ "x": b.l + (b.r - b.l) * (0.1 + 0.8 * _rng(s)), "y": b.top, "k": _rng(s) * 6 });
+                s.crumbs.push({ "x": b.l + (b.r - b.l) * (0.1 + 0.8 * random(s)), "y": b.top, "k": random(s) * 6 });
         }
     }
     s.crumbs.forEach(c => c.y = Math.min(b.bottom + 4, c.y + CRUMB_FALL * dt));
@@ -131,7 +132,7 @@ function step(s, dt, env) {
         }
     } else if (s.mood === "swim") {
         if (!s.goal || s.moodT > 9 || Math.hypot(s.goal.x - s.x, s.goal.y - s.y) < 8) {
-            s.goal = _clampTo(b, { "x": b.l + (b.r - b.l) * _rng(s), "y": b.top + (b.bottom - 10 - b.top) * _rng(s) });
+            s.goal = _clampTo(b, { "x": b.l + (b.r - b.l) * random(s), "y": b.top + (b.bottom - 10 - b.top) * random(s) });
             s.moodT = 0;
         }
     }
