@@ -7,26 +7,23 @@ approved, and not used by the widget.
 |---|---|---|
 | `darwin-front.svg` | front | 729 px wide, same as `components/assets/darwin/body.png`; the viewBox adds 12 px on the left for the tail fin, 4 px on the right, 8 px on top |
 | `darwin-swim.svg` | swimming, turned | 680 x 480 |
-| `darwin-three-quarter.svg`, `darwin-profile.svg` | three-quarter and profile, deduced from the front view | the front space, 660 and 500 wide |
-| `darwin-front-25.svg`, `darwin-three-quarter-25.svg`, `darwin-profile-25.svg`, `darwin-swim-25.svg` | optical variants for the real widget size | 25 x 21, 22 x 21, 17 x 21 and 25 x 18, one unit = one pixel |
+| `darwin-three-quarter.svg`, `darwin-profile.svg` | three-quarter and profile, deduced from the front view | the front space, 660 and 566 wide (the profile box starts 89 units further left for its tail fin) |
+| `darwin-front-25.svg`, `darwin-three-quarter-25.svg`, `darwin-profile-25.svg`, `darwin-swim-25.svg` | optical variants for the real widget size | 25 x 21, 22 x 21, 19 x 21 and 25 x 18, one unit = one pixel |
 | `*@1x.png` | the optical variants rendered 1:1 (25 px wide, `unit` 0.034 in `Goldfish.qml`) | |
-| `*@4x.png` | four times the real size: front and swimming 100 px wide, three-quarter 89, profile 67 (one scale, 100 / 745, for the three views of the front space) | |
-| `scene-dark.png`, `scene-light.png`, `scene-wallpaper.png` | the four views at real size in the real desktop bowl (`scripts/preview/render.sh desk`, `desk-light`, and `desk` with a made-up warm wallpaper palette in the preview `Theme`), composited at +328+356 (front), +360+356 (three-quarter), +389+356 (profile) and +413+357 (swimming), with a 6x unsmoothed zoom below | |
+| `*@4x.png` | four times the real size: front and swimming 100 px wide, three-quarter 89, profile 76 (one scale, 100 / 745, for the three views of the front space) | |
+| `scene-dark.png`, `scene-light.png`, `scene-wallpaper.png` | the profile alone (the only view kept, owner 2026-10-10) at real size in the real desktop bowl (`scripts/preview/render.sh desk`, `desk-light`, and `desk` with a made-up warm wallpaper palette in the preview `Theme`), composited at +368+356, with a 6x unsmoothed zoom below | |
 
 Rebuild:
 
 ```sh
 python3 build.py .
-for v in front:100 three-quarter:89 profile:67 swim:100; do
+for v in front:100 three-quarter:89 profile:76 swim:100; do
   magick -background none darwin-${v%:*}-25.svg darwin-${v%:*}@1x.png
   magick -background none darwin-${v%:*}.svg -resize ${v#*:}x darwin-${v%:*}@4x.png
 done
 # scenes: <mode> is desk, desk-light, or desk with the wallpaper palette below
 ../../../scripts/preview/render.sh <mode> top.png
-magick top.png darwin-front@1x.png -geometry +328+356 -composite \
-  darwin-three-quarter@1x.png -geometry +360+356 -composite \
-  darwin-profile@1x.png -geometry +389+356 -composite \
-  darwin-swim@1x.png -geometry +413+357 -composite top.png
+magick top.png darwin-profile@1x.png -geometry +368+356 -composite top.png
 magick top.png \( top.png -crop 130x60+312+336 +repage -filter point -resize 600% \) \
   -append -strip scene-<name>.png
 ```
@@ -201,6 +198,18 @@ pupils, cheeks and both brows sit on the reference ink.
   of body on a horizontal line). Where the body line slants, the gap measured
   across it is smaller: 9.0 and 9.5 px between centres, that is 5.5 to 6 px
   of visible body (measured by the UI Designer), not a full stroke width.
-- Not done: the 0.6 depth ratio is an assumption (Q129); the profile keeps the front
-  tail fin seen flat (a real profile would show it edge-on or fanned, no
-  reference says which).
+- **Profile only** (owner, 2026-10-10: Darwin is shown in profile only). The
+  profile is the reference view; front, three-quarter and swimming stay as the
+  source it is built from and are no longer worked on. Its tail fin and mouth
+  are now its own, both deduced: the fin is the rounded paddle seen side-on
+  (`FIN_SIDE`, sized from the swimming fin, drawn under the body so the body
+  line stays whole, two short strokes); the mouth is the near half of the
+  smile, from the corner under the cheek out to the body line at the snout.
+  Outline, colours, proportions, eye, cheek and legs are unchanged. The 25 px
+  variant is 19 x 21 (everything shifted 3 px right for the fin).
+- Profile-only scenes, contrast on all 7800 backdrop pixels of the 130 x 60
+  zone: body 6.25 to 7.18:1 (dark), 6.63 to 7.44:1 (light), 6.23 to 7.19:1
+  (wallpaper theme); eye white 13.09, 13.89 and 13.04:1 at worst; outline
+  1.12 to 1.19:1 at worst (invisible, the body carries the shape).
+- Not done: the 0.6 depth ratio is an assumption (Q129); the side-on fin has
+  no reference; the fin's top edge keeps a slight wave at full size.

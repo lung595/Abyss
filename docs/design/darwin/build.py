@@ -122,6 +122,13 @@ FIN = [(56, 309), (40, 306), (26, 310), (18, 317), (6, 326), (-3, 340), (-4, 360
        (124, 462), (130, 457), (134, 452)]
 FIN_CURLS = [[(56, 300), (58, 322), (68, 337)], [(113, 431), (122, 443), (136, 453)]]
 CENTRE, HALF_WIDTH, BACK = (385, 240), 335, 54
+# Profile tail fin (deduced): the same rounded paddle, seen side-on, so it
+# leaves the back of the body along its axis instead of sitting beside it. Its
+# size is the swimming fin's (115 x 105 in the 680 space, body 460 wide) carried
+# to this space (x 670 / 460). It is drawn under the body, whose line stays
+# whole across the root; the first and last two points are hidden there.
+FIN_SIDE = [(110, 396), (72, 356), (22, 326), (-36, 314), (-78, 340), (-90, 394), (-80, 446), (-42, 476),
+            (16, 472), (76, 450), (122, 432)]
 # Turned views are deduced, not traced (no reference shows them): the body is
 # taken as 0.6 times as deep as it is wide, turned about its vertical axis.
 DEPTH = 0.6
@@ -171,19 +178,30 @@ def front(small=False, view="front"):
     s = 'stroke="%s" stroke-width="%d" stroke-linecap="round" stroke-linejoin="round"' % (INK, STROKE)
     leg = '<path d="M%.1f 455v104a35 35 0 0 0 70 0v-104z" fill="%s" %s/>'
     fin = [(xs(x), y) for x, y in FIN]
+    body = '<path d="%s" fill="%s" %s/>' % (outline(BODY_PTS, CENTRE, 0, 12, xs), BODY, s)
+    shine = ('<path transform="translate(%.1f 0)" d="M112 146c-30 36-36 96-24 140 6 4 14 2 16-6 4-50 18-90 36-122 0-10-18-18-28-12z"'
+             ' fill="%s"/>' % (xs(112) - 112, LIGHT))
     # Far leg first: the near one overlaps it when the body turns. In profile
     # both legs are on the view axis: the far one only shows behind the near.
     legs = (xs(CENTRE[0]) - 57, xs(CENTRE[0]) - 35) if view == "profile" else (xs(470), xs(230))
-    base = [
-        leg % (legs[0], BODY, s), leg % (legs[1], BODY, s),
-        '<path d="%s" fill="%s" %s/>' % (outline(BODY_PTS, CENTRE, 0, 12, xs), BODY, s),
-        '<path d="M%.1f %.1f%s" fill="%s" %s/>' % (fin[0] + ("".join(
-            "C" + " ".join("%.1f %.1f" % p for p in fin[i:i + 3]) for i in range(1, len(fin), 3)), BODY, s)),
-        '<path transform="translate(%.1f 0)" d="M112 146c-30 36-36 96-24 140 6 4 14 2 16-6 4-50 18-90 36-122 0-10-18-18-28-12z"'
-        ' fill="%s"/>' % (xs(112) - 112, LIGHT),
-    ]
-    curls = "".join("M%.1f %dQ%.1f %d %.1f %d" % tuple(v for x, y in c for v in (xs(x), y)) for c in FIN_CURLS)
-    detail = ['<path d="%sM3 387l32-6M26 452l32-21" fill="none" %s/>' % (curls, s)]
+    if view == "profile":
+        base = [
+            leg % (legs[0], BODY, s), leg % (legs[1], BODY, s),
+            '<path d="%s" fill="%s" %s/>' % (smooth(FIN_SIDE), BODY, s),
+            body, shine,
+        ]
+        # Two fin strokes, as on the references, pointing at the root.
+        detail = ['<path d="M-86 372l36 6M-66 458l30-22" fill="none" %s/>' % s]
+    else:
+        base = [
+            leg % (legs[0], BODY, s), leg % (legs[1], BODY, s),
+            body,
+            '<path d="M%.1f %.1f%s" fill="%s" %s/>' % (fin[0] + ("".join(
+                "C" + " ".join("%.1f %.1f" % p for p in fin[i:i + 3]) for i in range(1, len(fin), 3)), BODY, s)),
+            shine,
+        ]
+        curls = "".join("M%.1f %dQ%.1f %d %.1f %d" % tuple(v for x, y in c for v in (xs(x), y)) for c in FIN_CURLS)
+        detail = ['<path d="%sM3 387l32-6M26 452l32-21" fill="none" %s/>' % (curls, s)]
     thin = s.replace('"7"', '"5"')
     if view == "front":
         detail += [
@@ -225,9 +243,10 @@ def front(small=False, view="front"):
             '<ellipse cx="%.1f" cy="297" rx="%.1f" ry="30" fill="%s"/>' % (face(492)[0] + far, 30 * max(rk, 0.7), LIGHT),
         ]
     else:
-        # Profile: one eye, one cheek, the mouth ends on the outline. The eye
-        # keeps its height and takes the body's own narrowing (DEPTH).
-        edge = xs(712)
+        # Profile: one eye, one cheek. The eye keeps its height and takes the
+        # body's own narrowing (DEPTH). The mouth is the near half of the front
+        # smile: it leaves the corner under the cheek and runs out to the body
+        # line at the snout, where the front smile is lowest (y 336).
         at = radial(BODY_PTS, CENTRE, 0, 12, xs)
         erx = 96 * DEPTH
         # The eye sits as far forward as the body line allows over its whole
@@ -243,7 +262,8 @@ def front(small=False, view="front"):
             '<path d="%s" fill="none" %s/>' % (lashes(ex, 184.5, erx, 90, (215, 195, 178)), thin),
             '<path d="%s" fill="%s"/>' % (blob(brow), INK),
             cheek(ex + 10, 314, 50, 203, 118, 1),
-            '<path d="M%.1f 322Q%.1f 340 %.1f 312" fill="none" %s/>' % (edge - 78, edge - 46, edge - 18, s),
+            '<path d="M%.1f 318Q%.1f 344 %.1f 336" fill="none" %s/>'
+            % (ex + 58, (ex + 58 + right_edge(at, 336)) / 2 - 8, right_edge(at, 336), s),
             '<circle cx="%.1f" cy="307" r="26" fill="%s"/>' % (ex + 12, LIGHT),
         ]
     return "\n".join(base if small else base + detail)
@@ -319,8 +339,9 @@ THREE_QUARTER_25 = "".join([px(7, 15, 2, 5, BODY, 1), px(14, 15, 2, 5, BODY, 1),
                             px(8, 3, 5, 6, WHITE, 2.5), px(14, 3, 4, 6, WHITE, 2),
                             px(10, 5, 3, 3, INK, 1), px(15, 5, 2, 3, INK),
                             px(11, 10, 2, 2, LIGHT, 1), px(15, 10, 1, 2, LIGHT)])
-PROFILE_25 = "".join([px(7, 15, 2, 5, BODY, 1), px(8, 15, 2, 5, BODY, 1),
-                      px(9, 3, 4, 6, WHITE, 2), px(11, 5, 2, 3, INK), px(11, 10, 2, 2, LIGHT, 1)])
+# Profile: its box starts 89 units further left for the fin, 3 px here.
+PROFILE_25 = "".join([px(10, 15, 2, 5, BODY, 1), px(11, 15, 2, 5, BODY, 1),
+                      px(12, 3, 4, 6, WHITE, 2), px(14, 5, 2, 3, INK), px(14, 10, 2, 2, LIGHT, 1)])
 # One pixel of body is kept between the two eyes so they do not merge; the
 # pupils are square so that they stay solid ink on whole pixels.
 SWIM_25 = "".join([px(7, 5, 5, 5, WHITE, 2.5), px(13, 3, 5, 5, WHITE, 2.5),
@@ -333,11 +354,11 @@ if __name__ == "__main__":
     open(out + "/darwin-front.svg", "w").write(
         '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-12 -8 745 612" width="745" height="612">\n'
         '<title>Darwin, front view, neutral pose</title>\n%s\n</svg>\n' % front())
-    for name, width in (("three-quarter", 660), ("profile", 500)):
+    for name, left, width in (("three-quarter", -12, 660), ("profile", -101, 566)):
         open(out + "/darwin-%s.svg" % name, "w").write(
-            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-12 -8 %d 612" width="%d" height="612">\n'
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="%d -8 %d 612" width="%d" height="612">\n'
             '<title>Darwin, %s view, neutral pose (deduced from the front view)</title>\n%s\n</svg>\n'
-            % (width, width, name, front(view=name)))
+            % (left, width, width, name, front(view=name)))
     open(out + "/darwin-swim.svg", "w").write(
         '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 480" width="680" height="480">\n'
         '<title>Darwin, side view, swimming</title>\n%s\n</svg>\n' % swim())
@@ -345,5 +366,5 @@ if __name__ == "__main__":
     open(out + "/darwin-three-quarter-25.svg", "w").write(
         optical("three-quarter view", 22, 21, (-12, -8, 745), front(True, "three-quarter"), THREE_QUARTER_25))
     open(out + "/darwin-profile-25.svg", "w").write(
-        optical("profile view", 17, 21, (-12, -8, 745), front(True, "profile"), PROFILE_25))
+        optical("profile view", 19, 21, (-101, -8, 745), front(True, "profile"), PROFILE_25))
     open(out + "/darwin-swim-25.svg", "w").write(optical("swimming view", 25, 18, (0, 0, 680), swim(True), SWIM_25))
