@@ -3,9 +3,10 @@ import QtQuick.Window
 import "../../app/views"
 
 // CPU bench scene, runs until stopped:
-//   qml-qt6 -I tests/scene/imports scripts/preview/bench-app.qml -- <idle|switch> /dev/null
+//   qml-qt6 -I tests/scene/imports scripts/preview/bench-app.qml -- <idle|switch|after-send> /dev/null
 // idle: window open and still. switch: a station change every second, the
 // same call a gauge click makes (the dive animation runs each time).
+// after-send: Send is visited once, then the map is shown and stays.
 Window {
     id: root
 
@@ -22,6 +23,22 @@ Window {
 
         anchors.fill: parent
         netbirdState: "connected"
+    }
+
+    Timer {
+        interval: 1500
+        running: root.mode === "after-send"
+        onTriggered: {
+            frame.show("send");
+            back.start();
+        }
+    }
+
+    Timer {
+        id: back
+
+        interval: 1500
+        onTriggered: frame.show("map")
     }
 
     Timer {
