@@ -10,7 +10,10 @@ export QT_QPA_PLATFORM=offscreen
 # A private copy under a unique path: pgrep then sees only this test's process
 tmp=$(mktemp -d)
 trap 'pkill -f "qs -p $tmp/app" 2>/dev/null; rm -rf "$tmp"' EXIT
+# -L: the app reaches the shared settings folder through a symlink
 cp -rL app "$tmp/app"
+# The app writes its settings file: keep it out of the real config
+export XDG_CONFIG_HOME="$tmp/config"
 count() { pgrep -fc "[q]s -p $tmp/app"; }
 fail=0
 check() { [ "$2" = "$3" ] || { echo "FAIL $1: got $2, want $3"; fail=1; }; }

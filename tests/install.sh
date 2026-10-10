@@ -13,7 +13,7 @@ scratch=$(mktemp -d)
 trap 'rm -rf "$scratch"' EXIT
 # A space in HOME exercises the quoting of Exec
 export HOME="$scratch/my home"
-unset XDG_DATA_HOME
+unset XDG_DATA_HOME XDG_CONFIG_HOME   # the runner may set them: the test must not depend on the machine
 mkdir -p "$HOME/.local/bin"   # already there before the install: must survive
 tree() { find "$HOME" -printf '%P %y\n' | sort; }
 
@@ -25,6 +25,20 @@ sh "$root/install-app.sh" >/dev/null 2>&1
 check "a second install works" "$?" 0
 sh "$root/install-app.sh" --uninstall >/dev/null 2>&1
 check "uninstall restores the tree" "$(tree)" "$before"
+
+# The shared settings file: kept while the widget is installed, removed after it
+check "the install ships the settings store" "$(sh "$root/install-app.sh" >/dev/null 2>&1; ls "$HOME/.local/share/abyss/components/settings" | LC_ALL=C sort | tr '\n' ' ')" "SettingsFile.qml Store.js qmldir "
+mkdir -p "$HOME/.config/abyss" "$HOME/.config/DankMaterialShell/plugins/Abyss"
+echo '{}' >"$HOME/.config/abyss/settings.json"
+touch "$HOME/.config/DankMaterialShell/plugins/Abyss/plugin.json"
+sh "$root/install-app.sh" --uninstall >/dev/null 2>&1
+check "the settings stay while the widget is installed" "$([ -f "$HOME/.config/abyss/settings.json" ] && echo kept)" kept
+sh "$root/install-app.sh" >/dev/null 2>&1
+rm -r "$HOME/.config/DankMaterialShell"
+sh "$root/install-app.sh" --uninstall >/dev/null 2>&1
+check "the settings go when the widget is gone" "$([ -e "$HOME/.config/abyss" ] && echo left || echo gone)" gone
+rmdir "$HOME/.config" 2>/dev/null
+check "uninstall restores the tree again" "$(tree)" "$before"
 
 # Foreign files with Abyss's names are never overwritten or removed
 mkdir -p "$HOME/.local/share/abyss"
@@ -51,6 +65,14 @@ before=$(tree)
 sh "$root/install-app.sh" >/dev/null 2>&1
 sh "$root/install-app.sh" --uninstall >/dev/null 2>&1
 check "uninstall restores the tree again" "$(tree)" "$before"
+
+# A relative XDG_CONFIG_HOME is ignored: the real folder is the one removed
+sh "$root/install-app.sh" >/dev/null 2>&1
+mkdir -p "$HOME/.config/abyss"
+echo '{}' >"$HOME/.config/abyss/settings.json"
+XDG_CONFIG_HOME=rel sh "$root/install-app.sh" --uninstall >/dev/null 2>&1
+check "a relative XDG_CONFIG_HOME falls back to ~/.config" "$([ -e "$HOME/.config/abyss" ] && echo left || echo gone)" gone
+rmdir "$HOME/.config" 2>/dev/null
 
 [ "$fail" = 0 ] && echo "✓ install: app installer and uninstaller" || echo "install: FAILED"
 exit "$fail"
