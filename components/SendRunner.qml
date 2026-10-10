@@ -40,7 +40,7 @@ QtObject {
     property int _round: 0
 
     // host: the peer's address; link: { user, port } saved for it; items:
-    // paths or file:// URLs (a drop gives either); folder: the destination
+    // paths or file:// URLs (the clipboard gives either); folder: the destination
     // setting ("" for the default); name: the device's, for the sentences.
     // False when one is already under way.
     function send(host, link, items, folder, name) {

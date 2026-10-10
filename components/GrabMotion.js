@@ -49,11 +49,10 @@ function tip(creature, file, reach) {
     return { "x": creature.x + (file.x - creature.x) * reach, "y": creature.y + (file.y - creature.y) * reach };
 }
 
-// Where the file appears. A drop starts where the pointer let go; every
-// other way starts from a spot beside the creature, kept inside the scene.
+// Where the file appears: a spot beside the creature, kept inside the scene.
 // size: { w, h } of the scene.
-function startPoint(drop, target, size) {
-    const at = drop || { "x": target.x - 110, "y": target.y - 90 };
+function startPoint(target, size) {
+    const at = { "x": target.x - 110, "y": target.y - 90 };
     return { "x": Math.max(24, Math.min(size.w - 24, at.x)), "y": Math.max(24, Math.min(size.h - 24, at.y)) };
 }
 

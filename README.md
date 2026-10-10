@@ -76,7 +76,7 @@ In **Settings → Plugins**, turn **Abyss** on. The launcher entry works right a
 - **Internet through a peer or a whole group**, by carrying the light of the surface.
 - **Your own groups**, plus automatic shoals that keep the view uncluttered.
 - **Connect, not only look**: each card opens Terminal (SSH), Files (SFTP), Screen (VNC) or Desktop (RDP), with the right user and port per device.
-- **Send a file**: drop it on a creature (or right-click, Ctrl+V on its card, the launcher): a short scene carries it over, then the tentacle shows the progress.
+- **Send a file**: right-click a creature (or Ctrl+V on its card, the launcher): a short scene carries it over, then the tentacle shows the progress.
 - **Add a device in a minute**: this computer with a setup key, your phone with QR codes; it is spotted and celebrated as it joins.
 - **Let your devices in**: one switch turns on NetBird's SSH server on this computer.
 - **Search and commands**: a search bar with shortcuts, that also runs actions.
@@ -90,7 +90,7 @@ In **Settings → Plugins**, turn **Abyss** on. The launcher entry works right a
 | In the deep | Means / action |
 | --- | --- |
 | The jellyfish (you) | Lit = connected. Click: connect or disconnect. Right-click: profile, offline peers |
-| A creature | A peer. Click: open its card. Right-click: groups, Internet, send a file. Drop a file on it to send it |
+| A creature | A peer. Click: open its card. Right-click: groups, Internet, send a file |
 | Depth | Latency (1–320 ms, log scale) |
 | Tentacle width and pulses | Live traffic of that peer |
 | A coral lantern on a tentacle | A relay; blinking orange = the relay stopped answering |

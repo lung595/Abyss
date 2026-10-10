@@ -160,7 +160,7 @@ Abyss sends files and folders to a device with your own `scp`, over the same SSH
 
 **Where it lands.** The folder on the device is *Folder files are sent to* in **Settings → Connect → Opening a device**, `~/Downloads` by default (`~` is the device's home). Letters, digits, spaces and `. _ - / @ % + = ,` only; a folder with `..` is refused. The folder must exist on the device.
 
-**Limits.** Up to 100 items and 200 GB at once. Abyss looks at what you picked first, so a missing item or a huge drop is refused before anything leaves.
+**Limits.** Up to 100 items and 200 GB at once. Abyss looks at what you picked first, so a missing item or a huge pick is refused before anything leaves.
 
 When a send fails, Abyss says why and what to do:
 
@@ -174,21 +174,16 @@ When a send fails, Abyss says why and what to do:
 
 While it sends, progress is shown as a moving mark, not a percentage: `scp` prints no count without a terminal.
 
-### Four ways to start a send
+### Three ways to start a send
 
-All four play the same short scene (about one second): the file appears, the creature's tentacle reaches it, carries it over and the file drops in; then the send's progress runs along that tentacle, and the creature glows once when it went through. With *Reduce motion* on, the scene is skipped and the progress starts at once.
+All three play the same short scene (about one second): the file appears, the creature's tentacle reaches it, carries it over and the file drops in; then the send's progress runs along that tentacle, and the creature glows once when it went through. With *Reduce motion* on, the scene is skipped and the progress starts at once.
 
-![A file dropped on a creature](../screenshots/send-drop.gif)
-
-- **Drop** one or several files or folders right on a creature. The scene starts where you let go.
-- **Right-click a creature → Send a file…** (or **Send a folder…**) opens a file picker (`zenity`). The scene is the same, starting beside the creature.
+- **Right-click a creature → Send a file…** (or **Send a folder…**) opens a file picker (`zenity`). The scene starts beside the creature.
 
 ![The same send from the menu](../screenshots/send-menu.gif)
 
 - **Ctrl+V on an open card** sends what you copied in your file manager (needs `wl-clipboard` for `wl-paste`).
 - **Launcher**: `abyss send` lists *Send a file to …* for each online device (`abyss send nas` keeps one), and **`dms ipc call abyss send <device> <path>`** sends without any window. The path is absolute (or a `file://` URL); at most 100 items, and a name that is not a plain device is refused.
-
-Use the menu, Ctrl+V or the launcher where a drop cannot work: a view that does not receive drops, or the desktop fishbowl when it has no focus.
 
 With no Abyss view open (no popout, Control Center or desktop view on screen), nothing is drawn: a notification says how the send went.
 
@@ -197,8 +192,7 @@ When Abyss cannot start a send it says why next to the creature, with a link her
 - **Device is offline**: wake it or check that it is connected to the mesh, then send again.
 - **Another send is still under way**: wait for it to finish.
 - **No copied file to send** (Ctrl+V): copy a file or folder in your file manager first.
-- **wl-paste could not run** or **The file picker could not open**: install `wl-clipboard` or `zenity`, or use another way.
-- **Drop it on a creature**: let go right on one.
+- **wl-paste could not run** or **The file picker could not open**: install `wl-clipboard` or `zenity`, or use another way (the menu, Ctrl+V or the launcher).
 
 ## From the launcher
 

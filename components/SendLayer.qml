@@ -5,8 +5,8 @@ import "SendFlow.js" as Flow
 
 // What the deep shows of a send, whichever way it was asked for. It reports
 // this view to the hub (so a send with no view open comes as a notification
-// instead), plays the same GrabFile scene for the drop, the menu, Ctrl+V and
-// the launcher, then lets the creature carry the send (its light, the waves
+// instead), plays the same GrabFile scene for the menu, Ctrl+V and the
+// launcher, then lets the creature carry the send (its light, the waves
 // on its tentacle: AbyssScene reads sendingId), blooms when it went through
 // and explains a refusal or a failure with the advice and the guide's link.
 // Nothing runs when no send does: the scene's Timers are bound to its state.
@@ -27,8 +27,6 @@ Item {
     property real bloomAmount: 0
     readonly property color bloomTint: layer.bloomId !== "" ? layer.scene.tintOfItem(layer.scene.itemById[layer.bloomId]) : Theme.primary
 
-    // Where the last drop let go, for the file to start from (this view only)
-    property var _dropAt: null
     // The outcome that came while the file was still flying
     property var _late: null
     property double _bloomT0: 0
@@ -36,12 +34,6 @@ Item {
     z: 30
 
     // --- Starting a send -----------------------------------------------------
-    function dropFiles(peer, urls, at) {
-        layer._dropAt = at;
-        if (layer.hub)
-            layer.hub.sendTo(peer, urls.map(u => String(u)));
-        layer._dropAt = null;
-    }
     function pick(peer, folder) {
         if (layer.hub)
             layer.hub.pick(peer, folder);
@@ -77,12 +69,10 @@ Item {
         target: layer.hub
         function onStarted(peerId, mode, count) {
             const it = layer.scene.itemOfPeer(peerId);
-            if (!layer.watching || mode !== "grab" || !it) {
-                layer._dropAt = null;
+            if (!layer.watching || mode !== "grab" || !it)
                 return;
-            }
             const to = layer.scene.anchorOfPeer(peerId);
-            const from = Motion.startPoint(layer._dropAt, to, {
+            const from = Motion.startPoint(to, {
                 "w": layer.scene.width,
                 "h": layer.scene.height
             });

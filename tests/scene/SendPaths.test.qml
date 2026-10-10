@@ -4,10 +4,10 @@ import QtTest
 import qs.Common
 import "../../components"
 
-// The deep's own send paths against a recording hub: a file dropped on a
-// creature, the menu's "Send a file…" / "Send a folder…", Ctrl+V on the open
-// card, a drop beside every creature, and the view counting itself on the
-// hub exactly once (also when the hub is swapped). Rendered offscreen from
+// The deep's own send paths against a recording hub: the menu's "Send a
+// file…" / "Send a folder…", Ctrl+V on the open card, no file drop target in
+// the scene, and the view counting itself on the hub exactly once (also when
+// the hub is swapped). Rendered offscreen from
 // the demo mesh (made-up peers); the real hub is tested by
 // tests/qml/SendHub.test.qml.
 // Run: tests/scene/run.sh
@@ -90,6 +90,11 @@ Window {
     function peerItem() {
         return scene.arr.items.find(i => i.type === "peer" && scene.peerById[i.peerId].online);
     }
+    // True when any item under `item` is a DropArea (the toString of a
+    // QML object starts with its C++ class name)
+    function hasDropArea(item) {
+        return String(item).indexOf("DropArea") !== -1 || Array.from(item.children).some(hasDropArea);
+    }
     function last() {
         return hubA.calls[hubA.calls.length - 1];
     }
@@ -98,10 +103,7 @@ Window {
             const it = peerItem();
             check("the demo mesh has an online creature", !!it);
             check("this view is counted once on the hub", hubA.viewers === 1, hubA.viewers);
-            // Qt's own drag-and-drop (DropArea) is not driven offscreen: the
-            // scene's handler for what it hands over is
-            scene.dropUrls([Qt.url("file:///made/up/report.pdf")], scene.spotOf(it.id).x, scene.spotOf(it.id).y);
-            check("a file dropped on a creature is sent to that peer", !!last() && last()[0] === "send" && last()[1] === it.peerId && String(last()[2][0]) === "file:///made/up/report.pdf", hubA.calls);
+            check("the scene has no file drop target (the menu is the way)", !hasDropArea(scene));
             scene.openMenu(it.id, scene.spotOf(it.id));
             const texts = scene.menuItems ? scene.menuItems.map(m => m.text) : [];
             scene.doMenu({
@@ -118,9 +120,6 @@ Window {
             check("the menu closed", scene.menuId === "");
         }, () => {
             const it = peerItem();
-            const before = hubA.calls.length;
-            scene.dropUrls([Qt.url("file:///made/up/report.pdf")], 2, 2);
-            check("a drop beside every creature sends nothing", hubA.calls.length === before, hubA.calls);
             scene.openCard(it.id);
             scene.forceActiveFocus();
             keys.keyClick(Qt.Key_V, Qt.ControlModifier);

@@ -2,13 +2,12 @@ import QtQuick
 import "Send.js" as Send
 import "SendFlow.js" as Flow
 
-// Every way of sending ends here: a drop on a creature, the menu's file
-// picker, Ctrl+V on a card, the launcher and `dms ipc call abyss send`. It
-// checks the peer, takes the items (from the drop, the picker or the
-// clipboard), starts the SendRunner and says what happens in three signals,
-// so each open view plays the same scene (started), shows the outcome
-// (ended) or explains a refusal (refused). The daemon turns them into a
-// notification when no view is open.
+// Every way of sending ends here: the menu's file picker, Ctrl+V on a card,
+// the launcher and `dms ipc call abyss send`. It checks the peer, takes the
+// items (from the picker, the clipboard or a path), starts the SendRunner and
+// says what happens in three signals, so each open view plays the same
+// scene (started), shows the outcome (ended) or explains a refusal (refused).
+// The daemon turns them into a notification when no view is open.
 // Nothing exists before the first send: the runner, the clipboard reader
 // and the picker are each made when needed and dropped when done.
 QtObject {

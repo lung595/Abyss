@@ -52,7 +52,7 @@ function remoteDir(setting) {
 
 // --- The files on this computer ---------------------------------------------
 
-// An absolute path from a path or a file:// URL (what a drop gives), or null.
+// An absolute path from a path or a file:// URL (what the clipboard gives), or null.
 // Absolute only: a relative path starting with "x:" would read as a host.
 function localPath(item) {
     let p = String(item === undefined || item === null ? "" : item);
