@@ -130,6 +130,19 @@ Strata used as text backgrounds and their measured pairs are printed by
 - `option-b.html` — same idea, continuous light falloff and a single tall
   column scrolled by the gauge (costlier: three backgrounds to measure).
 - `render.py` — real-size PNG renderer sharing the same token values
-  (`<option>/<dark|light>/<screen>.png`); no browser exists on the machine,
+  (`option-a/<dark|light>/<screen>.png`; `--option-b` writes `option-b/`); no browser exists on the machine,
   so the screenshots the owner sees are rendered by this script, not from
   the HTML (assumption recorded in the knowledge base `questions.md`).
+
+## 7. Self-critique before review
+
+- Glyphs (`●★✕⚠`) are drawn with the Noto Symbols faces: Noto Sans has none
+  of them and printed boxes in the first render.
+- The peer card stops 76 px from the right edge so it never sits under the
+  zoom gauge (44 px + 16 px margin + 16 px gap).
+- Send queue columns: name · track 120 · percentage 72 · speed 160 · action
+  100, 16 px gaps; `scp · no progress` no longer touches the Cancel button.
+- Depth labels on the gauge: `0 · 1k · 2k · 3k · 4k`, mono 11.
+- Option B costs more to build (one 2 400 px column, 16 band colours to
+  measure instead of 3 strata) and the scrim must be sticky; option A is
+  recommended.

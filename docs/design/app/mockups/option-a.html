@@ -1,0 +1,235 @@
+<!doctype html>
+<!-- Abyss app mockup, option A: "the window is a dive" (NAK-286). Not product code.
+     Three flat strata (0 m settings, 200 m send, 4 000 m map), an instrument gauge
+     on the left, transitions on transform/opacity only. Fictional data. -->
+<html lang="en"><head><meta charset="utf-8"><title>Abyss app · option A · water column</title>
+<style>
+:root{ /* DMS Theme tokens, dark "abyss" (design.md §2, D393) */
+ --surface:#02040b;--sclowest:#000208;--sclow:#070a14;--sc:#0c1020;--schigh:#131a2e;--schighest:#1b2440;
+ --on:#e8ecf6;--onv:#a3acc0;--outline:#58648a;--primary:#6fe3ff;--onprimary:#04202c;--secondary:#ffc46b;
+ --success:#7ee2a8;--warning:#ffb35c;--error:#ff7b86;
+ --w0:var(--schighest);--w200:var(--sc);--w4000:var(--sclowest);
+ --gauge:72px;--pad:32px;--r-ctl:12px;--r-card:16px;--r-panel:20px;--descend:240ms;--ascend:180ms;--ease:cubic-bezier(.33,1,.68,1)}
+html[data-theme=light]{--surface:#f3f7fb;--sclowest:#ffffff;--sclow:#e9f0f6;--sc:#dfe8f0;--schigh:#d2dde8;--schighest:#c4d2df;
+ --on:#0e1a2b;--onv:#475870;--outline:#6f8097;--primary:#0b6f8f;--onprimary:#ffffff;--secondary:#7a4f00;
+ --success:#1e7a4a;--warning:#8a5600;--error:#b3263a;--w0:var(--sclowest);--w200:var(--sclow);--w4000:var(--schigh)}
+*{box-sizing:border-box;margin:0}
+body{background:#555;font:15px/1.4 "Noto Sans",system-ui,sans-serif;color:var(--on);padding:24px;display:grid;gap:16px;justify-content:start}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;color:#fff;font-size:13px}.toolbar button,.toolbar label{background:#222;color:#fff;border:1px solid #777;border-radius:8px;padding:6px 10px;cursor:pointer}
+.win{width:1280px;height:800px;background:var(--surface);display:grid;grid-template-columns:var(--gauge) 1fr;overflow:hidden;position:relative;border-radius:8px}
+.mono{font-family:"Noto Sans Mono",monospace;font-variant-numeric:tabular-nums}
+/* gauge */
+.gauge{background:var(--sc);border-right:1px solid var(--outline);position:relative}
+.scale{position:absolute;left:0;top:40px;width:72px;height:520px}
+.scale i{position:absolute;right:8px;height:1px;background:var(--outline);width:8px;opacity:.4}.scale i.major{width:16px;opacity:1}
+.scale b{position:absolute;right:28px;transform:translateY(-50%);font:11px "Noto Sans Mono",monospace;color:var(--onv);font-weight:400}
+.station{position:absolute;left:2px;width:44px;height:44px;transform:translateY(-50%);border-radius:50%;border:2px solid transparent;cursor:pointer;background:none;padding:0}
+.station::after{content:"";position:absolute;inset:8px;border-radius:50%;border:1px solid var(--outline)}
+.station[aria-current=true]{border-color:var(--primary)}.station[aria-current=true]::after{background:var(--primary);border-color:var(--primary)}
+.station:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.readout{position:absolute;left:8px;top:620px;font:11px/20px "Noto Sans Mono",monospace;color:var(--onv);white-space:pre}
+.readout .depth{color:var(--on)}.readout .sig{color:var(--success)}.readout[data-sig=stop] .sig{color:var(--error)}
+.darwin{position:absolute;left:84px;width:24px;height:14px;transform:translateY(-50%);transition:top var(--descend) var(--ease)}
+.darwin svg{display:block}
+/* strata: one flat colour per view, the thermocline is the 1 px outline line */
+.sea{position:relative;overflow:hidden}
+.stratum{position:absolute;inset:0;padding:var(--pad);display:none;flex-direction:column;gap:8px;border-top:1px solid var(--outline)}
+.stratum[data-depth="0"]{background:var(--w0)}.stratum[data-depth="200"]{background:var(--w200)}.stratum[data-depth="4000"]{background:var(--w4000)}
+.stratum.on{display:flex;animation:arrive var(--descend) var(--ease)}
+.stratum.up{animation-duration:var(--ascend);animation-name:arriveUp}
+@keyframes arrive{from{transform:translateY(40px);opacity:0}}@keyframes arriveUp{from{transform:translateY(-40px);opacity:0}}
+h1{font-size:22px;font-weight:600;height:44px;display:flex;align-items:center;gap:12px}h1 small{font:13px "Noto Sans Mono",monospace;color:var(--onv)}
+/* controls */
+.chip{display:inline-flex;align-items:center;height:32px;padding:0 12px;border-radius:16px;background:var(--schigh);color:var(--on);font-size:13px;font-weight:500;border:0;cursor:pointer;max-width:240px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;position:relative}
+.chip::before{content:"";position:absolute;inset:-6px 0}/* 44 px hit */
+.chip.on{background:var(--primary);color:var(--onprimary);font-weight:600}.chip:hover{filter:brightness(1.12)}.chip:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.btn{height:44px;padding:0 16px;border-radius:var(--r-ctl);border:1px solid var(--outline);background:none;color:var(--primary);font-size:14px;font-weight:600;cursor:pointer}
+.btn.primary{background:var(--primary);color:var(--onprimary);border-color:var(--primary)}.btn:active{transform:scale(.97)}.btn:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.btn[disabled]{opacity:.38;cursor:not-allowed}
+.band{display:flex;align-items:center;gap:12px;height:44px;padding:0 16px;border-radius:var(--r-ctl);border:1px solid var(--warning);background:color-mix(in srgb,var(--warning) 13%,transparent);font-size:13px;font-weight:500}
+.band.error{border-color:var(--error);background:color-mix(in srgb,var(--error) 13%,transparent)}.band span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.band .act{height:32px;border-radius:16px;padding:0 12px;border:0;background:var(--warning);color:var(--onprimary);font-weight:600;font-size:13px;cursor:pointer}.band.error .act{background:var(--error)}
+.gh{width:24px;height:24px;border-radius:50%;background:var(--on);color:var(--surface);display:grid;place-items:center;font-size:12px;font-weight:700;text-decoration:none}
+/* map */
+.map{flex:1;border:1px solid var(--outline);border-radius:var(--r-card);position:relative;background:var(--w4000)}
+.filters{position:absolute;left:16px;top:16px;display:flex;gap:8px}.zoom{position:absolute;right:16px;top:16px;display:grid;gap:4px}
+.zoom button{width:44px;height:44px;border-radius:var(--r-ctl);border:1px solid var(--outline);background:none;color:var(--on);font-size:18px;cursor:pointer}
+.creature{position:absolute;width:120px;transform:translate(-50%,-50%);text-align:center;font-size:13px;font-weight:500;cursor:pointer}
+.creature svg{display:block;margin:0 auto 10px;overflow:visible}.creature.off{color:var(--onv)}.creature.off svg *{stroke:var(--outline)}
+.creature.online svg circle.halo{fill:var(--primary);fill-opacity:.13;transition:transform 150ms var(--ease);transform-origin:center}.creature:hover circle.halo{transform:scale(1.25)}
+.creature .name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card{position:absolute;width:300px;height:240px;right:76px;top:80px;background:var(--sc);border:1px solid var(--outline);border-radius:var(--r-card);padding:16px;animation:pop 150ms var(--ease)}
+@keyframes pop{from{transform:scale(.96);opacity:0}}
+.card h3{font-size:15px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.card .meta{font-size:13px;color:var(--onv)}.card .verdict{font-size:13px;color:var(--success);font-weight:500;margin:6px 0 16px}
+.card .row{display:flex;gap:8px;margin-top:12px}.spark{display:block;margin-top:8px}
+.footer{font:13px "Noto Sans Mono",monospace;color:var(--onv)}
+.empty{position:absolute;left:50%;top:300px;transform:translateX(-50%);text-align:center;width:600px}.empty h2{font-size:22px;font-weight:600}.empty p{font-size:13px;color:var(--onv)}
+.cave{position:absolute;width:140px;height:90px;border:1px solid var(--outline);border-radius:50%;transform:translate(-50%,-50%);display:grid;place-content:center;text-align:center;font-weight:600}.cave small{font:13px "Noto Sans Mono",monospace;color:var(--onv);font-weight:400}
+.list{position:absolute;left:16px;bottom:16px;right:16px;display:grid;grid-template-columns:repeat(6,1fr);font:11px/16px "Noto Sans Mono",monospace}.list .off{color:var(--onv)}
+/* send */
+.drop{height:120px;border:1px solid var(--primary);border-radius:var(--r-card);display:grid;place-items:center;color:var(--onv);font-weight:500;position:relative}
+.drop::after{content:"";position:absolute;inset:8px;border:1px dashed var(--outline);border-radius:12px;opacity:.6}.drop.over{background:color-mix(in srgb,var(--primary) 13%,transparent)}
+.to{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--onv);margin-top:8px}
+.queue{display:grid}.q{display:grid;grid-template-columns:28px 1fr 120px 72px 160px 100px;align-items:center;height:56px;border-bottom:1px solid color-mix(in srgb,var(--outline) 40%,transparent);gap:16px}
+.q .cap{width:12px;height:16px;border-radius:6px;background:var(--primary)}.q.done .cap{background:var(--outline)}
+.q .n{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.q .d{font-size:12px;color:var(--onv);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.track{width:120px;height:8px;border-radius:4px;background:var(--schighest);position:relative}.track i{position:absolute;left:0;top:0;bottom:0;width:100%;border-radius:4px;background:var(--primary);transform-origin:left;transform:scaleX(var(--p))}
+.track b{position:absolute;top:-2px;left:-6px;width:12px;height:12px;border-radius:50%;background:var(--primary);transform:translateX(calc(var(--p) * 120px))}
+.track.scp i{width:36px;transform:translateX(40px)}.q .pct,.q .spd{font:13px "Noto Sans Mono",monospace;color:var(--onv)}.q .pct{color:var(--on)}
+.q .btn{height:44px;padding:0;width:100px}
+.hist h2{font-size:15px;font-weight:600;margin:16px 0 8px}.hist .n{font-weight:500}.hist .d{font:12px "Noto Sans Mono",monospace;color:var(--onv);margin-bottom:8px}
+/* settings */
+.search{height:44px;border:1px solid var(--outline);border-radius:var(--r-ctl);background:var(--sc);padding:0 16px;color:var(--on);font-size:15px;width:100%}html[data-theme=light] .search{background:var(--sclow)}
+.search::placeholder{color:var(--onv)}
+.set{display:grid;grid-template-columns:200px 1fr;gap:32px;margin-top:16px}.cats{display:grid;gap:8px;align-content:start}
+.cats button{height:40px;border-radius:var(--r-ctl);border:0;background:none;color:var(--on);text-align:left;padding:0 12px;font-size:15px;font-weight:500;cursor:pointer;display:flex;gap:12px;align-items:center}
+.cats button.on{background:var(--primary);color:var(--onprimary);font-weight:600}.cats button.match{box-shadow:inset 0 0 0 1px var(--primary)}
+.rows .row{display:grid;grid-template-columns:1fr auto;align-items:center;min-height:72px}.rows .l{font-weight:500}.rows .h{font-size:12px;color:var(--onv)}.rows mark{background:color-mix(in srgb,var(--primary) 30%,transparent);color:inherit}
+.sw{width:48px;height:28px;border-radius:14px;background:var(--schighest);border:0;position:relative;cursor:pointer}.sw::after{content:"";position:absolute;top:4px;left:4px;width:20px;height:20px;border-radius:50%;background:var(--outline);transition:transform 100ms var(--ease)}
+.sw[aria-checked=true]{background:var(--primary)}.sw[aria-checked=true]::after{background:var(--onprimary);transform:translateX(20px)}.sw:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+/* panels */
+.scrim{position:absolute;inset:0;background:color-mix(in srgb,var(--surface) 60%,transparent);display:none;place-items:center}.scrim.on{display:grid}
+.panel{width:560px;background:var(--sc);border:1px solid var(--outline);border-radius:var(--r-panel);padding:24px;animation:pop 200ms var(--ease);position:relative}
+.panel h2{font-size:22px;font-weight:600;margin-bottom:16px}.panel .x{position:absolute;right:16px;top:16px;width:44px;height:44px;border:0;background:none;color:var(--onv);font-size:18px;cursor:pointer}
+.steps{display:flex;gap:8px;margin-bottom:24px}.key{display:flex;gap:12px;margin:8px 0 24px}.key input{flex:1;height:44px;border-radius:var(--r-ctl);border:1px solid var(--outline);background:var(--schigh);color:var(--on);padding:0 16px;font-family:monospace}
+.key button{width:44px;height:44px;border-radius:var(--r-ctl);border:1px solid var(--outline);background:none;color:var(--on);cursor:pointer}
+.qr{display:grid;grid-template-columns:repeat(21,8px);margin:0 auto 16px;width:168px}.qr i{height:8px;background:var(--on)}.qr i.o{background:none}
+.diag{font:13px/28px "Noto Sans Mono",monospace;white-space:pre}.diag .ok{color:var(--success)}.diag .warn{color:var(--warning)}.diag .bad{color:var(--error)}
+.group{background:var(--schigh);border-radius:var(--r-ctl);padding:10px 16px;margin-top:12px;display:flex;justify-content:space-between;align-items:center}.group .d{font:12px "Noto Sans Mono",monospace;color:var(--onv)}
+.help{font-size:12px;color:var(--onv);margin-bottom:8px}.lbl{font-weight:500}
+.snow{position:absolute;inset:0;pointer-events:none;overflow:hidden}.snow i{position:absolute;width:2px;height:2px;border-radius:50%;background:var(--on);opacity:.35;animation:fall 2400ms linear 1 forwards}
+@keyframes fall{from{transform:translateY(-20px)}to{transform:translateY(120px);opacity:0}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}.snow{display:none}}
+</style></head><body>
+<div class="toolbar">
+ <button onclick="theme()">Light / dark</button>
+ <button onclick="dive(0)">Settings · 0 m</button><button onclick="dive(1)">Send · 200 m</button><button onclick="dive(2)">Map · 4 000 m</button>
+ <button onclick="state('empty')">Empty network</button><button onclick="state('stopped')">NetBird stopped</button><button onclick="state('missing')">NetBird missing</button>
+ <button onclick="state('refused')">Send refused</button><button onclick="state('many')">30 peers</button><button onclick="state('long')">Long names</button><button onclick="state('')">Reset</button>
+ <button onclick="panel('wizard')">Wizard</button><button onclick="panel('diag')">Diagnosis</button><button onclick="panel('tags')">Tags</button>
+</div>
+<div class="win" id="win">
+ <aside class="gauge">
+  <div class="scale" id="scale"></div>
+  <button class="station" style="top:40px" aria-current="true" aria-label="Settings, surface" onclick="dive(0)"></button>
+  <button class="station" style="top:66px" aria-label="Send, 200 m" onclick="dive(1)"></button>
+  <button class="station" style="top:560px" aria-label="Map, 4 000 m" onclick="dive(2)"></button>
+  <div class="darwin" id="darwin" style="top:40px"><svg width="24" height="14" viewBox="0 0 24 14"><path d="M0 7 14 0v14zM14 7l10-6v12z" fill="var(--secondary)"/></svg></div>
+  <div class="readout" id="readout" data-sig="ok"><span class="depth" id="rd">    0 m</span>
+<span id="rb">    1 bar</span>
+<span id="rt">   18 °C</span>
+<span class="sig" id="rs">● signal</span></div>
+ </aside>
+ <main class="sea" id="sea">
+  <!-- 0 m -->
+  <section class="stratum on" data-depth="0" id="s0">
+   <h1>Settings <small>· 0 m</small></h1>
+   <input class="search" placeholder="Search settings   /" oninput="search(this.value)" aria-label="Search settings">
+   <div class="set"><nav class="cats" id="cats">
+    <button>◉ Network</button><button class="on">↓ Sending</button><button>☼ Appearance</button><button>♪ Sounds</button><button>⌘ Shortcuts</button><button>⚑ Privacy</button></nav>
+    <div class="rows" id="rows">
+     <div class="row"><div><div class="l">Receive folder</div><div class="h">Where files you receive are saved</div></div><button class="chip">~/Downloads/Abyss</button></div>
+     <div class="row"><div><div class="l">Ask before receiving</div><div class="h">A capsule waits for your answer</div></div><button class="sw" role="switch" aria-checked="true" onclick="tog(this)"></button></div>
+     <div class="row"><div><div class="l">Retry failed sends</div><div class="h">Up to 3 times, 10 s apart</div></div><button class="sw" role="switch" aria-checked="false" onclick="tog(this)"></button></div>
+     <div class="row"><div><div class="l">Parallel transfers</div><div class="h">At most, per device</div></div><button class="chip">2</button></div>
+     <div class="row"><div><div class="l">Play a sound on arrival</div><div class="h">Gentle, rate-limited</div></div><button class="sw" role="switch" aria-checked="true" onclick="tog(this)"></button></div>
+    </div></div>
+   <div id="missing" hidden style="margin-top:24px;display:flex;gap:16px"><svg width="24" height="14" viewBox="0 0 24 14" style="margin-top:8px"><path d="M0 7 14 0v14zM14 7l10-6v12z" fill="var(--secondary)"/></svg>
+    <div><h2 style="font-size:22px;font-weight:600">NetBird is not installed on this machine.</h2><p style="color:var(--onv);margin:8px 0 16px">Abyss uses it to find your devices. Install it, then come back: I will be waiting here at the surface.</p>
+    <button class="btn primary">Install NetBird</button> <button class="btn">I have a key</button></div></div>
+  </section>
+  <!-- 200 m -->
+  <section class="stratum" data-depth="200" id="s1">
+   <div class="snow" id="snow"></div>
+   <h1>Send <small>· 200 m</small></h1>
+   <div class="drop" ondragover="event.preventDefault();this.classList.add('over')" ondragleave="this.classList.remove('over')" ondrop="event.preventDefault();this.classList.remove('over')">Drop files here, or press Ctrl+O</div>
+   <div class="to">To <button class="chip on">atlas-server</button><button class="chip on">reef-nas</button><button class="chip" id="toLong">nova-laptop</button></div>
+   <div class="queue" id="queue">
+    <div class="q"><i class="cap"></i><div><div class="n" id="qn0">quarterly-report-final-v3.pdf</div><div class="d" id="qd0">→ atlas-server</div></div><div class="track" style="--p:.42"><i></i><b></b></div><span class="pct">42 %</span><span class="spd">8.1 MB/s</span><button class="btn">Cancel</button></div>
+    <div class="q"><i class="cap"></i><div><div class="n">holiday-photos-2026.tar</div><div class="d">→ reef-nas</div></div><div class="track scp"><i></i></div><span class="pct">Sending…</span><span class="spd">scp · no progress</span><button class="btn">Cancel</button></div>
+    <div class="q done"><i class="cap"></i><div><div class="n">notes.md</div><div class="d">→ atlas-server</div></div><div class="track" style="--p:1"><i></i><b></b></div><span class="pct">100 %</span><span class="spd">done</span><button class="btn">Dismiss</button></div>
+   </div>
+   <div class="band error" id="refused" hidden>✕ <span>Send refused: reef-nas does not accept files from you. Ask its owner to allow your key.</span><button class="act">Retry</button><a class="gh" href="#guide-send-refused" title="Open the guide: send refused">G</a></div>
+   <div class="hist"><h2>History</h2><div class="n">build-2026-10.log</div><div class="d">→ harbor-vps · yesterday · 2.3 MB</div><div class="n">backup.tar.zst</div><div class="d">→ reef-nas · 3 d ago · 1.8 GB</div></div>
+   <div style="flex:1"></div><div class="band stopped" hidden>⚠ <span>NetBird is stopped: nothing can be sent.</span><button class="act">Start NetBird</button></div>
+  </section>
+  <!-- 4 000 m -->
+  <section class="stratum" data-depth="4000" id="s2">
+   <h1>Map <small>· 4 000 m</small></h1>
+   <div class="map" id="map">
+    <div class="filters"><button class="chip on">All</button><button class="chip">#servers</button><button class="chip">#home</button><button class="chip">lab</button></div>
+    <div class="zoom"><button aria-label="Zoom in">+</button><button aria-label="Zoom out">−</button><button aria-label="Centre on me">⌖</button></div>
+    <div id="peers"></div>
+    <div class="empty" id="empty" hidden><h2>No creature yet</h2><p>Add a device from the + at the top right, or wait: NetBird is listening.</p></div>
+    <div class="card" id="card"><h3 id="cn">atlas-server</h3><div class="meta mono">100.64.0.12 · 12 ms · 9 d</div>
+     <svg class="spark" width="240" height="24"><polyline fill="none" stroke="var(--primary)" stroke-width="2" points="0,20 10,12 20,16 30,6 40,14 50,10 60,18 70,8 80,12 90,4 100,14 110,10 120,16 130,6 140,12 150,8 160,18 170,10 180,14 190,4 200,12 210,8 220,16 240,10"/></svg>
+     <div class="verdict">● Direct · 12 ms · healthy</div>
+     <div class="row"><button class="chip on">Send a file</button><button class="chip">Browse files</button><button class="chip">SSH</button></div>
+     <div class="row"><button class="chip">★ Favourite</button><button class="chip" onclick="panel('diag')">Diagnosis</button></div></div>
+   </div>
+   <div class="footer" id="foot">8/10 online · ↓ 21 Mb/s · ↑ 4.3 Mb/s</div>
+   <div class="band stopped" hidden>⚠ <span>NetBird is stopped: creatures are asleep.</span><button class="act">Start NetBird</button></div>
+  </section>
+  <!-- panels -->
+  <div class="scrim" id="scrim" onclick="if(event.target===this)panel('')">
+   <div class="panel" id="wizard" hidden><button class="x" onclick="panel('')">✕</button><h2>Add a device</h2>
+    <div class="steps"><button class="chip">1 Name</button><button class="chip on">2 Key</button><button class="chip" onclick="wz(3)">3 QR code</button></div>
+    <div id="wz2"><div class="lbl">Setup key</div><div class="help">Paste it on the new device. It is never shown or logged.</div>
+     <div class="key"><input type="password" value="nb-fictional-setup-key-0000" readonly aria-label="Setup key"><button onclick="const i=this.parentNode.firstElementChild;i.type=i.type==='password'?'text':'password'" aria-label="Reveal the key">◉</button><button class="chip">Copy</button></div></div>
+    <div id="wz3" hidden><div class="qr" id="qr"></div><p style="text-align:center;font-weight:500;margin-bottom:24px">Scan it from the phone</p></div>
+    <div style="display:flex;justify-content:space-between"><button class="btn" style="width:100px">Back</button><button class="btn primary" style="width:100px">Next</button></div></div>
+   <div class="panel" id="diag" hidden><button class="x" onclick="panel('')">✕</button><h2>Diagnosis · atlas-server</h2>
+    <div class="diag"><span class="ok">●</span> Daemon       running
+<span class="ok">●</span> Management   connected
+<span class="ok">●</span> Signal       connected
+<span class="ok">●</span> Path         direct (no relay)
+<span class="warn">◐</span> Latency      12 ms · jitter 3 ms
+<span class="ok">●</span> MTU          1280
+<span class="ok">●</span> Handshake    4 s ago</div>
+    <button class="btn primary" style="margin:16px 0" id="tp" onclick="measure(this)">Measure throughput (10 s)</button>
+    <div class="mono" id="tpr" style="font-weight:600">↓ 94 Mb/s · ↑ 41 Mb/s</div>
+    <svg class="spark" width="240" height="24"><polyline fill="none" stroke="var(--primary)" stroke-width="2" points="0,18 20,8 40,14 60,4 80,12 100,6 120,16 140,8 160,12 180,4 200,14 220,8 240,10"/></svg></div>
+   <div class="panel" id="tags" hidden><button class="x" onclick="panel('')">✕</button><h2>Tags and groups</h2>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="chip">#servers 3 &nbsp;✕</button><button class="chip">#home 2 &nbsp;✕</button><button class="chip">#lab 4 &nbsp;✕</button><button class="chip">#nas 1 &nbsp;✕</button></div>
+    <input class="search" style="width:240px;margin:16px 0 24px" placeholder="New tag…" aria-label="New tag">
+    <div class="lbl">Groups</div>
+    <div class="group"><div><div class="lbl">Work</div><div class="d">#servers #lab</div></div><span>◇ ◁ ◇ ◁ ◇</span></div>
+    <div class="group"><div><div class="lbl">House</div><div class="d">#home #nas</div></div><span>◇ ◁ ◇</span></div></div>
+  </div>
+ </main>
+</div>
+<script>
+// Fictional data. Everything moves on transform/opacity only; nothing animates at rest.
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const PEERS=[['atlas-server','ray',1],['harbor-vps','whale',1],['nova-laptop','fish',1],['reef-nas','ray',1],['kite-phone','dot',1],['pi-lantern','dot',0],['dune-desktop','dot',1],['orca-build','ray',0]];
+const LONG='a-really-very-long-device-name-that-goes-on-and-on-forever-until-it-breaks-the-layout';
+const SHAPES={ray:'<path d="M18 0 43 18 18 31 -7 18z"/>',whale:'<ellipse cx="18" cy="18" rx="29" ry="13"/>',fish:'<path d="M0 18 29 7v22z"/>',dot:'<circle cx="18" cy="18" r="18"/>'};
+let cur=0,state_='';
+const scale=document.getElementById('scale');
+for(let i=0;i<=130;i++){const t=document.createElement('i');t.style.top=i*4+'px';if(i%10==0)t.className='major';scale.append(t)}
+for(let d=0;d<=4000;d+=1000){const b=document.createElement('b');b.style.top=(d/4000*520)+'px';b.textContent=d?d/1000+'k':'0';scale.append(b)}
+function peers(list,long){const p=document.getElementById('peers');p.innerHTML='';
+ if(list.length>8){const g=[['servers',9],['home',8],['lab',7],['other',6]];g.forEach(([n,c],k)=>{p.insertAdjacentHTML('beforeend',`<div class="cave" style="left:${200+k*220}px;top:380px">${n}<br><small>${c} creatures</small></div>`)});
+  p.insertAdjacentHTML('beforeend','<div class="list">'+list.slice(0,24).map(([n,,on])=>`<span class="${on?'':'off'}">${on?'●':'○'} ${n}</span>`).join('')+'</div>');return}
+ list.forEach(([n,k,on],i)=>{const x=120+(i%4)*250,y=240+(i/4|0)*200;const name=long&&i==0?LONG:n;
+  p.insertAdjacentHTML('beforeend',`<div class="creature ${on?'online':'off'}" style="left:${x}px;top:${y}px" title="${name}"><svg width="36" height="36" viewBox="0 0 36 36"><circle class="halo" cx="18" cy="18" r="26" fill="none"/><g fill="none" stroke="var(--primary)" stroke-width="1">${SHAPES[k]}</g></svg><div class="name">${name}</div></div>`)});}
+function dive(i){if(i==cur)return;const up=i<cur;const s=document.querySelectorAll('.stratum');s.forEach(e=>e.classList.remove('on','up'));s[i].classList.add('on');if(up)s[i].classList.add('up');
+ document.querySelectorAll('.station').forEach((b,k)=>b.setAttribute('aria-current',k==i));const tops=[40,66,560];document.getElementById('darwin').style.top=tops[i]+'px';
+ const d=[0,200,4000][i];rd.textContent=String(d).padStart(5)+' m';rb.textContent=String(d/10+1).padStart(5)+' bar';rt.textContent=String([18,6,2][i]).padStart(5)+' °C';
+ if(i==1&&!RM){snow.innerHTML='';for(let k=0;k<24;k++)snow.insertAdjacentHTML('beforeend',`<i style="left:${Math.random()*100}%;top:${Math.random()*600}px;animation-delay:${Math.random()*600}ms"></i>`)}
+ cur=i}
+function state(s){state_=s;const stopped=s=='stopped';document.querySelectorAll('.band.stopped').forEach(b=>b.hidden=!stopped);readout.dataset.sig=stopped||s=='missing'?'stop':'ok';rs.textContent=(stopped||s=='missing'?'○':'●')+' signal';
+ missing.hidden=s!='missing';empty.hidden=s!='empty';card.hidden=s=='empty'||s=='many';refused.hidden=s!='refused';
+ peers(s=='empty'?[]:s=='many'?Array.from({length:30},(_,i)=>[['atlas','harbor','nova','reef','kite','pi','dune','orca','coral','tide'][i%10]+'-'+i,'dot',i%5!=4]):PEERS,s=='long');
+ cn.textContent=s=='long'?LONG:'atlas-server';qn0.textContent=s=='long'?LONG+'.pdf':'quarterly-report-final-v3.pdf';qd0.textContent='→ '+(s=='long'?LONG:'atlas-server');toLong.textContent=s=='long'?LONG:'nova-laptop';
+ foot.textContent=s=='many'?'24/30 online · ↓ 21 Mb/s · ↑ 4.3 Mb/s':s=='empty'?'0/0 online':'8/10 online · ↓ 21 Mb/s · ↑ 4.3 Mb/s';
+ dive(s=='missing'?0:s=='refused'||s=='stopped'?1:2)}
+function panel(id){scrim.classList.toggle('on',!!id);['wizard','diag','tags'].forEach(p=>document.getElementById(p).hidden=p!=id);if(id)dive(2)}
+function wz(n){wz2.hidden=n==3;wz3.hidden=n!=3;document.querySelectorAll('.steps .chip').forEach((c,i)=>c.classList.toggle('on',i==n-1));if(!qr.childElementCount)for(let i=0;i<441;i++)qr.insertAdjacentHTML('beforeend',`<i class="${(i*7919)%5<2?'':'o'}"></i>`)}
+function theme(){document.documentElement.dataset.theme=document.documentElement.dataset.theme=='light'?'':'light'}
+function tog(b){b.setAttribute('aria-checked',b.getAttribute('aria-checked')!='true')}
+function search(q){q=q.trim().toLowerCase();document.querySelectorAll('#rows .row').forEach(r=>{r.hidden=q&&!r.textContent.toLowerCase().includes(q)});document.querySelectorAll('#cats button').forEach(c=>c.classList.toggle('match',!!q&&c.textContent.toLowerCase().includes(q)))}
+function measure(b){b.disabled=true;b.textContent='Measuring… 10 s';tpr.textContent='—';setTimeout(()=>{b.disabled=false;b.textContent='Measure throughput (10 s)';tpr.textContent='↓ 94 Mb/s · ↑ 41 Mb/s'},RM?0:2000)}
+document.addEventListener('keydown',e=>{if(e.key=='/'&&cur==0){e.preventDefault();document.querySelector('.search').focus()}if(e.key=='Escape')panel('')});
+peers(PEERS,false);
+</script></body></html>
