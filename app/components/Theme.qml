@@ -24,17 +24,17 @@ QtObject {
     readonly property color surfaceContainer: _c.surfaceContainer
     readonly property color surfaceContainerHigh: _c.surfaceContainerHigh
     readonly property color surfaceContainerHighest: _c.surfaceContainerHighest
-    // Text roles under both DMS names: the on* ones and their *Text aliases.
-    readonly property color onSurface: _c.onSurface
-    readonly property color surfaceText: onSurface
+    // Text roles. The DMS on* names that collide with another property of this
+    // singleton (onSurface, onPrimary, onSecondary) read black here: QML takes
+    // them for the change handlers of surface/primary/secondary (P229). Bound
+    // straight to the palette under the *Text names, which components must use.
+    readonly property color surfaceText: _c.onSurface
     readonly property color onSurfaceVariant: _c.onSurfaceVariant
     readonly property color surfaceVariantText: onSurfaceVariant
-    readonly property color onSecondary: _c.onSecondary
     readonly property color outline: _c.outline
     readonly property color outlineStrong: _c.outlineStrong
     readonly property color primary: _c.primary
-    readonly property color onPrimary: _c.onPrimary
-    readonly property color primaryText: onPrimary
+    readonly property color primaryText: _c.onPrimary
     readonly property color secondary: _c.secondary
     readonly property color tertiary: _c.tertiary
     readonly property color success: _c.success

@@ -12,6 +12,7 @@ sed -e '/^import Quickshell/d' \
     -e 's/Quickshell.env("ABYSS_REDUCE_MOTION")/""/' app/components/Theme.qml > "$tmp/Theme.qml"
 # A substitution that did not apply would leave a Quickshell call behind: fail loudly.
 ! grep -q Quickshell "$tmp/Theme.qml" || { echo "theme-shot: Theme.qml still uses Quickshell" >&2; exit 1; }
+case $out in /*) dest=$out ;; *) dest=$PWD/$out ;; esac
 cat > "$tmp/shot.qml" <<QML
 import QtQuick
 import QtQuick.Window
@@ -28,16 +29,25 @@ Window {
                 width: 480; height: 52; radius: Theme.cornerRadiusLarge
                 color: Theme[modelData]; border.color: Theme.outlineStrong
                 Text { x: Theme.spacingL; anchors.verticalCenter: parent.verticalCenter; text: parent.modelData
-                    color: Theme.onSurface; font.family: Theme.monoFontFamily; font.pixelSize: Theme.fontSizeMedium }
+                    color: Theme.surfaceText; font.family: Theme.monoFontFamily; font.pixelSize: Theme.fontSizeMedium }
                 Rectangle { anchors { right: parent.right; rightMargin: Theme.spacingL; verticalCenter: parent.verticalCenter }
                     width: 40; height: 24; radius: Theme.cornerRadius; color: Theme.primary
-                    Text { anchors.centerIn: parent; text: "ok"; color: Theme.onPrimary; font.pixelSize: Theme.fontSizeSmall } }
+                    Text { anchors.centerIn: parent; text: "ok"; color: Theme.primaryText; font.pixelSize: Theme.fontSizeSmall } }
             }
         }
         Text { text: "Abyss"; color: Theme.primary; font.pixelSize: Theme.fontSizeXLarge; font.weight: Font.DemiBold }
     }
-    Timer { interval: 300; running: true; onTriggered: page.grabToImage(function (r) { r.saveToFile("$PWD/$out"); Qt.quit() }) }
+    Timer { interval: 300; running: true; onTriggered: page.grabToImage(function (r) { r.saveToFile("$dest"); Qt.quit() }) }
     }
 }
 QML
-QT_QPA_PLATFORM=offscreen timeout 60 qml-qt6 "$tmp/shot.qml" 2>&1 | grep -v '^$' | head -5
+QT_QPA_PLATFORM=offscreen timeout 60 qml-qt6 "$tmp/shot.qml" 2>&1 | grep -v '^$' | head -5 || true
+[ -s "$dest" ] || { echo "theme-shot: no capture written" >&2; exit 1; }
+# The text roles must reach the pixels: a role that silently read black passed review once (P229).
+# Palette.js lists dark first, then light.
+n=1; [ "$scheme" = light ] && n=2
+# Only onSurface: the 11 px "ok" label is fully anti-aliased, no exact pixel.
+for role in onSurface; do
+    hex=$(grep "^ *$role:" app/components/Palette.js | sed -n "${n}p" | grep -o '#[0-9a-fA-F]\{6\}' | tr 'a-f' 'A-F')
+    magick "$dest" -format %c histogram:info:- | grep -qi "$hex" || { echo "theme-shot: no $role pixel ($hex) in the capture" >&2; exit 1; }
+done
