@@ -29,6 +29,8 @@ Item {
     }
     // Only a gesture saves, so opening the page writes nothing
     function set(v) {
+        if (v === value)
+            return;
         value = v;
         const s = Host.find(root.parent);
         if (s)
