@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import "components"
 import "components/Cli.js" as Cli
 
 // The Abyss app: one window, one process. Closing the window ends it (no tray,
@@ -15,6 +16,7 @@ ShellRoot {
         id: window
 
         title: "Abyss"
+        color: Theme.surface
         visible: true
         implicitWidth: 640
         implicitHeight: 420
@@ -24,17 +26,23 @@ ShellRoot {
 
         Column {
             anchors.centerIn: parent
-            spacing: 12
+            spacing: Theme.spacingM
 
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: "Abyss"
-                font.pixelSize: 28
+                color: Theme.primary
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSizeXLarge
+                font.weight: Font.DemiBold
             }
 
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: root.current.ok ? JSON.stringify(root.current) : root.current.error
+                color: Theme.surfaceVariantText
+                font.family: Theme.monoFontFamily
+                font.pixelSize: Theme.fontSizeMedium
             }
         }
     }
