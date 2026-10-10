@@ -74,6 +74,11 @@ Item {
     function mix(a, b, k) {
         return Qt.rgba(a.r + (b.r - a.r) * k, a.g + (b.g - a.g) * k, a.b + (b.b - a.b) * k, 1);
     }
+    // WCAG relative luminance of a colour (sRGB channels linearised)
+    function _lum(c) {
+        const lin = v => v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+        return 0.2126 * lin(c.r) + 0.7152 * lin(c.g) + 0.0722 * lin(c.b);
+    }
     readonly property color _night: "#02040b"
     readonly property color _white: "#ffffff"
     readonly property color _grey: "#8a8fa0"
@@ -84,6 +89,9 @@ Item {
     readonly property color inkDim: Qt.rgba(ink.r, ink.g, ink.b, 0.62)
     readonly property color sleepColor: mix(Theme.primary, _grey, 0.7)
     readonly property color sunColor: mix(Theme.warning, _white, 0.4)
+    // The least white that reads on the dark menu: the raw role when it is
+    // bright enough, a mix with white when the theme is light
+    readonly property color sendColor: _lum(Theme.primary) >= 0.32 ? Theme.primary : mix(Theme.primary, _white, 0.4)
     readonly property color groupColor: mix(Theme.primary, Theme.tertiary, 0.35)
     readonly property var tints: [Theme.primary, Theme.tertiary, Theme.success, Theme.secondary, mix(Theme.primary, Theme.tertiary, 0.5), mix(Theme.tertiary, Theme.success, 0.5), mix(Theme.primary, Theme.success, 0.5), mix(Theme.secondary, Theme.tertiary, 0.5)]
     // Stable colour per peer name
@@ -1594,11 +1602,15 @@ Item {
             if (p.online) {
                 out.push({
                     "text": "Send a file…",
+                    "icon": "upload_file",
+                    "accent": true,
                     "act": "send",
                     "arg": false
                 });
                 out.push({
                     "text": "Send a folder…",
+                    "icon": "drive_folder_upload",
+                    "accent": true,
                     "act": "send",
                     "arg": true
                 });
@@ -2718,15 +2730,28 @@ Item {
                         width: menuCol.width
                         height: 30
                         radius: 8
-                        color: rowArea.containsMouse ? Qt.rgba(root.ink.r, root.ink.g, root.ink.b, 0.1) : "transparent"
+                        readonly property bool accent: !!modelData.accent
+                        color: rowArea.pressed ? Qt.rgba(root.ink.r, root.ink.g, root.ink.b, 0.16) : rowArea.containsMouse ? Qt.rgba(root.ink.r, root.ink.g, root.ink.b, 0.1) : "transparent"
+                        border.width: activeFocus && accent ? 2 : 0
+                        border.color: root.sendColor
                         StyledText {
                             anchors.verticalCenter: parent.verticalCenter
                             x: 10
-                            width: parent.width - 20
+                            width: parent.width - (accent ? 40 : 20)
                             elide: Text.ElideRight
                             text: modelData.text
                             font.pixelSize: 12
-                            color: root.ink
+                            font.weight: accent ? Font.DemiBold : Font.Normal
+                            color: accent ? root.sendColor : root.ink
+                        }
+                        DankIcon {
+                            visible: accent
+                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.right: parent.right
+                            anchors.rightMargin: 10
+                            name: modelData.icon || ""
+                            size: 16
+                            color: root.sendColor
                         }
                         MouseArea {
                             id: rowArea

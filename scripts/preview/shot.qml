@@ -416,7 +416,7 @@ Window {
     }
 
     // gif-send-menu: a send started from the creature's menu ("Send a
-    // file…"). Frames every 80 ms from the moment it starts.
+    // file…"). Frames every 80 ms from the moment the menu opens.
     Timer {
         id: sendReel
         property int frame: -1
@@ -428,10 +428,13 @@ Window {
                 if (!it)
                     return;
                 scene.openMenu(it.id, scene.spotOf(it.id));
-                scene.doMenu({ "act": "send", "arg": false });
             }
             const n = ++frame;
-            if (n > 40) {
+            // The menu stays open for 12 frames (about 1 s) so the two
+            // send entries are seen, then "Send a file…" is picked
+            if (n === 12)
+                scene.doMenu({ "act": "send", "arg": false });
+            if (n > 52) {
                 stop();
                 Qt.quit();
                 return;
