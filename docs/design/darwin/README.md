@@ -11,7 +11,7 @@ approved, and not used by the widget.
 | `darwin-front-25.svg`, `darwin-three-quarter-25.svg`, `darwin-profile-25.svg`, `darwin-swim-25.svg` | optical variants for the real widget size | 25 x 21, 22 x 21, 19 x 21 and 25 x 18, one unit = one pixel |
 | `*@1x.png` | the optical variants rendered 1:1 (25 px wide, `unit` 0.034 in `Goldfish.qml`) | |
 | `*@4x.png` | four times the real size: front and swimming 100 px wide, three-quarter 89, profile 76 (one scale, 100 / 745, for the three views of the front space) | |
-| `scene-dark.png`, `scene-light.png`, `scene-wallpaper.png` | the profile alone (the only view kept, owner 2026-10-10) at real size in the real desktop bowl (`scripts/preview/render.sh desk`, `desk-light`, and `desk` with a made-up warm wallpaper palette in the preview `Theme`), composited at +368+356, with a 6x unsmoothed zoom below | |
+| `scene-dark.png`, `scene-light.png`, `scene-wallpaper.png` | the front view alone (the only view kept, owner 2026-10-10, replacing "profile only") at real size in the real desktop bowl (`scripts/preview/render.sh desk`, `desk-light`, and `desk` with a made-up warm wallpaper palette in the preview `Theme`), composited at +365+356, with a 6x unsmoothed zoom below | |
 
 Rebuild:
 
@@ -23,7 +23,7 @@ for v in front:100 three-quarter:89 profile:76 swim:100; do
 done
 # scenes: <mode> is desk, desk-light, or desk with the wallpaper palette below
 ../../../scripts/preview/render.sh <mode> top.png
-magick top.png darwin-profile@1x.png -geometry +368+356 -composite top.png
+magick top.png darwin-front@1x.png -geometry +365+356 -composite top.png
 magick top.png \( top.png -crop 130x60+312+336 +repage -filter point -resize 600% \) \
   -append -strip scene-<name>.png
 ```
@@ -234,3 +234,50 @@ pupils, cheeks and both brows sit on the reference ink.
   1.00 to 1.19:1 (invisible, the body carries the shape).
 - Not done: the 0.6 depth ratio is an assumption (Q129); the side-on fin has
   no reference; the fin's top edge keeps a slight wave at full size.
+
+## Front view only (owner, 2026-10-10)
+
+The owner keeps Darwin from the front only; this replaces "profile only".
+The profile, three-quarter and swimming files stay as they were and are no
+longer worked on; the profile sections above describe the previous scenes.
+The front drawing is unchanged since the smoothing.
+
+Contrast of the front view in the three scenes, on the 7275 backdrop pixels of
+the 130 x 60 zone at +312+336 (Darwin's 25 x 21 box excluded), worst to best:
+
+| Scene | Body `#F47E26` | Eye white `#E4E3E8` | Outline `#0A0A0A` |
+|---|---|---|---|
+| dark | 6.25 to 7.18:1 | 13.09 to 15.03:1 | 1.03 to 1.19:1 |
+| light | 6.63 to 7.44:1 | 13.89 to 15.57:1 | 1.00 to 1.12:1 |
+| wallpaper | 6.23 to 7.19:1 | 13.04 to 15.05:1 | 1.03 to 1.19:1 |
+
+The outline is invisible on the deep; the body and the eyes carry the shape.
+Inside each scene, at most 1 opaque pixel of `darwin-front@1x.png` differs.
+
+Right brow: checked on ink masks (red channel under 125) of the reference and
+of ours, the brow itself sits on the reference ink. The offset seen next to it
+on the overlay is the body line: the reference has a crease where the head
+bump meets the body (about x 625, y 160 of the board), and the 12-harmonic
+smoothing rounds it, so our line runs inside the bump above the crease and
+outside it at the crease. Our ink is up to about 12 px from the nearest
+reference ink there (reference ink grown by a disk of radius 11 leaves 58 of
+our ink pixels uncovered, radius 13 leaves none). The 4.97 px quoted above is
+the gap at the 48 measured rays only; none of them falls in the crease. Not
+corrected: it is the trade between "smooth" and 1:1, and a redraw of the body
+line needs a new score.
+
+The front board (outside the repository, it holds the reference): reference,
+ours and 50 % overlay at one scale, and below them the 25 px front view of
+the three scenes at 6x, unsmoothed. Three 745 x 612 panels and three
+384 x 240 zooms on a 2283 x 888 canvas, 12 px margins (`ref.png`, `ours.png`
+and `mix.png` as in the side-by-side recipe above):
+
+```sh
+for n in dark light wallpaper; do
+  magick scene-$n.png -crop 64x40+345+347 +repage -filter point -resize 600% z-$n.png
+done
+magick -size 2283x888 xc:'#5c6670' ref.png -geometry +12+12 -composite \
+  ours.png -geometry +769+12 -composite mix.png -geometry +1526+12 -composite \
+  z-dark.png -geometry +192+636 -composite z-light.png -geometry +949+636 -composite \
+  z-wallpaper.png -geometry +1706+636 -composite -strip -depth 8 front-board.png
+```
