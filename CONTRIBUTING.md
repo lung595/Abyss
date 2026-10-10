@@ -75,7 +75,8 @@ Abyss/
 │   ├── abyss             # the `abyss` command (POSIX sh), single instance
 │   ├── abyss.desktop     # menu entry
 │   ├── usage.txt         # what `abyss --help` prints
-│   └── components/       # Cli.js (command-line parser, pure), Palette.js (the app's colours, pure), Theme.qml (singleton with the DMS Theme API, so shared components render unchanged; read the text roles as `surfaceText` / `primaryText`, never `onSurface` / `onPrimary` (they read black, P229); scheme follows the system, `ABYSS_SCHEME=light|dark` forces it, `ABYSS_REDUCE_MOTION=1` zeroes the durations; `tests/scene/theme-shot.sh <scheme> <out.png>` regenerates the captures in `docs/design/app/theme-captures/`)
+│   ├── views/            # AppFrame.qml (gauge + title row + current view, no window type, testable offscreen), PlaceholderView.qml
+│   └── components/       # Stations.js (stations, routing, readouts, pure), DepthGauge/StationTarget/GuideBand.qml, GitHubMark.qml (symlink to the widget's, one source), Cli.js (command-line parser, pure), Palette.js (the app's colours, pure), Theme.qml (singleton with the DMS Theme API, so shared components render unchanged; read the text roles as `surfaceText` / `primaryText`, never `onSurface` / `onPrimary` (they read black, P229); scheme follows the system, `ABYSS_SCHEME=light|dark` forces it, `ABYSS_REDUCE_MOTION=1` zeroes the durations; `tests/scene/theme-shot.sh <scheme> <out.png>` regenerates the captures in `docs/design/app/theme-captures/`)
 ├── install-app.sh        # installs / removes the app under ~/.local
 ├── .github/workflows/    # CI: tests/run.sh on every push
 ├── scripts/preview/      # offscreen renders and GIFs from the demo mesh

@@ -10,7 +10,7 @@ export QT_QPA_PLATFORM=offscreen
 # A private copy under a unique path: pgrep then sees only this test's process
 tmp=$(mktemp -d)
 trap 'pkill -f "qs -p $tmp/app" 2>/dev/null; rm -rf "$tmp"' EXIT
-cp -r app "$tmp/app"
+cp -rL app "$tmp/app"
 count() { pgrep -fc "[q]s -p $tmp/app"; }
 fail=0
 check() { [ "$2" = "$3" ] || { echo "FAIL $1: got $2, want $3"; fail=1; }; }
@@ -28,7 +28,7 @@ check "an option-like word creates no second process" "$(count)" 1
 check "help starts nothing" "$("$tmp/app/abyss" --help | head -n 1)" "Usage: abyss [command]"
 
 # Closing the window quits: a copy whose window closes itself after a moment
-rm -rf "$tmp/app" && cp -r app "$tmp/app"
+rm -rf "$tmp/app" && cp -rL app "$tmp/app"
 sed -i 's|^        visible: true|        visible: true\n        Timer { running: true; interval: 1000; onTriggered: window.visible = false }|' "$tmp/app/shell.qml"
 pkill -f "qs -p $tmp/app" 2>/dev/null
 "$tmp/app/abyss" >/dev/null 2>&1 &
