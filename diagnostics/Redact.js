@@ -58,8 +58,8 @@ var _RULES = [
     // Links with credentials, then e-mail addresses
     [/\b([a-z][a-z0-9+.-]*:\/\/)[^\s\/@]+@/gi, "$1<secret>@"],
     [/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g, "<email>"],
-    // Also rewrites any "word@x" ("Abyss@1.2"): deliberate, the safe side
-    // The user of an ssh/scp target ("user@100.64.0.2", "user@peer")
+    // The user of an ssh/scp target ("user@100.64.0.2", "user@peer"); also
+    // rewrites any "word@x" ("Abyss@1.2"): deliberate, the safe side
     [/\b[A-Za-z_][A-Za-z0-9._-]*@(?=[A-Za-z0-9.:\[<-])/g, "<user>@"],
     // Hardware and network addresses: Bluetooth (colon, dash and BlueZ
     // underscore forms), IPv6 then IPv4, host names of a private network
@@ -78,6 +78,8 @@ var _RULES = [
     // (documents, a chosen send folder, a localized name): hide it to the end of
     // the line, because a name with spaces or quotes cannot be delimited safely
     [/~\/(?!\.)[^\n]*/g, "~/<path>"],
+    // Mounted drives hold the login, a volume label and file names (USB stick)
+    [/(^|[^0-9A-Za-z_.])\/(?:run\/media|media|mnt)\/[^\n]*/g, "$1<path>"],
     [/\/root\b/g, "~"],
     [/\/run\/user\/\d+/g, "/run/user/<uid>"]
 ];

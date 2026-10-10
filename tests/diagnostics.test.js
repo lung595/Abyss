@@ -72,6 +72,9 @@ const secrets = {
     "quote in name": "'\x2fhome/jdoe/Documents/it's mine.pdf'",
     "send folder itself": "\x2fhome/jdoe/Received/tax-2026.pdf",
     "localized folder": "\x2fhome/jdoe/Téléchargements/secret.pdf",
+    "usb stick": "/run/media/jdoe/USBKEY/Tax Return.pdf",
+    "media drive": "cp /media/jdoe/disk/x.pdf",
+    "mnt drive": "/mnt/data/Tax Return.pdf",
     "silverblue home": "/var\x2fhome/jdoe/Documents/a.txt",
     "runtime dir": "/run/user/1000/quickshell/by-id/abc",
     "setup key": "netbird up --setup-key " + KEY,
@@ -85,7 +88,7 @@ const secrets = {
     "ssh user at host": "jdoe@" + FQDN,
     "url credentials": HT + "s://jdoe:hunter2@example.org/path"
 };
-const forbidden = [MAC, MAC.toLowerCase(), NB4, "192.168.7.23", "fd7a:115c", "fe80::1ff", "jdoe", "hunter2", "tskey-auth", "abcDEF123456", "eyJhbGci", "ghp_16C7", "0123456789abcdef", "laptop-jdoe", "nas.home", "tail1234", "netbird.cloud", "tax-2026", "Tax Return", "it's mine", "Received", "Téléchargements", "secret.pdf", "6B2F1C9A", "6b2f1c9a", "1000/quickshell"];
+const forbidden = [MAC, MAC.toLowerCase(), NB4, "192.168.7.23", "fd7a:115c", "fe80::1ff", "jdoe", "hunter2", "tskey-auth", "abcDEF123456", "eyJhbGci", "ghp_16C7", "0123456789abcdef", "laptop-jdoe", "nas.home", "tail1234", "netbird.cloud", "tax-2026", "Tax Return", "it's mine", "Received", "Téléchargements", "secret.pdf", "6B2F1C9A", "6b2f1c9a", "1000/quickshell", "USBKEY", "disk/x", "data/Tax"];
 for (const what in secrets) {
     const out = Redact.text(secrets[what]);
     eq("no leak: " + what, forbidden.filter(f => out.indexOf(f) >= 0), []);
