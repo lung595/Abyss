@@ -1,0 +1,5 @@
+#!/bin/sh
+# Stands in for wakeonlan in the QML tests: saves its arguments, one per
+# line, in $FAKE_NB/wol.argv, and succeeds.
+printf '%s\n' "$@" > "$FAKE_NB/wol.argv"
+exit 0

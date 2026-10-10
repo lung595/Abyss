@@ -1,0 +1,15 @@
+#!/bin/sh
+# Stands in for ssh in the QML tests. The arguments are saved one per line in
+# $FAKE_NB/ssh.argv. The host (after "--") decides the outcome:
+#   auth.mesh   the login is refused (exit 255)
+#   nowol.mesh  the peer has no wake program (its PATH holds none)
+#   anything else: the peer runs the command it was given, as its own
+#   "sh -c", so the real remote script is exercised
+printf '%s\n' "$@" > "$FAKE_NB/ssh.argv"
+for last; do :; done
+while [ "$1" != "--" ]; do shift; done
+case "$2" in
+    *auth.mesh) echo "x: Permission denied (publickey)." >&2; exit 255 ;;
+    *nowol.mesh) PATH=/usr/bin:/bin exec sh -c "$last" ;;
+esac
+exec sh -c "$last"
