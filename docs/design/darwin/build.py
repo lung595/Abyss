@@ -133,8 +133,9 @@ def right_edge(at, y):
     return max(p[0] for p in (at(i / 2000) for i in range(2000)) if abs(p[1] - y) < 1.5)
 
 
-# Face parts of the turned views stay this far inside the body line, so that a
-# full stroke width of body shows between them and the outline.
+# Face parts of the turned views stay this far inside the body line, measured
+# along x: a full stroke width of body shows on a horizontal line, 5.5 to 6 px
+# across the line where it slants.
 INSET = 2 * STROKE
 
 

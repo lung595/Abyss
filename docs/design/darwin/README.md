@@ -55,6 +55,28 @@ magick ref.png \( -size 745x612 xc:'#00E5FF' edge.png -alpha off \
   -compose CopyOpacity -composite \) -composite front-overlay-measured.png
 ```
 
+The two side-by-side boards (outside the repository, they hold the
+references): reference, ours, 50 % overlay, at one scale. Front: the poster
+frame brought into the SVG space as above, ours on the poster's backdrop
+colour. Swimming: the 1400 x 700 frame is cropped, not scaled; the SVG origin
+is at +352+50 in it (found by an exact sub-image match).
+
+```sh
+magick -background '#bcd3e6' darwin-front.svg -alpha remove -alpha off ours.png
+magick ref.png ours.png -compose blend -define compose:args=50 -composite mix.png
+magick ref.png ours.png mix.png +append -strip front-ref-vs-ours.png
+
+magick <swimming frame> -crop 684x480+350+50 +repage ref.png
+magick -size 684x480 xc:white \( -background none darwin-swim.svg \) \
+  -geometry +2+0 -composite -alpha off ours.png
+magick ref.png ours.png -compose blend -define compose:args=50 -composite mix.png
+magick ref.png ours.png mix.png +append -strip swim-ref-vs-ours.png
+```
+
+Both were rebuilt from the smoothed drawings and looked at: the front
+overlay shows one line; the swimming overlay still shows a double line on the
+right edge of the body and along the arm (the 4 px worst case below).
+
 ## Optical size (25 px)
 
 At the widget size one pixel is about 30 units of the drawing, so the 7 px
@@ -175,6 +197,10 @@ pupils, cheeks and both brows sit on the reference ink.
   drawings (6006 pixels per scene): body 6.25 to 7.18:1 (dark), 6.63 to 7.44:1
   (light), 6.23 to 7.19:1 (wallpaper theme); eye white 13.04 to 15.57:1;
   outline 1.00 to 1.19:1 (invisible, the body carries the shape).
-- Not done: the 0.6 depth ratio is an assumption; the profile keeps the front
+- The inset is taken along x (14 px between the two stroke centres, so 7 px
+  of body on a horizontal line). Where the body line slants, the gap measured
+  across it is smaller: 9.0 and 9.5 px between centres, that is 5.5 to 6 px
+  of visible body (measured by the UI Designer), not a full stroke width.
+- Not done: the 0.6 depth ratio is an assumption (Q129); the profile keeps the front
   tail fin seen flat (a real profile would show it edge-on or fanned, no
   reference says which).
