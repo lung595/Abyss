@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-12 -8 500 612" width="500" height="612">
+<title>Darwin, profile view, neutral pose (deduced from the front view)</title>
+<path d="M303.6 455v104a35 35 0 0 0 70 0v-104z" fill="#f47e26" stroke="#0a0a0a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M159.6 455v104a35 35 0 0 0 70 0v-104z" fill="#f47e26" stroke="#0a0a0a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M449.6 240.0C457.8 268.7 456.3 300.0 451.6 328.9C446.9 357.8 438.4 385.4 424.8 405.7C411.2 426.0 393.3 438.2 377.2 447.6C361.0 457.0 346.2 464.4 331.4 467.6C316.6 470.7 302.2 468.7 289.3 468.1C276.4 467.5 264.6 468.8 252.6 469.0C240.6 469.2 228.8 467.8 216.0 467.9C203.2 468.0 189.0 469.7 173.2 469.1C157.5 468.5 140.0 465.7 122.1 457.4C104.3 449.1 86.8 433.9 75.6 410.3C64.4 386.8 59.9 356.5 57.5 327.1C55.2 297.8 53.8 268.8 54.8 240.0C55.7 211.2 60.2 182.7 68.9 158.0C77.6 133.2 90.1 112.6 103.2 96.2C116.3 79.9 130.0 67.4 143.2 57.7C156.5 48.0 169.5 41.3 181.7 35.3C193.9 29.4 205.3 23.3 216.9 18.0C228.5 12.7 240.5 9.5 252.6 8.0C264.7 6.5 277.3 5.1 290.2 6.4C303.1 7.7 315.9 13.8 327.4 24.0C338.9 34.3 349.9 46.9 358.8 62.9C367.8 79.0 372.7 100.2 377.6 119.7C382.5 139.2 391.2 154.1 406.8 171.1C422.5 188.2 441.5 211.3 449.6 240.0Z" fill="#f47e26" stroke="#0a0a0a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M55.2 309.0C40.0 306.0 26.0 310.0 18.0 317.0C6.0 326.0 -3.0 340.0 -4.0 360.0C-6.0 385.0 -2.0 410.0 6.0 428.0C14.0 448.0 26.0 462.0 40.0 472.0C52.0 482.0 63.6 486.0 74.4 482.0C82.8 479.0 88.8 472.0 92.4 467.0C96.0 462.0 99.6 457.0 102.0 452.0" fill="#f47e26" stroke="#0a0a0a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+<path transform="translate(-23.2 0)" d="M112 146c-30 36-36 96-24 140 6 4 14 2 16-6 4-50 18-90 36-122 0-10-18-18-28-12z" fill="#f6bc8c"/>
+<path d="M55.2 300Q56.4 322 62.4 337M89.4 431Q94.8 443 103.2 453M3 387l32-6M26 452l32-21" fill="none" stroke="#0a0a0a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+<ellipse cx="338.0" cy="184.5" rx="57.6" ry="90" fill="#e4e3e8" stroke="#0a0a0a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+<ellipse cx="354.0" cy="188" rx="35.2" ry="47" fill="#0a0a0a"/>
+<path d="M287.5 130.6L276.1 122.6M278.5 160.2L265.0 156.5M276.4 187.8L262.4 188.3" fill="none" stroke="#0a0a0a" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M308 70C308.9 66.0 313.1 59.2 315 56C317.9 52.8 320.3 52.5 322 51C325.1 49.5 327.5 47.8 329 47C332.3 46.2 334.7 46.0 337 46C339.5 46.0 341.9 46.3 344 47C346.7 47.7 349.3 48.0 351 50C353.7 52.0 356.9 56.0 357 59C358.1 62.0 356.7 66.0 355 68C353.5 70.0 350.3 70.8 347 71C345.5 71.2 343.1 69.3 340 69C338.3 68.7 335.9 68.3 333 69C331.1 69.7 328.7 71.3 326 73C323.9 74.7 321.5 77.8 319 79C316.7 80.2 313.7 81.5 311 80C310.1 78.5 307.7 74.0 308 70Z" fill="#0a0a0a"/>
+<circle cx="348" cy="314" r="50" fill="#f47e26"/><path d="M302.0 294.5A50 50 0 1 1 324.5 358.1" fill="none" stroke="#0a0a0a" stroke-width="7" stroke-linecap="round"/>
+<path d="M370.8 322Q402.8 340 430.8 312" fill="none" stroke="#0a0a0a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="350.0" cy="307" r="26" fill="#f6bc8c"/>
+</svg>

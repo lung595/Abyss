@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Builds the Darwin model sheet (front view) as SVG.
+"""Builds the Darwin model sheet (front, three-quarter, profile, swimming) as SVG.
 
 Geometry is in the 729 px wide space of the picture the widget uses today,
 so the drawing can replace it without touching the scale in Goldfish.qml.
@@ -36,9 +36,10 @@ def smooth(pts):
     return d + "Z"
 
 
-def poly(pts):
-    """Closed polygon through points measured on the reference (brows)."""
-    return "M" + "L".join("%d %d" % p for p in pts) + "Z"
+def blob(pts):
+    """Closed smooth shape through every other measured point (brows): the
+    6 px reading step of the ink would otherwise show as facets."""
+    return smooth(pts[::2])
 
 
 def chain(pts):
@@ -49,6 +50,37 @@ def chain(pts):
         d += "C%.1f %.1f %.1f %.1f %d %d" % (p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6,
                                              p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6, p2[0], p2[1])
     return d
+
+
+def outline(pts, centre, a0, harmonics, xs=lambda x: x):
+    """Smooth closed outline from the measured rays. The 48 radii are a
+    periodic function of the angle: keeping only its low harmonics removes the
+    1 px wobble of the measurement, and 24 anchors with analytic tangents give
+    one continuous curve with no corner (see README, Smoothness)."""
+    n = len(pts)
+    r = [math.hypot(x - centre[0], y - centre[1]) for x, y in pts]
+    co = [(sum(r[i] * math.cos(2 * math.pi * k * i / n) for i in range(n)) * (1 if k == 0 else 2) / n,
+           sum(r[i] * math.sin(2 * math.pi * k * i / n) for i in range(n)) * 2 / n) for k in range(harmonics + 1)]
+
+    def at(t):
+        """Point and derivative at parameter t (turns), xs applied to x."""
+        rad = sum(a * math.cos(2 * math.pi * k * t) + b * math.sin(2 * math.pi * k * t) for k, (a, b) in enumerate(co))
+        drad = sum(2 * math.pi * k * (b * math.cos(2 * math.pi * k * t) - a * math.sin(2 * math.pi * k * t))
+                   for k, (a, b) in enumerate(co))
+        th = math.radians(a0) + 2 * math.pi * t
+        x, y = centre[0] + rad * math.cos(th), centre[1] + rad * math.sin(th)
+        dx = drad * math.cos(th) - 2 * math.pi * rad * math.sin(th)
+        dy = drad * math.sin(th) + 2 * math.pi * rad * math.cos(th)
+        e = 1e-3  # xs is piecewise linear: its slope is read numerically
+        return xs(x), y, dx * (xs(x + e) - xs(x - e)) / (2 * e), dy
+
+    m = 24
+    p = [at(i / m) for i in range(m + 1)]
+    d = "M%.1f %.1f" % p[0][:2]
+    for a, b in zip(p, p[1:]):
+        d += "C%.1f %.1f %.1f %.1f %.1f %.1f" % (a[0] + a[2] / (3 * m), a[1] + a[3] / (3 * m),
+                                                 b[0] - b[2] / (3 * m), b[1] - b[3] / (3 * m), b[0], b[1])
+    return d + "Z"
 
 
 # Front brows: top then bottom edge of each ink blob of the reference, read
@@ -76,32 +108,108 @@ def cheek(cx, cy, r, a1, a2, sweep):
             % (x1, y1, r, r, sweep, x2, y2, INK, STROKE))
 
 
-def front(small=False):
+# Tail fin, measured on the reference: it is fused to the body (drawn over the
+# body outline, open on the body side), the body line curls a little way into
+# it at both ends, and it carries two short strokes.
+FIN = [(56, 309), (40, 306), (26, 310), (18, 317), (6, 326), (-3, 340), (-4, 360), (-6, 385), (-2, 410), (6, 428),
+       (14, 448), (26, 462), (40, 472), (52, 482), (70, 486), (88, 482), (102, 479), (112, 472), (118, 467),
+       (124, 462), (130, 457), (134, 452)]
+FIN_CURLS = [[(56, 300), (58, 322), (68, 337)], [(113, 431), (122, 443), (136, 453)]]
+CENTRE, HALF_WIDTH, BACK = (385, 240), 335, 54
+# Turned views are deduced, not traced (no reference shows them): the body is
+# taken as 0.6 times as deep as it is wide, turned about its vertical axis.
+DEPTH = 0.6
+YAW = {"front": 0, "three-quarter": 40, "profile": 90}
+
+
+def lashes(cx, cy, rx, ry, angles):
+    """Short ticks leaving the eye outline at the given angles (degrees)."""
+    d = ""
+    for a in angles:
+        c, n = math.cos(math.radians(a)), math.sin(math.radians(a))
+        d += "M%.1f %.1fL%.1f %.1f" % (cx + (rx + 4) * c, cy + (ry + 4) * n, cx + (rx + 18) * c, cy + (ry + 18) * n)
+    return d
+
+
+def front(small=False, view="front"):
+    yaw = math.radians(YAW[view])
+    # Apparent width of an ellipsoid turned by yaw, as a share of its width.
+    k = math.hypot(math.cos(yaw), DEPTH * math.sin(yaw))
+
+    def xs(x):
+        """Silhouette: narrowed toward the tail side, the fin keeps its size."""
+        return x if x < BACK else BACK + (x - BACK) * k
+
+    def face(x):
+        """A point of the face, on the front surface of the turned body:
+        returns its new x and the local horizontal squeeze."""
+        u = max(-0.98, min(0.98, (x - CENTRE[0]) / HALF_WIDTH))
+        bulge = 0.55 * DEPTH * HALF_WIDTH * math.sin(yaw)  # 0.55: keeps the far eye inside the outline
+        return (xs(CENTRE[0]) + u * HALF_WIDTH * math.cos(yaw) + bulge * math.sqrt(1 - u * u),
+                math.cos(yaw) - bulge * u / (HALF_WIDTH * math.sqrt(1 - u * u)))
+
+    def fx(pts):
+        return [(face(x)[0], y) for x, y in pts]
+
     s = 'stroke="%s" stroke-width="%d" stroke-linecap="round" stroke-linejoin="round"' % (INK, STROKE)
-    leg = '<path d="M%d 455v104a35 35 0 0 0 70 0v-104z" fill="%s" %s/>'
+    leg = '<path d="M%.1f 455v104a35 35 0 0 0 70 0v-104z" fill="%s" %s/>'
+    fin = [(xs(x), y) for x, y in FIN]
     base = [
-        leg % (230, BODY, s), leg % (470, BODY, s),
-        '<path d="%s" fill="%s" %s/>' % (smooth(BODY_PTS), BODY, s),
-        # Tail fin, measured on the reference: it is fused to the body (drawn
-        # over the body outline, open on the body side), the body line curls a
-        # little way into it at both ends, and it carries two short strokes.
-        '<path d="M56 309C40 306 26 310 18 317C6 326-3 340-4 360C-6 385-2 410 6 428C14 448 26 462 40 472'
-        'C52 482 70 486 88 482C102 479 112 472 118 467C124 462 130 457 134 452" fill="%s" %s/>' % (BODY, s),
-        '<path d="M112 146c-30 36-36 96-24 140 6 4 14 2 16-6 4-50 18-90 36-122 0-10-18-18-28-12z" fill="%s"/>' % LIGHT,
+        # Far leg first: the near one overlaps it when the body turns.
+        leg % (xs(470), BODY, s), leg % (xs(230), BODY, s),
+        '<path d="%s" fill="%s" %s/>' % (outline(BODY_PTS, CENTRE, 0, 12, xs), BODY, s),
+        '<path d="M%.1f %.1f%s" fill="%s" %s/>' % (fin[0] + ("".join(
+            "C" + " ".join("%.1f %.1f" % p for p in fin[i:i + 3]) for i in range(1, len(fin), 3)), BODY, s)),
+        '<path transform="translate(%.1f 0)" d="M112 146c-30 36-36 96-24 140 6 4 14 2 16-6 4-50 18-90 36-122 0-10-18-18-28-12z"'
+        ' fill="%s"/>' % (xs(112) - 112, LIGHT),
     ]
-    detail = [
-        '<path d="M56 300Q58 322 68 337M113 431Q122 443 136 453M3 387l32-6M26 452l32-21" fill="none" %s/>' % s,
-        '<ellipse cx="269.5" cy="184.5" rx="96" ry="90" fill="%s" %s/>' % (WHITE, s),
-        '<ellipse cx="495.5" cy="173" rx="90" ry="86.5" fill="%s" %s/>' % (WHITE, s),
-        '<circle cx="285" cy="188" r="47" fill="%s"/><circle cx="484" cy="177" r="47" fill="%s"/>' % (INK, INK),
-        # Lashes: short, thin ticks on the upper outer arc of each eye.
-        '<path d="M193 124l-10-12M180 147l-12-7M175 171l-13-3M555 99l8-11M575 119l10-7M586 142l12-4" fill="none" %s/>' % s.replace('"7"', '"5"'),
-        # Brows are solid shapes on the reference, traced from its ink.
-        '<path d="%s%s" fill="%s"/>' % (poly(BROW_L), poly(BROW_R), INK),
-        cheek(286, 314, 63, 203, 118, 1), cheek(503, 301, 59, -30, 62, 0),
-        '<path d="M346 320Q398 352 448 306" fill="none" %s/>' % s,
-        '<circle cx="290" cy="307" r="30" fill="%s"/><circle cx="492" cy="297" r="30" fill="%s"/>' % (LIGHT, LIGHT),
-    ]
+    curls = "".join("M%.1f %dQ%.1f %d %.1f %d" % tuple(v for x, y in c for v in (xs(x), y)) for c in FIN_CURLS)
+    detail = ['<path d="%sM3 387l32-6M26 452l32-21" fill="none" %s/>' % (curls, s)]
+    thin = s.replace('"7"', '"5"')
+    if view == "front":
+        detail += [
+            '<ellipse cx="269.5" cy="184.5" rx="96" ry="90" fill="%s" %s/>' % (WHITE, s),
+            '<ellipse cx="495.5" cy="173" rx="90" ry="86.5" fill="%s" %s/>' % (WHITE, s),
+            '<circle cx="285" cy="188" r="47" fill="%s"/><circle cx="484" cy="177" r="47" fill="%s"/>' % (INK, INK),
+            # Lashes: short, thin ticks on the upper outer arc of each eye.
+            '<path d="M193 124l-10-12M180 147l-12-7M175 171l-13-3M555 99l8-11M575 119l10-7M586 142l12-4" fill="none" %s/>' % thin,
+            # Brows are solid shapes on the reference, traced from its ink.
+            '<path d="%s%s" fill="%s"/>' % (blob(BROW_L), blob(BROW_R), INK),
+            cheek(286, 314, 63, 203, 118, 1), cheek(503, 301, 59, -30, 62, 0),
+            '<path d="M346 320Q398 352 448 306" fill="none" %s/>' % s,
+            '<circle cx="290" cy="307" r="30" fill="%s"/><circle cx="492" cy="297" r="30" fill="%s"/>' % (LIGHT, LIGHT),
+        ]
+    elif view == "three-quarter":
+        # Every face part of the front view, moved onto the turned surface:
+        # the near eye keeps almost its width, the far one narrows.
+        (lx, lk), (rx, rk) = face(269.5), face(495.5)
+        detail += [
+            '<ellipse cx="%.1f" cy="184.5" rx="%.1f" ry="90" fill="%s" %s/>' % (lx, 96 * lk, WHITE, s),
+            '<ellipse cx="%.1f" cy="173" rx="%.1f" ry="86.5" fill="%s" %s/>' % (rx, 90 * rk, WHITE, s),
+            '<ellipse cx="%.1f" cy="188" rx="%.1f" ry="47" fill="%s"/>' % (face(285)[0] + 6, 47 * lk, INK),
+            '<ellipse cx="%.1f" cy="177" rx="%.1f" ry="47" fill="%s"/>' % (face(484)[0] + 4, 47 * rk, INK),
+            '<path d="%s%s" fill="none" %s/>' % (lashes(lx, 184.5, 96 * lk, 90, (215, 195, 178)),
+                                                 lashes(rx, 173, 90 * rk, 86.5, (-58, -35, -15)), thin),
+            '<path d="%s%s" fill="%s"/>' % (blob(fx(BROW_L)), blob(fx(BROW_R)), INK),
+            cheek(face(286)[0], 314, 63, 203, 118, 1), cheek(face(503)[0], 301, 50, -30, 62, 0),
+            '<path d="M%.1f 320Q%.1f 352 %.1f 306" fill="none" %s/>' % (face(346)[0], face(398)[0], face(448)[0], s),
+            '<circle cx="%.1f" cy="307" r="30" fill="%s"/>' % (face(290)[0], LIGHT),
+            '<ellipse cx="%.1f" cy="297" rx="%.1f" ry="30" fill="%s"/>' % (face(492)[0], 30 * max(rk, 0.7), LIGHT),
+        ]
+    else:
+        # Profile: one eye, one cheek, the mouth ends on the outline. The eye
+        # keeps its height and takes the body's own narrowing (DEPTH).
+        edge = xs(712)
+        ex, erx = xs(640) - 10 - 96 * DEPTH, 96 * DEPTH  # 640: the outline at eye height
+        detail += [
+            '<ellipse cx="%.1f" cy="184.5" rx="%.1f" ry="90" fill="%s" %s/>' % (ex, erx, WHITE, s),
+            '<ellipse cx="%.1f" cy="188" rx="%.1f" ry="47" fill="%s"/>' % (ex + 16, 47 * 0.75, INK),
+            '<path d="%s" fill="none" %s/>' % (lashes(ex, 184.5, erx, 90, (215, 195, 178)), thin),
+            '<path d="%s" fill="%s"/>' % (blob([(ex + (x - 269.5) * DEPTH, y) for x, y in BROW_L]), INK),
+            cheek(ex + 10, 314, 50, 203, 118, 1),
+            '<path d="M%.1f 322Q%.1f 340 %.1f 312" fill="none" %s/>' % (edge - 78, edge - 46, edge - 18, s),
+            '<circle cx="%.1f" cy="307" r="26" fill="%s"/>' % (ex + 12, LIGHT),
+        ]
     return "\n".join(base if small else base + detail)
 
 
@@ -125,7 +233,7 @@ def swim(small=False):
         '<path d="M520 125C535 70 570 35 620 28c35-3 50 27 30 50-20 17-50 17-65 62" fill="%s" %s/>' % (BODY, s),
         # Darker band where the leg leaves the body, as on the reference.
         '<path d="M524 112l34 22 10-20-36-20z" fill="%s"/>' % BAND,
-        '<path d="%s" fill="%s" %s/>' % (smooth(SWIM_PTS), BODY, s),
+        '<path d="%s" fill="%s" %s/>' % (outline(SWIM_PTS, (370, 230), -90, 12), BODY, s),
         '<path d="M158 222c-14 20-12 52 4 70 8 4 14-2 12-10-8-18-8-36 0-52-2-8-10-12-16-8z" fill="%s"/>' % LIGHT,
         # Tail fin under the arm, then the arm reaching forward; both open
         # paths so the joint with the body carries no outline.
@@ -181,6 +289,11 @@ if __name__ == "__main__":
     open(out + "/darwin-front.svg", "w").write(
         '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-12 -8 745 612" width="745" height="612">\n'
         '<title>Darwin, front view, neutral pose</title>\n%s\n</svg>\n' % front())
+    for name, width in (("three-quarter", 660), ("profile", 500)):
+        open(out + "/darwin-%s.svg" % name, "w").write(
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-12 -8 %d 612" width="%d" height="612">\n'
+            '<title>Darwin, %s view, neutral pose (deduced from the front view)</title>\n%s\n</svg>\n'
+            % (width, width, name, front(view=name)))
     open(out + "/darwin-swim.svg", "w").write(
         '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 480" width="680" height="480">\n'
         '<title>Darwin, side view, swimming</title>\n%s\n</svg>\n' % swim())

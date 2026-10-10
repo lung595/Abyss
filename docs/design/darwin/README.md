@@ -139,3 +139,26 @@ pupils, cheeks and both brows sit on the reference ink.
   and 1.09 % of the body width: the same weight on the character.
 - No three-quarter or true side view: no reference shows one. Shoes are not
   drawn: no reference shows them.
+
+## Smoothness and deduced views (owner feedback, 2026-10-10)
+
+- **Smoother outlines.** The body outline of both views is no longer a spline
+  through the 48 measured points (their 1 px rounding showed as a wobble). The
+  48 radii are kept as a periodic function of the angle, cut to 12 harmonics,
+  and drawn with 24 anchors and analytic tangents (`outline()` in `build.py`).
+  Measured: curvature sign changes 26 to 8 (front) and 32 to 8 (swimming);
+  distance to the measured points 1.10 px mean, 4.97 px max (front, 729 space)
+  and 0.87 px mean, 4.17 px max (swimming, 680 space), under 0.2 px at 25 px.
+  Front brows are a smooth closed curve through every other traced point
+  instead of a polygon. Proportions, colours and expression are unchanged.
+- **Three-quarter and profile views** (`darwin-three-quarter.svg`,
+  `darwin-profile.svg`, `@4x` PNG) are **deduced, not traced**: no reference
+  shows them. Rule: the front body is turned about its vertical axis as an
+  ellipsoid 0.6 times as deep as wide (assumed ratio), 40 degrees and 90
+  degrees; the silhouette narrows toward the tail, the tail fin, legs, stroke
+  and colours are the front ones; face parts are the front ones moved onto the
+  turned surface (far eye narrower). In profile one eye, one cheek and the end
+  of the mouth are shown.
+- Not done yet: 25 px optical variants of the two new views;
+  `scene-wallpaper.png` still shows the previous outline (dark and light are
+  re-composited); the far brow of the three-quarter view touches the outline.
