@@ -1,0 +1,196 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Abyss · NAK-521 · Copy report row</title>
+<style>
+/* Every colour below is a DMS Theme role; the palettes are fictitious theme data set from JS. */
+:root{--r:12px;--ease:cubic-bezier(.33,1,.68,1)}
+*{box-sizing:border-box}
+body{margin:0;padding:24px;background:var(--bg);color:var(--text);font:14px/1.4 Inter,'Noto Sans',sans-serif}
+h1{font-size:20px;font-weight:600;margin:0 0 4px}h2{font-size:16px;font-weight:600;margin:32px 0 12px}
+p{margin:0 0 4px;color:var(--variant);max-width:76ch}
+.num{font-variant-numeric:tabular-nums}
+.switches{display:flex;flex-wrap:wrap;gap:12px 20px;margin:20px 0}
+.grp{display:flex;flex-wrap:wrap;align-items:center;gap:4px}.grp>span{font-size:12px;color:var(--variant);margin-right:4px}
+.grp button{font:inherit;min-height:44px;padding:0 12px;border-radius:var(--r);border:1px solid var(--outline);background:none;color:var(--text);cursor:pointer}
+.grp button[aria-pressed=true]{background:var(--primary);color:var(--onprimary);border-color:var(--primary)}
+button:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+#stage{overflow:auto;max-width:100%;padding:4px}
+#panel{background:var(--surface);border-radius:var(--r);padding:16px}
+.body{display:flex;align-items:flex-start}
+/* The built section rail (SectionRail.qml, NAK-263): a depth gauge, the open section is where the float sits. Static here. */
+.rail{position:relative;flex:0 0 176px;width:176px}
+.search{height:40px;border-radius:var(--r);border:1px solid var(--outline);background:var(--high);color:var(--variant);display:flex;align-items:center;padding:0 12px;margin-bottom:12px}
+.rows{position:relative}
+.rows::before{content:"";position:absolute;left:0;top:0;bottom:0;width:1px;background:var(--outline)}
+.ent{position:relative;margin-left:16px;width:160px;height:44px;border-radius:var(--r);color:var(--variant);display:flex;align-items:center;gap:8px;padding:0 4px 0 8px;line-height:20px}
+.ent::before{content:"";position:absolute;left:-16px;top:22px;width:8px;height:1px;background:var(--outline)}
+.ent svg{flex:0 0 20px}.ent span{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ent.on{color:var(--text);font-weight:600}.ent.on svg{color:var(--primary)}
+.ent.on::before{width:12px;background:var(--primary)}
+.ent.on::after{content:"";position:absolute;inset:0;border-radius:var(--r);background:var(--primary);opacity:.24;z-index:-1}
+.rows{z-index:0}
+.float{position:absolute;left:-4px;width:8px;height:28px;border-radius:4px;background:var(--primary)}
+.logo{fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.content{flex:1 1 0;min-width:0;padding:0 0 32px 24px;display:flex;flex-direction:column;gap:8px}
+.content h3{margin:0;font-size:20px;font-weight:600;line-height:28px;overflow-wrap:anywhere}
+.sub{font-size:12px;line-height:16px;color:var(--variant);margin:0 0 8px;overflow-wrap:anywhere}
+/* The six guide cards, as built: one line of description, elided. */
+.card{height:56px;border-radius:var(--r);background:var(--high);display:flex;align-items:center;gap:12px;padding:0 12px 0 16px}
+.card svg{flex:0 0 20px;color:var(--primary)}.card div{min-width:0}
+.card b,.card small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card b{font-weight:600;line-height:20px}.card small{font-size:12px;line-height:16px;color:var(--variant)}
+/* Abyss' wrapping row (NAK-423): the title wraps before its control, the control drops under the text when room is missing. */
+.rowi{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;padding-top:8px}
+.txt{flex:1 1 160px;min-width:0}
+.txt b{display:block;font-weight:600;line-height:20px;overflow-wrap:anywhere}.txt small{display:block;font-size:12px;line-height:16px;color:var(--variant);overflow-wrap:anywhere}
+.ctl{position:relative;flex:0 1 auto;min-width:0;max-width:100%;display:flex;flex-wrap:wrap;gap:8px}
+/* Same button as the model row (D453): radius 12 like the guide cards, fixed 112 px. The labels share one grid cell, so the width never changes between states. The guide button keeps its built pill. */
+.seg,.cr{font:inherit;font-size:14px;font-weight:600;line-height:20px;height:44px;padding:0 16px;border-radius:22px;border:1px solid var(--outline);background:none;color:var(--text);cursor:pointer;max-width:100%;display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.seg{align-self:flex-start}
+.cr{position:relative;overflow:hidden;width:112px;padding:0;border-radius:var(--r);display:grid;place-items:center;transition:transform .1s var(--ease)}
+.cr::before{content:"";position:absolute;inset:0;background:var(--highest);opacity:0;transition:opacity .1s var(--ease)}
+.cr:hover::before,.cr.f-hover::before,.cr.f-press::before{opacity:1;transition-duration:.15s}
+.cr:active,.cr.f-press{transform:scale(.97)}
+.cr.f-focus,.gh.f-focus{outline:2px solid var(--primary);outline-offset:2px}
+.cr>span{grid-area:1/1;position:relative;display:inline-flex;align-items:center;gap:8px;transition:opacity .1s var(--ease)}
+.cr .l-busy,.cr .l-done{opacity:0}
+.cr .l-done svg{color:var(--primary)}
+/* Copied: the report has surfaced. Water rises in the button and three bubbles climb its right edge. */
+.cr .tintc{position:absolute;inset:0;background:var(--primary);opacity:0;transform:scaleY(.2);transform-origin:50% 100%;transition:opacity .1s var(--ease),transform .1s var(--ease)}
+.cr .bub{position:absolute;right:8px;top:8px;width:8px;height:28px;color:var(--primary);opacity:0;transform:translateY(8px);transition:opacity .1s var(--ease),transform .1s var(--ease)}
+.s-busy .cr{cursor:default;color:var(--variant)}.s-busy .cr::before{opacity:0}.s-busy .cr:active{transform:none}
+.s-busy .cr .l-rest,.s-copied .cr .l-rest{opacity:0}
+.s-busy .cr .l-busy,.s-copied .cr .l-done{opacity:1;transition-duration:.15s}
+.s-copied .cr{border-color:var(--primary)}.s-copied .cr::before{opacity:0}
+.s-copied .cr .tintc{opacity:.14;transform:none;transition:opacity .15s var(--ease),transform .2s var(--ease)}
+.s-copied .cr .bub{opacity:1;transform:none;transition:opacity .15s var(--ease),transform .2s var(--ease)}
+/* Guided message (D228): reason, what to do, GitHub mark to the guide. Same surface as the guide cards. */
+.hn{flex:1 1 100%;min-width:0;display:none;align-items:center;gap:4px;padding:8px 4px 8px 16px;border-radius:var(--r);background:var(--high)}
+#row.s-none .hn{animation:fade .15s var(--ease) both}
+.s-none .hn{display:flex}
+.hn div{flex:1 1 0;min-width:0}
+.hn b{display:block;font-weight:600;line-height:20px;overflow-wrap:anywhere}
+.hn small{display:block;font-size:12px;line-height:16px;color:var(--variant);overflow-wrap:anywhere}
+/* The GitHub mark (GitHubMark.qml): one monochrome glyph, tinted with a Theme role, in a 44 x 44 target. Hover is the primary colour alone, no fill (D453). */
+.gh{position:relative;flex:0 0 44px;width:44px;height:44px;border:0;border-radius:var(--r);background:none;color:var(--variant);cursor:pointer;display:grid;place-items:center;transition:transform .1s var(--ease),color .1s var(--ease)}
+.gh:hover,.gh.f-hover,.gh.f-press{color:var(--primary);transition-duration:.1s,.15s}
+.gi:active,.gi.f-press{transform:scale(.97)}
+/* Once the report is copied the mark takes the primary colour: the next step shows itself. */
+.s-copied .gi{color:var(--primary)}
+.tip{position:absolute;z-index:2;left:0;top:calc(100% + 4px);padding:4px 8px;border-radius:var(--r);background:var(--high);border:1px solid color-mix(in srgb,var(--outline) 24%,transparent);color:var(--text);font-size:12px;line-height:16px;width:max-content;max-width:100%;overflow-wrap:anywhere;pointer-events:none;opacity:0;transition:opacity .1s var(--ease)}
+.gi:hover~.tip,.gi:focus-visible~.tip,.g-tip .tip{opacity:1;transition-duration:.15s}
+@keyframes fade{from{opacity:0}}
+/* Reduce motion: states swap with a 150 ms fade, nothing scales, rises or climbs. */
+.rm .cr,.rm .gh,.rm .cr .tintc,.rm .cr .bub{transition:opacity .15s var(--ease)!important;transform:none!important}
+@media (prefers-reduced-motion:reduce){.cr,.gh,.cr .tintc,.cr .bub{transition:opacity .15s var(--ease)!important;transform:none!important}}
+#said{min-height:20px;margin-top:8px}
+.sheet{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start}
+.cell{background:var(--surface);border-radius:var(--r);padding:16px}
+.cell .rowi{padding-top:0}
+.cell .g-tip{margin-bottom:32px}
+.cell>i{display:block;font-style:normal;font-size:12px;line-height:16px;color:var(--variant);margin-bottom:8px}
+table{border-collapse:collapse;font-size:14px;max-width:100%}th,td{text-align:left;padding:8px 16px 8px 0;border-bottom:1px solid var(--outline);vertical-align:top}th{color:var(--variant);font-weight:500}
+</style>
+<body>
+<h1>Abyss · NAK-521 · The "Copy report" row in Help</h1>
+<p>The anonymous diagnostics report, as the last row of the Help section ("Quick guide") of the built settings, under the six guide cards. Press the button: the report rises to the clipboard, water fills the button and three bubbles climb its edge, then it all leaves by itself. Beside the button the GitHub mark is always there: it opens a new issue for Abyss, where the report is pasted. Once the report is copied the mark takes the primary colour. Switch "Clipboard tool" to "Missing" to see the guided message. Every state is also drawn side by side under the panel.</p>
+<p>Why it is not generic: the confirmation is neither a toast nor a green tick. In Abyss what is done comes up from the deep, so "copied" reads as water rising and bubbles reaching the surface.</p>
+<div class="switches" id="sw"></div>
+<div id="stage"><div id="panel"></div></div>
+<p id="said" aria-live="polite"></p>
+<h2>Every state, at the width of the settings column</h2><div class="sheet" id="sheet"></div>
+<h2>Where the GitHub mark leads</h2><div id="dest"></div>
+<h2>Motion</h2><div id="motion"></div>
+<h2>Contrast, measured from the palette shown (WCAG formula, tints composited)</h2><div id="contrast"></div>
+<h2>Exact copy</h2><div id="copy"></div>
+<script>
+"use strict";
+// Fictitious DMS themes: stock, one coloured, one wallpaper-generated. Keys are Theme roles
+// (surface, surfaceContainerHigh, surfaceContainerHighest, surfaceText, surfaceVariantText, outline, primary, primaryText).
+const TH={stock:{dark:{bg:"#141218",surface:"#211F26",high:"#2B2930",highest:"#36343B",text:"#E6E0E9",variant:"#CAC4D0",outline:"#938F99",primary:"#D0BCFF",onprimary:"#381E72"},
+light:{bg:"#E7E0EC",surface:"#FEF7FF",high:"#ECE6F0",highest:"#E6E0E9",text:"#1D1B20",variant:"#49454F",outline:"#79747E",primary:"#6750A4",onprimary:"#FFFFFF"}},
+sea:{dark:{bg:"#0F1417",surface:"#1B2023",high:"#252B2E",highest:"#303639",text:"#DEE3E7",variant:"#BFC8CD",outline:"#899297",primary:"#8AD0EE",onprimary:"#003546"},
+light:{bg:"#DFE5E9",surface:"#F5FAFE",high:"#E9EFF3",highest:"#DEE3E7",text:"#171C1F",variant:"#40484C",outline:"#70787D",primary:"#0A6780",onprimary:"#FFFFFF"}},
+wall:{dark:{bg:"#17130B",surface:"#231F17",high:"#2E2920",highest:"#39342B",text:"#ECE1D4",variant:"#D1C5B4",outline:"#9A8F80",primary:"#EFBF6D",onprimary:"#422C00"},
+light:{bg:"#EFE3D0",surface:"#FFF8F1",high:"#F3E7D6",highest:"#EDE1D0",text:"#1F1B13",variant:"#4E4639",outline:"#807667",primary:"#7A5900",onprimary:"#FFFFFF"}}};
+const S={theme:"stock",mode:"dark",w:680,rm:false,tool:"yes",st:"live"};
+let live="rest",timer=0;
+const C={title:"Anonymous report",help:"Versions, states and error codes only. It stays on this PC until you paste it.",
+ button:"Copy report",busy:"Collecting…",done:"Copied",helpDone:"Report copied. Read it, then paste it in a GitHub issue.",
+ noneTitle:"The report could not be copied",noneHint:"Install wl-clipboard, or run dms ipc call abyss diagnostics in a terminal.",
+ gh:"Open the guide: Report a problem",issue:"Open a new issue for Abyss on GitHub",tip:"Open an issue on GitHub"};
+// 20 px drawings on one 1.5 px stroke, standing in for SectionLogo and the cards' icons (static, not the subject here).
+const LOGO={connect:"M8 12l4-4M6.5 9.5l-2 2a3 3 0 0 0 4 4l2-2M13.5 10.5l2-2a3 3 0 0 0-4-4l-2 2",
+appearance:"M2.5 10c2.5-4 5-5 7.5-5s5 1 7.5 5c-2.5 4-5 5-7.5 5s-5-1-7.5-5zM10 7.5a2.5 2.5 0 1 0 0 5a2.5 2.5 0 0 0 0-5z",
+effects:"M2.5 6.5h13v7h-13zM17.5 8.5v3M5.5 12l6-4",
+bar:"M2.5 4.5h15v4h-15zM5 6.5h.01M8 6.5h4",
+desktop:"M10 3a7 7 0 1 0 0 14a7 7 0 0 0 0-14zM4 12c2-2 4-2 6 0s4 2 6 0",
+alerts:"M4.5 14c0-8 11-8 11 0zM10 4v3M10 16.5h.01",
+advanced:"M7.5 3v5l-4 7a1.5 1.5 0 0 0 1.3 2h10.4a1.5 1.5 0 0 0 1.3-2l-4-7V3M6.5 3h7",
+help:"M8 8a2 2 0 1 1 3.1 1.7c-.8.5-1.1 1-1.1 1.8M10 14.5h.01M10 2.5a7.5 7.5 0 1 0 0 15a7.5 7.5 0 0 0 0-15z",
+tap:"M5 10c0-6 10-6 10 0c-1.5-1-3.5-1-5 0c-1.5-1-3.5-1-5 0zM7 11v5M10 11v6M13 11v5",
+pet:"M3 10c3-4 8-4 11 0c-3 4-8 4-11 0zM14 10l3-3v6zM6.5 9.5h.01",
+find:"M9 3.5a5.5 5.5 0 1 0 0 11a5.5 5.5 0 0 0 0-11zM13 13l4 4",
+plus:"M10 2.5a7.5 7.5 0 1 0 0 15a7.5 7.5 0 0 0 0-15zM10 6.5v7M6.5 10h7",
+sun:"M10 6.5a3.5 3.5 0 1 0 0 7a3.5 3.5 0 0 0 0-7zM10 2v2M10 16v2M2 10h2M16 10h2M4.5 4.5l1.4 1.4M14.1 14.1l1.4 1.4M4.5 15.5l1.4-1.4M14.1 5.9l1.4-1.4",
+term:"M2.5 4.5h15v11h-15zM5.5 8l2.5 2l-2.5 2M10.5 12.5h4"};
+const SECS=[["connect","Connect"],["appearance","Appearance"],["effects","Effects & battery"],["bar","Bar"],["desktop","Desktop"],["alerts","Alerts & sounds"],["advanced","Advanced"],["help","Help"]];
+const CARDS=[["tap","Click the jellyfish","Connect or disconnect. Right-click: profile, sharing, admin console"],["pet","Click a creature","Its card: Terminal, Files, Screen, Desktop, copy its address"],["find","Type anywhere","Search devices by name or by what they are, or type a command"],["plus","The + at the top","Add this computer or your phone, step by step, with a QR code"],["sun","Drag the light of the surface","Onto a device that can lend Internet: you go out through it"],["term","From a terminal","dms ipc call abyss ssh <device> · files · vnc · rdp · join · share on"]];
+const lg=(id,s)=>`<svg class="logo" width="${s||20}" height="${s||20}" viewBox="0 0 20 20" aria-hidden="true"><path d="${LOGO[id]}"/></svg>`;
+const GH=`<svg width="18" height="18" viewBox="0 0 98 96" aria-hidden="true"><path fill="currentColor" d="M48.854 0C21.839 0 0 22 0 49.217c0 21.756 13.993 40.172 33.405 46.69 2.427.49 3.316-1.059 3.316-2.362 0-1.141-.08-5.052-.08-9.127-13.59 2.934-16.42-5.867-16.42-5.867-2.184-5.704-5.42-7.17-5.42-7.17-4.448-3.015.324-3.015.324-3.015 4.934.326 7.523 5.052 7.523 5.052 4.367 7.496 11.404 5.378 14.235 4.074.404-3.178 1.699-5.378 3.074-6.6-10.839-1.141-22.243-5.378-22.243-24.283 0-5.378 1.94-9.778 5.014-13.2-.485-1.222-2.184-6.275.486-13.038 0 0 4.125-1.304 13.426 5.052a46.97 46.97 0 0 1 12.214-1.63c4.125 0 8.33.571 12.213 1.63 9.302-6.356 13.427-5.052 13.427-5.052 2.67 6.763.97 11.816.485 13.038 3.155 3.422 5.015 7.822 5.015 13.2 0 18.905-11.404 23.06-22.324 24.283 1.78 1.548 3.316 4.481 3.316 9.126 0 6.6-.08 11.897-.08 13.526 0 1.304.89 2.853 3.316 2.364 19.412-6.52 33.405-24.935 33.405-46.691C97.707 22 75.788 0 48.854 0z"/></svg>`;
+const CHECK=`<svg class="logo" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.5 3.5l6.5-7.5"/></svg>`;
+const OPEN=`<svg class="logo" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M9 3h4v4M13 3L7.5 8.5M11 9.5V13H3V5h3.5"/></svg>`;
+const BUB=`<svg class="bub logo" viewBox="0 0 8 28" aria-hidden="true"><circle cx="4" cy="4" r="3"/><circle cx="3" cy="14" r="2"/><circle cx="5" cy="23" r="1.25"/></svg>`;
+const SW=[["theme","Theme",[["stock","Stock"],["sea","Sea"],["wall","Wallpaper"]]],["mode","",[["dark","Dark"],["light","Light"]]],
+["w","Panel width",[[680,"680 px roomy"],[518,"518 px wide"],[436,"436 px narrow"],[360,"360 px stress"]]],["rm","Reduce motion",[[false,"Off"],[true,"On"]]],
+["tool","Clipboard tool",[["yes","Present"],["no","Missing"]]],
+["st","Panel shows",[["live","Live (press it)"],["hover","Hover"],["press","Pressed"],["focus","Focus"],["busy","Collecting"],["copied","Copied"],["none","No clipboard tool"],["ghover","Mark hover"],["gpress","Mark pressed"],["gfocus","Mark focus"]]]];
+const STATES=[["rest","Rest"],["hover","Hover"],["press","Pressed"],["focus","Focus-visible"],["busy","Collecting (about 2 s at most)"],["copied","Copied (leaves alone after 4 s)"],["none","No clipboard tool (guided message)"],["ghover","GitHub mark: hover (label shown)"],["gpress","GitHub mark: pressed"],["gfocus","GitHub mark: focus-visible (label shown)"]];
+const $=id=>document.getElementById(id);
+// One row, in the asked state. `id` only on the live row so the sheet stays inert.
+function rowHTML(st,isLive){const sc=st==="busy"||st==="copied"||st==="none"?" s-"+st:"",f=st==="hover"||st==="press"||st==="focus"?" f-"+st:"",g=st==="ghover"?" f-hover":st==="gpress"?" f-press":st==="gfocus"?" f-focus":"";
+ return`<div class="rowi${sc}"${isLive?' id="row"':""}><div class="txt"><b>${C.title}</b><small${isLive?' aria-live="polite"':""}>${st==="copied"?C.helpDone:C.help}</small></div>
+<div class="ctl${g&&st!=="gpress"?" g-tip":""}"><button class="cr${f}"${isLive?' id="cr"':' tabindex="-1"'}${st==="busy"?' aria-disabled="true"':""} aria-label="${st==="busy"?C.busy:st==="copied"?C.done:C.button}"><i class="tintc"></i>${BUB}
+<span class="l-rest">${C.button}</span><span class="l-busy">${C.busy}</span><span class="l-done">${CHECK}${C.done}</span></button><button class="gh gi${g}"${isLive?"":' tabindex="-1"'} aria-label="${C.issue}">${GH}</button><span class="tip" role="tooltip">${C.tip}</span></div>
+<div class="hn" role="status"><div><b>${C.noneTitle}</b><small>${C.noneHint}</small></div><button class="gh"${isLive?"":' tabindex="-1"'} aria-label="${C.gh}">${GH}</button></div></div>`;}
+const shown=()=>S.st==="live"?live:S.st;
+function content(){$("content").innerHTML=`<h3>Quick guide</h3><p class="sub">Everything in Abyss, in one minute</p>
+${CARDS.map(c=>`<div class="card">${lg(c[0])}<div><b>${c[1]}</b><small>${c[2].replace("<","&lt;").replace(">","&gt;")}</small></div></div>`).join("")}
+<button class="seg">${OPEN}Full user guide</button>
+${rowHTML(shown(),true)}`;}
+// The live press: collect, then copy or guide. The confirmation leaves alone; no timer exists at rest.
+function press(){if(S.st!=="live"||live==="busy")return;clearTimeout(timer);live="busy";content();$("cr").focus();
+ timer=setTimeout(()=>{live=S.tool==="yes"?"copied":"none";content();$("cr").focus();
+  if(live==="copied")timer=setTimeout(()=>{live="rest";const r=$("row");if(r){r.classList.remove("s-copied");r.querySelector("small").textContent=C.help;$("cr").setAttribute("aria-label",C.button);}},4000);},600);}
+const lin=c=>{c/=255;return c<=.03928?c/12.92:Math.pow((c+.055)/1.055,2.4)};
+const rgb=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
+const lum=c=>.2126*lin(c[0])+.7152*lin(c[1])+.0722*lin(c[2]);
+const mix=(f,b,a)=>f.map((v,i)=>v*a+b[i]*(1-a));
+const cr=(a,b)=>{const x=lum(a),y=lum(b);return(Math.max(x,y)+.05)/(Math.min(x,y)+.05)};
+function pairs(t){const s=rgb(t.surface),h=rgb(t.high),hh=rgb(t.highest),p=rgb(t.primary),tx=rgb(t.text),v=rgb(t.variant),o=rgb(t.outline),ti=mix(p,s,.14);
+ return[["Title (surfaceText) / surface",4.5,cr(tx,s)],["Help line (surfaceVariantText) / surface",4.5,cr(v,s)],["Button label (surfaceText) / surface, rest",4.5,cr(tx,s)],["Button label (surfaceText) / hover fill (surfaceContainerHighest)",4.5,cr(tx,hh)],
+ ["Collecting label (surfaceVariantText) / surface",4.5,cr(v,s)],["Copied label (surfaceText) / primary tint 14 %",4.5,cr(tx,ti)],["Check and bubbles (primary) / primary tint 14 %",3,cr(p,ti)],
+ ["Button outline (outline) / surface",3,cr(o,s)],["Copied outline and focus ring (primary) / surface",3,cr(p,s)],
+ ["Note reason (surfaceText) / note fill (surfaceContainerHigh)",4.5,cr(tx,h)],["Note hint (surfaceVariantText) / note fill (surfaceContainerHigh)",4.5,cr(v,h)],
+ ["GitHub mark at rest (surfaceVariantText) / surface",3,cr(v,s)],["GitHub mark hover, pressed, focus and after copy (primary) / surface",3,cr(p,s)],
+ ["Mark label (surfaceText) / label fill (surfaceContainerHigh)",4.5,cr(tx,h)],["GitHub mark in the note (surfaceVariantText) / note fill",3,cr(v,h)],["GitHub mark in the note, hover (primary) / note fill",3,cr(p,h)]];}
+function render(){const t=TH[S.theme][S.mode],de=document.documentElement;for(const k in t)de.style.setProperty("--"+k,t[k]);
+ $("sw").innerHTML=SW.map(g=>`<div class="grp" role="group" aria-label="${g[1]||g[0]}">${g[1]?`<span>${g[1]}</span>`:""}${g[2].map(o=>`<button aria-pressed="${S[g[0]]===o[0]}" data-sw="${g[0]}" data-v="${o[0]}">${o[1]}</button>`).join("")}</div>`).join("");
+ const p=$("panel");p.style.width=S.w+"px";document.body.className=S.rm?"rm":"";
+ p.innerHTML=`<div class="body"><div class="rail" aria-label="Sections"><div class="search">Search</div><div class="rows"><i class="float" style="top:${(SECS.length-1)*44+8}px"></i>
+${SECS.map(s=>`<div class="ent${s[0]==="help"?" on":""}">${lg(s[0])}<span>${s[1]}</span></div>`).join("")}</div></div>
+<div class="content" id="content"></div></div>`;
+ content();
+ const cw=S.w-32-176-24;
+ $("sheet").innerHTML=STATES.map(s=>`<div class="cell"><i>${s[1]}</i><div style="width:${cw}px">${rowHTML(s[0],false)}</div></div>`).join("");
+ $("motion").innerHTML=`<table><tr><th>What moves</th><th>Property</th><th>Duration</th><th>Easing</th></tr>${[["Hover: fill appears under the button label","opacity","150 ms in, 100 ms out"],["GitHub mark hover: glyph turns primary, no fill","colour of the glyph","150 ms in, 100 ms out"],["Press: button or mark shrinks to 97 %","transform scale","100 ms in, 100 ms out"],["Copied: label swaps to the check and \"Copied\"","opacity","150 ms in, 100 ms out"],["Copied: water rises in the button","transform scaleY .2 to 1, opacity","200 ms in, 100 ms out"],["Copied: three bubbles climb 8 px","transform translateY, opacity","200 ms in, 100 ms out"],["Guided message appears","opacity","150 ms in, 100 ms out"],["GitHub mark: label on hover or focus","opacity","150 ms in, 100 ms out"]].map(r=>`<tr>${r.map(c=>`<td class="num">${c}</td>`).join("")}<td class="num">OutCubic</td></tr>`).join("")}<tr><td>Reduce motion</td><td>opacity only</td><td class="num">150 ms</td><td>nothing scales, rises or climbs</td></tr><tr><td>At rest</td><td colspan="3">nothing moves and no timer runs; the 4 s timer exists only while "Copied" is shown</td></tr></table>`;
+ $("contrast").innerHTML=`<table><tr><th>Pair</th><th>Need</th><th>${S.theme} dark</th><th>${S.theme} light</th></tr>${pairs(TH[S.theme].dark).map((r,i)=>{const l=pairs(TH[S.theme].light)[i][2];return`<tr><td>${r[0]}</td><td class="num">${r[1]}:1</td><td class="num">${r[2].toFixed(2)}${r[2]<r[1]?" FAIL":""}</td><td class="num">${l.toFixed(2)}${l<r[1]?" FAIL":""}</td></tr>`}).join("")}</table>`;
+ $("dest").innerHTML=`<table><tr><th>Drawn here</th><th>Opens</th><th>Why</th></tr>
+<tr><td>New issue (D453, model of every plugin)</td><td>github.com/lung595/Abyss/issues/new/choose</td><td>the report is in the clipboard, the next gesture is to paste it</td></tr></table>
+<p>Same target as the row approved on Sands (assumption Q153: what GitHub shows at this address while the repo has no bug form is not checked here). Constant address: the report is never put in it and nothing is prefilled. The page opens in the browser on click or key press only; the plugin itself never touches the network.</p>`;
+ $("copy").innerHTML=`<table><tr><th>Part</th><th>Text</th></tr>${[["Title",C.title],["Help line",C.help],["Button",C.button],["Button while collecting",C.busy],["Button once copied",C.done],["Help line once copied",C.helpDone],["Guided message, reason",C.noneTitle],["Guided message, what to do",C.noneHint],["GitHub mark beside the button, accessible name",C.issue],["GitHub mark beside the button, label on hover or focus",C.tip],["GitHub mark in the guided message, accessible name",C.gh]].map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join("")}</table>`;}
+document.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
+ if(b.dataset.sw){const k=b.dataset.sw,raw=b.dataset.v;S[k]=k==="w"?+raw:k==="rm"?raw==="true":raw;clearTimeout(timer);live="rest";render();const n=document.querySelector(`[data-sw="${k}"][aria-pressed=true]`);if(n)n.focus();return;}
+ if(b.id==="cr"){press();return;}
+ if(b.classList.contains("gh")||b.classList.contains("seg"))$("said").textContent=b.classList.contains("gi")?"In the plugin: opens github.com/lung595/Abyss/issues/new/choose in your browser, on click only. This page opens nothing.":b.classList.contains("gh")?"In the plugin: opens docs/GUIDE.md, section \"Report a problem\", in your browser. This page opens nothing.":"In the plugin: opens the guide in your browser. This page opens nothing.";});
+render();
+</script>
+</body></html>
