@@ -50,6 +50,43 @@ Item {
         }
     }
 
+    // Stand-in for the running daemon: only what the "Abyss app" row reads
+    Component {
+        id: daemonComponent
+        QtObject {
+            property var appInstaller: QtObject {
+                property string phase: "idle"
+                property string appState: "install"
+                property int step: 0
+                property string reason: ""
+                property string installedVersion: ""
+                function refresh() {
+                }
+                function install() {
+                }
+                function uninstall() {
+                }
+            }
+            property var prefs: QtObject {
+                property var links: ({})
+                property bool appDontAsk: false
+                function set(key, value) {
+                }
+                function setLink(a, b, c) {
+                }
+            }
+            property var source: QtObject {
+                property var view: ({
+                        "state": "connected",
+                        "peers": [],
+                        "relays": []
+                    })
+                function join() {
+                }
+            }
+        }
+    }
+
     Component {
         id: pageComponent
         AbyssSettings {}
@@ -99,11 +136,12 @@ Item {
             return item.objectName || item.text || "?";
         }
 
-        function check_section(id, stored) {
+        function check_section(id, stored, pageWidth) {
+            const narrow = pageWidth || host.narrow;
             // The preview PluginService keeps the plugin's keys flat
             SettingsData.pluginSettings = stored || {};
             const page = createTemporaryObject(pageComponent, host, {
-                "width": host.narrow,
+                "width": narrow,
                 "section": id
             });
             verify(page, id);
@@ -119,7 +157,7 @@ Item {
                     problems.push("elided: " + label(all[i]));
                 if (a.w < 1 || a.h < 1)
                     continue;
-                if (a.x + a.w > host.narrow + 0.5)
+                if (a.x + a.w > narrow + 0.5)
                     problems.push("past the page edge: " + label(all[i]) + " ends at " + Math.round(a.x + a.w));
                 for (let j = i + 1; j < all.length; j++) {
                     const b = boxes[j];
@@ -132,6 +170,46 @@ Item {
             for (const t of cutTexts(page, []))
                 problems.push("truncated: " + t);
             compare(problems.join("; "), "", id);
+        }
+
+        // The "Abyss app" row in its states at the narrowest real page (366, whose row is the designer's 296) and at 436
+        function test_app_row() {
+            const stub = createTemporaryObject(daemonComponent, host);
+            PluginService.pluginDaemonInstances = {
+                "abyss": stub
+            };
+            const states = [
+                {
+                    "phase": "idle",
+                    "appState": "install",
+                    "installedVersion": ""
+                },
+                {
+                    "phase": "idle",
+                    "appState": "ok",
+                    "installedVersion": "1.0.0"
+                },
+                {
+                    "phase": "installing",
+                    "appState": "install",
+                    "installedVersion": "",
+                    "step": 2
+                },
+                {
+                    "phase": "failed",
+                    "appState": "install",
+                    "installedVersion": "",
+                    "reason": "Quickshell is not installed on this machine."
+                }
+            ];
+            for (const width of [host.narrow, 436]) {
+                for (const st of states) {
+                    for (const k of Object.keys(st))
+                        stub.appInstaller[k] = st[k];
+                    check_section("connect", undefined, width);
+                }
+            }
+            PluginService.pluginDaemonInstances = {};
         }
 
         function test_connect() {
