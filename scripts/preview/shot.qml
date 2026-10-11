@@ -121,7 +121,7 @@ Window {
             demo.setProfile("work");
         if (mode === "nets")
             scene.netsOpen = true;
-        if (mode === "card" || mode === "desk-card")
+        if (mode === "card" || mode === "desk-card" || mode === "card-hold")
             scene.cardId = "demo-harbor-vps";
         // card-phone: a phone's card, with the Termux hint ready to accept
         if (mode === "card-phone")
@@ -832,6 +832,9 @@ Window {
         property int waits: 0
         interval: 1600
         onTriggered: {
+            // card-hold: the open card stays up for a safe try (outils/essai.sh), no capture
+            if (win.mode === "card-hold")
+                return;
             if (scene._swimming && waits < 50) {
                 waits++;
                 interval = 100;
