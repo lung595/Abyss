@@ -41,6 +41,13 @@ Window {
                 online: true
             },
             {
+                id: "p4",
+                name: "workstation-in-the-basement-lab-rack-07",
+                fqdn: "workstation-in-the-basement-lab-rack-07.netbird.cloud",
+                ip: "100.64.0.14",
+                online: true
+            },
+            {
                 id: "p3",
                 name: "phone-tab",
                 fqdn: "phone-tab.netbird.cloud",
@@ -54,7 +61,7 @@ Window {
     // set on the view directly, so no program is started
     function fillSend() {
         const long = root.scene === "send-long";
-        const names = long ? ["/x/quarterly-report-final-version-2-reviewed-by-everyone-and-signed-off.pdf", "/x/holiday-photos-from-the-long-weekend-in-the-mountains-2026.zip"] : ["/x/report.pdf", "/x/photos.zip", "/x/notes.txt"];
+        const names = long ? ["/x/quarterly-report-final-version-2-reviewed-by-everyone-and-signed-off.pdf", "/x/holiday-photos-from-the-long-weekend-in-the-mountains-2026.zip", "/x/notes.txt"] : ["/x/report.pdf", "/x/photos.zip", "/x/notes.txt"];
         let q = Queue.add(Queue.empty(), names, (long ? ["laptop-anna", "workstation-in-the-basement-lab-rack-07"] : ["laptop-anna", "nas-box"])).state;
         // 1: rsync with a meter, 2: done (stays until dismissed), 4: scp without
         // progress, 5: failed (goes to the history)
@@ -62,11 +69,23 @@ Window {
         q = Queue.finish(Queue.start(q, 2), 2, Date.now());
         q = Queue.start(q, 4);
         q = Queue.fail(Queue.start(q, 5), 5, "Connection refused", Date.now() - 300000);
+        if (root.scene === "send-many") {
+            const more = [];
+            for (let i = 0; i < 24; i++)
+                more.push("/x/holiday-photo-" + (i + 10) + ".jpg");
+            q = Queue.add(q, more, ["nas-box"]).state;
+        }
         frame.sendView.rates = {
             "1": "3.1 MB/s"
         };
         frame.sendView.q = q;
-        frame.sendView.chosen = ["laptop-anna"];
+        frame.sendView.chosen = long ? ["laptop-anna", "workstation-in-the-basement-lab-rack-07"] : ["laptop-anna"];
+        if (root.scene === "send-paste")
+            frame.sendView.say({
+                "title": "No files on the clipboard",
+                "advice": "Copy files in your file manager, then press Ctrl+V.",
+                "guide": "https://example.invalid/guide"
+            }, 0);
         if (root.scene === "send-refused")
             frame.sendView.say({
                 "title": "nas-box refused the file",

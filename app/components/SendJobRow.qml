@@ -63,7 +63,7 @@ Item {
     Text {
         x: row.history ? 0 : 28
         y: row.history ? 24 : 32
-        text: "→ " + Transfer.middle(row.job.device, 10, 8) + (row.history ? " · " + row.age : "")
+        text: "→ " + Transfer.middle(row.job.device, 10, 0) + (row.history ? " · " + row.age : "")
         color: Theme.onSurfaceVariant
         font.family: Theme.monoFontFamily
         font.pixelSize: 12
