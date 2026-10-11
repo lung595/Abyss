@@ -193,6 +193,12 @@ Window {
             sendLoop.start();
             return;
         }
+        // bench-peek-N: a group of mine with N members, opened and left open
+        if (mode.indexOf("bench-peek-") === 0) {
+            demo.setProfile("crowd");
+            peekLoop.start();
+            return;
+        }
         if (mode === "bench-menu") {
             menuLoop.start();
             return;
@@ -462,6 +468,25 @@ Window {
 
     // bench-menu: the peer's right-click menu opened and closed every 1.5 s
     // (no picture taken), a worst case for the cost of opening it
+    Timer {
+        id: peekLoop
+        property int step: 0
+        interval: 1600
+        repeat: true
+        onTriggered: {
+            if (step++ === 0) {
+                const n = parseInt(win.mode.slice(11));
+                const ids = demo.view.peers.filter(p => p.online).slice(0, n).map(p => p.id);
+                SettingsData.pluginSettings = Object.assign({}, SettingsData.pluginSettings, { "groups": [{ "id": "u1", "name": "Bench", "members": ids }] });
+                PluginService.pluginDataChanged("abyss");
+            } else if (step === 2) {
+                scene.openPeek("g:u:u1");
+                scene.pinnedPointer = scene.peekCentre;
+                stop();
+            }
+        }
+    }
+
     Timer {
         id: menuLoop
         interval: 1500

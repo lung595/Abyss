@@ -56,9 +56,13 @@ Click a creature. Its card rises from the bottom and the creature flies onto it:
 
 ## Open a group
 
-Peers that look alike swim together as a shoal ("3 busy", "2 quiet"). Rest the pointer on one, or click it: the camera glides in and the group opens in the middle. Move the pointer away to come back. The **Open groups** setting chooses how: on hover and click (default), hover only, or click only.
+Peers that look alike swim together as a shoal ("3 busy", "2 quiet"). Rest the pointer on one, or click it: the camera glides in and the group opens in the middle. Move the pointer away to come back. Inside an open group the awake creatures swim as a school: they keep to their own place, follow each other's heading and never bunch up. It moves only while the group is open and you are looking; with Reduce motion on, they stay still. The **Open groups** setting chooses how: on hover and click (default), hover only, or click only.
 
 ![Opening a group](../screenshots/group-open.gif)
+
+![The awake members swimming as a school](../screenshots/group-school.gif)
+
+The school does not slow down on battery: Abyss has no battery signal today, and it already costs nothing while the group is closed. Try it yourself: `scripts/preview/gif.sh life-peek out.gif 300`.
 
 ## Make your own groups
 
