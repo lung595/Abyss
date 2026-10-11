@@ -7,6 +7,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - App install: `AppInstaller.qml` runs `install-app.sh` (and `--uninstall`) as an argument list after a Quickshell check; failure reason shortened for display (NAK-292).
 - App install: the invite band shows in the popout when "Send a file" finds no current app (Not now falls back to the picker, Don't ask again is kept in Abyss settings); "Abyss app" row in Connect settings installs, uninstalls (with confirmation) and resets the invite.
 - App install: the widget's install is marked; unloading the plugin with its `plugin.json` gone sweeps the app it installed (`install-app.sh --sweep`, one detached one-shot, nothing at rest); a standalone install is kept. GUIDE sections: install, Quickshell missing, uninstall.
+- App install: a widget install now runs the app from the plugin folder (a small launcher in `~/.local`), so the app always has the widget's version; a plain `./install-app.sh` stays a standalone copy and is never swept (NAK-292).
 
 ### Fixed
 

@@ -92,5 +92,16 @@ sh "$HOME/.local/share/abyss/install-app.sh" --sweep >/dev/null 2>&1
 check "widget update keeps a standalone origin" "$([ -e "$HOME/.local/share/abyss" ] && echo kept || echo gone)" kept
 sh "$root/install-app.sh" --uninstall >/dev/null 2>&1
 
+# A widget install runs the app from the plugin folder: its version is the plugin's
+sh "$root/install-app.sh" --by-widget >/dev/null 2>&1
+want=$(sed -n 's/^ *"version": "\(.*\)",$/\1/p' "$root/plugin.json")
+check "abyss --version equals plugin.json" "$("$HOME/.local/bin/abyss" --version)" "$want"
+check "a widget install ships no app copy" "$([ -e "$HOME/.local/share/abyss/shell.qml" ] && echo copy || echo stub)" stub
+# A plain run over a widget install makes it standalone: the sweep leaves it
+sh "$root/install-app.sh" >/dev/null 2>&1
+sh "$HOME/.local/share/abyss/install-app.sh" --sweep >/dev/null 2>&1
+check "a plain run over a widget install is standalone" "$([ -e "$HOME/.local/share/abyss" ] && echo kept || echo gone)" kept
+sh "$root/install-app.sh" --uninstall >/dev/null 2>&1
+
 [ "$fail" = 0 ] && echo "✓ install: app installer and uninstaller" || echo "install: FAILED"
 exit "$fail"

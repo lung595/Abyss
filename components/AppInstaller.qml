@@ -106,7 +106,7 @@ Item {
 
     Process {
         id: remover
-        onExited: versionProbe.start()
+        onExited: versionProbe.running = true
     }
 
     // `abyss --version` through the launcher on PATH; empty when absent

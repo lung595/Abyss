@@ -135,7 +135,8 @@ Item {
             root._pending = null;
             if (!p)
                 return;
-            if (state === "ok")
+            // An installed app of another version still opens when the user asked not to be asked
+            if (state === "ok" || (state === "update" && prefs.appDontAsk))
                 p.ready();
             else if (prefs.appDontAsk || !root.open())
                 p.fallback();
