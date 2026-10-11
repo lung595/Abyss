@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Abyss NAK-271 - wake a sleeping device</title>
+<style>
+/* Stand-ins for DMS Theme roles: one set per theme, nothing else is coloured.
+   Every tint is a role with alpha (hover = withAlpha(onSurface, 0.08), pill = withAlpha(primary, 0.12)), never a literal.
+   Motion uses the kit scale only: 100 / 150 / 200 / 300 ms. */
+body{--bg:#141218;--card:#1d1b20;--ink:#e6e0e9;--dim:#cac4d0;--primary:#d0bcff;--onprimary:#381e72;--outline:#938f99;--warning:#ffb873;--error:#f2b8b5;--page:#0c0b0f}
+body.light{--bg:#fef7ff;--card:#f3edf7;--ink:#1d1b20;--dim:#49454f;--primary:#6750a4;--onprimary:#ffffff;--outline:#79747e;--warning:#7a4700;--error:#b3261e;--page:#e9e2ee}
+body.wall{--bg:#19120f;--card:#251e1a;--ink:#f0dfd8;--dim:#d8c2b9;--primary:#ffb59c;--onprimary:#5d1900;--outline:#a08d85;--warning:#f0c060;--error:#ffb4ab;--page:#0f0a08}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--ink);font:13px/20px Inter,"Noto Sans",system-ui,sans-serif;font-variant-numeric:tabular-nums}
+main{max-width:1240px;margin:0 auto;padding:24px}
+h1{font-size:20px;line-height:28px;margin:0 0 4px;font-weight:700}
+h2{font-size:16px;line-height:24px;margin:40px 0 4px;font-weight:700}
+p.lead{margin:0 0 16px;color:var(--dim);max-width:76ch}
+.bar{position:sticky;top:0;z-index:9;background:var(--page);padding:12px 0;display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;border-bottom:1px solid var(--outline)}
+.seg{display:inline-flex;border:1px solid var(--outline);border-radius:10px;overflow:hidden}
+.seg button{all:unset;cursor:pointer;padding:6px 12px;min-height:32px;line-height:20px;color:var(--dim);font-weight:600;font-size:12px}
+.seg button[aria-pressed=true]{background:var(--primary);color:var(--onprimary)}
+.seg button:focus-visible,.btn:focus-visible,.cr:focus-visible,.x:focus-visible,.gh:focus-visible,.sw:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.lbl{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.06em;margin-right:4px}
+.row{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start}
+.cap{font-size:11px;line-height:16px;color:var(--dim);margin:8px 0 0;max-width:48ch}
+
+/* ---------- scene, real size 580 x 480 ---------- */
+.scene{position:relative;width:580px;height:480px;background:var(--bg);border-radius:16px;overflow:hidden;flex:none}
+.scene .floor{position:absolute;left:0;right:0;bottom:0;height:56px;background:var(--card)}
+.scene svg.net{position:absolute;inset:0}
+/* Resting rule: the 80 x 64 body box sits on the floor (body bottom = floor top, y 424); the drawing is centred on the
+   72 px ring, whose lowest point is tangent to the floor edge; name, sub label and wait tick sit on the floor band, 4 px grid. */
+.cr{all:unset;display:block;position:absolute;width:96px;margin:-40px 0 0 -48px;cursor:pointer;text-align:center;border-radius:12px;transition:transform .3s cubic-bezier(.2,0,0,1)}
+.cr .body{display:block;position:relative;width:80px;height:64px;margin:0 auto}
+.cr svg{position:absolute;inset:0;width:80px;height:64px;overflow:visible}
+.cr .dimsh{color:var(--ink);opacity:.38}
+.cr .lvl{position:absolute;inset:0;overflow:hidden;transform:translateY(100%)}
+.cr .lvl svg{color:var(--primary);transform:translateY(-100%)}
+.cr .halo{position:absolute;left:4px;top:-8px;width:72px;height:72px;border-radius:50%;background:var(--primary);opacity:0;transform:scale(.4)}
+.cr .spark{position:absolute;left:36px;top:52px;width:8px;height:8px;border-radius:50%;background:var(--primary);opacity:0}
+.cr .ring{position:absolute;left:4px;top:-8px;width:72px;height:72px;border-radius:50%;border:1.5px solid var(--primary);opacity:0;transform:scale(.9);transition:opacity .15s,transform .15s}
+.cr .nm{display:block;font-weight:700;font-size:12px;line-height:16px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cr .sub{display:block;font-size:11px;line-height:16px;color:var(--dim)}
+.cr .tick{display:block;width:48px;height:2px;margin:4px auto 0;background:var(--outline);border-radius:1px;overflow:hidden;opacity:0}
+.cr .tick i{display:block;height:2px;background:var(--primary);transform-origin:0 50%;transform:scaleX(0)}
+/* can be woken: a thin ring opens on hover or focus, the sub label says what the click does */
+.cr.can:hover .ring,.cr.can:focus-visible .ring,.cr.can.hov .ring{opacity:.9;transform:scale(1)}
+.cr.can:active .ring{transform:scale(.94)}
+.cr .hint{display:none}
+.cr.can:hover .hint,.cr.can:focus-visible .hint,.cr.can.hov .hint{display:block;color:var(--primary);font-weight:600}
+.cr.can:hover .rest,.cr.can:focus-visible .rest,.cr.can.hov .rest{display:none}
+/* waking, option A: the light level rises through the body (window and drawing counter-slide) */
+.cr.rise .lvl,.cr.rise .lvl svg{transition:transform .3s cubic-bezier(.2,0,0,1)}
+.cr.lit .lvl,.cr.lit .lvl svg{transform:none}
+.cr.wait .tick{opacity:1}
+/* no answer: the light drains, faster than it rose */
+.cr.drain .lvl,.cr.drain .lvl svg{transition:transform .2s cubic-bezier(.4,0,1,1)}
+/* option B: a spark climbs the body and opens a halo; the body lights at once */
+body.optB .cr.rise .lvl,body.optB .cr.rise .lvl svg{transition:none}
+body.optB .cr.rise .spark{opacity:1;transform:translateY(-44px);transition:transform .3s cubic-bezier(.2,0,0,1),opacity .1s}
+body.optB .cr.lit .halo{opacity:.16;transform:scale(1);transition:transform .3s cubic-bezier(.2,0,0,1),opacity .3s}
+body.optB .cr.lit:not(.rise) .spark{opacity:0}
+/* woke: it leaves the floor for its place in the water and its thread appears */
+.cr.up{transform:translateY(-168px)}
+.thread{opacity:0;transition:opacity .3s}.thread.on{opacity:.7}
+body.rm .cr,body.rm .cr *,body.rm .thread{transition-duration:.01s!important}
+body.rm .cr.rise .lvl,body.rm .cr.rise .lvl svg{transition:none}
+@media (prefers-reduced-motion:reduce){.cr,.cr *,.thread{transition-duration:.01s!important}}
+.note{position:absolute;left:16px;right:16px;bottom:16px;background:var(--bg);border:1px solid var(--outline);border-radius:10px;padding:8px 8px 8px 12px;display:none;gap:8px;align-items:center}
+.note.show{display:flex}
+.note b,.hn b{display:block;font-size:12px;line-height:16px;font-weight:600;color:var(--ink)}
+.note span,.hn span{display:block;text-wrap:pretty;font-size:11px;line-height:16px;color:var(--dim)}
+.gh{all:unset;cursor:pointer;flex:none;width:44px;height:44px;display:grid;place-items:center;border-radius:10px;color:var(--dim)}
+.gh:hover{color:var(--primary)}
+
+/* ---------- peer card ---------- */
+.card{width:360px;background:var(--card);border:1px solid var(--outline);border-radius:20px;padding:16px;text-align:center;flex:none}
+.card .hero{width:72px;height:72px;border-radius:50%;box-shadow:inset 0 0 0 1.5px var(--outline);margin:0 auto 8px;position:relative}
+.card .hero svg{position:absolute;left:-4px;top:4px;width:80px;height:64px;overflow:visible}
+.card .kind{font-size:11px;line-height:16px;letter-spacing:.12em;color:var(--dim)}
+.card .name{font-size:20px;line-height:28px;font-weight:700;overflow-wrap:anywhere}
+.card .st{display:flex;justify-content:center;align-items:center;gap:8px;color:var(--dim);font-size:12px;line-height:16px;margin:4px 0 16px}
+.card .st svg{flex:none}
+.btn{all:unset;cursor:pointer;box-sizing:border-box;display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:44px;padding:0 16px;border-radius:12px;font-weight:700;font-size:13px;background:var(--primary);color:var(--onprimary)}
+.btn.ghost{background:none;border:1px solid var(--outline);color:var(--ink)}
+.btn.hover{box-shadow:inset 0 0 0 99px color-mix(in srgb,var(--ink) 8%,transparent)}.btn:hover{box-shadow:inset 0 0 0 99px color-mix(in srgb,var(--ink) 8%,transparent)}
+.btn.pressed,.btn:active{transform:scale(.98)}
+.btn.focus{outline:2px solid var(--primary);outline-offset:2px}
+/* one wake at a time: the other Wake buttons wait, DMS disabled look (role with alpha), not focusable */
+.btn[disabled]{cursor:default;background:color-mix(in srgb,var(--ink) 12%,transparent);color:color-mix(in srgb,var(--ink) 38%,transparent);box-shadow:none;transform:none}
+.bartick{height:2px;background:var(--outline);border-radius:1px;margin:0 0 12px;overflow:hidden}.bartick i{display:block;height:2px;width:35%;background:var(--primary)}
+.hn{display:flex;gap:8px;align-items:center;text-align:left;background:var(--bg);border:1px solid var(--outline);border-radius:10px;padding:8px 8px 8px 12px;margin-top:12px}
+.hn>div{flex:1;min-width:0}
+.cmd{display:flex;align-items:center;gap:8px;margin-top:8px;font:12px/16px "JetBrains Mono","DejaVu Sans Mono",monospace;color:var(--ink);background:var(--card);border-radius:8px;padding:0 0 0 8px;overflow-wrap:anywhere}
+.cmd code{flex:1;padding:8px 0}
+.x{all:unset;cursor:pointer;flex:none;width:44px;height:44px;display:grid;place-items:center;border-radius:10px;color:var(--dim)}
+.x:hover{color:var(--error)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,360px);gap:24px}
+.grid h3,.col h3{font-size:11px;line-height:16px;margin:0 0 8px;color:var(--dim);font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+
+/* ---------- settings ---------- */
+.set{background:var(--bg);border:1px solid var(--outline);border-radius:16px;padding:16px;flex:none}
+.set.narrow{width:366px}.set.wide{width:560px}
+.srow{display:flex;gap:12px;align-items:flex-start}
+.srow>div{flex:1;min-width:0}
+.st1{font-weight:600;font-size:13px;line-height:20px;color:var(--ink)}
+.st2{font-size:11px;line-height:16px;color:var(--dim)}
+.sw{all:unset;cursor:pointer;flex:none;width:44px;height:24px;border-radius:12px;background:var(--primary);position:relative;margin:10px 0}
+.sw i{position:absolute;right:3px;top:3px;width:18px;height:18px;border-radius:50%;background:var(--onprimary)}
+.pillrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}
+.pill{display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 8px;border-radius:12px;font-size:11px;font-weight:600;color:var(--primary);background:color-mix(in srgb,var(--primary) 12%,transparent);white-space:nowrap}
+.sep{height:1px;background:var(--outline);opacity:.5;margin:16px 0}
+.mac{display:flex;align-items:center;gap:8px;min-height:44px;border-top:1px solid color-mix(in srgb,var(--outline) 40%,transparent)}
+.mac>div{flex:1;min-width:0}
+.mac .n{font-weight:600;font-size:12px;line-height:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mac .a{font:11px/16px "JetBrains Mono","DejaVu Sans Mono",monospace;color:var(--dim);overflow-wrap:anywhere}
+.list{max-height:232px;overflow:auto;margin-top:8px}
+.acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.acts .btn{width:auto;flex:1 1 150px}
+.empty{color:var(--dim);font-size:12px;line-height:16px;padding:12px 0 0}
+table{border-collapse:collapse;font-size:12px}td,th{padding:4px 12px 4px 0;text-align:left;border-bottom:1px solid color-mix(in srgb,var(--outline) 40%,transparent)}
+td.bad{color:var(--error);font-weight:700}
+[data-fr]{font-style:normal}
+</style>
+</head>
+<body class="optA">
+<svg width="0" height="0" style="position:absolute"><defs>
+<g id="manta" fill="currentColor" fill-opacity=".14" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"><path d="M0-12Q16-8 34 5Q14 6 4 14L0 30L-4 14Q-14 6-34 5Q-16-8 0-12Z"/><path fill="none" d="M-5-10L-7-17M5-10L7-17"/></g>
+<g id="fish" fill="currentColor" fill-opacity=".14" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"><ellipse rx="18" ry="9"/><path d="M-16 0L-28-9L-28 9Z"/><path fill="none" d="M-2-8Q4-16 10-8"/><circle cx="9" cy="-2" r="1.2"/></g>
+<g id="wake" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2 13h12M4.5 10a3.5 3.5 0 0 1 7 0M8 2v3M5.5 4.5L8 2l2.5 2.5"/></g>
+<g id="ok" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3.2 3L13 4.5"/></g>
+<g id="help" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><path d="M6.2 6.4a1.9 1.9 0 1 1 2.6 1.8c-.5.3-.8.6-.8 1.2M8 11.6v.1"/></g>
+<g id="moon" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M13 9.5A5.5 5.5 0 0 1 6.5 3 5.5 5.5 0 1 0 13 9.5Z"/></g>
+<g id="bin" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.6 8.5h5.8l.6-8.5"/></g>
+<g id="copy" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5.5" y="5.5" width="8" height="8" rx="2"/><path d="M10.5 3.5v-1h-8v8h1"/></g>
+<g id="bolt" fill="currentColor"><path d="M9 1L3 9h4l-1 6 6-8H8z"/></g>
+<path id="ghp" fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/>
+</defs></svg>
+
+<main>
+<h1>Abyss - <i data-fr="réveiller un appareil endormi">wake a sleeping device</i> (NAK-271)</h1>
+<p class="lead"><i data-fr="Une idée : l'appareil endormi est une créature éteinte posée sur le fond. On la touche, la lumière monte dans son corps, et elle quitte le fond si elle répond. Données fictives. Interface en anglais, tailles réelles (vue 580 × 480, fiche 360, réglages 366 et 560).">One idea: a sleeping device is an unlit creature resting on the floor. Touch it, light rises through its body, and it leaves the floor if it answers. Fictitious data. Real sizes (view 580 × 480, card 360, settings 366 and 560).</i></p>
+
+<div class="bar">
+ <span><span class="lbl"><i data-fr="Thème">Theme</i></span><span class="seg" data-g="theme"><button data-v="">Dark</button><button data-v="light">Light</button><button data-v="wall">Wallpaper</button></span></span>
+ <span><span class="lbl">Option</span><span class="seg" data-g="opt"><button data-v="optA">A · Rising tide</button><button data-v="optB">B · Lantern spark</button></span></span>
+ <span><span class="lbl">Reduce motion</span><span class="seg" data-g="rm"><button data-v="">Off</button><button data-v="rm">On</button></span></span>
+ <span><span class="lbl"><i data-fr="Notes en">Notes in</i></span><span class="seg" data-g="lang"><button data-v="fr">FR</button><button data-v="">EN</button></span></span>
+</div>
+
+<h2>1 · <i data-fr="La vue : créature éteinte, réveil, résultat">The view: unlit creature, wake, result</i></h2>
+<p class="lead"><i data-fr="Cliquez une créature posée sur le fond, ou utilisez les boutons. L'attente réelle est de 20 s (ici 3 s).">Click a creature on the floor, or use the buttons. The real wait is 20 s (3 s here).</i></p>
+<div class="row">
+ <div>
+  <div class="scene" id="scene">
+   <svg class="net" viewBox="0 0 580 480" fill="none" stroke-linecap="round">
+    <g style="color:var(--primary)" stroke="currentColor" stroke-width="1.7">
+     <path d="M258 100q32-44 64 0q-32 8-64 0Z" fill="currentColor" fill-opacity=".2"/>
+     <path d="M270 104q-4 26 4 50M290 105v58M310 104q4 26-4 50" opacity=".6"/>
+     <path d="M318 112q90 40 150 70" opacity=".7"/>
+     <path class="thread" id="thread" d="M266 112q-70 50-106 84"/>
+    </g>
+    <g transform="translate(486 192)" style="color:var(--primary)"><use href="#fish"/></g>
+    <text x="486" y="226" text-anchor="middle" font-size="12" font-weight="700" fill="var(--ink)" stroke="none">harbor-vps</text>
+    <text x="290" y="72" text-anchor="middle" font-size="12" font-weight="700" fill="var(--ink)" stroke="none">you</text>
+   </svg>
+   <div class="floor"></div>
+   <button class="cr can" id="c1" style="left:160px;top:400px" aria-label="Wake atlas-nas">
+    <span class="body"><span class="halo"></span><span class="ring"></span>
+     <svg class="dimsh" viewBox="-40 -21.5 80 64"><use href="#manta"/></svg>
+     <span class="lvl"><svg viewBox="-40 -21.5 80 64"><use href="#manta"/></svg></span><span class="spark"></span></span>
+    <span class="nm">atlas-nas</span>
+    <span class="sub"><span class="rest" id="c1sub">offline</span><span class="hint">Wake</span></span>
+    <span class="tick"><i id="c1tick"></i></span>
+   </button>
+   <button class="cr" id="c2" style="left:400px;top:400px" aria-label="old-laptop, offline, cannot be woken yet">
+    <span class="body"><svg class="dimsh" viewBox="-45 -29.5 80 64"><use href="#fish"/></svg></span>
+    <span class="nm">old-laptop</span><span class="sub">offline</span>
+   </button>
+   <div class="note" id="snote"><div style="flex:1;min-width:0"><b id="snt"></b><span id="sna"></span></div><button class="gh" aria-label="Open the guide: Wake a device"><svg width="16" height="16" viewBox="0 0 16 16"><use href="#ghp"/></svg></button></div>
+  </div>
+  <p class="cap"><i data-fr="Gauche : MAC connue, un anneau fin s'ouvre au survol et au focus clavier, le sous-titre devient « Wake ». Droite : MAC inconnue, aucun anneau, le clic explique pourquoi (jamais de refus muet).">Left: known MAC, a thin ring opens on hover and keyboard focus, the sub label becomes "Wake". Right: unknown MAC, no ring, the click explains why (never a silent refusal).</i></p>
+ </div>
+ <div class="col" style="width:280px">
+  <h3><i data-fr="États">States</i></h3>
+  <div class="acts" style="margin:0">
+   <button class="btn ghost" data-s="rest">Rest</button><button class="btn ghost" data-s="hover">Hover</button>
+   <button class="btn ghost" data-s="woke">Wake: it answers</button><button class="btn ghost" data-s="none">Wake: no answer</button>
+   <button class="btn ghost" data-s="nomac">No known MAC</button><button class="btn ghost" data-s="nopeer">No online peer</button>
+  </div>
+  <p class="cap"><b>A · Rising tide</b> <i data-fr="[recommandée] : la lumière monte dans le corps comme un niveau d'eau (300 ms), reste pendant l'attente, puis la créature quitte le fond, ou la lumière redescend (200 ms). Pas générique : c'est le corps de l'animal qui sert de jauge, sans barre ni roue.">[recommended]: light rises in the body like a water level (300 ms), holds during the wait, then the creature leaves the floor, or the light drains (200 ms). Not generic: the animal's own body is the gauge, no bar, no spinner.</i></p>
+  <p class="cap"><b>B · Lantern spark</b><i data-fr=" : une étincelle grimpe le corps et ouvre un halo. Plus proche de la lanterne de la baleine, mais l'échec se lit moins bien (le halo s'éteint seulement).">: a spark climbs the body and opens a halo. Closer to the whale's lantern, but failure reads less clearly (the halo only fades).</i></p>
+  <p class="cap"><i data-fr="Reduce motion : aucun mouvement, le corps s'allume d'un coup et le texte dit l'état. Pendant l'attente rien ne tourne : un trait de 2 px avance d'un cran par seconde (Timer 1 Hz, seulement vue ouverte).">Reduce motion: no movement, the body lights at once and the text says the state. Nothing spins during the wait: a 2 px line steps once per second (1 Hz Timer, only while the view is open).</i></p>
+ </div>
+</div>
+
+<h2>2 · <i data-fr="La fiche de l'appareil">The peer card</i></h2>
+<p class="lead"><i data-fr="Une seule action principale par fiche. L'état est dit par une icône et un texte, jamais par la couleur seule.">One primary action per card. The state is said by an icon and a text, never by colour alone.</i></p>
+<div class="grid" id="cards"></div>
+
+<h3 style="margin-top:24px;font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.06em"><i data-fr="États du bouton">Button states</i></h3>
+<div class="acts" style="max-width:960px">
+ <button class="btn"><svg width="16" height="16"><use href="#wake"/></svg>Wake atlas-nas</button>
+ <button class="btn hover" tabindex="-1">Hover</button><button class="btn focus" tabindex="-1">Focus</button>
+ <button class="btn pressed" tabindex="-1">Pressed</button><button class="btn ghost" tabindex="-1">Stop waiting</button><button class="btn" disabled>Wake reef-desktop</button>
+</div>
+
+<h2>3 · Notes <i data-fr="(valeur 10 : guidé, jamais bloqué)">(value 10: guided, never blocked)</i></h2>
+<p class="lead"><i data-fr="Titre court, une phrase qui dit quoi faire, logo GitHub (cible 44 px) vers docs/GUIDE.md#wake-a-device. Textes du moteur NAK-270, repris tels quels.">Short title, one sentence saying what to do, GitHub mark (44 px target) to docs/GUIDE.md#wake-a-device. Copy from the NAK-270 engine, unchanged.</i></p>
+<div class="grid" id="notes"></div>
+
+<h2>4 · <i data-fr="Réglages : lumière de réveil et adresses apprises">Settings: wake light and learned addresses</i></h2>
+<p class="lead"><i data-fr="Forme étroite (366 px, avec le rail) et large (560 px). Le titre passe à la ligne avant l'interrupteur, les boutons tombent l'un sous l'autre, rien ne se chevauche.">Narrow form (366 px, with the rail) and wide (560 px). The title wraps before the switch, buttons drop under each other, nothing overlaps.</i></p>
+<div class="row" id="sets"></div>
+
+<h2>5 · <i data-fr="Contrastes mesurés dans cette page (thème courant)">Contrast measured in this page (current theme)</i></h2>
+<table id="ctr"></table>
+<p class="cap"><i data-fr="Calcul WCAG sur les couleurs réellement appliquées (fonds composés). Texte ≥ 4.5, parties d'interface ≥ 3. Le corps éteint (38 %) est décoratif : le nom et le sous-titre portent l'information. Le bouton Wake désactivé (texte à 38 %, fond à 12 % de onSurface, l'aspect désactivé de DMS) est exempté par WCAG 1.4.3 : la ligne d'état au-dessus (« waiting for atlas-nas, 13 s left ») dit pourquoi et jusqu'à quand.">WCAG ratio on the colours actually applied (backgrounds composited). Text ≥ 4.5, UI parts ≥ 3. The unlit body (38 %) is decorative: the name and sub label carry the information. The disabled Wake button (label at 38 %, fill at 12 % of onSurface, the DMS disabled look) is exempt under WCAG 1.4.3: the status line above it ("waiting for atlas-nas, 13 s left") says why and until when.</i></p>
+
+<h2>6 · <i data-fr="Coût de construction">Cost to build</i></h2>
+<p class="lead"><i data-fr="A : un second dessin de la créature dans un Item à clip, deux translations de 300 ms, puis plus rien (0 au repos) ; environ une demi-journée de plus que B à cause du clip sur Canvas. B : un cercle et un halo, le moins cher. Les deux : Timer 1 Hz pendant 20 s d'attente, arrêté vue fermée ; coût batterie à mesurer par le Performance Engineer dans NAK-224 (non mesuré ici).">A: a second drawing of the creature in a clipped Item, two 300 ms translations, then nothing (0 at rest); about half a day more than B because of the Canvas clip. B: one circle and one halo, cheapest. Both: a 1 Hz Timer during the 20 s wait, stopped when the view closes; battery cost to be measured by the Performance Engineer in NAK-224 (not measured here).</i></p>
+</main>
+
+<script>
+const $=s=>document.querySelector(s),ico=(n,s=16)=>`<svg width="${s}" height="${s}" viewBox="0 0 16 16"><use href="#${n}"/></svg>`;
+const gh=`<button class="gh" aria-label="Open the guide: Wake a device">${ico('ghp')}</button>`;
+const VB={manta:'-40 -25.5 80 64',fish:'-45 -33.5 80 64'};/* drawing bbox centre on the circle centre */
+const hero=(shape,lit)=>`<div class="hero"><svg viewBox="${VB[shape]}" style="color:var(--${lit?'primary':'ink'});opacity:${lit?1:.38}"><use href="#${shape}"/></svg></div>`;
+const hn=(t,a,cmd)=>`<div class="hn"><div><b>${t}</b><span>${a}</span>${cmd?`<div class="cmd"><code>${cmd}</code><button class="x" aria-label="Copy the command">${ico('copy')}</button></div>`:''}</div>${gh}</div>`;
+const card=(h,o)=>`<div><h3>${h}</h3><div class="card">${hero(o.shape||'manta',o.lit)}<div class="kind">${o.kind||'SERVER'}</div><div class="name">${o.name||'atlas-nas'}</div><div class="st">${ico(o.icon||'moon',14)}<span>${o.st}</span></div>${o.wait?'<div class="bartick"><i></i></div>':''}${o.btn||''}${o.note||''}</div></div>`;
+const wakeBtn=n=>`<button class="btn">${ico('wake')}Wake ${n}</button>`;
+$('#cards').innerHTML=[
+ card('Offline, known MAC',{st:'Offline · last seen 2 h ago',btn:wakeBtn('atlas-nas')}),
+ card('Waking (short wait)',{lit:1,icon:'wake',st:'Wake signal sent via harbor-vps · 13 s left',wait:1,btn:'<button class="btn ghost">Stop waiting</button>'}),
+ card('Woke up',{lit:1,icon:'ok',st:'Online · woke up just now',btn:'<button class="btn">Open Terminal</button>'}),
+ card('No answer',{st:'No answer after 20 s',btn:wakeBtn('atlas-nas again'),note:hn('atlas-nas did not answer','The signal went out. Check that Wake-on-LAN is on in its firmware and that it is plugged in by cable.')}),
+ card('Offline, no known MAC',{shape:'fish',kind:'LAPTOP',name:'old-laptop',st:'Offline · never seen online here',btn:'<button class="btn ghost">'+ico('help')+'Why can\'t I wake it?</button>'}),
+ card('Another wake is running',{kind:'DESKTOP',name:'reef-desktop',st:'Offline · waiting for atlas-nas, 13 s left',btn:'<button class="btn" disabled>'+ico('wake')+'Wake reef-desktop</button>'}),
+ card('Very long name',{st:'Offline · last seen 9 d ago',name:'backup-storage-rack-02-basement-eu-west',btn:wakeBtn('this device')})
+].join('');
+const N={nomac:['Abyss does not know how to wake old-laptop yet','It learns the address of old-laptop while it is online on a network you share. Wait until it shows as online once, then try again.'],
+ nopeer:['No device can wake atlas-nas right now','Waking needs this computer, or another online device, on the same network as atlas-nas. Connect one of them, then try again.']};
+$('#notes').innerHTML=[
+ ['No known MAC',hn(...N.nomac)],['No online peer on that LAN',hn(...N.nopeer)],
+ ['Tool missing, here',hn('No wake program installed on this computer','Install it with the command below, then try again.','sudo dnf install wol')],
+ ['Tool missing, on the peer, unknown package manager',hn('No wake program installed on harbor-vps','Install wakeonlan (or wol) from your software center, then try again.')],
+ ['Long name',hn('No device can wake backup-storage-rack-02-basement-eu-west right now','Waking needs this computer, or another online device, on the same network as backup-storage-rack-02-basement-eu-west. Connect one of them, then try again.')]
+].map(([h,n])=>`<div><h3>${h}</h3><div class="card" style="padding:0 16px 16px;text-align:left">${n}</div></div>`).join('');
+const macs=[['atlas-nas','52:54:00:12:ab:01','192.168.1.0/24'],['reef-desktop','52:54:00:12:ab:02','192.168.1.0/24'],['old-printer-server-second-floor-meeting-room','52:54:00:7c:10:9e','10.20.0.0/16'],['kelp-mini','52:54:00:aa:03:41','192.168.1.0/24'],['tide-htpc','52:54:00:aa:03:42','192.168.1.0/24'],['coral-build','52:54:00:aa:03:43','10.20.0.0/16'],['drift-pi','52:54:00:aa:03:44','192.168.1.0/24']];
+const setBox=(cls,h,rows)=>`<div><h3 style="font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px">${h}</h3><div class="set ${cls}">
+ <div class="srow"><div><div class="st1">Wake light</div><div class="st2">Light rises through a sleeping device while Abyss wakes it. Off: the result still shows as text.</div></div><button class="sw" role="switch" aria-checked="true" aria-label="Wake light"><i></i></button></div>
+ <div class="pillrow"><span class="pill">${ico('bolt',13)}Light on battery</span><span class="st2">Plays once per wake, about a third of a second, only while the view is open.</span></div>
+ <div class="sep"></div>
+ <div class="st1">Devices Abyss can wake</div><div class="st2">Abyss remembers the network address (MAC) of a device once it has seen it online on a network you share. Kept in Abyss's settings only.</div>
+ ${rows.length?`<div class="list" tabindex="0">${rows.map(m=>`<div class="mac"><div><div class="n">${m[0]}</div><div class="a">${m[1]} · ${m[2]}</div></div><button class="x" aria-label="Forget ${m[0]}">${ico('bin')}</button></div>`).join('')}</div>
+ <div class="acts"><button class="btn ghost">Forget all ${rows.length} addresses</button></div>`:`<div class="empty">No address learned yet. A device appears here after Abyss has seen it online once.</div>`}
+</div></div>`;
+$('#sets').innerHTML=setBox('narrow','Narrow 366 px · 3 devices, long name',macs.slice(0,3))+setBox('wide','Wide 560 px · many devices (scrolls)',macs)+setBox('narrow','Empty',[]);
+document.querySelectorAll('.x[aria-label^="Forget "]').forEach(b=>b.onclick=()=>b.closest('.mac').remove());
+
+/* scene state machine: mock of WakeRunner idle / waking / done / failed */
+const c1=$('#c1'),sub=$('#c1sub'),tick=$('#c1tick'),note=$('#snote');let timers=[];
+function reset(){timers.forEach(clearTimeout);timers=[];c1.className='cr can';void c1.offsetWidth;/* restart from the unlit state even when replayed */sub.textContent='offline';tick.style.transform='';$('#thread').classList.remove('on');note.classList.remove('show')}
+function showNote(k){reset();$('#snt').textContent=N[k][0];$('#sna').textContent=N[k][1];note.classList.add('show')}
+function wake(ok){reset();c1.classList.remove('can');c1.classList.add('rise','lit');sub.textContent='waking';
+ timers.push(setTimeout(()=>{c1.classList.remove('rise');c1.classList.add('wait');for(let i=1;i<=6;i++)timers.push(setTimeout(()=>{tick.style.transform=`scaleX(${i/6})`;sub.textContent='waking · '+Math.round(20-i*20/6)+' s'},i*500))},320));
+ timers.push(setTimeout(()=>{c1.classList.remove('wait');if(ok){c1.classList.add('up');$('#thread').classList.add('on');sub.textContent='online · woke up'}else{c1.classList.add('drain');c1.classList.remove('lit');c1.classList.add('can');sub.textContent='no answer'}},3700));}
+c1.onclick=()=>wake(true);$('#c2').onclick=()=>showNote('nomac');
+document.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{const s=b.dataset.s;if(s=='rest')reset();else if(s=='hover'){reset();c1.classList.add('hov')}else if(s=='woke')wake(true);else if(s=='none')wake(false);else showNote(s)});
+
+/* contrast: composite every ancestor background, then WCAG ratio */
+function rgba(s){const c=document.createElement('canvas');c.width=c.height=1;const x=c.getContext('2d');x.fillStyle=s;x.fillRect(0,0,1,1);const p=x.getImageData(0,0,1,1).data;return[p[0],p[1],p[2],p[3]/255]}
+const over=(f,b)=>[0,1,2].map(i=>f[i]*f[3]+b[i]*(1-f[3])).concat(1);
+function bgOf(e){const ch=[];for(let n=e;n&&n.nodeType==1;n=n.parentElement)ch.push(rgba(getComputedStyle(n).backgroundColor));let b=[255,255,255,1];ch.reverse().forEach(c=>b=over(c,b));return b}
+const lum=c=>[0,1,2].map(i=>{const v=c[i]/255;return v<=.03928?v/12.92:((v+.055)/1.055)**2.4}).reduce((a,v,i)=>a+v*[.2126,.7152,.0722][i],0);
+function ratio(e,prop){const b=bgOf(prop=='self'?e.parentElement:e),f=over(rgba(prop=='self'?getComputedStyle(e).backgroundColor:getComputedStyle(e)[prop||'color']),b),a=lum(f),c=lum(b);return(Math.max(a,c)+.05)/(Math.min(a,c)+.05)}
+function measure(){const rows=[['Creature name on the view','.cr .nm','color',4.5],['Creature sub label','.cr .sub','color',4.5],['Card name','.card .name','color',4.5],['Card status line','.card .st','color',4.5],['Primary button label','.card .btn:not(.ghost):not([disabled])','color',4.5],['Primary button against the card','.card .btn:not(.ghost):not([disabled])','self',3],['Ghost button label','.card .btn.ghost','color',4.5],['Note title','.hn b','color',4.5],['Note advice','.hn span','color',4.5],['GitHub mark','.hn .gh','color',3],['Battery pill label','.pill','color',4.5],['Setting description','.set .st2','color',4.5],['MAC address','.mac .a','color',4.5],['Switch track against the page','.sw','self',3],['Outline against the card','.card','borderTopColor',3],['Disabled Wake label (exempt)','.card .btn[disabled]','color',0]];
+ $('#ctr').innerHTML='<tr><th>Pair</th><th>Ratio</th><th>Needs</th></tr>'+rows.map(([n,s,p,min])=>{const e=$(s);if(!e)return'';const r=ratio(e,p);return`<tr><td>${n}</td><td class="${r<min?'bad':''}">${r.toFixed(2)}:1</td><td>${min?min+':1':'none'}</td></tr>`}).join('')}
+/* switches: declared last, each one re-measures and so needs the contrast helpers above */
+document.querySelectorAll('[data-fr]').forEach(e=>e.dataset.en=e.textContent);
+function lang(v){document.querySelectorAll('[data-fr]').forEach(e=>e.textContent=v=='fr'?e.dataset.fr:e.dataset.en)}
+document.querySelectorAll('.seg').forEach(g=>{const bs=[...g.children],vals=bs.map(b=>b.dataset.v).filter(Boolean);
+ const set=v=>{bs.forEach(b=>b.setAttribute('aria-pressed',b.dataset.v==v));if(g.dataset.g=='lang')lang(v);else{vals.forEach(x=>document.body.classList.remove(x));if(v)document.body.classList.add(v)}measure()};
+ bs.forEach(b=>b.onclick=()=>set(b.dataset.v));set(g.dataset.g=='lang'?'fr':g.dataset.g=='opt'?'optA':'')});
+</script>
+</body>
+</html>
