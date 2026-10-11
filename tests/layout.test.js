@@ -374,17 +374,17 @@ const LAB = [1, 2, 12, 60, 120].flatMap(n => [3, 5, 10].map(max => ["lab:" + n, 
 
 // Squeezed cave row: names keep clear space (no overlap with each other or the edge)
 {
-    const NAME_H = 20;
-    const box = (fr, i, name) => {
+        const box = (fr, i, name) => {
         const row = L.caveRow(fr), shown = L.caveName(name, row.nameW);
-        const w = Math.min(row.nameW, shown.length * 7 + 16), x = L.caveX(fr, i), lift = L.caveLift(fr, i);
-        return { "l": x - w / 2, "r": x + w / 2, "b": lift, "t": lift + NAME_H };
+        const w = Math.min(row.nameW, shown.length * L.CAVE_CHAR_W + L.CAVE_CHIP_PAD), x = L.caveX(fr, i), lift = L.caveLift(fr, i);
+        return { "l": x - w / 2, "r": x + w / 2, "b": lift, "t": lift + L.CAVE_NAME_H };
     };
     const hit = (a, b) => a.l < b.r && b.l < a.r && a.b < b.t && b.b < a.t;
     [[480, 340], [646, 420], [1100, 700]].forEach(([w, h]) => [4, 8, 15].forEach(n => {
         const fr = L.frame(w, h, 60, { "caves": n });
         const names = [...Array(n).keys()].map(i => "cave-network-number-" + i);
         const bs = names.map((nm, i) => box(fr, i, nm));
+        ok(w + "x" + h + " " + n + " caves: a name box is lower than the tier lift", L.CAVE_NAME_H <= L.CAVE_TIER_LIFT);
         ok(w + "x" + h + " " + n + " caves: names never overlap",
             bs.every((a, i) => bs.every((b, j) => i >= j || !hit(a, b))));
         ok(w + "x" + h + " " + n + " caves: names stay inside the deep", bs.every(b => b.l >= 0 && b.r <= w));
@@ -399,7 +399,7 @@ const LAB = [1, 2, 12, 60, 120].flatMap(n => [3, 5, 10].map(max => ["lab:" + n, 
             })));
     }));
     // Creatures keep clear of the names too, squeezed arrangement included
-    [[580, 480], [780, 620]].forEach(([w, h]) => [4, 8, 15].forEach(n => {
+    [[480, 340], [580, 480], [780, 620]].forEach(([w, h]) => [4, 8, 15].forEach(n => {
         const crowd = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"].map((id, i) => p(id, [4, 12, 40, 70, 150][i % 5]));
         const lay2 = L.layout(crowd, w, h, 60, { "caves": n });
         const fy = lay2.frame.floorY, bx = [...Array(n).keys()].map(c => ({ "x": L.caveX(lay2.frame, c), "lift": L.caveLift(lay2.frame, c), "half": L.caveRow(lay2.frame).tiers > 1 ? L.caveRow(lay2.frame).nameW / 2 : 50 }));
@@ -407,10 +407,14 @@ const LAB = [1, 2, 12, 60, 120].flatMap(n => [3, 5, 10].map(max => ["lab:" + n, 
             const q = lay2.peers[id];
             return Math.abs(q.x - c.x) >= c.half + 50 || q.y + 66 <= fy - 88 - c.lift || q.y - 30 >= fy - 52;
         })));
-        // The lift for the caves must not stack creatures on each other or above the top
+        // The lift for the caves must not make creatures overlap more than without caves
+        const clashes = lay => {
+            const its = Object.keys(lay.peers).filter(id => !lay.peers[id].floor).map(id => lay.peers[id]);
+            return its.reduce((c, a, i) => c + its.filter((b, j) => i < j && Math.abs(a.x - b.x) < L.BODY_W && Math.abs(a.y - b.y) < L.BODY_UP).length, 0);
+        };
+        ok(w + "x" + h + " " + n + " caves: lifted creatures overlap no more than without caves (" + clashes(lay2) + " vs " + clashes(L.layout(crowd, w, h, 60, null)) + ")",
+            clashes(lay2) <= clashes(L.layout(crowd, w, h, 60, null)));
         const its = Object.keys(lay2.peers).filter(id => !lay2.peers[id].floor).map(id => lay2.peers[id]);
-        ok(w + "x" + h + " " + n + " caves: lifted creatures do not overlap each other",
-            its.every((a, i) => its.every((b, j) => i >= j || Math.abs(a.x - b.x) >= 50 || Math.abs(a.y - b.y) >= 30)));
         ok(w + "x" + h + " " + n + " caves: creatures stay under the surface", its.every(q => q.y - 30 >= lay2.frame.surfaceY));
     }));
     const roomy = L.frame(646, 420, 60, { "caves": 3 });

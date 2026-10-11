@@ -117,7 +117,7 @@ const BOX_W = 88, BOX_H = 60;
 // peer may become the top consumer, so every one keeps that room (P124).
 // Sideways, the top consumer's rates widen its pill: it keeps 100 px from a
 // cave, not 88 (104 put a tentacle over a lantern in the lab demo).
-const BODY_UP = 30, LABEL_DOWN = 66, CAVE_LABEL = [88, 52], CAVE_W = 100;
+const BODY_UP = 30, BODY_W = 50, LABEL_DOWN = 66, CAVE_LABEL = [88, 52], CAVE_W = 100;
 function _clash(a, b, strict) {
     if (a.cave || b.cave) {
         const c = a.cave ? a : b, q = a.cave ? b : a;
@@ -196,12 +196,27 @@ function pack(f, rings, prev) {
         it.y = Math.min(it.y, c.floorY - CAVE_LABEL[0] - c.lift - LABEL_DOWN);
         it.lifted = true;
     }));
-    // A lifted creature may land on another one: it rises further, a body
-    // height at a time, until it is clear (never above the surface)
+    // A lifted creature may land on another one: it takes the nearest spot
+    // (up a body height at a time, then aside) that is clear of the names and
+    // has the fewest creatures on it, never above the surface or off the deep.
+    // Staying put on the name is not an option, so in an overfull deep a rest
+    // of overlap between creatures can remain (ROADMAP, known limits).
+    const hits = (c, it) => items.filter(o => o !== it && Math.abs(o.x - c.x) < BODY_W && Math.abs(o.y - c.y) < BODY_UP).length;
     items.filter(it => it.lifted).forEach(it => {
-        const hits = () => items.some(o => o !== it && Math.abs(o.x - it.x) < BOX_W / 2 && Math.abs(o.y - it.y) < BODY_UP);
-        while (hits() && it.y - 2 * BODY_UP >= f.surfaceY)
-            it.y -= BODY_UP;
+        let best = null;
+        for (let up = 0; it.y - up - BODY_UP >= f.surfaceY; up += BODY_UP)
+            [0, -BODY_W, BODY_W, -2 * BODY_W, 2 * BODY_W].forEach(dx => {
+                const c = { "x": it.x + dx, "y": it.y - up, "cave": false, "ring": it.ring, "deg": it.deg };
+                if (c.x < BODY_W / 2 || c.x > f.w - BODY_W / 2 || caves.some(q => _clash(c, q, false)))
+                    return;
+                const cost = hits(c, it) * 1000 + up + Math.abs(dx);
+                if (!best || cost < best.cost)
+                    best = { "cost": cost, "x": c.x, "y": c.y };
+            });
+        if (best) {
+            it.x = best.x;
+            it.y = best.y;
+        }
         delete it.lifted;
     });
     return items;
@@ -350,7 +365,7 @@ const CAVE_TOP = 96;
 // next name on its own height. A roomy row gives a name the whole step; a
 // squeezed one aims at CAVE_NAME_W and never goes below CAVE_NAME_MIN (below
 // that the row is simply overfull).
-const CAVE_TIERS = 3, CAVE_TIER_LIFT = 24, CAVE_NAME_W = 96, CAVE_NAME_MIN = 48, CAVE_NAME_GAP = 6;
+const CAVE_TIERS = 3, CAVE_TIER_LIFT = 26, CAVE_NAME_H = 24, CAVE_NAME_W = 96, CAVE_NAME_MIN = 48, CAVE_NAME_GAP = 6;
 // A cave's click area is a strip of its rock, at most this wide each side
 const CAVE_ROCK_HALF = 52;
 // The edge room also keeps the first and last names (at most 2 x (edge - 6) wide) inside the deep
