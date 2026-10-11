@@ -916,12 +916,7 @@ Item {
     // bowl's narrowing
     function _fishWater() {
         const f = frame, side = Math.max(24, f.insetFloor + 24);
-        return {
-            "l": side,
-            "r": width - side,
-            "top": f.surfaceY + 44,
-            "bottom": f.floorY - 22
-        };
+        return { "l": side, "r": width - side, "top": f.surfaceY + 44, "bottom": f.floorY - 22 };
     }
     function _fishStep(dt) {
         if (!companion || width < 200)
@@ -1359,13 +1354,7 @@ Item {
     // section (anchor) that explains it. HelpNote shows it, then clears it.
     property var note: null
     function explain(title, hint, anchor, px, py) {
-        note = {
-            "title": title,
-            "hint": hint,
-            "anchor": anchor,
-            "x": px,
-            "y": py
-        };
+        note = { "title": title, "hint": hint, "anchor": anchor, "x": px, "y": py };
     }
     // Internet through an exit route no peer is known for yet (by its id)
     function setExitRoute(id) {
@@ -1413,32 +1402,19 @@ Item {
                 }
             });
             if (best)
-                return {
-                    "peer": best
-                };
+                return { "peer": best };
             // The middle of any group: all of it (a shoal the mesh made is
             // kept as a group of yours, so its members stay put)
             const it = itemById[peekId];
             if (it && it.type === "group" && !it.fog && Math.hypot(px - peekCentre.x, py - peekCentre.y) < peekR)
-                return it.mine ? {
-                    "group": it.mine,
-                    "name": it.label
-                } : {
-                    "keep": it.id,
-                    "name": _keepName(it)
-                };
+                return it.mine ? { "group": it.mine, "name": it.label } : { "keep": it.id, "name": _keepName(it) };
             return null;
         }
         const p = _peerAt(px, py);
         if (p)
-            return {
-                "peer": p
-            };
+            return { "peer": p };
         const g = _groupAt(px, py);
-        return g && g.mine ? {
-            "group": g.mine,
-            "name": g.label
-        } : null;
+        return g && g.mine ? { "group": g.mine, "name": g.label } : null;
     }
     // Can the light's target lend Internet: the peer offers an exit, or
     // some member of the group does
@@ -1616,33 +1592,15 @@ Item {
             // You: what the top bar holds, for the bowl that has none
             if (!source)
                 return out;
-            out.push({
-                "text": connected || view.state === "connecting" ? "Disconnect" : view.state === "needsLogin" ? "Sign in" : "Connect",
-                "act": "toggle"
-            });
+            out.push({ "text": connected || view.state === "connecting" ? "Disconnect" : view.state === "needsLogin" ? "Sign in" : "Connect", "act": "toggle" });
             const ps = source.profiles;
             if (ps.length > 1)
-                out.push({
-                    "text": "Profile: " + ps[(ps.indexOf(source.profile) + 1) % ps.length],
-                    "act": "profile"
-                });
-            out.push({
-                "text": prefs.showOffline ? "Hide offline peers" : "Show offline peers",
-                "act": "offline"
-            });
-            out.push({
-                "text": "Add a device…",
-                "act": "add"
-            });
-            out.push({
-                "text": prefs.shareSsh ? "Stop letting devices in" : "Let my devices in (SSH)",
-                "act": "share"
-            });
+                out.push({ "text": "Profile: " + ps[(ps.indexOf(source.profile) + 1) % ps.length], "act": "profile" });
+            out.push({ "text": prefs.showOffline ? "Hide offline peers" : "Show offline peers", "act": "offline" });
+            out.push({ "text": "Add a device…", "act": "add" });
+            out.push({ "text": prefs.shareSsh ? "Stop letting devices in" : "Let my devices in (SSH)", "act": "share" });
             if (view.me.console)
-                out.push({
-                    "text": "Open the admin console",
-                    "act": "console"
-                });
+                out.push({ "text": "Open the admin console", "act": "console" });
         } else if (p) {
             const g = MyGroups.groupOf(mine, p.id);
             // The main send path comes first, above every other entry
@@ -1664,53 +1622,18 @@ Item {
             }
             if (p.exit && p.online) {
                 const on = !!source && source.exitNode === p.name && !prefs.exitGroup;
-                out.push({
-                    "text": on ? "Stop using for Internet" : "Use for Internet",
-                    "act": "use",
-                    "arg": {
-                        "peer": on ? "" : p.name,
-                        "group": ""
-                    }
-                });
+                out.push({ "text": on ? "Stop using for Internet" : "Use for Internet", "act": "use", "arg": { "peer": on ? "" : p.name, "group": "" } });
             }
-            mine.filter(x => x !== g).forEach(x => out.push({
-                    "text": "Add to " + x.name,
-                    "act": "join",
-                    "arg": x.id
-                }));
-            out.push({
-                "text": "New group",
-                "act": "create",
-                "arg": p.id
-            });
+            mine.filter(x => x !== g).forEach(x => out.push({ "text": "Add to " + x.name, "act": "join", "arg": x.id }));
+            out.push({ "text": "New group", "act": "create", "arg": p.id });
             if (g)
-                out.push({
-                    "text": "Leave " + g.name,
-                    "act": "leave",
-                    "arg": p.id
-                });
+                out.push({ "text": "Leave " + g.name, "act": "leave", "arg": p.id });
         } else if (it && it.mine) {
-            out.push({
-                "text": prefs.exitGroup === it.mine ? "Stop Internet through it" : "Internet through it",
-                "act": "exit",
-                "arg": it.mine
-            });
-            out.push({
-                "text": "Rename",
-                "act": "rename",
-                "arg": it.mine
-            });
-            out.push({
-                "text": "Ungroup",
-                "act": "remove",
-                "arg": it.mine
-            });
+            out.push({ "text": prefs.exitGroup === it.mine ? "Stop Internet through it" : "Internet through it", "act": "exit", "arg": it.mine });
+            out.push({ "text": "Rename", "act": "rename", "arg": it.mine });
+            out.push({ "text": "Ungroup", "act": "remove", "arg": it.mine });
         } else if (it && it.type === "group" && !it.fog) {
-            out.push({
-                "text": "Keep as my group",
-                "act": "keep",
-                "arg": id
-            });
+            out.push({ "text": "Keep as my group", "act": "keep", "arg": id });
         }
         return out;
     }

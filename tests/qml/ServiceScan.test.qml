@@ -38,6 +38,26 @@ Item {
         command: ["sh", "-c", "touch \"$1/missing.timeout\"", "sh", fakeDir]
     }
 
+    // Exit 1 when any probe saved by the hanging scan (fake-timeout) still lives
+    Process {
+        id: alive
+        command: ["sh", "-c", "for f in \"$1\"/hang.*.pid; do kill -0 \"$(cat \"$f\")\" 2>/dev/null && exit 1; done; exit 0", "sh", fakeDir]
+        onExited: code => {
+            test.check("closing the card mid-scan kills the waiting probes", code === 0, code);
+        }
+    }
+
+    // A step that never advances must not hang the suite
+    Timer {
+        interval: 25000
+        running: true
+        onTriggered: {
+            test.check("the test finished in time", false, test.step);
+            console.log("✗ ServiceScan: " + (test.count - test.fails) + "/" + test.count + " passed");
+            Qt.exit(1);
+        }
+    }
+
     // One step per tick, so every scan has time to answer
     Timer {
         id: tick
@@ -58,7 +78,7 @@ Item {
                 test.step = "some";
             } else if (test.step === "some") {
                 test.check("open ports -> their buttons, in table order", JSON.stringify(test.ids()) === JSON.stringify(["jellyfin", "homeassistant"]), scan.services);
-                test.check("the button carries the URL", scan.services[0].url === "http://10.0.0.1:8096/", scan.services);
+                test.check("the button carries the URL", test.ids().length > 0 && scan.services[0].url === "http://10.0.0.1:8096/", scan.services);
                 scan.active = false;
                 test.check("closing the card clears the buttons", test.ids().length === 0);
                 scan.ip = "not an address";
@@ -81,6 +101,8 @@ Item {
             } else if (test.step === "after") {
                 test.check("a scan after a cancelled one is clean", JSON.stringify(test.ids()) === JSON.stringify(["jellyfin", "homeassistant"]), scan.services);
                 scan.active = false;
+                // A tick later the killed probes are reaped, so none looks alive
+                alive.running = true;
                 hide.running = true;
                 test.step = "gone";
             } else if (test.step === "gone") {

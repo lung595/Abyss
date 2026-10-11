@@ -19,7 +19,9 @@ Window {
     Component.onCompleted: {
         const c = Qt.createComponent("../../components/ServiceScan.qml");
         if (c.status === Component.Ready)
-            root.scan = c.createObject(root, { "ip": "127.0.0.1" });
+            root.scan = c.createObject(root, {
+                "ip": "127.0.0.1"
+            });
     }
 
     Timer {

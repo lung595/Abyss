@@ -13,6 +13,8 @@
 # root object: it calls Qt.exit(failures) when done.
 import os, shutil, sys, tempfile
 
+from shiboken6 import isValid
+
 from PySide6.QtCore import QObject, QProcess, QProcessEnvironment, Property, Signal, QTimer, QUrl
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine, qmlRegisterType
@@ -121,7 +123,9 @@ class Process(QObject):
         if on and self._p is None and self._command:
             p = QProcess(self)
             self._p = p
-            p.finished.connect(self._done)
+            # A closure, not the bound method: on a Process made by
+            # createObject PySide never delivers the bound-method slot
+            p.finished.connect(lambda c, s: self._done(c, s))
             p.errorOccurred.connect(self._error)
             self._pending = ""
             if isinstance(self._out, SplitParser):
@@ -164,6 +168,9 @@ class Process(QObject):
 
     def _done(self, code, status):
         p = self._p
+        # Destroyed while running: the real Process says nothing then
+        if p is None or not isValid(p):
+            return
         self._p = None
         out = bytes(p.readAllStandardOutput()).decode()
         err = bytes(p.readAllStandardError()).decode()
