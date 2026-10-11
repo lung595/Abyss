@@ -52,8 +52,6 @@ const all = [{}, { direct: false, relayReason: "r—s", latencyMs: 99, mbps: 4 }
 ok("no dash character in any sentence", all.every(l => !/[–—]/.test(v(l).text)));
 ok("level is always listed", all.every(l => W.LEVELS.indexOf(v(l).level) >= 0));
 
-done("slow");
-
 // Null and non-boolean fields are "not known" like missing ones
 eq("null direct, nothing else", v({ direct: null }).level, "unknown");
 eq("null direct and latency", v({ direct: null, latencyMs: null }).level, "unknown");
@@ -61,10 +59,12 @@ eq("string direct is not known", v({ direct: "false" }).level, "unknown");
 eq("string direct does not mean relayed", v({ direct: "false", latencyMs: 5 }).level, "good");
 
 // Exactly one sentence in every verdict, even with a dotted relay reason
-const sentences = t => t.split(/[.!?]+/).filter(x => x.trim()).length;
-const many = [{}, { direct: false, relayReason: "a. b! c?", latencyMs: 99, mbps: 4 }, { direct: true, latencyMs: 1 }, { mbps: 1 }, { direct: null }];
+const sentences = t => (t.match(/[.!?](\s|$)/g) || []).length;
+const many = [{}, { direct: false, relayReason: "a. b! c?", latencyMs: 99, mbps: 4 }, { direct: true, latencyMs: 1 }, { mbps: 1 }, { direct: null }, { direct: false, latencyMs: 9, mbps: 4.6 }];
 ok("one sentence each", many.every(l => sentences(v(l).text) === 1 && /[.]$/.test(v(l).text)));
 
 // Inverted threshold pairs fall back to the defaults, keeping the fair level
 eq("inverted latency pair", v({ direct: true, latencyMs: 100 }, { fairLatencyMs: 200, slowLatencyMs: 50 }).level, "fair");
 eq("inverted speed pair", v({ direct: true, mbps: 30 }, { fairMbps: 5, slowMbps: 20 }).level, "fair");
+
+done("slow");

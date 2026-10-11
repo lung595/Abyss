@@ -95,6 +95,6 @@ function _clean(text) {
         .replace(/[\u2013\u2014]/g, "-")
         .replace(/[.!?]+/g, " ")
         .replace(/\s+/g, " ")
-        .trim()
-        .slice(0, 80);
+        .slice(0, 80)
+        .trim();
 }
