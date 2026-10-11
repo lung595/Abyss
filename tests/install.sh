@@ -74,5 +74,16 @@ XDG_CONFIG_HOME=rel sh "$root/install-app.sh" --uninstall >/dev/null 2>&1
 check "a relative XDG_CONFIG_HOME falls back to ~/.config" "$([ -e "$HOME/.config/abyss" ] && echo left || echo gone)" gone
 rmdir "$HOME/.config" 2>/dev/null
 
+# Sweep when the plugin is removed: only an install made by the widget goes,
+# and the copy of the script left in the app folder does the work
+before=$(tree)
+sh "$root/install-app.sh" >/dev/null 2>&1
+sh "$HOME/.local/share/abyss/install-app.sh" --sweep >/dev/null 2>&1
+check "sweep keeps a standalone install" "$([ -e "$HOME/.local/share/abyss" ] && echo kept || echo gone)" kept
+sh "$root/install-app.sh" --uninstall >/dev/null 2>&1
+sh "$root/install-app.sh" --by-widget >/dev/null 2>&1
+sh "$HOME/.local/share/abyss/install-app.sh" --sweep >/dev/null 2>&1
+check "sweep removes a widget install" "$(tree)" "$before"
+
 [ "$fail" = 0 ] && echo "✓ install: app installer and uninstaller" || echo "install: FAILED"
 exit "$fail"

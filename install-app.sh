@@ -37,10 +37,15 @@ entry_ours() {
     [ -f "$entry" ] && grep -qxF "Exec=\"$home_dir/abyss\"" "$entry"
 }
 
+by_widget=
 case "${1-}" in
---uninstall)
+--sweep | --uninstall)
     if [ ! -f "$marker" ]; then
         echo "Nothing to remove: $home_dir is not an Abyss app install." >&2
+        exit 0
+    fi
+    # --sweep (the plugin was removed) only touches what the widget itself installed
+    if [ "$1" = --sweep ] && ! grep -qxF 'by widget' "$marker"; then
         exit 0
     fi
     # The link and the entry only when they are ours, so a command or an entry
@@ -67,6 +72,7 @@ case "${1-}" in
     exit 0
     ;;
 "") ;;
+--by-widget) by_widget=1 ;;
 *)
     echo "Usage: install-app.sh [--uninstall]" >&2
     exit 2
@@ -112,7 +118,11 @@ cp -rL -- "$src/app/components/assets" "$home_dir/components/"
 mkdir -p -- "$home_dir/views"
 cp -- "$src/app/views/"*.qml "$home_dir/views/"
 cp -- "$src/components/settings/"* "$home_dir/components/settings/"
-printf '%s\n' "$created" | sed -n 's/^\(..*\)$/dir \1/p' >"$marker"
+cp -- "$src/install-app.sh" "$home_dir/"
+{
+    printf '%s\n' "$created" | sed -n 's/^\(..*\)$/dir \1/p'
+    [ -n "$by_widget" ] && echo 'by widget'
+} >"$marker" || true
 ln -sf -- "$home_dir/abyss" "$link"
 
 # The desktop entry gets the full quoted path: a menu does not always have

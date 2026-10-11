@@ -3,6 +3,7 @@ import Quickshell
 import Quickshell.Io
 import qs.Services
 import "components"
+import "components/AppInstall.js" as AppInstall
 import "components/Terminal.js" as Terminal
 import "components/Connect.js" as Connect
 import "components/MyGroups.js" as MyGroups
@@ -88,6 +89,14 @@ Item {
         id: appInstaller
         pluginDir: root._dir
         widgetVersion: manifest.version
+    }
+    // Value 12: DMS leaves the app behind when the plugin folder is deleted, so on
+    // unload a detached one-shot checks whether plugin.json is gone and sweeps what
+    // the widget installed (a restart finds the manifest and does nothing)
+    Component.onDestruction: {
+        const argv = AppInstall.sweepCommand(root._dir, Quickshell.env("XDG_DATA_HOME"), Quickshell.env("HOME"));
+        if (argv)
+            Quickshell.execDetached(argv);
     }
     FileView {
         id: manifest

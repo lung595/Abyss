@@ -230,6 +230,18 @@ Abyss also runs as an app of its own, without DankMaterialShell: one window, sta
 
 From a checkout, run `./install-app.sh`. It copies the app to `~/.local/share/abyss/`, links the `abyss` command in `~/.local/bin/` (add that folder to your `PATH` if it is not there) and adds `abyss.desktop` to `~/.local/share/applications/`. Nothing outside `~/.local`, nothing needs root. `./install-app.sh --uninstall` removes exactly those and the folders it made (a marker file in the app folder remembers them); a command, an entry or a folder named `abyss` that is not Abyss's is never touched, and the install stops with a message instead of overwriting it.
 
+### Install the app
+
+When you use an action that opens the app (for example "Send a file" from the launcher) and the app is missing or older than the widget, the popout shows a band: **Install the Abyss app** runs `install-app.sh` from the plugin folder, **Not now** carries on with the file picker of the widget, **Don't ask again** is kept in Abyss's own settings and reset by "Ask me again" in the *Abyss app* row of the Connect settings. The install needs Quickshell, copies the app under `~/.local` and does not touch the network. The install made by the widget is marked: when you uninstall the plugin, the app is removed with it, so no broken `abyss` command stays. An install from a clone (`./install-app.sh`) is never removed by the plugin.
+
+### Quickshell is missing
+
+If neither `qs` nor `quickshell` is on your `PATH`, the band shows the command that installs Quickshell for your distribution (read from `/etc/os-release`) with a Copy button. Abyss never runs it. For a distribution it does not know, the band links here: install Quickshell with your package manager or from its documentation, then try again.
+
+### Uninstall the app
+
+Settings, Connect, *Abyss app*, **Uninstall the app** (one click, then a confirmation) runs `install-app.sh --uninstall`. Your settings file `~/.config/abyss/settings.json` stays while the widget is installed.
+
 ### The depth gauge and the stations
 
 The window is a dive. On the left, the **depth gauge** is a vertical scale with three round targets, one per station: **Settings** at 0 m, **Send** at 200 m and **Map** at 4 000 m. The current station is filled and ringed, and Darwin swims beside it. Under the scale, four readouts follow the depth: depth, pressure, temperature and the NetBird signal (a glyph as well as a colour: ● connected, ◐ stopped, ✕ missing, ○ unknown).

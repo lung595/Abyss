@@ -40,7 +40,21 @@ function installCommand(pluginDir, uninstall) {
     if (!validDir(pluginDir))
         return null;
     const script = pluginDir.replace(/\/+$/, "") + "/install-app.sh";
-    return uninstall ? ["sh", "--", script, "--uninstall"] : ["sh", "--", script];
+    // The widget records itself as the installer so that removing the plugin removes the app
+    return uninstall ? ["sh", "--", script, "--uninstall"] : ["sh", "--", script, "--by-widget"];
+}
+
+// Run when the plugin is unloaded: if plugin.json is gone the plugin was uninstalled,
+// so the app copy that the widget installed is swept (a standalone install is kept).
+// The copy of the script inside the app folder is used since the plugin folder is gone.
+function sweepCommand(pluginDir, dataHome, home) {
+    if (!validDir(pluginDir))
+        return null;
+    const data = validDir(dataHome) ? dataHome : validDir(home) ? home + "/.local/share" : "";
+    if (!data)
+        return null;
+    return ["sh", "-c", "[ -f \"$1\" ] || exec sh -- \"$2\" --sweep", "sh",
+        pluginDir.replace(/\/+$/, "") + "/plugin.json", data.replace(/\/+$/, "") + "/abyss/install-app.sh"];
 }
 
 // KEY=value lines of /etc/os-release -> { ID, ID_LIKE: [..] }

@@ -11,8 +11,11 @@ eq("newer app -> update too", A.appState("0.6.0", "0.5.2"), "update");
 eq("garbage output -> install", A.appState("abyss: not found", "0.5.2"), "install");
 eq("unreadable widget version leaves the app alone", A.appState("0.5.2", ""), "ok");
 
-eq("install command", A.installCommand("/p/Abyss", false), ["sh", "--", "/p/Abyss/install-app.sh"]);
+eq("install command", A.installCommand("/p/Abyss", false), ["sh", "--", "/p/Abyss/install-app.sh", "--by-widget"]);
 eq("uninstall command", A.installCommand("/p/Abyss/", true), ["sh", "--", "/p/Abyss/install-app.sh", "--uninstall"]);
+eq("sweep command", A.sweepCommand("/p/Abyss/", "/d/", "/h")[5], "/d/abyss/install-app.sh");
+eq("sweep falls back to HOME", A.sweepCommand("/p/Abyss", "", "/h")[5], "/h/.local/share/abyss/install-app.sh");
+eq("sweep refuses a bad folder", A.sweepCommand("x", "/d", "/h"), null);
 eq("relative folder refused", A.installCommand("Abyss", false), null);
 eq("control character refused", A.installCommand("/p/a\nb", false), null);
 eq("no folder refused", A.installCommand(undefined, false), null);
