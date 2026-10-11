@@ -63,6 +63,8 @@ QtObject {
     readonly property var favorites: _get("favorites", ({}))
     // The user's own groups (right-click a creature): [{ id, name, members }]
     readonly property var groups: _get("groups", [])
+    // Tags the user gave to peers: peer id -> [tag]
+    readonly property var tags: _get("tags", ({}))
     // Which peer each exit route goes through, once seen (route id -> peer
     // id): exit routes named after no peer are then lent by the right one
     readonly property var exitTies: _get("exitTies", ({}))

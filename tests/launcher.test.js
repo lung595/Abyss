@@ -73,4 +73,13 @@ eq("with a prefix set, DMS stripped it: all is ours", JSON.stringify(L.route("ve
 eq("the entry for a device", L.sendEntry("vega").name + "|" + L.sendEntry("vega").action + "|" + L.sendEntry("vega").icon, "Send a file to vega…|send:vega|material:upload_file");
 eq("the entry without a device", L.sendEntry(null).name + "|" + L.sendEntry(null).action, "Send a file…|send:");
 
+// Tags: "#tag" and a tag word find peers, whatever their name
+const tagged = Object.assign({}, base, { tags: { "d": ["work"], "e": ["work"] } });
+eq("#work offers those peers' rows", names(L.items(tagged, "#work")).filter(n => n.indexOf("SSH to") === 0), ["SSH to lyra", "SSH to laptop"]);
+ok("a tag word finds a peer by its tag", names(L.items(tagged, "ssh work")).indexOf("SSH to lyra") >= 0);
+ok("a stop word does not hide a tag match", names(L.items(tagged, "ssh my work")).indexOf("SSH to lyra") >= 0);
+const accented = Object.assign({}, base, { groups: [{ name: "Été", members: ["d"] }] });
+ok("an accented group name is found with its accent", names(L.items(accented, "ssh été")).indexOf("SSH to lyra") >= 0);
+ok("an untagged peer is not found", names(L.items(tagged, "ssh work")).indexOf("SSH to vega") < 0);
+
 done("launcher");

@@ -48,8 +48,11 @@ const WORDS = [
 const STOP = ["the", "my", "all", "and", "en", "les", "le", "la", "des", "de", "du", "et", "mes"];
 
 // "hors ligne" -> offline; "phones offline" -> [phones, offline]
+// `tagsOf` (optional, peer -> [tag]) lets "#nas" pick a tag exactly and lets
+// a plain word also match the start of a tag ("work").
 // Returns [{label, name: bool, test(peer)}]
-function parse(query, relays) {
+function parse(query, relays, tagsOf) {
+    const tagged = (p, t, exact) => (tagsOf ? tagsOf(p) : []).some(x => exact ? x === t : x.indexOf(t) === 0);
     const known = (relays || []).map(norm);
     const toks = norm(query).replace(/hors[\s-]*ligne?/g, "offline").replace(/en[\s-]+ligne/g, "online").split(/\s+/).filter(Boolean);
     const out = [];
@@ -68,6 +71,11 @@ function parse(query, relays) {
         }
         if (STOP.indexOf(tok) >= 0)
             return;
+        if (/^#[a-z0-9_-]+$/.test(tok)) {
+            const tag = tok.slice(1);
+            out.push({ "label": "tagged #" + tag, "test": p => tagged(p, tag, true) });
+            return;
+        }
         // A relay by name, or by its tail ("eu" for "relay-eu")
         const relay = known.find(r => r === tok || r.endsWith("-" + tok));
         if (relay) {
@@ -81,9 +89,9 @@ function parse(query, relays) {
             return;
         }
         out.push({
-            "label": "name ≈ “" + tok + "”",
+            "label": "name or tag ≈ “" + tok + "”",
             "name": true,
-            "test": p => norm(p.name).indexOf(tok) >= 0 || (tok.length >= 3 && subseq(tok, norm(p.name)))
+            "test": p => norm(p.name).indexOf(tok) >= 0 || (tok.length >= 3 && subseq(tok, norm(p.name))) || tagged(p, tok, false)
         });
     });
     return out;

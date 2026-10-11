@@ -9,6 +9,7 @@ import "Layout.js" as Lay
 import "Groups.js" as Groups
 import "MyGroups.js" as MyGroups
 import "Query.js" as Query
+import "Tags.js" as Tags
 import "Spring.js" as Spring
 import "Swim.js" as Swim
 import "Grips.js" as Grips
@@ -111,7 +112,7 @@ Item {
     }
     readonly property var downRelays: view.relays.filter(r => !r.available).map(r => r.name)
     readonly property var shown: view.peers.filter(p => p.online || prefs.showOffline)
-    readonly property var filters: Query.parse(query, view.relays.map(r => r.name))
+    readonly property var filters: Query.parse(query, view.relays.map(r => r.name), p => Tags.of(p, prefs.groups, prefs.tags))
     readonly property int maxItems: Math.max(3, Math.min(10, prefs.maxItems))
     // Last arrangement; also the memory that keeps groups steady between reads
     property var arr: ({

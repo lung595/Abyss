@@ -2,6 +2,7 @@
 .import "MyGroups.js" as MyGroups
 .import "Query.js" as Query
 .import "SendIntent.js" as SendIntent
+.import "Tags.js" as Tags
 
 // What typing "abyss" in the launcher (Super+Space) offers. First the deep
 // itself — the whole scene, with everything it can do — then the quick
@@ -98,7 +99,11 @@ function items(s, query) {
     // as nas or phone…) pick the peers themselves, as in the deep's search:
     // "abyss >100ms", "abyss ssh nas", "abyss copy phones"
     const toks = q.split(/\s+/), verb = ["copy", "ssh", "send"].indexOf(toks[0]) >= 0 ? toks[0] : "";
-    const filters = Query.parse((verb ? toks.slice(1) : toks).join(" "), s.relays);
+    // Tags are worked out once per peer, not once per row and word
+    const tagCache = {};
+    const tagsOf = p => tagCache[p.id] || (tagCache[p.id] = Tags.of(p, s.groups, s.tags));
+    const words = verb ? toks.slice(1) : toks;
+    const filters = Query.parse(words.join(" "), s.relays, tagsOf);
     const smart = filters.some(f => !f.name);
     const rows = p => {
         const out = [];
@@ -115,9 +120,12 @@ function items(s, query) {
         s.peers.filter(p => p.online && filters.every(f => f.test(p))).forEach(p => rows(p).forEach(r => found.push(r)));
         return head.concat(net).filter(i => _match(i, q)).concat(found);
     }
-    const peers = [];
-    s.peers.filter(p => p.online).forEach(p => rows(p).forEach(r => peers.push(r)));
-    return head.concat(net, peers).filter(i => _match(i, q));
+    // A peer the filters accept (they carry the tag rule, stop words and
+    // accents, as in the search bar) is offered even when its name lacks the words
+    const tagHit = p => filters.length > 0 && filters.every(f => f.test(p));
+    const peers = [], tagged = [];
+    s.peers.filter(p => p.online).forEach(p => rows(p).forEach(r => (tagHit(p) ? tagged : peers).push(r)));
+    return head.concat(net, peers).filter(i => _match(i, q)).concat(tagged);
 }
 
 // Open and connect first, then what is in use, groups, peers, "directly"

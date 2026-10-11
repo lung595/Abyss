@@ -59,7 +59,7 @@ Settings are read through `components/Prefs.qml`, a reactive view shared by ever
 
 ### Shared settings
 
-`components/settings/Store.js` (pure, tested by `tests/settingsStore.test.js`) owns the schema of the settings shared by the widget and the app; `SettingsFile.qml` is the only file that touches `~/.config/abyss/settings.json` (watch, atomic write, one-time read-only migration from the DMS plugin settings). `app/components/settings` is a symlink to it, dereferenced by `install-app.sh`. Any new setting is one line in the `SCHEMA` of `Store.js`. `Store.js` reuses the widget's `Connect.js` rules for SSH user and port (`app/components/Connect.js` is a symlink to it).
+`components/settings/Store.js` (pure, tested by `tests/settingsStore.test.js`) owns the schema of the settings shared by the widget and the app; `SettingsFile.qml` is the only file that touches `~/.config/abyss/settings.json` (watch, atomic write, one-time read-only migration from the DMS plugin settings). `app/components/settings` is a symlink to it, dereferenced by `install-app.sh`. Any new setting is one line in the `SCHEMA` of `Store.js`. `Store.js` reuses the widget's `Connect.js` rules for SSH user and port (`app/components/Connect.js` is a symlink to it, as is `Tags.js`).
 
 Uninstall rule (value 12): the app's uninstall removes `~/.config/abyss/` only when the widget is no longer installed. The same rule the other way applies to the widget: when the widget is removed, it deletes the folder only if the app is not installed (`~/.local/share/abyss`). It is to be implemented in the widget switch-over story.
 

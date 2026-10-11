@@ -19,6 +19,7 @@ Every refusal in Abyss says why in a short note, with a GitHub mark that opens t
 - [Ping](#ping)
 - [Connect to a peer](#connect-to-a-peer)
 - [Search and commands](#search-and-commands)
+- [Tags](#tags)
 - [Add a device](#add-a-device)
 - [Join a mesh](#join-a-mesh)
 - [Let peers SSH in](#let-peers-ssh-in)
@@ -281,11 +282,22 @@ The test lab only shows while it is the mesh source. It never touches NetBird: t
 
 DMS's *Reduce motion* is respected: every movement stops.
 
+## Tags
+
+Every peer carries tags, and the search bar and the launcher match them.
+
+- **Automatic tags** come from what the peer is: its kind (`nas`, `phone`, `server`, `vps`, `pi`, `laptop`, `desktop`), `exit` when it can lend Internet, `subnet` when it carries a network, and the name of your group for it (a group called Home gives `home`, Work gives `work`).
+- **Manual tags** are yours. They are lowercase letters, digits, `-` and `_`; anything else is turned into `-`. At most 8 per peer, 24 characters each, and 200 tagged peers. No screen sets them yet: editing tags on a card comes with a later step.
+- **Searching**: `#nas` matches that tag exactly. A plain word such as `work` also matches the start of a tag, next to names and the other words, so `work online` or `#work >100ms` combine as usual. In the launcher, `abyss #work`, `abyss ssh work` and `abyss copy #nas` offer those peers.
+
+Tags are only stored in Abyss's own settings (see [Privacy](#privacy)); nothing is computed or listed while no view is open.
+
 ## Privacy
 
 - **No network access by the plugin itself, no telemetry.** NetBird is read through its local `netbird` command, never through a shell: no peer name or address can run anything. QR codes are drawn locally.
 - **Secrets stay secret.** A setup key goes to `netbird` through its environment, which only you can read, never on a command line (visible to every user in `ps`). It is never saved, logged or put on the clipboard. The command line takes a key file, never the key (see [Join a mesh](#join-a-mesh)).
 - **Written to disk: only your settings**, saved by DMS. They hold peer names and identifiers (NetBird's key for each peer, or its name or address when it has none) for your favorites, muted peers and own groups, which peer carries each exit route once seen, and the login (user, port) you set for a peer. Live peers, addresses and traffic stay in memory for the session.
+- **Tags** you give peers are saved with your other settings (peer identifier and tag text), capped at 200 peers, 8 tags each. They are not part of the anonymous diagnostics.
 - **Clipboard tidy.** After a successful join, the copy of the setup key in DMS's clipboard history is removed (pinned entries are yours and stay).
 - **Names are only names.** A peer's name is shown as plain text: it never becomes a link in a toast, and *Open page* only opens a plain host name or address.
 - **Who can ask Abyss to act.** Like every DMS plugin, the `dms ipc call abyss …` commands answer programs running in your own session, the same way your keyboard shortcuts do. They can connect, disconnect or open a peer, never read a setup key.

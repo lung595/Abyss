@@ -1,5 +1,6 @@
 .pragma library
 .import "../Connect.js" as Connect
+.import "../Tags.js" as Tags
 
 // The Abyss settings shared by the widget and the app. Pure: no global, no
 // side effect. The file is data from outside (the other program, the user's
@@ -56,6 +57,7 @@ const SCHEMA = {
     "muted": names(),
     "favorites": names(),
     "groups": { "type": "groups", "def": [] },
+    "tags": { "type": "tags", "def": {} },
     "exitTies": names(),
     "exitGroup": text(""),
     "labMesh": oneOf("home", ["home", "work", "crowd", "lab"]),
@@ -122,6 +124,8 @@ function _check(rule, v) {
         }
         return out;
     }
+    case "tags":
+        return _isObject(v) ? Tags.cleanMap(v) : undefined;
     case "groups": {
         if (!Array.isArray(v))
             return undefined;

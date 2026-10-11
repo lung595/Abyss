@@ -43,6 +43,8 @@ eq("wrong type falls back", bad({ "pulses": "yes" }).pulses, true);
 eq("unknown enum falls back", bad({ "pill": "huge" }).pill, "peers");
 eq("control chars refused", bad({ "terminal": "a\nb" }).terminal, "auto");
 eq("long text refused", bad({ "terminal": "x".repeat(300) }).terminal, "auto");
+eq("tags: unsafe characters cleaned", bad({ "tags": { "p": ["NAS!", "a b"] } }).tags, { "p": ["nas", "a-b"] });
+eq("tags: a list instead of a map falls back", bad({ "tags": ["x"] }).tags, {});
 eq("bad group dropped, good kept", bad({ "groups": [{ "id": 1 }, { "id": "g", "name": "G", "members": ["a", 3] }] }).groups,
     [{ "id": "g", "name": "G", "members": ["a"] }]);
 eq("names map keeps strings only", bad({ "muted": { "a": "A", "b": 3 } }).muted, { "a": "A" });
@@ -55,7 +57,7 @@ const widget = {
     "sendFolder": "~/Inbox", "links": { "p": { "user": "u", "port": "1" } }, "shareSsh": true, "smooth": false,
     "drift": false, "celebrate": false, "statusDot": false, "middleToggle": false, "searchHints": false,
     "desktopLive": true, "maxItems": 7, "pill": "icon", "companion": false, "groupOpen": "hover",
-    "muted": { "m": "M" }, "favorites": { "f": "F" }, "groups": [{ "id": "u2", "name": "G", "members": ["m"] }],
+    "muted": { "m": "M" }, "favorites": { "f": "F" }, "groups": [{ "id": "u2", "name": "G", "members": ["m"] }], "tags": { "m": ["nas"] },
     "exitTies": { "e": "E" }, "exitGroup": "u2", "labMesh": "work", "labPeers": 10, "labLatency": 50,
     "labTrouble": "flap", "labTraffic": "calm", "labLazy": true
 };
