@@ -28,14 +28,12 @@ Item {
         }
     }
 
-    property var steps: [
-        () => {
+    property var steps: [() => {
             check("NetBird is found and used", daemon.hasNetbird && daemon.source && !daemon.source.demo, [daemon.hasNetbird, !!daemon.source]);
             check("the real state is known before any view opens", daemon.source.view.state === "connected" && daemon.source.view.online === 3, daemon.source.view.state);
             test.ipc = daemon.data.find(o => o.target === "abyss");
             daemon.source.watch(true);
-        },
-        () => {
+        }, () => {
             check("ipc status", test.ipc.status() === "connected · 3/4 online · Internet directly", test.ipc.status());
             check("ipc exit alone says where Internet goes out", test.ipc.exit("") === "Internet goes out directly", test.ipc.exit(""));
             check("ipc copy", test.ipc.copy("nook") === "100.90.0.3" && JSON.stringify(Quickshell.launched[0]) === '["dms","cl","copy","100.90.0.3"]', Quickshell.launched);
@@ -51,8 +49,7 @@ Item {
             // The fake scp succeeds; no view is open, so the daemon says so in a toast
             check("ipc send to an online peer starts", test.ipc.send("atlas", "/etc/os-release") === "OK");
             check("ipc send, a second one meanwhile is refused as busy", test.ipc.send("atlas", "/etc/os-release").indexOf("Refused: Another send") === 0);
-        },
-        () => {
+        }, () => {
             check("the send ended with a notification, as no view is open", ToastService.shown.some(t => t === "Sent to atlas"), ToastService.shown);
             check("ipc ssh knocks first: atlas does not answer, the toast says how to turn SSH on", ToastService.warned.some(t => t.indexOf("! atlas does not accept Terminal (port 22)") === 0 && t.indexOf("[sudo systemctl enable --now sshd]") > 0), ToastService.warned);
             check("the exit reached NetBird", daemon.source.exitNode === "harbor-vps" && daemon.source.view.peers.find(p => p.name === "harbor-vps").lending);
@@ -70,16 +67,15 @@ Item {
             check("ipc share on", test.ipc.share("on") === "SSH in this device: on" && daemon.prefs.shareSsh === true);
             check("ipc share says where it stands", test.ipc.share("") === "Shared with SSH: on");
             check("ipc demo refuses on the real mesh", test.ipc.demo("needsLogin") === "Not in demo mode");
-        },
-        () => {
+        }, () => {
             // Favourite alerts, driven with a clock and peer lists of our own
             const view = daemon.source.view, atlas = view.peers.find(p => p.name === "atlas");
             const withAtlas = online => ({
-                    "state": "connected",
-                    "peers": view.peers.map(p => p.id === atlas.id ? Object.assign({}, p, {
-                            "online": online
-                        }) : p)
-                });
+                        "state": "connected",
+                        "peers": view.peers.map(p => p.id === atlas.id ? Object.assign({}, p, {
+                                "online": online
+                            }) : p)
+                    });
             const shown = () => ToastService.shown.filter(t => t.indexOf("atlas") === 0 || t.indexOf("Atlas") === 0);
             const t0 = 1000000;
             daemon.prefs.set("favouriteAlerts", true);
@@ -107,20 +103,18 @@ Item {
             daemon._alertStep(t0 + 300000, withAtlas(false));
             check("switched off, nothing is announced and nothing is remembered", shown().filter(t => /offline/.test(t)).length === 1 && Object.keys(daemon._alertState).length === 0, daemon._alertState);
             daemon.prefs.set("notifications", false);
-        },
-        () => {
+            daemon.prefs.toggleFavorite(atlas.id, "atlas");
+        }, () => {
             // The knocks run one after the other (2 s each at most)
             check("ssh as a user opens a terminal at once, with user@fqdn", Quickshell.launched.some(l => l.slice(-1)[0] === "tom@atlas.netbird.cloud"), Quickshell.launched);
             check("a device that does not answer says how to fix it", ToastService.warned.some(t => t.indexOf("! atlas is not sharing its screen") === 0), ToastService.warned);
             PluginService.savePluginData("abyss", "source", "demo");
-        },
-        () => {
+        }, () => {
             check("the demo setting swaps the source", daemon.source && daemon.source.demo);
             check("ipc demo works there", test.ipc.demo("needsLogin") === "needsLogin");
             check("the ping was announced, then answered", ToastService.shown.some(t => t === "Abyss: Pinging atlas…") && ToastService.shown.some(t => t === "Abyss: atlas: no answer"), ToastService.shown);
             check("nothing went wrong in silence", ToastService.shown.filter(t => t.indexOf("Copied") === 0).length === 1 && !ToastService.shown.some(t => /Could not|Refused|Not /.test(t)), ToastService.shown);
-        }
-    ]
+        }]
 
     Timer {
         interval: 2600

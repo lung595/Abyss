@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Shapes
 import qs.Common
 import qs.Services
 import qs.Widgets
@@ -455,74 +456,126 @@ PluginSettings {
                         impact: "low"
                         cost: "Reads the status Abyss already refreshes. No timer of its own"
                     }
-                    SettingChoiceRow {
-                        id: alertDelay
-                        settingKey: "favouriteAlertDelay"
-                        label: "Wait before alerting"
-                        description: "A favourite must stay offline this long. Shorter drops stay silent"
-                        options: [
-                            {
-                                "label": "10 s",
-                                "value": "10"
-                            },
-                            {
-                                "label": "30 s",
-                                "value": "30"
-                            },
-                            {
-                                "label": "1 min",
-                                "value": "60"
-                            },
-                            {
-                                "label": "5 min",
-                                "value": "300"
-                            }
-                        ]
-                        defaultValue: "30"
-                        // Nothing to choose while the alerts are off
-                        enabled: favouriteAlerts.value
-                        opacity: enabled ? 1 : 0.5
-                    }
-                    // Three sample drops against the chosen wait: lit when it would alert
-                    Row {
-                        spacing: Theme.spacingS
-                        Repeater {
-                            model: [
+                    Column {
+                        width: parent.width
+                        spacing: Theme.spacingXS
+                        SettingChoiceRow {
+                            id: alertDelay
+                            settingKey: "favouriteAlertDelay"
+                            label: "Wait before alerting"
+                            description: "A favourite must stay offline this long. Shorter drops stay silent"
+                            options: [
                                 {
-                                    "s": 20,
-                                    "label": "20 s",
-                                    "w": 16
+                                    "label": "10 s",
+                                    "value": "10"
                                 },
                                 {
-                                    "s": 45,
-                                    "label": "45 s",
-                                    "w": 32
+                                    "label": "30 s",
+                                    "value": "30"
                                 },
                                 {
-                                    "s": 720,
-                                    "label": "12 min",
-                                    "w": 64
+                                    "label": "1 min",
+                                    "value": "60"
+                                },
+                                {
+                                    "label": "5 min",
+                                    "value": "300"
                                 }
                             ]
-                            Column {
-                                id: drop
-                                required property var modelData
-                                readonly property bool lit: modelData.s >= Number(alertDelay.value)
-                                spacing: Theme.spacingXS
-                                Rectangle {
-                                    width: drop.modelData.w
-                                    height: Theme.spacingL
-                                    radius: height / 2
-                                    color: drop.lit ? Theme.primary : "transparent"
-                                    border.width: 1
-                                    border.color: drop.lit ? Theme.primary : Theme.outline
+                            defaultValue: "30"
+                            // Nothing to choose while the alerts are off
+                            enabled: favouriteAlerts.value
+                            opacity: enabled ? 1 : 0.5
+                        }
+                        // Three sample drops against the chosen wait: a line of one day, a drop is a gap
+                        // (lit when it would alert, dashed ring when it stays silent)
+                        Row {
+                            id: strip
+                            width: parent.width
+                            // Fixed columns keep the gaps on the grid; they shrink on a narrow page
+                            readonly property int colW: Math.max(40, Math.min(64, Math.floor((width - 4 * 8) / 3)))
+                            readonly property real lineW: Math.max(8, (width - 3 * colW) / 4)
+                            Repeater {
+                                model: [
+                                    {
+                                        "s": 20,
+                                        "label": "20 s",
+                                        "w": 16
+                                    },
+                                    {
+                                        "s": 45,
+                                        "label": "45 s",
+                                        "w": 32
+                                    },
+                                    {
+                                        "s": 720,
+                                        "label": "12 min",
+                                        "w": 64
+                                    }
+                                ]
+                                Row {
+                                    id: drop
+                                    required property var modelData
+                                    readonly property bool lit: modelData.s >= Number(alertDelay.value)
+                                    // The day line before this drop
+                                    Rectangle {
+                                        width: strip.lineW
+                                        height: 1
+                                        y: Theme.spacingS
+                                        color: Theme.outline
+                                    }
+                                    Column {
+                                        width: strip.colW
+                                        spacing: Theme.spacingXS
+                                        Item {
+                                            width: parent.width
+                                            height: Theme.spacingL
+                                            Rectangle {
+                                                anchors.horizontalCenter: parent.horizontalCenter
+                                                width: Math.min(drop.modelData.w, strip.colW)
+                                                height: parent.height
+                                                radius: height / 2
+                                                color: Theme.primary
+                                                visible: drop.lit
+                                            }
+                                            Shape {
+                                                id: ring
+                                                anchors.horizontalCenter: parent.horizontalCenter
+                                                width: Math.min(drop.modelData.w, strip.colW)
+                                                height: parent.height
+                                                visible: !drop.lit
+                                                ShapePath {
+                                                    strokeColor: Theme.outline
+                                                    strokeWidth: 1
+                                                    strokeStyle: ShapePath.DashLine
+                                                    fillColor: "transparent"
+                                                    PathRectangle {
+                                                        x: 0.5
+                                                        y: 0.5
+                                                        width: ring.width - 1
+                                                        height: ring.height - 1
+                                                        radius: height / 2
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        StyledText {
+                                            width: parent.width
+                                            horizontalAlignment: Text.AlignHCenter
+                                            text: drop.modelData.label + "\n" + (drop.lit ? "alert" : "silent")
+                                            font.pixelSize: Theme.fontSizeSmall
+                                            font.weight: drop.lit ? Font.DemiBold : Font.Normal
+                                            color: drop.lit ? Theme.surfaceText : Theme.surfaceVariantText
+                                        }
+                                    }
                                 }
-                                StyledText {
-                                    text: drop.modelData.label + "\n" + (drop.lit ? "alert" : "silent")
-                                    font.pixelSize: Theme.fontSizeSmall
-                                    font.weight: drop.lit ? Font.DemiBold : Font.Normal
-                                    color: drop.lit ? Theme.surfaceText : Theme.surfaceVariantText
-                                }
+                            }
+                            // The day line after the last drop
+                            Rectangle {
+                                width: strip.lineW
+                                height: 1
+                                y: Theme.spacingS
+                                color: Theme.outline
                             }
                         }
                     }

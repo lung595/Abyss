@@ -326,6 +326,7 @@ Item {
         function onViewChanged() {
             if (prefs.exitGroup !== "")
                 root._followExitGroup(prefs.exitGroup);
+            root._alertStep();
         }
         // An exit chosen elsewhere (the bar's menu, a profile switch) ends
         // the group's
@@ -358,13 +359,6 @@ Item {
     // Rides on the refreshes the source already does: no timer, no process.
     // Only the favourites are kept in memory, and only until they are back.
     property var _alertState: ({})
-    Connections {
-        target: root.source
-        ignoreUnknownSignals: true
-        function onViewChanged() {
-            root._alertStep();
-        }
-    }
     Connections {
         target: prefs
         function onFavouriteAlertsChanged() {
@@ -403,7 +397,10 @@ Item {
             return "Refused: " + user + " is not a user name";
         if (user && (kind === "ssh" || kind === "sftp")) {
             const host = p.fqdn || p.ip;
-            return root.ssh(host, prefs.terminal, { "user": user, "port": prefs.linkOf(p.id).port }, kind) ? "OK" : "Refused: " + host + " is not a plain host name";
+            return root.ssh(host, prefs.terminal, {
+                "user": user,
+                "port": prefs.linkOf(p.id).port
+            }, kind) ? "OK" : "Refused: " + host + " is not a plain host name";
         }
         return root.reach(kind, p) ? "OK" : "Refused: " + (p.fqdn || p.ip) + " is not a plain host name";
     }
