@@ -81,8 +81,19 @@ Rectangle {
         height: 32
         radius: height / 2
         color: Theme.error
+        activeFocusOnTab: true
         Accessible.role: Accessible.Button
         Accessible.name: band.actionLabel
+        Keys.onPressed: event => {
+            if (event.key === Qt.Key_Return || event.key === Qt.Key_Space) {
+                band.acted();
+                event.accepted = true;
+            }
+        }
+
+        FocusRing {
+            target: parent
+        }
 
         Text {
             id: retryText

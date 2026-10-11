@@ -32,7 +32,7 @@ Rectangle {
             margins: 8
         }
         radius: Theme.cornerRadius
-        color: tap.pressed ? Qt.rgba(Theme.primary.r, Theme.primary.g, Theme.primary.b, 0.2) : zone.dragOver ? Qt.rgba(Theme.primary.r, Theme.primary.g, Theme.primary.b, 0.13) : hover.hovered ? Theme.surfaceContainerHigh : "transparent"
+        color: tap.pressed ? Theme.withAlpha(Theme.primary, 0.2) : zone.dragOver ? Theme.withAlpha(Theme.primary, 0.13) : hover.hovered ? Theme.surfaceContainerHigh : "transparent"
         border.width: 1
         border.color: Qt.rgba(Theme.outline.r, Theme.outline.g, Theme.outline.b, 0.53)
     }

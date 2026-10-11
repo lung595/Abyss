@@ -9,7 +9,7 @@ import "../../app/components"
 Item {
     id: host
     width: 600
-    height: 300
+    height: 600
 
     property var toggled: []
     property int picks: 0
@@ -26,6 +26,43 @@ Item {
             names: ["atlas", "kite"]
             chosen: []
             onToggled: name => host.toggled.push(name)
+        }
+    }
+
+    property var actions: []
+    property var jobs: {
+        const r = [];
+        for (let i = 0; i < 30; i++)
+            r.push({
+                id: i,
+                path: "/tmp/f" + i,
+                device: "atlas",
+                state: "queued",
+                progress: null,
+                at: 0
+            });
+        return r;
+    }
+
+    RevealFlickable {
+        id: flick
+        x: 0
+        y: 400
+        width: 400
+        height: 150
+        contentHeight: col.height
+        Column {
+            id: col
+            Repeater {
+                model: host.jobs
+                SendJobRow {
+                    required property var modelData
+                    width: 380
+                    job: modelData
+                    onAction: kind => host.actions.push(kind)
+                    onRevealed: item => flick.reveal(item)
+                }
+            }
         }
     }
 
@@ -62,7 +99,28 @@ Item {
             mouseClick(zone);
             verify(!zone.activeFocus, "a click does not focus the zone");
             verify(!host.ringOf(zone).visible, "no ring after a click");
-            verify(!zone.activeFocus, "a click does not focus the zone");
+        }
+        function test_return_on_a_row_button_emits_its_action() {
+            const btn = col.children[0].children.find(c => c.activeFocusOnTab);
+            btn.forceActiveFocus();
+            keyClick(Qt.Key_Return);
+            compare(host.actions[0], "cancel");
+        }
+        function test_focus_scrolls_the_row_into_view_and_back() {
+            verify(flick.contentHeight > flick.height, "list is taller than the view");
+            const last = col.children[29].children.find(c => c.activeFocusOnTab);
+            last.forceActiveFocus();
+            verify(flick.contentY > 0, "scrolled down");
+            const top = col.children[29].mapToItem(flick.contentItem, 0, 0).y;
+            verify(top >= flick.contentY && top + 56 <= flick.contentY + flick.height, "last row inside the view");
+            col.children[0].children.find(c => c.activeFocusOnTab).forceActiveFocus();
+            compare(flick.contentY, 0);
+        }
+        function test_click_on_a_chip_toggles_without_a_ring() {
+            const chip = picker.children.find(c => c.activeFocusOnTab);
+            mouseClick(chip);
+            compare(host.toggled[0], "atlas");
+            verify(!chip.activeFocus, "no focus after a click");
         }
     }
 }

@@ -21,6 +21,10 @@ Item {
     // The action button took keyboard focus: the list scrolls it into view
     signal revealed(Item item)
 
+    function act() {
+        action(actionLabel.toLowerCase());
+    }
+
     readonly property bool live: job.state === "queued" || job.state === "sending"
     readonly property string actionLabel: live ? "Cancel" : job.state === "done" ? "Dismiss" : "Retry"
     readonly property bool hasAction: !history || job.state === "failed" || job.state === "cancelled"
@@ -167,7 +171,7 @@ Item {
         width: 100
         height: 44
         radius: Theme.cornerRadius
-        color: tap.pressed ? Qt.rgba(Theme.primary.r, Theme.primary.g, Theme.primary.b, 0.2) : hover.hovered ? Theme.surfaceContainerHigh : "transparent"
+        color: tap.pressed ? Theme.withAlpha(Theme.primary, 0.2) : hover.hovered ? Theme.surfaceContainerHigh : "transparent"
         border.width: 1
         border.color: Theme.outlineStrong
         activeFocusOnTab: true
@@ -175,7 +179,7 @@ Item {
             row.revealed(row)
         Keys.onPressed: event => {
             if (event.key === Qt.Key_Return || event.key === Qt.Key_Space) {
-                row.action(row.actionLabel.toLowerCase());
+                row.act();
                 event.accepted = true;
             }
         }
@@ -201,7 +205,7 @@ Item {
         TapHandler {
             id: tap
 
-            onTapped: row.action(row.actionLabel.toLowerCase())
+            onTapped: row.act()
         }
     }
 }

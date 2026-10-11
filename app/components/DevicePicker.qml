@@ -37,7 +37,7 @@ Row {
             width: label.implicitWidth + 24
             radius: 16
 
-            color: on ? (press.pressed ? Qt.darker(Theme.primary, 1.15) : Theme.primary) : press.pressed ? Qt.rgba(Theme.primary.r, Theme.primary.g, Theme.primary.b, 0.2) : hover.hovered ? Theme.surfaceContainerHighest : Theme.surfaceContainerHigh
+            color: on ? (press.pressed ? Qt.darker(Theme.primary, 1.15) : Theme.primary) : press.pressed ? Theme.withAlpha(Theme.primary, 0.2) : hover.hovered ? Theme.surfaceContainerHighest : Theme.surfaceContainerHigh
             border.width: on ? 0 : 1
             border.color: Theme.outlineStrong
             activeFocusOnTab: true

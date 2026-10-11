@@ -350,7 +350,7 @@ Item {
     // Queue, band and history scroll together; the drop zone and the "To"
     // row stay in place. Wheel scroll; a focused row button is brought into
     // view. No animation at rest.
-    Flickable {
+    RevealFlickable {
         id: scroller
 
         anchors {
@@ -360,30 +360,7 @@ Item {
             topMargin: Theme.spacingXL
             bottom: parent.bottom
         }
-        clip: true
-        contentWidth: width
         contentHeight: list.height
-        boundsBehavior: Flickable.StopAtBounds
-        flickableDirection: Flickable.VerticalFlick
-        ScrollBar.vertical: ScrollBar {
-            policy: scroller.contentHeight > scroller.height ? ScrollBar.AlwaysOn : ScrollBar.AlwaysOff
-            contentItem: Rectangle {
-                implicitWidth: 4
-                radius: 2
-                color: Theme.outlineStrong
-            }
-        }
-
-        // Move contentY so a row that took keyboard focus is fully visible
-        function reveal(item) {
-            const top = item.mapToItem(contentItem, 0, 0).y;
-            const bottom = top + item.height;
-            if (top < contentY)
-                contentY = top;
-            else if (bottom > contentY + height)
-                contentY = Math.min(bottom - height, contentHeight - height);
-        }
-
         Column {
             id: list
 
