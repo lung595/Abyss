@@ -106,11 +106,12 @@ Rectangle {
             font.weight: Font.DemiBold
         }
 
-        // Hover and pressed read as a surface veil over the error fill
+        // Hover and pressed push the fill away from the label colour (surface), never towards it,
+        // so the label contrast only grows (it fell to 3.91:1 pressed in light with a surface veil)
         Rectangle {
             anchors.fill: parent
             radius: parent.radius
-            color: Theme.withAlpha(Theme.surface, tap.pressed ? 0.25 : retryHover.hovered ? 0.12 : 0)
+            color: Theme.withAlpha(Theme.surfaceText, tap.pressed ? 0.2 : retryHover.hovered ? 0.12 : 0)
         }
 
         HoverHandler {
