@@ -22,8 +22,10 @@ Item {
 
     signal toggled
 
-    // A hovered label may be wider than the cave: keep it above its neighbours
-    z: hovered ? 1 : 0
+    // Above the creatures and the resting group, which in a squeezed row can
+    // stand over a name and would take its click; a hovered label may also be
+    // wider than the cave, so it stays above its neighbours
+    z: hovered ? 4 : 3
     width: 0
     height: 0
 
