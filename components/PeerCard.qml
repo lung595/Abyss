@@ -152,7 +152,6 @@ Item {
         }
     }
 
-
     // One way in: a big tile, icon over its name, the protocol small below
     component ConnectTile: Rectangle {
         id: tile
@@ -656,6 +655,12 @@ Item {
                     k: "Total"
                     v: "↓ " + Mesh.fmtBytes(card.peer.rx) + " · ↑ " + Mesh.fmtBytes(card.peer.tx)
                 }
+            }
+
+            LinkVerdict {
+                scene: card.scene
+                peer: card.peer
+                ink: card.ink
             }
 
             Repeater {

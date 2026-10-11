@@ -17,6 +17,7 @@ Every refusal in Abyss says why in a short note, with a GitHub mark that opens t
 - [Find a peer](#find-a-peer)
 - [The list](#the-list)
 - [Ping](#ping)
+- [Why is it slow?](#why-is-it-slow)
 - [Connect to a peer](#connect-to-a-peer)
 - [Search and commands](#search-and-commands)
 - [Tags](#tags)
@@ -117,6 +118,10 @@ With 12 peers or more, a list icon appears in the top bar: every peer as one lin
 ## Ping
 
 A peer's card has a **Ping** button: three echoes to its address, and a toast with the average, the best and worst time and how many answered. It runs only when you ask (also `dms ipc call abyss ping <peer>`); Abyss never pings by itself. In the test lab it says what the made-up mesh claims.
+
+## Why is it slow?
+
+Below the numbers, a peer's card says in one sentence whether the link is **direct** or **relayed**, how long a round trip takes, and whether that looks healthy, a bit slow or slow. When the link goes through a relay it adds a short tip: traffic takes a detour, and a direct link needs UDP to get through on both networks. It only reads what NetBird already reports, so it costs nothing and measures nothing.
 
 ## Connect to a peer
 
