@@ -106,7 +106,20 @@ Rectangle {
             font.weight: Font.DemiBold
         }
 
+        // Hover and pressed read as a surface veil over the error fill
+        Rectangle {
+            anchors.fill: parent
+            radius: parent.radius
+            color: Theme.withAlpha(Theme.surface, tap.pressed ? 0.25 : retryHover.hovered ? 0.12 : 0)
+        }
+
+        HoverHandler {
+            id: retryHover
+        }
+
         TapHandler {
+            id: tap
+
             onTapped: band.acted()
         }
     }

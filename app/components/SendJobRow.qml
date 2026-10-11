@@ -42,7 +42,7 @@ Item {
             bottom: parent.bottom
         }
         height: 1
-        color: Qt.rgba(Theme.outline.r, Theme.outline.g, Theme.outline.b, 0.4)
+        color: Theme.withAlpha(Theme.outline, 0.4)
     }
 
     Rectangle {

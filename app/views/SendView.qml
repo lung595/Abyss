@@ -1,7 +1,6 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
-import QtQuick.Controls
 import "../components"
 import "../components/SendQueue.js" as Queue
 import "../components/SendTransfer.js" as Transfer
@@ -360,9 +359,12 @@ Item {
             topMargin: Theme.spacingXL
             bottom: parent.bottom
         }
-        contentHeight: list.height
+        // 4 px above and below so a focus ring on the first or last row is not clipped
+        contentHeight: list.height + 8
         Column {
             id: list
+
+            y: 4
 
             // Room for the scroll indicator on the right
             width: scroller.width - 12

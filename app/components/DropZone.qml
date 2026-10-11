@@ -34,7 +34,7 @@ Rectangle {
         radius: Theme.cornerRadius
         color: tap.pressed ? Theme.withAlpha(Theme.primary, 0.2) : zone.dragOver ? Theme.withAlpha(Theme.primary, 0.13) : hover.hovered ? Theme.surfaceContainerHigh : "transparent"
         border.width: 1
-        border.color: Qt.rgba(Theme.outline.r, Theme.outline.g, Theme.outline.b, 0.53)
+        border.color: Theme.withAlpha(Theme.outline, 0.53)
     }
 
     Text {
