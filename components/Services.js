@@ -26,7 +26,7 @@ const SERVICES = [
 // a peer that is up answers at once, a closed port must not hold the card.
 const PROBE_SECONDS = 1;
 
-// The most buttons a card shows
+// The most buttons a card shows: a short list stays readable on a small card
 const MAX_SHOWN = 6;
 
 // "v4", "v6" or "" for an address a probe may take. IPv4 is four numbers
@@ -36,8 +36,10 @@ const MAX_SHOWN = 6;
 function addressKind(ip) {
     const s = String(ip === undefined || ip === null ? "" : ip);
     const m = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(s);
+    // A leading zero is refused: resolvers read "010" as octal, so the probe
+    // could reach another host than the one shown
     if (m)
-        return m.slice(1).every(n => Number(n) <= 255) ? "v4" : "";
+        return m.slice(1).every(n => Number(n) <= 255 && (n === "0" || n[0] !== "0")) ? "v4" : "";
     if (!/^[0-9a-fA-F:]+$/.test(s) || s.indexOf(":") < 0 || s.indexOf(":::") >= 0)
         return "";
     const doubles = s.split("::").length - 1;
@@ -60,7 +62,7 @@ function addressKind(ip) {
 // PROBE_SECONDS and exits 0 when the port accepts. The address and the port
 // reach bash as positional parameters ("$1", "$2"), never inside the script.
 function probePlan(ip) {
-    if (!addressKind(ip))
+    if (typeof ip !== "string" || !addressKind(ip))
         return { ok: false, reason: "not a valid address", probes: [] };
     return {
         ok: true,
@@ -77,10 +79,10 @@ function probePlan(ip) {
 // An IPv6 address goes in brackets, as a URL requires; the default port of
 // the scheme is left out so the address bar reads like a person would type.
 function url(service, ip) {
-    const kind = addressKind(ip);
+    const kind = typeof ip === "string" ? addressKind(ip) : "";
     if (!kind || !service)
         return "";
-    const host = kind === "v6" ? "[" + ip + "]" : String(ip);
+    const host = kind === "v6" ? "[" + ip + "]" : ip;
     const plain = (service.scheme === "http" && service.port === 80) || (service.scheme === "https" && service.port === 443);
     return service.scheme + "://" + host + (plain ? "" : ":" + service.port) + "/";
 }

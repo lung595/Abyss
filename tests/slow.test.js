@@ -23,10 +23,10 @@ eq("throughput alone", v({ mbps: 3 }).level, "slow");
 // Relay
 const r = v({ direct: false, relayReason: "no direct route", latencyMs: 10 });
 eq("relay is never good", r.level, "fair");
-ok("relay and reason said", r.text.indexOf("relay (no direct route)") > 0);
-ok("relay without reason", v({ direct: false, latencyMs: 10 }).text.indexOf("relay.") > 0);
+ok("relay and reason said", r.text.indexOf("Relayed link (no direct route)") === 0);
+ok("relay without reason", v({ direct: false, latencyMs: 10 }).text.indexOf("Relayed link:") === 0);
 eq("relay and slow stays slow", v({ direct: false, latencyMs: 400 }).level, "slow");
-ok("direct is said", v({ direct: true, latencyMs: 10 }).text.indexOf("direct") > 0);
+ok("direct is said", v({ direct: true, latencyMs: 10 }).text.indexOf("Direct link") === 0);
 ok("reason flattened", v({ direct: false, relayReason: "a—b\nc–d" }).text.indexOf("(a-b c-d)") > 0);
 ok("reason capped", v({ direct: false, relayReason: "x".repeat(500) }).text.length < 200);
 
@@ -44,12 +44,27 @@ eq("custom throughput", v({ mbps: 80 }, { fairMbps: 100, slowMbps: 90 }).level, 
 eq("bad threshold falls back", v({ direct: true, latencyMs: 60 }, { fairLatencyMs: "x" }).level, "fair");
 
 // Sentences
-ok("slow sentence", v({ latencyMs: 300 }).text.endsWith("This is slow."));
-ok("good sentence", v({ direct: true, latencyMs: 5 }).text.endsWith("This looks healthy."));
-ok("numbers shown", v({ direct: true, latencyMs: 12.4, mbps: 94.6 }).text.indexOf("12 ms") > 0 && v({ mbps: 94.6 }).text.indexOf("95 Mbit/s") > 0);
-ok("small speed keeps a decimal", v({ mbps: 2.34 }).text.indexOf("2.3 Mbit/s") > 0);
+ok("slow sentence", v({ latencyMs: 300 }).text.endsWith("this is slow."));
+ok("good sentence", v({ direct: true, latencyMs: 5 }).text.endsWith("this looks healthy."));
+ok("numbers shown", v({ direct: true, latencyMs: 12.4, mbps: 94.6 }).text.indexOf("12 ms") > 0 && v({ mbps: 94.6 }).text.indexOf("95 Mbit/s") >= 0);
+ok("small speed keeps a decimal", v({ mbps: 2.34 }).text.indexOf("2.3 Mbit/s") >= 0);
 const all = [{}, { direct: false, relayReason: "r—s", latencyMs: 99, mbps: 4 }, { direct: true, latencyMs: 1 }, { mbps: 1 }];
 ok("no dash character in any sentence", all.every(l => !/[–—]/.test(v(l).text)));
 ok("level is always listed", all.every(l => W.LEVELS.indexOf(v(l).level) >= 0));
 
 done("slow");
+
+// Null and non-boolean fields are "not known" like missing ones
+eq("null direct, nothing else", v({ direct: null }).level, "unknown");
+eq("null direct and latency", v({ direct: null, latencyMs: null }).level, "unknown");
+eq("string direct is not known", v({ direct: "false" }).level, "unknown");
+eq("string direct does not mean relayed", v({ direct: "false", latencyMs: 5 }).level, "good");
+
+// Exactly one sentence in every verdict, even with a dotted relay reason
+const sentences = t => t.split(/[.!?]+/).filter(x => x.trim()).length;
+const many = [{}, { direct: false, relayReason: "a. b! c?", latencyMs: 99, mbps: 4 }, { direct: true, latencyMs: 1 }, { mbps: 1 }, { direct: null }];
+ok("one sentence each", many.every(l => sentences(v(l).text) === 1 && /[.]$/.test(v(l).text)));
+
+// Inverted threshold pairs fall back to the defaults, keeping the fair level
+eq("inverted latency pair", v({ direct: true, latencyMs: 100 }, { fairLatencyMs: 200, slowLatencyMs: 50 }).level, "fair");
+eq("inverted speed pair", v({ direct: true, mbps: 30 }, { fairMbps: 5, slowMbps: 20 }).level, "fair");

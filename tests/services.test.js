@@ -17,7 +17,7 @@ eq("ports are unique", new Set(S.SERVICES.map(s => s.port)).size, 9);
 for (const good of ["100.64.0.7", "0.0.0.0", "255.255.255.255", "fd7a:115c:a1e0::1", "::1", "2001:db8:0:0:0:0:0:1", "fe80::"])
     ok("accepted: " + good, S.addressKind(good) !== "");
 eq("kinds", [S.addressKind("10.0.0.1"), S.addressKind("::1")], ["v4", "v6"]);
-for (const bad of ["", "256.1.1.1", "1.2.3", "1.2.3.4.5", "-1.2.3.4", "-oX", "host.example", "a b", "1.2.3.4;id", "$(id)", ":::", "1::2::3", "12345::1", "1:2:3:4:5:6:7", "1:2:3:4:5:6:7:8:9", ":1:2:3:4:5:6:7", "1:2:3:4:5:6:7:", "fe80::g", "1.2.3.4/24", null, undefined, 5])
+for (const bad of ["", "256.1.1.1", "1.2.3", "1.2.3.4.5", "-1.2.3.4", "-oX", "host.example", "a b", "1.2.3.4;id", "$(id)", ":::", "1::2::3", "12345::1", "1:2:3:4:5:6:7", "1:2:3:4:5:6:7:8:9", ":1:2:3:4:5:6:7", "1:2:3:4:5:6:7:", "fe80::g", "1.2.3.4/24", "010.008.1.1", "1.02.3.4", "01.2.3.4", null, undefined, 5])
     eq("refused: " + JSON.stringify(bad), S.addressKind(bad), "");
 
 // The plan
@@ -27,7 +27,7 @@ const j = p.probes.find(x => x.id === "jellyfin");
 eq("argument list", j.argv, ["timeout", "1", "bash", "-c", ': < "/dev/tcp/$1/$2"', "abyss-probe", "100.64.0.7", "8096"]);
 ok("data never inside the script", p.probes.every(x => x.argv[4].indexOf("100.64") < 0 && x.argv.every(a => typeof a === "string")));
 eq("v6 plan", S.probePlan("fd7a::1").probes[0].argv[6], "fd7a::1");
-for (const bad of ["", "x; id", "-oProxyCommand=x", null]) {
+for (const bad of ["", "x; id", "-oProxyCommand=x", null, ["10.0.0.1"]]) {
     const q = S.probePlan(bad);
     eq("invalid plan: " + JSON.stringify(bad), [q.ok, q.probes.length], [false, 0]);
     ok("reason given", q.reason.length > 0);
