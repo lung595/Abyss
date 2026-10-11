@@ -391,6 +391,16 @@ const LAB = [1, 2, 12, 60, 120].flatMap(n => [3, 5, 10].map(max => ["lab:" + n, 
         ok(w + "x" + h + " " + n + " caves: the last cave stays on the floor", L.caveX(fr, n - 1) <= w - 60);
         ok(w + "x" + h + " " + n + " caves: names never shrink below readable", L.caveRow(fr).nameW >= 48);
     }));
+    // Creatures keep clear of the names too, squeezed arrangement included
+    [[580, 480], [780, 620]].forEach(([w, h]) => [4, 8, 15].forEach(n => {
+        const crowd = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"].map((id, i) => p(id, [4, 12, 40, 70, 150][i % 5]));
+        const lay2 = L.layout(crowd, w, h, 60, { "caves": n });
+        const fy = lay2.frame.floorY, bx = [...Array(n).keys()].map(c => ({ "x": L.caveX(lay2.frame, c), "lift": L.caveLift(lay2.frame, c), "half": L.caveRow(lay2.frame).tiers > 1 ? L.caveRow(lay2.frame).nameW / 2 : 50 }));
+        ok(w + "x" + h + " " + n + " caves: no creature over a name", Object.keys(lay2.peers).filter(id => !lay2.peers[id].floor).every(id => bx.every(c => {
+            const q = lay2.peers[id];
+            return Math.abs(q.x - c.x) >= c.half + 50 || q.y + 66 <= fy - 88 - c.lift || q.y - 30 >= fy - 52;
+        })));
+    }));
     const roomy = L.frame(646, 420, 60, { "caves": 3 });
     ok("a roomy row is untouched", L.caveRow(roomy).tiers === 1 && L.caveLift(roomy, 2) === 0 && Math.abs(L.caveX(roomy, 1) - L.caveX(roomy, 0) - 646 * 0.16) < 1e-9);
     eq("a short name stays whole", L.caveName("lab", 60), "lab");

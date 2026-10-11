@@ -5,7 +5,6 @@ No promises, no dates. Everything here was asked for and is not in a release yet
 ## Next
 
 - Measured CPU cost while a view is open, from a repeatable bench (the shell is too busy on a desktop in use for honest numbers).
-- In a small deep with many caves, when the roomy arrangement does not fit, the squeezed one does not keep clear of the caves' names yet.
 
 ## Later
 

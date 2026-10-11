@@ -121,7 +121,7 @@ const BODY_UP = 30, LABEL_DOWN = 66, CAVE_LABEL = [88, 52], CAVE_W = 100;
 function _clash(a, b, strict) {
     if (a.cave || b.cave) {
         const c = a.cave ? a : b, q = a.cave ? b : a;
-        return Math.abs(q.x - c.x) < CAVE_W && q.y + LABEL_DOWN > c.floorY - CAVE_LABEL[0] && q.y - BODY_UP < c.floorY - CAVE_LABEL[1];
+        return Math.abs(q.x - c.x) < (c.half || CAVE_W / 2) + CAVE_W / 2 && q.y + LABEL_DOWN > c.floorY - CAVE_LABEL[0] - (c.lift || 0) && q.y - BODY_UP < c.floorY - CAVE_LABEL[1];
     }
     if (Math.abs(a.x - b.x) < BOX_W && Math.abs(a.y - b.y) < BOX_H)
         return true;
@@ -143,9 +143,7 @@ function spread(f, rings, strict, prev) {
     const n = order.length, S = spreadSpan(n);
     const ideal = _keepOrder(order.map(o => o.p.id), fanAngles(n, n > 1 ? S / (n - 1) : 0), prev);
     // The caves' labels are in the way too (never a tentacle clash: no ring)
-    const caves = [];
-    for (let c = 0; c < f.caves; c++)
-        caves.push({ "x": caveX(f, c), "floorY": f.floorY, "cave": true, "ring": -1, "deg": 999 });
+    const caves = _caveBoxes(f);
     const placed = caves.slice();
     for (let i = 0; i < n; i++) {
         const k = order[i].k, rho = f.fan.rings[k];
@@ -176,6 +174,14 @@ function _keepOrder(ids, angles, prev) {
     return out;
 }
 
+// The caves' name boxes as _clash sees them (a squeezed row lifts some names)
+function _caveBoxes(f) {
+    const row = caveRow(f), boxes = [];
+    for (let c = 0; c < f.caves; c++)
+        boxes.push({ "x": caveX(f, c), "floorY": f.floorY, "cave": true, "ring": -1, "deg": 999, "lift": caveLift(f, c), "half": row.tiers > 1 ? row.nameW / 2 : CAVE_W / 2 });
+    return boxes;
+}
+
 // The crowded arrangement: each ring filled from the middle at a label's
 // width apart; nothing overlaps, but things may hang one below the other
 function pack(f, rings, prev) {
@@ -184,6 +190,11 @@ function pack(f, rings, prev) {
         const angles = _keepOrder(ps.map(p => p.id), fanAngles(ps.length, ringStep(f, k)), prev);
         ps.forEach((p, i) => items.push(Object.assign({ "id": p.id, "deg": angles[i], "rho": f.fan.rings[k], "ring": k }, fanPoint(f, angles[i], f.fan.rings[k]))));
     });
+    // A creature that hangs over a cave's name is lifted clear of it
+    const caves = _caveBoxes(f);
+    items.forEach(it => caves.filter(c => _clash(it, c, false)).forEach(c => {
+        it.y = Math.min(it.y, c.floorY - CAVE_LABEL[0] - c.lift - LABEL_DOWN);
+    }));
     return items;
 }
 
