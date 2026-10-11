@@ -63,6 +63,11 @@ eq("favourite flag must be exactly true", A.step({}, snap(0, { "id": "a", "favou
 eq("time going backwards never gives a negative duration", run([snap(100 * S, peer("a", false)), snap(131 * S, peer("a", false)), snap(50 * S, peer("a", true))]).all[2][0].duration, 0);
 eq("the input state is not changed", (() => { const s = { "a": { "since": 0, "notified": false } }; A.step(s, snap(40 * S, peer("a", false))); return s; })(), { "a": { "since": 0, "notified": false } });
 
+// Ids come from outside
+eq("prototype names are ordinary ids", ["toString", "constructor", "valueOf", "__proto__"].map(id => run([snap(0, peer(id, false)), snap(31 * S, peer(id, false))]).all[1].map(e => e.kind)), Array(4).fill(["down"]));
+eq("an unknown link state keeps a told outage", run([snap(0, peer("a", false)), snap(31 * S, peer("a", false)), snap(40 * S, { "id": "a", "favourite": true }), snap(50 * S, peer("a", false))]).all.map(e => e.length), [0, 1, 0, 0]);
+eq("an unknown link state does not hide the return", run([snap(0, peer("a", false)), snap(31 * S, peer("a", false)), snap(40 * S, { "id": "a", "favourite": true }), snap(50 * S, peer("a", true))]).all[3].map(e => e.kind), ["back"]);
+
 // Duration formatting
 eq("seconds", [A.formatDuration(0), A.formatDuration(999), A.formatDuration(45 * S), A.formatDuration(59999)], ["0 s", "0 s", "45 s", "59 s"]);
 eq("minutes", [A.formatDuration(60 * S), A.formatDuration(179 * S), A.formatDuration(59 * 60 * S)], ["1 min", "2 min", "59 min"]);
@@ -75,6 +80,7 @@ eq("down sentence", A.message({ "kind": "down" }, "Harbor"), "Harbor is offline.
 eq("back sentence", A.message({ "kind": "back", "duration": 125 * S }, "Harbor"), "Harbor is back after 2 min.");
 eq("no name", A.message({ "kind": "down" }, ""), "A favourite is offline.");
 eq("no event, unknown kind", [A.message(null, "x"), A.message({ "kind": "?" }, "x")], ["", ""]);
+eq("dashes in a name are replaced", A.message({ "kind": "down" }, "Kate — laptop – 2"), "Kate - laptop - 2 is offline.");
 ok("no dash in a sentence", !/[–—]/.test(A.message({ "kind": "back", "duration": 1 }, "x") + A.message({ "kind": "down" })));
 
 done("alerts");

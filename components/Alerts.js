@@ -28,15 +28,23 @@ function step(state, snapshot, opts) {
     const snap = snapshot || {};
     const now = Number(snap.now);
     const prev = state || {};
-    const next = {}, events = [];
+    // No prototype: ids come from outside, so "toString" or "__proto__" must be plain keys
+    const next = Object.create(null), events = [];
     if (!isFinite(now) || !Array.isArray(snap.peers))
         // No usable information (failed refresh): change nothing, say nothing
         return { "state": prev, "events": events };
     snap.peers.forEach(p => {
-        if (!p || typeof p.id !== "string" || p.id === "" || p.favourite !== true || typeof p.connected !== "boolean")
-            // Not a favourite (any more) or unknown link state: no tracking, no event
+        if (!p || typeof p.id !== "string" || p.id === "" || p.favourite !== true)
+            // Not a favourite (any more): no tracking, no event
             return;
-        const old = prev[p.id];
+        const old = Object.prototype.hasOwnProperty.call(prev, p.id) ? prev[p.id] : undefined;
+        if (typeof p.connected !== "boolean") {
+            // Unknown link state: keep what we knew, so a glitch neither
+            // restarts the outage clock nor hides a "back"
+            if (old)
+                next[p.id] = old;
+            return;
+        }
         if (p.connected) {
             if (old && old.notified)
                 events.push({ "kind": "back", "id": p.id, "since": old.since, "duration": Math.max(0, now - old.since) });
@@ -79,7 +87,8 @@ function formatDuration(ms) {
 // The notification sentence for an event; name is the device's name, kept
 // out of every log by the caller
 function message(event, name) {
-    const who = String(name === undefined || name === null || name === "" ? "A favourite" : name);
+    // Device names come from outside: a dash in one must not reach the sentence
+    const who = String(name === undefined || name === null || name === "" ? "A favourite" : name).replace(/[–—]/g, "-");
     if (!event)
         return "";
     if (event.kind === "down")

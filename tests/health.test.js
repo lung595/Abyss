@@ -4,7 +4,7 @@ const { load, eq, ok, done } = imports.load;
 const H = load("components/Health.js");
 
 const link = (latencyMs, connected = true) => ({ connected, latencyMs });
-const st = input => H.evaluate(input).state;
+const st = (input, opts) => H.evaluate(input, opts).state;
 
 // Nothing wrong, and nothing known
 eq("healthy mesh", st({ "relays": { "up": 2, "total": 2 }, "peers": [link(20)], "exit": { "active": true, "up": true } }), "ok");
@@ -34,7 +34,9 @@ eq("warn reason", H.evaluate({ "peers": [link(200)] }).reason, "A device answers
 eq("offline devices are ignored", st({ "peers": [link(9000, false)] }), "ok");
 eq("unknown latency is ignored", st({ "peers": [{ "connected": true }, { "connected": true, "latencyMs": null }, { "connected": true, "latencyMs": NaN }, { "connected": true, "latencyMs": "900" }, null] }), "ok");
 eq("custom thresholds", [H.evaluate({ "peers": [link(60)] }, { "warnMs": 50, "badMs": 100 }).state, H.evaluate({ "peers": [link(100)] }, { "warnMs": 50, "badMs": 100 }).state], ["warn", "bad"]);
-eq("bad thresholds fall back", st({ "peers": [link(150)] }, { "warnMs": "x" }) , "warn");
+const slow = { "peers": [link(150)] };
+eq("bad thresholds fall back", [{ "warnMs": "x" }, { "warnMs": 0 }, { "warnMs": -5 }, { "warnMs": null }, { "badMs": "x" }, { "badMs": 0 }, { "badMs": -1 }, { "badMs": null }].map(o => st(slow, o)), Array(8).fill("warn"));
+eq("inverted thresholds fall back to the defaults", [st({ "peers": [link(120)] }, { "warnMs": 200, "badMs": 100 }), st(slow, { "warnMs": 200, "badMs": 100 })], ["ok", "warn"]);
 
 // The worst wins, and its reason
 eq("bad beats warn", H.evaluate({ "relays": { "up": 1, "total": 2 }, "exit": { "active": true, "up": false } }).reason, "The Internet exit is down.");

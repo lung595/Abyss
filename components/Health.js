@@ -16,12 +16,17 @@ const _RANK = { "ok": 0, "warn": 1, "bad": 2 };
 //   peers: [{ connected, latencyMs }]
 //   exit: { active, up }             Internet exit chosen / carrying traffic
 // }
-// opts: { warnMs, badMs } to override the latency thresholds.
+// opts: { warnMs, badMs } to override the latency thresholds; unusable
+// values, or a warn threshold above the bad one, fall back to the defaults.
 // Returns { state, reason }; the worst state wins and its reason is the
 // one given. On a tie the order is relay, Internet exit, latency.
 function evaluate(input, opts) {
     const i = input || {}, o = opts || {};
-    const warnMs = _num(o.warnMs, LATENCY_WARN_MS), badMs = _num(o.badMs, LATENCY_BAD_MS);
+    let warnMs = _num(o.warnMs, LATENCY_WARN_MS), badMs = _num(o.badMs, LATENCY_BAD_MS);
+    if (warnMs > badMs) {
+        warnMs = LATENCY_WARN_MS;
+        badMs = LATENCY_BAD_MS;
+    }
     const found = [_relay(i.relays), _exit(i.exit), _latency(i.peers, warnMs, badMs)];
     let best = { "state": "ok", "reason": "Everything is connected." };
     found.forEach(f => {
