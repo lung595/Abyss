@@ -29,8 +29,8 @@ Window {
 
     // What each proposal asks the engineer to build
     readonly property var specs: ({
-            "a": { "turns": 3, "span": 0.3, "tilt": 0.42, "amp": 0.55, "decay": 7, "freq": 13, "k": 90, "zeta": 0.4, "curl": 0 },
-            "b": { "turns": 2, "span": 0.62, "tilt": 0.3, "amp": 0.4, "decay": 5, "freq": 9, "k": 60, "zeta": 0.35, "curl": 1 }
+            "a": { "turns": 3, "span": 0.44, "tilt": 0.42, "amp": 0.55, "decay": 7, "freq": 13, "k": 90, "zeta": 0.4, "curl": 0 },
+            "b": { "turns": 2.25, "span": 0.62, "tilt": 0.3, "amp": 0.4, "decay": 5, "freq": 9, "k": 60, "zeta": 0.35, "curl": 1 }
         })
     readonly property var cells: [
         { "kind": "vps", "name": "harbor-vps", "x": 120 },
@@ -132,24 +132,27 @@ Window {
                 "z": z
             });
         }
-        // B ends on a small curl resting on the flank, in front
+        // B ends a quarter turn later, in front and at mid height, on a
+        // small curl that rolls back over the flank: it never leaves the body
         if (sp.curl && pts.length > 4 && reach >= 1) {
-            const e = pts[pts.length - 1], g = 7 * slack;
+            const e = pts[pts.length - 1], g = 5.5 * slack;
             for (let j = 1; j <= 14; j++) {
-                const a = -Math.PI / 2 + j / 14 * Math.PI * 1.6, rr = g * (1 - j / 20);
-                pts.push({ "x": e.x - side * rr * Math.cos(a), "y": e.y + g + rr * Math.sin(a), "z": 1 });
+                const a = j / 14 * Math.PI * 1.5, rr = g * (1 - j / 22);
+                pts.push({ "x": e.x + side * (g - rr * Math.cos(a)), "y": e.y + rr * Math.sin(a), "z": 1 });
             }
         }
         return pts;
     }
 
-    // The free ribbon from the bell to where it meets the body: it hangs,
-    // and its belly trails behind when the device moves
+    // The free ribbon from the bell to where it meets the body: it drops
+    // from the bell, then sweeps in over the back (an S, never a straight
+    // line), and its belly trails behind when the device moves
     function freeRibbon(from, to, lag) {
-        const cx = (from[0] + to[0]) / 2 + lag[0] * 0.6 - 30, cyy = (from[1] + to[1]) / 2 + 26 + lag[1] * 0.6, pts = [];
-        for (let i = 0; i <= 20; i++) {
-            const u = i / 20, v = 1 - u;
-            pts.push([v * v * from[0] + 2 * v * u * cx + u * u * to[0], v * v * from[1] + 2 * v * u * cyy + u * u * to[1]]);
+        const a = [from[0] - 30, from[1] + 58], pts = [];
+        const b = [to[0] + 44 + lag[0] * 0.8, to[1] - 6 + lag[1] * 0.8];
+        for (let i = 0; i <= 24; i++) {
+            const u = i / 24, v = 1 - u, k = [v * v * v, 3 * v * v * u, 3 * v * u * u, u * u * u];
+            pts.push([0, 1].map(j => k[0] * from[j] + k[1] * a[j] + k[2] * b[j] + k[3] * to[j]));
         }
         return pts;
     }

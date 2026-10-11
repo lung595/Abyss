@@ -29,3 +29,15 @@ done
 for variant in a b; do
     shot "$variant" dark still "$out/$variant-reduce-motion.png"
 done
+# The board is one self-contained page: embed the fresh renders into it
+python3 - "$out" <<'PY'
+import base64, pathlib, re, sys
+out = pathlib.Path(sys.argv[1])
+page = out / "index.html"
+def embed(m):
+    f = out / m.group(1)
+    kind = "gif" if f.suffix == ".gif" else "png"
+    return 'data-file="%s" alt="%s" src="data:image/%s;base64,%s"' % (
+        m.group(1), m.group(2), kind, base64.b64encode(f.read_bytes()).decode())
+page.write_text(re.sub(r'data-file="([^"]+)" alt="([^"]*)" src="[^"]*"', embed, page.read_text()))
+PY
