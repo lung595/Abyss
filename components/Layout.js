@@ -194,7 +194,16 @@ function pack(f, rings, prev) {
     const caves = _caveBoxes(f);
     items.forEach(it => caves.filter(c => _clash(it, c, false)).forEach(c => {
         it.y = Math.min(it.y, c.floorY - CAVE_LABEL[0] - c.lift - LABEL_DOWN);
+        it.lifted = true;
     }));
+    // A lifted creature may land on another one: it rises further, a body
+    // height at a time, until it is clear (never above the surface)
+    items.filter(it => it.lifted).forEach(it => {
+        const hits = () => items.some(o => o !== it && Math.abs(o.x - it.x) < BOX_W / 2 && Math.abs(o.y - it.y) < BODY_UP);
+        while (hits() && it.y - 2 * BODY_UP >= f.surfaceY)
+            it.y -= BODY_UP;
+        delete it.lifted;
+    });
     return items;
 }
 
@@ -338,21 +347,32 @@ const CAVE_TOP = 96;
 // Roomy: caves 16 % of the deep apart. When that overruns the floor the row
 // squeezes: caves close up and their names stagger over up to CAVE_TIERS
 // heights, so a name may be up to tiers x step wide without touching the
-// next name on its own height. A name is at most CAVE_NAME_W wide, and never
-// narrower than CAVE_NAME_MIN (below that the row is simply overfull).
+// next name on its own height. A roomy row gives a name the whole step; a
+// squeezed one aims at CAVE_NAME_W and never goes below CAVE_NAME_MIN (below
+// that the row is simply overfull).
 const CAVE_TIERS = 3, CAVE_TIER_LIFT = 24, CAVE_NAME_W = 96, CAVE_NAME_MIN = 48, CAVE_NAME_GAP = 6;
+// A cave's click area is a strip of its rock, at most this wide each side
+const CAVE_ROCK_HALF = 52;
+// The edge room also keeps the first and last names (at most 2 x (edge - 6) wide) inside the deep
 const CAVE_EDGE = 64, CAVE_CHAR_W = 7, CAVE_CHIP_PAD = 16;
 
 // { step, tiers, nameW } for the row of frame.caves caves
 function caveRow(frame) {
     const n = frame.caves, usable = frame.w - 2 * frame.insetFloor;
-    const natural = Math.max(96, usable * 0.16);
+    const natural = Math.max(96, usable * 0.16), edgeRoom = 2 * (frame.insetFloor + CAVE_EDGE - 6);
     const fit = n > 1 ? (usable - 2 * CAVE_EDGE) / (n - 1) : natural;
     if (n < 2 || fit >= natural)
-        return { "step": natural, "tiers": 1, "nameW": CAVE_NAME_W };
+        return { "step": natural, "tiers": 1, "nameW": Math.min(natural - CAVE_NAME_GAP, edgeRoom) };
     const step = Math.max(fit, 1);
     const tiers = Math.min(CAVE_TIERS, Math.ceil((CAVE_NAME_W + CAVE_NAME_GAP) / step));
-    return { "step": step, "tiers": tiers, "nameW": Math.max(CAVE_NAME_MIN, Math.min(CAVE_NAME_W, tiers * step - CAVE_NAME_GAP)) };
+    return { "step": step, "tiers": tiers, "nameW": Math.max(CAVE_NAME_MIN, Math.min(tiers * step - CAVE_NAME_GAP, edgeRoom)) };
+}
+
+// Half width of cave i's rock click strip: strips of neighbours never meet,
+// and a name is hit through its own box (Cave.qml), not through a column
+// that would run over the names standing on the other heights
+function caveRockHalf(frame) {
+    return Math.min(CAVE_ROCK_HALF, caveRow(frame).step / 2);
 }
 
 function caveX(frame, i) {
