@@ -4,6 +4,7 @@ All notable changes to Abyss are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow [Semantic Versioning](https://semver.org/).
 
 ## Unreleased
+- App install: `AppInstaller.qml` runs `install-app.sh` (and `--uninstall`) as an argument list after a Quickshell check; failure reason shortened for display (NAK-292).
 
 ### Fixed
 

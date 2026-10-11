@@ -82,3 +82,15 @@ function quickshellHelp(osReleaseText) {
     }
     return { family: "unknown", name: "", command: null };
 }
+
+// One sentence for the failure band, from what install-app.sh printed on
+// stderr: its last line, with the home folder shortened to "~" and capped.
+function failureReason(stderr, home) {
+    const lines = String(stderr ?? "").split("\n").map(l => l.trim()).filter(Boolean);
+    if (!lines.length)
+        return "The installer stopped.";
+    let line = lines[lines.length - 1];
+    if (home && home.length > 1)
+        line = line.split(home.replace(/\/+$/, "")).join("~");
+    return line.length > 120 ? line.slice(0, 119) + "…" : line;
+}

@@ -29,4 +29,7 @@ eq("Debian has no package line", A.quickshellHelp(os("debian")).command, null);
 eq("Nobara via ID_LIKE", A.quickshellHelp(os("nobara", "rhel centos fedora")).family, "fedora");
 eq("unknown", A.quickshellHelp(os("plan9")).family, "unknown");
 eq("empty file", A.quickshellHelp("").family, "unknown");
+eq("failure reason: last line, home shortened", A.failureReason("x\n/h/u/.local/bin/abyss already exists\n", "/h/u"), "~/.local/bin/abyss already exists");
+eq("failure reason: silent installer", A.failureReason("", "/h/u"), "The installer stopped.");
+eq("failure reason: capped", A.failureReason("a".repeat(300), ""). length, 120);
 done();
