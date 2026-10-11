@@ -11,7 +11,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 - Send view: a done row waiting for *Dismiss* no longer counts as a live job, so the same file can be sent again and done rows never fill the cap; the scp label is shown in full; the history ages refresh without a timer; the Send bench scene takes its mode from `BENCH_MODE` instead of a tracked state file.
 - Send view (review of NAK-325): transfers survive every progress line (stable process delegates, rsync launched once per job), closing the window during a transfer asks once to finish or cancel (cancel stops every job and probe), `abyss send <device> [files]` hands its files to the view (capped), a file dropped on a device chip goes to that device only, rsync is probed once per device, the view ignores meter lines while hidden, and the window keeps the Send view alive after the first visit. `app/components/CliRunner.qml` is a symlink to the shared one. More QML cases: Ctrl+V of a folder, `wl-paste` missing, Ctrl+V inside a text field, drop on a device.
-- Send view (design QA): queue, band and history scroll together under the drop zone and the To row (wheel and keys, thin indicator); chips, row buttons and the drop zone show a 2 px keyboard focus ring, hover and pressed fills, and act on Return or Space.
+- Send view (design QA): queue, band and history scroll together under the drop zone and the To row (wheel, thin indicator); chips, row buttons and the drop zone show a 2 px keyboard focus ring, hover and pressed fills, and act on Return or Space.
 
 ### Added
 

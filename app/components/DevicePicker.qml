@@ -36,8 +36,6 @@ Row {
             height: 32
             width: label.implicitWidth + 24
             radius: 16
-            // Set by the Tab key only, so a click never draws the ring
-            property bool focusByKey: false
 
             color: on ? (press.pressed ? Qt.darker(Theme.primary, 1.15) : Theme.primary) : press.pressed ? Qt.rgba(Theme.primary.r, Theme.primary.g, Theme.primary.b, 0.2) : hover.hovered ? Theme.surfaceContainerHighest : Theme.surfaceContainerHigh
             border.width: on ? 0 : 1
@@ -46,10 +44,7 @@ Row {
             Accessible.role: Accessible.CheckBox
             Accessible.name: modelData
             Accessible.checked: on
-            onActiveFocusChanged: if (!activeFocus)
-                focusByKey = false
             Keys.onPressed: event => {
-                focusByKey = true;
                 if (event.key === Qt.Key_Return || event.key === Qt.Key_Space) {
                     picker.toggled(chip.modelData);
                     event.accepted = true;

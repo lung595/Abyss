@@ -348,7 +348,8 @@ Item {
     }
 
     // Queue, band and history scroll together; the drop zone and the "To"
-    // row stay in place. Wheel and keys, no animation at rest.
+    // row stay in place. Wheel scroll; a focused row button is brought into
+    // view. No animation at rest.
     Flickable {
         id: scroller
 
@@ -373,6 +374,16 @@ Item {
             }
         }
 
+        // Move contentY so a row that took keyboard focus is fully visible
+        function reveal(item) {
+            const top = item.mapToItem(contentItem, 0, 0).y;
+            const bottom = top + item.height;
+            if (top < contentY)
+                contentY = top;
+            else if (bottom > contentY + height)
+                contentY = Math.min(bottom - height, contentHeight - height);
+        }
+
         Column {
             id: list
 
@@ -391,6 +402,7 @@ Item {
                     job: view.rowJob(liveRow.model)
                     rate: view.rates[liveRow.model.jid] ?? ""
                     animate: view.shown
+                    onRevealed: item => scroller.reveal(item)
                     onAction: kind => view.act(job, kind)
                 }
             }
@@ -432,6 +444,7 @@ Item {
                     width: list.width
                     history: true
                     now: view.clock
+                    onRevealed: item => scroller.reveal(item)
                     job: view.rowJob(pastRow.model)
                     onAction: kind => view.act(job, kind)
                 }

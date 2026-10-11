@@ -18,6 +18,8 @@ Item {
     property bool animate: false
 
     signal action(string kind)
+    // The action button took keyboard focus: the list scrolls it into view
+    signal revealed(Item item)
 
     readonly property bool live: job.state === "queued" || job.state === "sending"
     readonly property string actionLabel: live ? "Cancel" : job.state === "done" ? "Dismiss" : "Retry"
@@ -169,12 +171,9 @@ Item {
         border.width: 1
         border.color: Theme.outlineStrong
         activeFocusOnTab: true
-        // Set by the key handler only, so a click never draws the ring
-        property bool focusByKey: false
-        onActiveFocusChanged: if (!activeFocus)
-            focusByKey = false
+        onActiveFocusChanged: if (activeFocus)
+            row.revealed(row)
         Keys.onPressed: event => {
-            focusByKey = true;
             if (event.key === Qt.Key_Return || event.key === Qt.Key_Space) {
                 row.action(row.actionLabel.toLowerCase());
                 event.accepted = true;

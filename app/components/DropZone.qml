@@ -15,14 +15,9 @@ Rectangle {
     border.width: 1
     border.color: Theme.primary
     activeFocusOnTab: true
-    // Set by the key handler only, so a click never draws the ring
-    property bool focusByKey: false
     // Scenes can show the drag-over look without a real drag
     property bool dragOver: drop.containsDrag
-    onActiveFocusChanged: if (!activeFocus)
-        focusByKey = false
     Keys.onPressed: event => {
-        focusByKey = true;
         if (event.key === Qt.Key_Return || event.key === Qt.Key_Space) {
             zone.pickRequested();
             event.accepted = true;
