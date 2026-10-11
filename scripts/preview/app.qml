@@ -94,10 +94,45 @@ Window {
             }, 5);
     }
 
+    // First descendant that satisfies `test` (the scene reaches into the view
+    // to put a control in a state a still image cannot get by input)
+    function find(item, test) {
+        if (test(item))
+            return item;
+        for (let i = 0; i < item.children.length; i++) {
+            const hit = root.find(item.children[i], test);
+            if (hit)
+                return hit;
+        }
+        return null;
+    }
+
+    function pose() {
+        if (root.scene === "send-drag") {
+            const z = root.find(frame.sendView, it => it.dragOver !== undefined);
+            if (z)
+                z.dragOver = true;
+        }
+        if (root.scene === "send-focus") {
+            // The second tab stop: the first chip (the zone is the first)
+            const stops = [];
+            root.find(frame.sendView, it => {
+                if (it.activeFocusOnTab === true)
+                    stops.push(it);
+                return false;
+            });
+            if (stops.length > 1)
+                stops[1].forceActiveFocus(Qt.TabFocusReason);
+        }
+    }
+
     Timer {
         interval: 200
         running: root.scene.startsWith("send-")
-        onTriggered: root.fillSend()
+        onTriggered: {
+            root.fillSend();
+            root.pose();
+        }
     }
 
     Timer {

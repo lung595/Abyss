@@ -331,6 +331,8 @@ Item {
             left: parent.left
             right: parent.right
             top: parent.top
+            // Spec: the zone starts 8 px lower than the title row ends
+            topMargin: Theme.spacingS
         }
         onDropped: urls => view.addItems(urls)
         onPickRequested: view.pick()
@@ -339,7 +341,7 @@ Item {
     DevicePicker {
         id: to
 
-        y: zone.height + Theme.spacingXL
+        y: zone.y + zone.height + Theme.spacingXL
         names: view.names
         chosen: view.chosen
         onToggled: name => view.toggle(name)

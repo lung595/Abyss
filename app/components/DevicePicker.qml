@@ -73,6 +73,8 @@ Row {
             TapHandler {
                 id: press
 
+                // 44 px target around the 32 px chip, drawn size unchanged
+                margin: 6
                 onTapped: picker.toggled(chip.modelData)
             }
 

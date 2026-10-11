@@ -17,6 +17,10 @@ Item {
     // Drives the indeterminate segment; the view stops it with the window
     property bool animate: false
 
+    // Spec sizes that Theme has no step for (it offers 11 and 13)
+    readonly property int metaSize: 12
+    readonly property int buttonSize: 14
+
     signal action(string kind)
     // The action button took keyboard focus: the list scrolls it into view
     signal revealed(Item item)
@@ -72,7 +76,7 @@ Item {
         text: "→ " + Transfer.middle(row.job.device, 10, 0) + (row.history ? " · " + row.age : "")
         color: Theme.onSurfaceVariant
         font.family: Theme.monoFontFamily
-        font.pixelSize: 12
+        font.pixelSize: row.metaSize
     }
 
     Rectangle {
@@ -151,9 +155,9 @@ Item {
 
     Text {
         visible: row.pct
-        x: pctText.x + pctText.width + 16
+        x: pctText.x + pctText.width + 30
         y: 16
-        width: 186
+        width: 172
         text: row.job.state === "done" ? "done" : row.rate
         color: Theme.onSurfaceVariant
         font.family: Theme.monoFontFamily
@@ -198,7 +202,7 @@ Item {
             anchors.centerIn: parent
             text: row.actionLabel
             color: Theme.primary
-            font.pixelSize: 14
+            font.pixelSize: row.buttonSize
             font.weight: Font.DemiBold
         }
 
