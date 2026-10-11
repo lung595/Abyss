@@ -446,10 +446,95 @@ PluginSettings {
                     width: parent.width
                     spacing: Theme.spacingL
 
+                    Effect {
+                        id: favouriteAlerts
+                        settingKey: "favouriteAlerts"
+                        label: "Favourite alerts"
+                        description: "Tells you when a favourite stays offline, and when it is back, with how long it was gone"
+                        defaultValue: false
+                        impact: "low"
+                        cost: "Reads the status Abyss already refreshes. No timer of its own"
+                    }
+                    SettingChoiceRow {
+                        id: alertDelay
+                        settingKey: "favouriteAlertDelay"
+                        label: "Wait before alerting"
+                        description: "A favourite must stay offline this long. Shorter drops stay silent"
+                        options: [
+                            {
+                                "label": "10 s",
+                                "value": "10"
+                            },
+                            {
+                                "label": "30 s",
+                                "value": "30"
+                            },
+                            {
+                                "label": "1 min",
+                                "value": "60"
+                            },
+                            {
+                                "label": "5 min",
+                                "value": "300"
+                            }
+                        ]
+                        defaultValue: "30"
+                        // Nothing to choose while the alerts are off
+                        enabled: favouriteAlerts.value
+                        opacity: enabled ? 1 : 0.5
+                    }
+                    // Three sample drops against the chosen wait: lit when it would alert
+                    Row {
+                        spacing: Theme.spacingS
+                        Repeater {
+                            model: [
+                                {
+                                    "s": 20,
+                                    "label": "20 s",
+                                    "w": 16
+                                },
+                                {
+                                    "s": 45,
+                                    "label": "45 s",
+                                    "w": 32
+                                },
+                                {
+                                    "s": 720,
+                                    "label": "12 min",
+                                    "w": 64
+                                }
+                            ]
+                            Column {
+                                id: drop
+                                required property var modelData
+                                readonly property bool lit: modelData.s >= Number(alertDelay.value)
+                                spacing: 4
+                                Rectangle {
+                                    width: drop.modelData.w
+                                    height: 16
+                                    radius: 8
+                                    color: drop.lit ? Theme.primary : "transparent"
+                                    border.width: 1
+                                    border.color: drop.lit ? Theme.primary : Theme.outline
+                                }
+                                StyledText {
+                                    text: drop.modelData.label + "\n" + (drop.lit ? "alert" : "silent")
+                                    font.pixelSize: 11
+                                    font.weight: drop.lit ? Font.DemiBold : Font.Normal
+                                    color: drop.lit ? Theme.surfaceText : Theme.surfaceVariantText
+                                }
+                            }
+                        }
+                    }
+                    Rectangle {
+                        width: parent.width
+                        height: 1
+                        color: Qt.rgba(Theme.outline.r, Theme.outline.g, Theme.outline.b, 0.4)
+                    }
                     SettingToggleRow {
                         settingKey: "notifications"
-                        label: "Notifications"
-                        description: "When a device comes online or goes offline (muted ones stay quiet)"
+                        label: "All device notifications"
+                        description: "Every device, the moment it comes online or goes offline. No wait, no duration (muted ones stay quiet)"
                         defaultValue: false
                     }
                 }
@@ -775,10 +860,12 @@ PluginSettings {
         property bool defaultValue: true
         property string impact: "low"
         property string cost: ""
+        readonly property alias value: toggle.value
         readonly property color hue: impact === "high" ? Theme.error : impact === "medium" ? Theme.warning : Theme.primary
         width: parent ? parent.width : 0
         spacing: 6
         SettingToggleRow {
+            id: toggle
             settingKey: fx.settingKey
             label: fx.label
             description: fx.description

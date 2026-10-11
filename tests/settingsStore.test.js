@@ -53,7 +53,7 @@ ok("no secret key exists", !S.KEYS.some(k => /key|token|secret|password/i.test(k
 
 // Migration: every existing widget key is carried over
 const widget = {
-    "source": "demo", "showOffline": false, "pulses": false, "notifications": true, "terminal": "foot",
+    "source": "demo", "showOffline": false, "pulses": false, "notifications": true, "favouriteAlerts": true, "favouriteAlertDelay": "60", "terminal": "foot",
     "sendFolder": "~/Inbox", "links": { "p": { "user": "u", "port": "1" } }, "shareSsh": true, "smooth": false,
     "drift": false, "celebrate": false, "statusDot": false, "middleToggle": false, "searchHints": false,
     "desktopLive": true, "maxItems": 7, "pill": "icon", "companion": false, "groupOpen": "hover",

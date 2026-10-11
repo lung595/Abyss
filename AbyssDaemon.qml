@@ -9,6 +9,8 @@ import "components/MyGroups.js" as MyGroups
 import "components/Query.js" as Query
 import "components/Ping.js" as Ping
 import "components/SendFlow.js" as SendFlow
+import "components/Alerts.js" as Alerts
+import "components/AlertToasts.js" as AlertToasts
 
 // The one engine every surface shares: the mesh source, the actions that
 // leave the shell (copy, SSH, browser), notifications and the IPC.
@@ -345,8 +347,48 @@ Item {
             const p = root.findPeer(name);
             if (p && prefs.isMuted(p.id))
                 return;
+            // A favourite is announced by its own alert, with the wait and the duration
+            if (p && prefs.favouriteAlerts && prefs.isFavorite(p.id))
+                return;
             root._toast(name + (online ? " is online" : " went offline"));
         }
+    }
+
+    // --- Favourite alerts (off by default) ----------------------------------
+    // Rides on the refreshes the source already does: no timer, no process.
+    // Only the favourites are kept in memory, and only until they are back.
+    property var _alertState: ({})
+    Connections {
+        target: root.source
+        ignoreUnknownSignals: true
+        function onViewChanged() {
+            root._alertStep();
+        }
+    }
+    Connections {
+        target: prefs
+        function onFavouriteAlertsChanged() {
+            root._alertStep();
+        }
+    }
+    function _alertStep() {
+        const view = root.source ? root.source.view : null;
+        // Without a live mesh the peers are all "offline" for the wrong reason
+        const live = prefs.favouriteAlerts && view && view.state === "connected";
+        const peers = live ? view.peers.map(p => ({
+                    "id": p.id,
+                    "favourite": prefs.isFavorite(p.id) && !prefs.isMuted(p.id),
+                    "connected": p.online
+                })) : null;
+        const r = Alerts.step(root._alertState, {
+            "now": Date.now(),
+            "peers": peers
+        }, {
+            "enabled": prefs.favouriteAlerts,
+            "debounceMs": Number(prefs.favouriteAlertDelay) * 1000
+        });
+        root._alertState = r.state;
+        AlertToasts.toasts(r.events, id => (root.findPeer(id) || {}).name).forEach(t => root._toast(t.title, t.details || undefined));
     }
 
     // The IPC's way to a peer: "user@peer" or "peer"
@@ -361,7 +403,10 @@ Item {
             return "Refused: " + user + " is not a user name";
         if (user && (kind === "ssh" || kind === "sftp")) {
             const host = p.fqdn || p.ip;
-            return root.ssh(host, prefs.terminal, { "user": user, "port": prefs.linkOf(p.id).port }, kind) ? "OK" : "Refused: " + host + " is not a plain host name";
+            return root.ssh(host, prefs.terminal, {
+                "user": user,
+                "port": prefs.linkOf(p.id).port
+            }, kind) ? "OK" : "Refused: " + host + " is not a plain host name";
         }
         return root.reach(kind, p) ? "OK" : "Refused: " + (p.fqdn || p.ip) + " is not a plain host name";
     }

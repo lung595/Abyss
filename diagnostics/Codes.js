@@ -50,6 +50,8 @@ var SETTINGS = {
     "showOffline": "bool",
     "pulses": "bool",
     "notifications": "bool",
+    "favouriteAlerts": "bool",
+    "favouriteAlertDelay": ["10", "30", "60", "300"],
     "terminal": ["auto", "ghostty", "kitty", "foot", "alacritty", "wezterm", "konsole", "ptyxis", "gnome-terminal", "xterm"],
     "shareSsh": "bool",
     "smooth": "bool",

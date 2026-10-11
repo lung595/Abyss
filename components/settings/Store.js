@@ -39,6 +39,8 @@ const SCHEMA = {
     "showOffline": bool(true),
     "pulses": bool(true),
     "notifications": bool(false),
+    "favouriteAlerts": bool(false),
+    "favouriteAlertDelay": oneOf("30", ["10", "30", "60", "300"]),
     "terminal": text("auto"),
     "sendFolder": text("~/Downloads"),
     "links": { "type": "links", "def": {} },

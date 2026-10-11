@@ -25,6 +25,10 @@ QtObject {
     readonly property bool pulses: _get("pulses", true)
     // A toast when a peer comes online or goes offline
     readonly property bool notifications: _get("notifications", false)
+    // A toast when a favourite stays offline, and when it is back
+    readonly property bool favouriteAlerts: _get("favouriteAlerts", false)
+    // Seconds a favourite must stay offline before that toast ("10" to "300")
+    readonly property string favouriteAlertDelay: _get("favouriteAlertDelay", "30")
     // Terminal used for SSH ("auto" tries the usual ones)
     readonly property string terminal: _get("terminal", "auto")
     // The folder on the receiving device that sent files land in ("~" is its
@@ -111,7 +115,10 @@ QtObject {
         if (!user && !port)
             delete next[id];
         else
-            next[id] = { "user": user || "", "port": port || "" };
+            next[id] = {
+                "user": user || "",
+                "port": port || ""
+            };
         set("links", next);
     }
     function toggleMuted(id, name) {

@@ -26,6 +26,7 @@ Every refusal in Abyss says why in a short note, with a GitHub mark that opens t
 - [Send a file](#send-a-file)
 - [From the launcher](#from-the-launcher)
 - [The Abyss app](#the-abyss-app)
+- [Favourite alerts](#favourite-alerts)
 - [Settings](#settings)
 - [Privacy](#privacy)
 - [Performance](#performance)
@@ -283,6 +284,12 @@ Every word is checked before anything happens, and an error is one short sentenc
 
 Nothing is run through a shell: the words reach the app as data only.
 
+## Favourite alerts
+
+Star a device (a favourite), then switch on **Favourite alerts** in *Alerts & sounds*. When that device stays offline longer than **Wait before alerting** (30 s by default), a toast says `Reef NAS is offline.`; when it returns, `Reef NAS is back after 3 min.` A drop shorter than the wait raises nothing, so a Wi-Fi blink stays silent. Several favourites at once make at most two toasts (one for offline, one for back). Muted favourites stay quiet, and a favourite is never announced twice when *All device notifications* is also on.
+
+Cost: none of its own. It reads the status Abyss already refreshes, so it checks when a view or the bar pill is watching, not in the background of a closed shell. Switching it off forgets every outage in progress.
+
 ## Settings
 
 | Section | Setting | Default | Description |
@@ -295,7 +302,9 @@ Nothing is run through a shell: the words reach the app as data only.
 | | Light pulses | On | Pulses of traffic along the tentacles |
 | | Companion | On | Darwin (Darwin Watterson from *The Amazing World of Gumball*, © Cartoon Network, see the README's credits), a goldfish with a life of his own: he eats the crumbs the traffic drops, scrubs the glass as it clouds over, sleeps on the bottom while the mesh is down and waves when clicked. He only moves while a view is open, and stays still with *Reduce motion* |
 | Peers | Bar pill | Peers online | What the small jellyfish in the bar says beside it: how many peers are online, the total traffic, or nothing |
-| | Notifications | Off | When a peer comes or goes; muted peers stay quiet |
+| | Favourite alerts | Off | A toast when a favourite stays offline, and when it is back with how long it was gone. See [Favourite alerts](#favourite-alerts) |
+| | Wait before alerting | 30 s | 10 s, 30 s, 1 min or 5 min a favourite must stay offline before the toast; shorter drops stay silent |
+| | All device notifications | Off | Every device, the moment it comes or goes, with no wait and no duration; muted peers stay quiet |
 | | Terminal for SSH | Automatic | The terminal used for SSH |
 | Source | Mesh source | Automatic | Your NetBird daemon, or the test lab's made-up mesh. Automatic reads NetBird when the `netbird` command is installed |
 | Test lab | Mesh | Home | Home (10 peers), work (5), crowd (30), or a custom size from 1 to 120 peers, to see how groups form |
