@@ -1,10 +1,11 @@
 [Desktop Entry]
 Type=Application
 Name=Abyss
-GenericName=Mesh network
-Comment=See and reach the devices of your NetBird mesh
+GenericName=Send files over your mesh
+Comment=See and reach the devices of your NetBird mesh, send files to them
+Keywords=abyss;send file;send files;share;transfer;netbird;mesh;network;devices;
 Exec=abyss
 Icon=network-workgroup
 Terminal=false
-Categories=Network;System;
+Categories=Network;
 StartupWMClass=abyss
