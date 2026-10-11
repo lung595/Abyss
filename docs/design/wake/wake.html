@@ -216,7 +216,7 @@ td.bad{color:var(--error);font-weight:700}
 
 <h2>5 · <i data-fr="Contrastes mesurés dans cette page (thème courant)">Contrast measured in this page (current theme)</i></h2>
 <table id="ctr"></table>
-<p class="cap"><i data-fr="Calcul WCAG sur les couleurs réellement appliquées (fonds composés). Texte ≥ 4.5, parties d'interface ≥ 3. Le corps éteint (38 %) est décoratif : le nom et le sous-titre portent l'information.">WCAG ratio on the colours actually applied (backgrounds composited). Text ≥ 4.5, UI parts ≥ 3. The unlit body (38 %) is decorative: the name and sub label carry the information.</i></p>
+<p class="cap"><i data-fr="Calcul WCAG sur les couleurs réellement appliquées (fonds composés). Texte ≥ 4.5, parties d'interface ≥ 3. Le corps éteint (38 %) est décoratif : le nom et le sous-titre portent l'information. Le bouton Wake désactivé (texte à 38 %, fond à 12 % de onSurface, l'aspect désactivé de DMS) est exempté par WCAG 1.4.3 : la ligne d'état au-dessus (« waiting for atlas-nas, 13 s left ») dit pourquoi et jusqu'à quand.">WCAG ratio on the colours actually applied (backgrounds composited). Text ≥ 4.5, UI parts ≥ 3. The unlit body (38 %) is decorative: the name and sub label carry the information. The disabled Wake button (label at 38 %, fill at 12 % of onSurface, the DMS disabled look) is exempt under WCAG 1.4.3: the status line above it ("waiting for atlas-nas, 13 s left") says why and until when.</i></p>
 
 <h2>6 · <i data-fr="Coût de construction">Cost to build</i></h2>
 <p class="lead"><i data-fr="A : un second dessin de la créature dans un Item à clip, deux translations de 300 ms, puis plus rien (0 au repos) ; environ une demi-journée de plus que B à cause du clip sur Canvas. B : un cercle et un halo, le moins cher. Les deux : Timer 1 Hz pendant 20 s d'attente, arrêté vue fermée ; coût batterie à mesurer par le Performance Engineer dans NAK-224 (non mesuré ici).">A: a second drawing of the creature in a clipped Item, two 300 ms translations, then nothing (0 at rest); about half a day more than B because of the Canvas clip. B: one circle and one halo, cheapest. Both: a 1 Hz Timer during the 20 s wait, stopped when the view closes; battery cost to be measured by the Performance Engineer in NAK-224 (not measured here).</i></p>
@@ -250,7 +250,7 @@ $('#notes').innerHTML=[
 const macs=[['atlas-nas','52:54:00:12:ab:01','192.168.1.0/24'],['reef-desktop','52:54:00:12:ab:02','192.168.1.0/24'],['old-printer-server-second-floor-meeting-room','52:54:00:7c:10:9e','10.20.0.0/16'],['kelp-mini','52:54:00:aa:03:41','192.168.1.0/24'],['tide-htpc','52:54:00:aa:03:42','192.168.1.0/24'],['coral-build','52:54:00:aa:03:43','10.20.0.0/16'],['drift-pi','52:54:00:aa:03:44','192.168.1.0/24']];
 const setBox=(cls,h,rows)=>`<div><h3 style="font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px">${h}</h3><div class="set ${cls}">
  <div class="srow"><div><div class="st1">Wake light</div><div class="st2">Light rises through a sleeping device while Abyss wakes it. Off: the result still shows as text.</div></div><button class="sw" role="switch" aria-checked="true" aria-label="Wake light"><i></i></button></div>
- <div class="pillrow"><span class="pill">${ico('bolt',13)}Light on battery</span><span class="st2">Plays once per wake, half a second, only while the view is open.</span></div>
+ <div class="pillrow"><span class="pill">${ico('bolt',13)}Light on battery</span><span class="st2">Plays once per wake, about a third of a second, only while the view is open.</span></div>
  <div class="sep"></div>
  <div class="st1">Devices Abyss can wake</div><div class="st2">Abyss remembers the network address (MAC) of a device once it has seen it online on a network you share. Kept in Abyss's settings only.</div>
  ${rows.length?`<div class="list" tabindex="0">${rows.map(m=>`<div class="mac"><div><div class="n">${m[0]}</div><div class="a">${m[1]} · ${m[2]}</div></div><button class="x" aria-label="Forget ${m[0]}">${ico('bin')}</button></div>`).join('')}</div>
@@ -269,22 +269,20 @@ function wake(ok){reset();c1.classList.remove('can');c1.classList.add('rise','li
 c1.onclick=()=>wake(true);$('#c2').onclick=()=>showNote('nomac');
 document.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{const s=b.dataset.s;if(s=='rest')reset();else if(s=='hover'){reset();c1.classList.add('hov')}else if(s=='woke')wake(true);else if(s=='none')wake(false);else showNote(s)});
 
-/* switches */
-const fr={};document.querySelectorAll('[data-fr]').forEach(e=>e.dataset.en=e.textContent);
-function lang(v){document.querySelectorAll('[data-fr]').forEach(e=>e.textContent=v=='fr'?e.dataset.fr:e.dataset.en)}
-document.querySelectorAll('.seg').forEach(g=>{const bs=[...g.children],vals=bs.map(b=>b.dataset.v).filter(Boolean);
- const set=v=>{bs.forEach(b=>b.setAttribute('aria-pressed',b.dataset.v==v));if(g.dataset.g=='lang')lang(v);else{vals.forEach(x=>document.body.classList.remove(x));if(v)document.body.classList.add(v)}measure()};
- bs.forEach(b=>b.onclick=()=>set(b.dataset.v));set(g.dataset.g=='lang'?'fr':g.dataset.g=='opt'?'optA':'')});
-
 /* contrast: composite every ancestor background, then WCAG ratio */
-function rgba(s){const d=document.createElement('canvas').getContext('2d');d.fillStyle='#000';d.fillStyle=s;d.fillRect(0,0,1,1);const m=getComputedStyle(Object.assign(document.createElement('i'),{style:'color:'+s}));const c=document.createElement('canvas');c.width=c.height=1;const x=c.getContext('2d');x.clearRect(0,0,1,1);x.fillStyle=s;x.fillRect(0,0,1,1);const p=x.getImageData(0,0,1,1).data;return[p[0],p[1],p[2],p[3]/255]}
+function rgba(s){const c=document.createElement('canvas');c.width=c.height=1;const x=c.getContext('2d');x.fillStyle=s;x.fillRect(0,0,1,1);const p=x.getImageData(0,0,1,1).data;return[p[0],p[1],p[2],p[3]/255]}
 const over=(f,b)=>[0,1,2].map(i=>f[i]*f[3]+b[i]*(1-f[3])).concat(1);
 function bgOf(e){const ch=[];for(let n=e;n&&n.nodeType==1;n=n.parentElement)ch.push(rgba(getComputedStyle(n).backgroundColor));let b=[255,255,255,1];ch.reverse().forEach(c=>b=over(c,b));return b}
 const lum=c=>[0,1,2].map(i=>{const v=c[i]/255;return v<=.03928?v/12.92:((v+.055)/1.055)**2.4}).reduce((a,v,i)=>a+v*[.2126,.7152,.0722][i],0);
 function ratio(e,prop){const b=bgOf(prop=='self'?e.parentElement:e),f=over(rgba(prop=='self'?getComputedStyle(e).backgroundColor:getComputedStyle(e)[prop||'color']),b),a=lum(f),c=lum(b);return(Math.max(a,c)+.05)/(Math.min(a,c)+.05)}
-function measure(){const rows=[['Creature name on the view','.cr .nm','color',4.5],['Creature sub label','.cr .sub','color',4.5],['Card name','.card .name','color',4.5],['Card status line','.card .st','color',4.5],['Primary button label','.card .btn:not(.ghost):not([disabled])','color',4.5],['Primary button against the card','.card .btn:not(.ghost):not([disabled])','self',3],['Ghost button label','.card .btn.ghost','color',4.5],['Note title','.hn b','color',4.5],['Note advice','.hn span','color',4.5],['GitHub mark','.hn .gh','color',3],['Battery pill label','.pill','color',4.5],['Setting description','.set .st2','color',4.5],['MAC address','.mac .a','color',4.5],['Switch track against the page','.sw','self',3],['Outline against the card','.card','borderTopColor',3]];
- $('#ctr').innerHTML='<tr><th>Pair</th><th>Ratio</th><th>Needs</th></tr>'+rows.map(([n,s,p,min])=>{const e=$(s);if(!e)return'';const r=ratio(e,p);return`<tr><td>${n}</td><td class="${r<min?'bad':''}">${r.toFixed(2)}:1</td><td>${min}:1</td></tr>`}).join('')}
-measure();
+function measure(){const rows=[['Creature name on the view','.cr .nm','color',4.5],['Creature sub label','.cr .sub','color',4.5],['Card name','.card .name','color',4.5],['Card status line','.card .st','color',4.5],['Primary button label','.card .btn:not(.ghost):not([disabled])','color',4.5],['Primary button against the card','.card .btn:not(.ghost):not([disabled])','self',3],['Ghost button label','.card .btn.ghost','color',4.5],['Note title','.hn b','color',4.5],['Note advice','.hn span','color',4.5],['GitHub mark','.hn .gh','color',3],['Battery pill label','.pill','color',4.5],['Setting description','.set .st2','color',4.5],['MAC address','.mac .a','color',4.5],['Switch track against the page','.sw','self',3],['Outline against the card','.card','borderTopColor',3],['Disabled Wake label (exempt)','.card .btn[disabled]','color',0]];
+ $('#ctr').innerHTML='<tr><th>Pair</th><th>Ratio</th><th>Needs</th></tr>'+rows.map(([n,s,p,min])=>{const e=$(s);if(!e)return'';const r=ratio(e,p);return`<tr><td>${n}</td><td class="${r<min?'bad':''}">${r.toFixed(2)}:1</td><td>${min?min+':1':'none'}</td></tr>`}).join('')}
+/* switches: declared last, each one re-measures and so needs the contrast helpers above */
+document.querySelectorAll('[data-fr]').forEach(e=>e.dataset.en=e.textContent);
+function lang(v){document.querySelectorAll('[data-fr]').forEach(e=>e.textContent=v=='fr'?e.dataset.fr:e.dataset.en)}
+document.querySelectorAll('.seg').forEach(g=>{const bs=[...g.children],vals=bs.map(b=>b.dataset.v).filter(Boolean);
+ const set=v=>{bs.forEach(b=>b.setAttribute('aria-pressed',b.dataset.v==v));if(g.dataset.g=='lang')lang(v);else{vals.forEach(x=>document.body.classList.remove(x));if(v)document.body.classList.add(v)}measure()};
+ bs.forEach(b=>b.onclick=()=>set(b.dataset.v));set(g.dataset.g=='lang'?'fr':g.dataset.g=='opt'?'optA':'')});
 </script>
 </body>
 </html>

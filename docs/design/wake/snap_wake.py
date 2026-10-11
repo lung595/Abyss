@@ -3,8 +3,11 @@
 
 The page is rendered by WebKitGTK on a private broadway display, so nothing
 appears on the live session. One sheet per theme: the 580 x 480 view at rest,
-hovered, waking, woke up and with no answer, side by side at 1x, plus one
-capture of the whole page. The page stays the thing judged; these are test
+hovered, waking, woke up and with no answer (option A), then option B waking
+and woke up, then Reduce motion, side by side at 1x, plus one capture of the
+whole page. This WebKit has no GL and does not advance CSS transitions on a
+steady clock, so they are switched off for the captures: each tile is the end
+state of its step. A probe then clicks every switch and prints what changed. The page stays the thing judged; these are test
 evidence only. Standard library, GTK 4, WebKitGTK 6.
 """
 import json
@@ -30,18 +33,34 @@ from gi.repository import GLib, Gtk, WebKit  # noqa: E402
 THEMES = {"dark": "", "light": "light", "wall": "wall"}
 # State button to press, then the delay before the capture: the mock waits 3 s,
 # so 1500 ms is mid-wait and 4600 ms is after the result has settled.
-STATES = [("rest", "rest", 400), ("hover", "hover", 400), ("waking", "woke", 1500),
-          ("woke", "woke", 4600), ("no-answer", "none", 4600)]
-SHOTS = [(t, s) for t in THEMES for s in STATES] + [(t, ("page", "rest", 400)) for t in THEMES]
+# Fourth and fifth fields: option class and Reduce motion class set by the page switches.
+STATES = [("rest", "rest", 400, "optA", ""), ("hover", "hover", 400, "optA", ""),
+          ("waking", "woke", 1500, "optA", ""), ("woke", "woke", 4600, "optA", ""),
+          ("no-answer", "none", 4600, "optA", ""), ("b-waking", "woke", 1500, "optB", ""),
+          ("b-woke", "woke", 4600, "optB", ""), ("rm-waking", "woke", 1500, "optA", "rm")]
+SHOTS = [(t, s) for t in THEMES for s in STATES] + [(t, ("page", "rest", 400, "optA", "")) for t in THEMES]
 # Returns the view rectangle in page coordinates and the boxes the layout rule is checked on.
-SETUP = """document.querySelector('.seg[data-g=theme] button[data-v="%s"]').click();
+SETUP = """if(!document.getElementById('snapfix')){var st=document.createElement('style');st.id='snapfix';
+st.textContent='*{transition:none!important}';document.head.appendChild(st)}
+var sw=function(g,v){document.querySelector('.seg[data-g='+g+'] button[data-v="'+v+'"]').click()};
+sw('theme','%s');sw('opt','%s');sw('rm','%s');sw('lang','');
 document.querySelector('[data-s=%s]').click();"""
+# Proof that the four switches are wired: each click must change the page.
+PROBE = """var r={};try{measure();r.measure='ok'}catch(e){r.measure=String(e)}
+var sw=function(g,v){document.querySelector('.seg[data-g='+g+'] button[data-v="'+v+'"]').click()};
+sw('opt','optB');r.afterB=document.body.className;sw('rm','rm');r.afterRm=document.body.className;
+sw('theme','light');r.afterLight=document.body.className;
+sw('lang','fr');r.fr=document.querySelector('[data-fr]').textContent;
+sw('lang','');r.en=document.querySelector('[data-fr]').textContent;
+r.rows=document.querySelectorAll('#ctr tr').length;r.bad=document.querySelectorAll('#ctr .bad').length;
+r.table=[].map.call(document.querySelectorAll('#ctr tr'),function(t){return t.textContent});
+JSON.stringify(r)"""
 BOXES = """var q=function(s){var r=document.querySelector(s).getBoundingClientRect();return [r.left+scrollX,r.top+scrollY,r.width,r.height]};
 JSON.stringify({scene:q('#scene'),body:q('#c1 .body'),lvl:q('#c1 .lvl'),ring:q('#c1 .ring'),nm:q('#c1 .nm'),floor:q('.floor'),hero:q('.card .hero'),pill:q('.pill'),kind:q('.card .kind')})"""
 
 
 def capture(app, view, shots, got):
-    theme, (name, button, settle) = shots[0]
+    theme, (name, button, settle, opt, rm) = shots[0]
 
     def settled():
         view.evaluate_javascript(BOXES, -1, None, None, None, snap)
@@ -57,9 +76,13 @@ def capture(app, view, shots, got):
         if shots[1:]:
             GLib.timeout_add(100, capture, app, view, shots[1:], got)
         else:
-            app.quit()
+            view.evaluate_javascript(PROBE, -1, None, None, None, probed)
 
-    view.evaluate_javascript(SETUP % (THEMES[theme], button), -1, None, None, None,
+    def probed(v, res):
+        got["probe"] = json.loads(v.evaluate_javascript_finish(res).to_string())
+        app.quit()
+
+    view.evaluate_javascript(SETUP % (THEMES[theme], opt, rm, button), -1, None, None, None,
                              lambda v, res: GLib.timeout_add(settle, settled))
     return False
 
@@ -73,10 +96,10 @@ def surface_of(texture):
 
 
 def sheet(theme, got):
-    """The five view states in one row, cropped from the page at 1x."""
+    """The view states in one row, cropped from the page at 1x."""
     out = cairo.ImageSurface(cairo.FORMAT_RGB24, 580 * len(STATES), 480)
     ctx = cairo.Context(out)
-    for i, (name, _, _) in enumerate(STATES):
+    for i, (name, *_) in enumerate(STATES):
         tex, boxes = got[(theme, name)]
         x, y = boxes["scene"][:2]
         ctx.set_source_surface(surface_of(tex), i * 580 - round(x), -round(y))
@@ -106,8 +129,9 @@ def main():
         DAEMON.terminate()
     for theme in THEMES:
         sheet(theme, got)
-    for name, _, _ in STATES:
+    for name, *_ in STATES:
         print(name, json.dumps(got[("dark", name)][1]))
+    print("probe", json.dumps(got["probe"], ensure_ascii=False, indent=1))
 
 
 if __name__ == "__main__":
