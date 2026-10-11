@@ -74,6 +74,7 @@ Item {
             "total": v.peers.length,
             "peers": v.peers,
             "groups": prefs.groups,
+            "tags": prefs.tags,
             "relays": v.relays.map(r => r.name),
             "exitNode": source.exitNode,
             "exitGroup": prefs.exitGroup

@@ -258,7 +258,7 @@ eq("every code with every hostile value gives a plain line", dirty, []);
 // --- Codes.js against Prefs.qml: the report cannot drift from the real settings ----
 // Every setting of Prefs.qml is either in Codes.SETTINGS with a matching kind, or left
 // out on purpose because it can hold something personal.
-const OMITTED = ["sendFolder", "links", "muted", "favorites", "groups", "exitTies", "exitGroup"];
+const OMITTED = ["sendFolder", "links", "muted", "favorites", "groups", "tags", "exitTies", "exitGroup"];
 const prefs = {};
 for (const m of read("components/Prefs.qml").matchAll(/readonly property (string|bool|int|var) (\w+): _get\(/g))
     prefs[m[2]] = m[1];
