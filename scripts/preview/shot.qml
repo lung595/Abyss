@@ -17,7 +17,7 @@ import "../../components/MyGroups.js" as MyGroups
 // opening / closing, as frames out-0.png ... out-11.png), step (the open card
 // stepping to the next peer, same frames, 35 ms apart), zoom (the camera
 // gliding to a group and back, frames), desk (the frameless desktop view on a
-// made-up wallpaper; desk-hover with the pointer over it, desk-sleep awake then left just before the shot, desk-zoom a group opening in the bowl); life / life-peek (frames of the deep, or an open group, left alone); mine, menu, menu-name, carry, carry-crowd, carry-mid, carry-aim, carry-pulse, carry-fade, sun-menu, sun-glide, carry-reopen, sun-regive (groups of mine, the Internet light carried into a group, left on a member or in the middle; held over the middle; just dropped there); a "-light" suffix uses a light theme's accents, "-cc" the Control Center size.
+// made-up wallpaper; desk-hover with the pointer over it, desk-sleep awake then left just before the shot, desk-zoom a group opening in the bowl); life / life-peek (frames of the deep, or an open group, left alone); mine, menu, menu-name, carry, carry-crowd, carry-mid, carry-aim, carry-pulse, carry-fade, sun-menu, sun-glide, carry-reopen, sun-regive (groups of mine, the Internet light carried into a group, left on a member or in the middle; held over the middle; just dropped there); caves15 a small deep with 15 caves; a "-light" suffix uses a light theme's accents, "-cc" the Control Center size.
 Window {
     id: win
     readonly property var args: Qt.application.arguments
@@ -34,6 +34,11 @@ Window {
 
     DemoSource {
         id: demo
+        // caves15: a small deep with 15 caves, some names long
+        Component.onCompleted: {
+            if (win.mode === "caves15")
+                networks = [...Array(15).keys()].map(i => ({ "id": ["lab", "office-lan", "backup-vault", "media", "printers", "cameras"][i % 6] + (i < 6 ? "" : "-" + i), "cidr": "10.20." + i + ".0/24", "via": "", "on": i % 3 === 0 }));
+        }
     }
     // sun-regive: a real mouse (press, move, release) on the window
     TestCase {

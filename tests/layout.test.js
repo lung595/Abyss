@@ -372,4 +372,30 @@ const LAB = [1, 2, 12, 60, 120].flatMap(n => [3, 5, 10].map(max => ["lab:" + n, 
     ok("a dozing peer floats, an asleep one rests", !l.peers.d.floor && l.peers.z.floor && l.peers.d.y < l.peers.z.y - 40);
 }
 
+// Squeezed cave row: names keep clear space (no overlap with each other or the edge)
+{
+    const NAME_H = 20;
+    const box = (fr, i, name) => {
+        const row = L.caveRow(fr), shown = L.caveName(name, row.nameW);
+        const w = Math.min(row.nameW, shown.length * 7 + 16), x = L.caveX(fr, i), lift = L.caveLift(fr, i);
+        return { "l": x - w / 2, "r": x + w / 2, "b": lift, "t": lift + NAME_H };
+    };
+    const hit = (a, b) => a.l < b.r && b.l < a.r && a.b < b.t && b.b < a.t;
+    [[480, 340], [646, 420], [1100, 700]].forEach(([w, h]) => [4, 8, 15].forEach(n => {
+        const fr = L.frame(w, h, 60, { "caves": n });
+        const names = [...Array(n).keys()].map(i => "cave-network-number-" + i);
+        const bs = names.map((nm, i) => box(fr, i, nm));
+        ok(w + "x" + h + " " + n + " caves: names never overlap",
+            bs.every((a, i) => bs.every((b, j) => i >= j || !hit(a, b))));
+        ok(w + "x" + h + " " + n + " caves: names stay inside the deep", bs.every(b => b.l >= 0 && b.r <= w));
+        ok(w + "x" + h + " " + n + " caves: the last cave stays on the floor", L.caveX(fr, n - 1) <= w - 60);
+        ok(w + "x" + h + " " + n + " caves: names never shrink below readable", L.caveRow(fr).nameW >= 48);
+    }));
+    const roomy = L.frame(646, 420, 60, { "caves": 3 });
+    ok("a roomy row is untouched", L.caveRow(roomy).tiers === 1 && L.caveLift(roomy, 2) === 0 && Math.abs(L.caveX(roomy, 1) - L.caveX(roomy, 0) - 646 * 0.16) < 1e-9);
+    eq("a short name stays whole", L.caveName("lab", 60), "lab");
+    eq("a long name ellipsizes deterministically", L.caveName("very-long-network-name", 80), "very-lon\u2026");
+    eq("the same input gives the same cut", L.caveName("very-long-network-name", 80), L.caveName("very-long-network-name", 80));
+}
+
 done("layout");

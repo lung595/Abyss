@@ -1,5 +1,6 @@
 import QtQuick
 import qs.Common
+import "Layout.js" as Lay
 
 // A network (route) reached through a peer, drawn as a cave on the sea floor.
 // Its rim always catches a little light so it reads against the black water;
@@ -13,6 +14,11 @@ Item {
     readonly property bool on: net.on && scene.connected
     // The pointer is over the cave or its label (the scene then shows its thread)
     readonly property bool hovered: caveArea.containsMouse
+
+    // Squeezed row (Layout.js caveRow): the name stands higher and may ellipsize
+    readonly property real lift: scene ? Lay.caveLift(scene.frame, index) : 0
+    readonly property real nameW: scene ? Lay.caveRow(scene.frame).nameW : 96
+    required property int index
 
     signal toggled
 
@@ -220,8 +226,8 @@ Item {
         id: label
         // Above the rock, kept inside the deep when it widens on hover
         x: Math.max(-cave.x + 6, Math.min(-width / 2, (cave.parent ? cave.parent.width : 1e6) - cave.x - width - 6))
-        y: -60 - height
-        title: cave.net.id
+        y: -60 - height - cave.lift
+        title: cave.hovered ? cave.net.id : Lay.caveName(cave.net.id, cave.nameW)
         titleSize: 11
         sub: !cave.hovered ? "" : !cave.scene.connected ? cave.net.cidr : (cave.net.via ? "via " + cave.net.via + " · " : "") + (cave.on ? "click to switch off" : "click to switch on")
         ink: cave.on ? cave.scene.abyss : cave.scene.ink

@@ -324,9 +324,45 @@ function layout(peers, w, h, top, inset, prev) {
 // A cave's thread leaves from the top of its label (Cave.qml: label above
 // the rock, taller on hover), never through the text or the rock
 const CAVE_TOP = 96;
+// Roomy: caves 16 % of the deep apart. When that overruns the floor the row
+// squeezes: caves close up and their names stagger over up to CAVE_TIERS
+// heights, so a name may be up to tiers x step wide without touching the
+// next name on its own height. A name is at most CAVE_NAME_W wide, and never
+// narrower than CAVE_NAME_MIN (below that the row is simply overfull).
+const CAVE_TIERS = 3, CAVE_TIER_LIFT = 24, CAVE_NAME_W = 96, CAVE_NAME_MIN = 48, CAVE_NAME_GAP = 6;
+const CAVE_EDGE = 64, CAVE_CHAR_W = 7, CAVE_CHIP_PAD = 16;
+
+// { step, tiers, nameW } for the row of frame.caves caves
+function caveRow(frame) {
+    const n = frame.caves, usable = frame.w - 2 * frame.insetFloor;
+    const natural = Math.max(96, usable * 0.16);
+    const fit = n > 1 ? (usable - 2 * CAVE_EDGE) / (n - 1) : natural;
+    if (n < 2 || fit >= natural)
+        return { "step": natural, "tiers": 1, "nameW": CAVE_NAME_W };
+    const step = Math.max(fit, 1);
+    const tiers = Math.min(CAVE_TIERS, Math.ceil((CAVE_NAME_W + CAVE_NAME_GAP) / step));
+    return { "step": step, "tiers": tiers, "nameW": Math.max(CAVE_NAME_MIN, Math.min(CAVE_NAME_W, tiers * step - CAVE_NAME_GAP)) };
+}
 
 function caveX(frame, i) {
-    return frame.insetFloor + 64 + i * Math.max(96, (frame.w - 2 * frame.insetFloor) * 0.16);
+    return frame.insetFloor + CAVE_EDGE + i * caveRow(frame).step;
+}
+
+// Cave i's name stands on height i mod tiers; higher names lift the label
+function caveLift(frame, i) {
+    return (i % caveRow(frame).tiers) * CAVE_TIER_LIFT;
+}
+
+// Where cave i's thread leaves: the top of its (maybe lifted) label
+function caveTop(frame, i) {
+    return CAVE_TOP + caveLift(frame, i);
+}
+
+// A name cut to the chars that fit nameW, with an ellipsis: deterministic
+// (a fixed advance per char), so layout never depends on font metrics
+function caveName(name, nameW) {
+    const room = Math.max(3, Math.floor((nameW - CAVE_CHIP_PAD) / CAVE_CHAR_W));
+    return name.length <= room ? name : name.slice(0, room - 1) + "\u2026";
 }
 
 // A tentacle from the jellyfish rim to a peer, optionally through a relay:
