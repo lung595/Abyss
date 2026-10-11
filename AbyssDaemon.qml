@@ -135,10 +135,10 @@ Item {
             root._pending = null;
             if (!p)
                 return;
-            // An installed app of another version still opens when the user asked not to be asked
-            if (state === "ok" || (state === "update" && prefs.appDontAsk))
+            const outcome = AppInstall.askOutcome(state, prefs.appDontAsk);
+            if (outcome === "ready")
                 p.ready();
-            else if (prefs.appDontAsk || !root.open())
+            else if (outcome === "fallback" || !root.open())
                 p.fallback();
             else {
                 root.appRequest = {

@@ -15,7 +15,7 @@ Item {
 
     readonly property alias installedVersion: versionProbe.version
     property string phase: "idle"
-    // Progress step shown by the invite: 0 asked, 1 checking, 2 copying, 3 linking
+    // Progress step shown by the invite: 0 asked, 1 checking, 2 setting up, 3 linking
     property int step: 0
     property string reason: ""
     property var help: ({

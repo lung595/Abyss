@@ -29,6 +29,16 @@ function appState(installedVersion, widgetVersion) {
     return "ok";
 }
 
+// What an app-opening action does once the state is known: "ready" opens the
+// app, "fallback" keeps the in-widget path, "invite" offers the install.
+// An installed app of another version still opens when the user asked not to
+// be asked again.
+function askOutcome(state, dontAsk) {
+    if (state === "ok" || (state === "update" && dontAsk))
+        return "ready";
+    return dontAsk ? "fallback" : "invite";
+}
+
 // A plugin folder that is safe to hand to `sh` as an argument: absolute, no
 // control character. It travels as its own argument, never inside a string.
 function validDir(dir) {
