@@ -35,4 +35,4 @@ eq("empty file", A.quickshellHelp("").family, "unknown");
 eq("failure reason: last line, home shortened", A.failureReason("x\n/h/u/.local/bin/abyss already exists\n", "/h/u"), "~/.local/bin/abyss already exists");
 eq("failure reason: silent installer", A.failureReason("", "/h/u"), "The installer stopped.");
 eq("failure reason: capped", A.failureReason("a".repeat(300), ""). length, 120);
-done();
+done("appinstall");

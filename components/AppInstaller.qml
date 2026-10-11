@@ -30,7 +30,7 @@ Item {
 
     // Reads the installed version (appState compares it with the widget) on demand
     function refresh() {
-        versionProbe.start();
+        versionProbe.running = true;
     }
 
     function install() {
@@ -96,7 +96,7 @@ Item {
             if (code === 0) {
                 root.step = 3;
                 root.phase = "installed";
-                versionProbe.start();
+                versionProbe.running = true;
                 root.finished(true);
             } else {
                 root._fail(AppInstall.failureReason(installer.err, Quickshell.env("HOME")));

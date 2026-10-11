@@ -77,7 +77,7 @@ function parseOsRelease(text) {
 // never run. Distributions differ in how Quickshell is packaged, so an
 // unknown one gets no command, only the guide link.
 const COMMANDS = {
-    fedora: { name: "Fedora", command: "sudo dnf copr enable errornointernet/quickshell && sudo dnf install quickshell" },
+    fedora: { name: "Fedora", command: "sudo dnf install quickshell" },
     arch: { name: "Arch", command: "sudo pacman -S quickshell" },
     nixos: { name: "NixOS", command: "nix profile install nixpkgs#quickshell" },
     gentoo: { name: "Gentoo", command: "sudo emerge --ask gui-apps/quickshell" },

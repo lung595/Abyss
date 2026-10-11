@@ -74,7 +74,7 @@ case "${1-}" in
 "") ;;
 --by-widget) by_widget=1 ;;
 *)
-    echo "Usage: install-app.sh [--uninstall]" >&2
+    echo "Usage: install-app.sh [--uninstall | --by-widget | --sweep]" >&2
     exit 2
     ;;
 esac
@@ -109,6 +109,14 @@ for dir in "$data" "$data/applications" "$bin_dir" "$home_dir"; do
 $dir"
 done
 
+# (read before the folder is rebuilt) An existing install keeps its origin: a widget update must not turn a clone
+# install into one the plugin removal would sweep
+if [ -f "$marker" ] && grep -qxF 'by widget' "$marker"; then
+    by_widget=1
+elif [ -f "$marker" ]; then
+    by_widget=
+fi
+
 # Only the app's own files: the widget (QML at the repository root) is not part of it
 rm -rf -- "$home_dir"
 mkdir -p -- "$home_dir/components/settings" "$data/applications" "$bin_dir"
@@ -119,10 +127,13 @@ mkdir -p -- "$home_dir/views"
 cp -- "$src/app/views/"*.qml "$home_dir/views/"
 cp -- "$src/components/settings/"* "$home_dir/components/settings/"
 cp -- "$src/install-app.sh" "$home_dir/"
-{
+if ! {
     printf '%s\n' "$created" | sed -n 's/^\(..*\)$/dir \1/p'
-    [ -n "$by_widget" ] && echo 'by widget'
-} >"$marker" || true
+    if [ -n "$by_widget" ]; then echo 'by widget'; fi
+} >"$marker"; then
+    echo "Could not write $marker." >&2
+    exit 1
+fi
 ln -sf -- "$home_dir/abyss" "$link"
 
 # The desktop entry gets the full quoted path: a menu does not always have

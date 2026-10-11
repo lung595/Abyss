@@ -117,6 +117,9 @@ Item {
     // popout. `fallback` runs for "don't ask again" or when the popout is absent.
     property var _pending: null
     function askApp(action, device, ready, fallback) {
+        // A second ask while the probe runs settles the first one on its fallback
+        if (root._pending)
+            root._pending.fallback();
         root._pending = {
             "action": action,
             "device": device || "",

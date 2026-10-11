@@ -264,11 +264,15 @@ PluginSettings {
                         }
                     }
 
-                    AppSettingRow {
-                        visible: !!root.daemon
-                        installer: root.daemon ? root.daemon.appInstaller : null
-                        prefs: root.prefs
-                        reduceMotion: SettingsData.reduceMotion
+                    // Only with a daemon: the row reads the installer and probes the version
+                    Loader {
+                        active: !!root.daemon
+                        width: parent.width
+                        sourceComponent: AppSettingRow {
+                            installer: root.daemon.appInstaller
+                            prefs: root.prefs
+                            reduceMotion: SettingsData.reduceMotion
+                        }
                     }
                 }
 

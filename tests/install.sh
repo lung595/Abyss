@@ -85,5 +85,12 @@ sh "$root/install-app.sh" --by-widget >/dev/null 2>&1
 sh "$HOME/.local/share/abyss/install-app.sh" --sweep >/dev/null 2>&1
 check "sweep removes a widget install" "$(tree)" "$before"
 
+# A widget install over a standalone one keeps it standalone
+sh "$root/install-app.sh" >/dev/null 2>&1
+sh "$root/install-app.sh" --by-widget >/dev/null 2>&1
+sh "$HOME/.local/share/abyss/install-app.sh" --sweep >/dev/null 2>&1
+check "widget update keeps a standalone origin" "$([ -e "$HOME/.local/share/abyss" ] && echo kept || echo gone)" kept
+sh "$root/install-app.sh" --uninstall >/dev/null 2>&1
+
 [ "$fail" = 0 ] && echo "✓ install: app installer and uninstaller" || echo "install: FAILED"
 exit "$fail"
