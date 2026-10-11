@@ -78,6 +78,14 @@ Item {
             y: 4
             x: root.value ? 26 : 4
             color: root.value ? Theme.primaryText : Theme.outline
+            // Only a gesture moves it; nothing runs at rest, and Reduce motion snaps it
+            Behavior on x {
+                enabled: !SettingsData.reduceMotion
+                NumberAnimation {
+                    duration: 120
+                    easing.type: Easing.OutCubic
+                }
+            }
         }
     }
     // Focus ring outside the track: primary on the surface, not on the primary fill

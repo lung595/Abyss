@@ -61,7 +61,8 @@ Column {
         height: list.height
         Rectangle {
             id: ring
-            readonly property Item target: reps.itemAt(root.options.findIndex(o => root.valueOf(o) === root.value))
+            // count notifies once the Repeater has built the pills, so the first focus finds one
+            readonly property Item target: reps.count > 0 ? reps.itemAt(root.options.findIndex(o => root.valueOf(o) === root.value)) : null
             visible: root.activeFocus
             x: (target ? target.x : 0) - 4
             y: (target ? target.y : 0) - 4

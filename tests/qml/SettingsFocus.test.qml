@@ -52,7 +52,12 @@ Item {
             for (let i = 0; i < choice.children.length; i++)
                 r = r.concat(rings(choice.children[i]));
             compare(r.length, 1);
-            verify(r[0].width > 20);
+            // Geometry of the selected pill (first option), 4 px out, at first focus
+            const pill = choice.children[1].children[1].children[0];
+            compare(r[0].x, pill.x - 4);
+            compare(r[0].y, pill.y - 4);
+            compare(r[0].width, pill.width + 8);
+            compare(r[0].height, pill.height + 8);
         }
     }
 }
