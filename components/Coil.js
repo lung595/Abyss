@@ -21,7 +21,19 @@ const POINTS = 121;
 const CLEAR = 4;
 // A coil tighter than the body would cut through it; below slack 1 (the
 // tighten overshoots) the ring keeps this share of CLEAR so it never does
-const MIN_CLEAR = CLEAR * 0.25;
+const MIN_CLEAR_SHARE = 0.25;
+const MIN_CLEAR = CLEAR * MIN_CLEAR_SHARE;
+// Points the body is measured at across the tilt reach (odd, centred)
+const TILT_SAMPLES = 5;
+// The tentacle's weight along the coil: the root follows the device a little,
+// the tip fully (lag x (LAG_ROOT + LAG_TIP x u))
+const LAG_ROOT = 0.3, LAG_TIP = 0.7;
+// A shoal's radius never goes below this, so a zero or missing live value
+// still gives a coil and never NaN
+const SHOAL_MIN_R = 1;
+const SHOAL_SIDES = 24;
+// A body counts as tall only when clearly taller than wide (float noise)
+const TALL_MARGIN = 1.0001;
 // The span, as a share of the body length, centred. Wide bodies (a manta, a
 // NAS: length over height from WIDE_FROM) get more room to show three turns;
 // the share grows to SPAN_WIDE_MAX over WIDE_RANGE more of that ratio. The
@@ -40,10 +52,11 @@ const WIDE_RANGE = 1.0;
 function body(kind, s, shoalR) {
     let hull;
     if (kind === "shoal") {
+        const rad = shoalR > SHOAL_MIN_R ? shoalR : SHOAL_MIN_R;
         hull = [];
-        for (let i = 0; i < 24; i++) {
-            const a = i / 24 * Math.PI * 2;
-            hull.push([Math.cos(a) * shoalR, Math.sin(a) * shoalR]);
+        for (let i = 0; i < SHOAL_SIDES; i++) {
+            const a = i / SHOAL_SIDES * Math.PI * 2;
+            hull.push([Math.cos(a) * rad, Math.sin(a) * rad]);
         }
     } else {
         hull = Shapes.hull(kind).map(q => [q[0] * s, q[1] * s]);
@@ -51,7 +64,7 @@ function body(kind, s, shoalR) {
     const xs = hull.map(q => q[0]), ys = hull.map(q => q[1]);
     const x0 = Math.min.apply(null, xs), x1 = Math.max.apply(null, xs);
     const y0 = Math.min.apply(null, ys), y1 = Math.max.apply(null, ys);
-    const tall = (y1 - y0) > (x1 - x0) * 1.0001;
+    const tall = (y1 - y0) > (x1 - x0) * TALL_MARGIN;
     // In the long-axis frame: u runs along "a", rings stand in "b"
     const pts = tall ? hull.map(q => [q[1], q[0]]) : hull;
     const a0 = tall ? y0 : x0, a1 = tall ? y1 : x1, b0 = tall ? x0 : y0, b1 = tall ? x1 : y1;
@@ -85,9 +98,10 @@ function halfHeight(b, a) {
 // The coil's points, from the entry side toward the far one. opts:
 //   side   +1 / -1: which end of the long axis the tentacle enters from
 //   slack  ring radius factor (1 = tight)
-//   frac   how much of the coil is out, 0..1 (the reach, the unwinding)
-//   sag    pixels the tip hangs down, scaled by u squared
-//   lag    [x, y] the coil trails the device by, weighted 0.3 + 0.7 u
+//   frac   how much of the coil is out, 0..1 (the reach, the unwinding); at 0
+//          one point remains, the entry, so a caller can skip drawing
+//   sag    pixels the tip hangs down (scene y), scaled by u squared
+//   lag    [x, y] the coil trails the device by, weighted LAG_ROOT + LAG_TIP u
 //   clear  ring clearance in pixels (tests only; default CLEAR)
 function build(b, cx, cy, opts) {
     const o = opts || {};
@@ -99,7 +113,7 @@ function build(b, cx, cy, opts) {
     // The tilt moves a point along the axis by up to TILT x radius: the body is
     // measured over that whole reach, or a tilted point meets a fatter part
     const reachMax = TILT * (b.hh + clear) * Math.max(1, slack);
-    const n = Math.max(2, Math.ceil((POINTS - 1) * frac) + 1);
+    const n = Math.ceil((POINTS - 1) * frac) + 1;
     const out = [];
     for (let i = 0; i < n; i++) {
         const u = i / (POINTS - 1);
@@ -107,12 +121,14 @@ function build(b, cx, cy, opts) {
         const z = Math.cos(theta);
         const a = centre + side * half * (1 - 2 * u);
         let h = 0;
-        for (let k = -2; k <= 2; k++)
-            h = Math.max(h, halfHeight(b, a + reachMax * k / 2));
-        const r = Math.max((h + clear) * slack, h + Math.min(MIN_CLEAR, clear * 0.25));
-        const w = 0.3 + 0.7 * u;
-        const pa = a + TILT * r * z + lag[b.tall ? 1 : 0] * w;
-        const pb = b.mid + r * Math.sin(theta) + sag * u * u + lag[b.tall ? 0 : 1] * w;
+        for (let k = 0; k < TILT_SAMPLES; k++)
+            h = Math.max(h, halfHeight(b, a + reachMax * (2 * k / (TILT_SAMPLES - 1) - 1)));
+        const r = Math.max((h + clear) * slack, h + Math.min(MIN_CLEAR, clear * MIN_CLEAR_SHARE));
+        const w = LAG_ROOT + LAG_TIP * u;
+        // The sag hangs down in the scene (y), which is the "a" axis on tall bodies
+        const drop = sag * u * u;
+        const pa = a + TILT * r * z + lag[b.tall ? 1 : 0] * w + (b.tall ? drop : 0);
+        const pb = b.mid + r * Math.sin(theta) + lag[b.tall ? 0 : 1] * w + (b.tall ? 0 : drop);
         out.push(b.tall ? [cx + pb, cy + pa, z] : [cx + pa, cy + pb, z]);
     }
     return out;
@@ -148,6 +164,7 @@ const SLEEP_SAG = 16;  // px the tip hangs
 const SLEEP_KEEP = 0.30;  // share of its length the coil keeps asleep
 // "Settled": the slack within this of 1, the lag under LAG_REST pixels
 const SLACK_REST = 0.01, LAG_REST = 0.5;
+const LAG_V_REST = LAG_REST * 4;  // px/s, the same for the spring's speed
 const LAG_STEP = 0.004;  // s, the spring's internal step (stable at k = 90)
 
 function _clamp01(v) {
@@ -195,13 +212,23 @@ function rest() {
     return { "p": [0, 0], "v": [0, 0] };
 }
 
+// How asleep the coil is, 0..1, or null while that is still changing
+function _sleep(st) {
+    if (st.asleepFor >= 0)
+        return st.asleepFor >= SLEEP_TIME ? 1 : null;
+    if (st.awakeFor >= 0)
+        return st.awakeFor >= SLEEP_TIME ? 0 : null;
+    return 0;
+}
+
 // Is the motion over? The caller stops its timer on true. st = {t (since the
-// device appeared), asleepFor (since going to sleep, or -1 awake), lag}.
+// device appeared), asleepFor (since going to sleep, or -1), awakeFor (since
+// waking up, or -1 or missing; ignored while asleepFor >= 0), lag}.
 // Time alone settles the tightening: after it the slack is within 1 % of 1.
 function settled(st) {
     const done = st.t >= TIGHTEN_AT + Math.log(TIGHTEN_AMP / SLACK_REST) / TIGHTEN_DECAY
-        && st.t >= REACH_TIME && (st.asleepFor < 0 || st.asleepFor >= SLEEP_TIME);
-    return done && Math.hypot(st.lag.p[0], st.lag.p[1]) < LAG_REST && Math.hypot(st.lag.v[0], st.lag.v[1]) < LAG_REST * 4;
+        && st.t >= REACH_TIME && _sleep(st) !== null;
+    return done && Math.hypot(st.lag.p[0], st.lag.p[1]) < LAG_REST && Math.hypot(st.lag.v[0], st.lag.v[1]) < LAG_V_REST;
 }
 
 // The pose that motion ends in: fully out, tight, no lag; asleep it is
@@ -219,7 +246,7 @@ function optsAt(st, side, reduceMotion) {
     const asleep = st.asleepFor >= 0;
     if (reduceMotion || settled(st))
         return finalOpts(side, asleep);
-    const sleep = asleep ? sleepAmount(st.asleepFor, true) : 0;
+    const sleep = asleep ? sleepAmount(st.asleepFor, true) : st.awakeFor >= 0 ? sleepAmount(st.awakeFor, false) : 0;
     return {
         "side": side,
         "slack": slackAt(st.t) * (1 + (SLEEP_SLACK - 1) * sleep),

@@ -68,7 +68,7 @@ BODIES.forEach(([k, sc, r]) => {
         ok(name + ": nor on the other side, " + m, _cuts(k, sc, r, { "slack": slack, "side": -1 }) === 0);
     });
     // Counter-test: with the clearance gone the same check has to fail
-    ok(name + ": caught without clearance", _cuts(k, sc, r, { "clear": -C.body(k, sc, r).hh }) > 0);
+    ok(name + ": caught without clearance", _cuts(k, sc, r, { "clear": -1 }) > 0);
 });
 
 // The shoal's ring follows its real size, never a fixed 25 px
@@ -86,12 +86,15 @@ BODIES.forEach(([k, sc, r]) => {
         return { "b": b, "share": Math.abs(C.spanShare(b)), "first": first, "last": last };
     };
     eq("a compact body takes 44 %", C.spanShare(C.body("desktop", s, 0)), 0.44);
-    ["server", "nas", "laptop", "vps"].forEach(k => {
+    ["server", "nas", "laptop", "vps", "phone", "pi"].forEach(k => {
         const sh = C.spanShare(C.body(k, s, 0));
         ok(k + ": a wide body takes 50 to 55 %", sh >= 0.5 && sh <= 0.55);
     });
-    const e = spanOf("desktop");
-    ok("the span is centred", Math.abs(e.first + e.last) < 1.5 * 0.42 * 40);
+    ["desktop", "vps", "phone"].forEach(k => {
+        const e = spanOf(k);
+        ok(k + ": the span is centred", Math.abs((e.first + e.last) / 2 - (e.b.a0 + e.b.a1) / 2) < 1e-6);
+        ok(k + ": the span is its share of the length", Math.abs(Math.abs(e.first - e.last) - e.share * e.b.len) < 1e-6);
+    });
 }
 ok("a body as a shoal stays compact", C.spanShare(C.body("shoal", 1, 30)) === 0.44);
 
@@ -105,7 +108,7 @@ ok("a body as a shoal stays compact", C.spanShare(C.body("shoal", 1, 30)) === 0.
 // Split: stretches cut where z changes sign, one shared point, marked
 {
     const pts = C.build(C.body("vps", s, 0), 0, 0, {}), st = C.split(pts);
-    ok("six stretches for three turns", st.length >= 6 && st.length <= 7);
+    ok("six stretches for three turns", st.length === 6);
     ok("fronts and behinds alternate", st.every((q, i) => i === 0 || q.front !== st[i - 1].front));
     ok("each is marked by its z", st.every(q => q.points.slice(1).every(p => (p[2] > 0) === q.front)));
     ok("one point of overlap", st.every((q, i) => i === 0 || q.points[0] === st[i - 1].points[st[i - 1].points.length - 1]));
@@ -128,6 +131,32 @@ ok("the sleep is a smoothstep, 0.9 s", C.sleepAmount(0, true) === 0 && C.sleepAm
     eq("asleep: 30 % of its length", o.frac, 0.3);
     const mid = C.optsAt({ "t": 5, "asleepFor": 0.45, "lag": C.rest() }, 1, false);
     ok("asleep: unwinding in between", mid.frac < 1 && mid.frac > 0.3);
+}
+
+// The asleep sag hangs down in the scene on every species, tall or wide
+["phone", "pi", "vps", "server"].forEach(k => {
+    const b = C.body(k, s, 0), flat = C.build(b, 0, 0, {}), low = C.build(b, 0, 0, { "sag": 16 });
+    const tip = low.length - 1;
+    ok(k + ": the sag moves the tip down only", Math.abs(low[tip][0] - flat[tip][0]) < 1e-9 && low[tip][1] - flat[tip][1] > 1);
+});
+
+// A shoal with no or zero radius still gives finite points
+[0, undefined, -3].forEach(r => {
+    const p = C.build(C.body("shoal", 1, r), 0, 0, {});
+    ok("shoal radius " + r + ": finite points", p.length === 121 && p.every(q => q.every(Number.isFinite)));
+});
+
+// frac 0 leaves the entry point alone
+eq("frac 0: one point", C.build(C.body("vps", s, 0), 0, 0, { "frac": 0 }).length, 1);
+
+// Waking up plays the sleep back, then lands on the awake pose
+{
+    const wake = d => ({ "t": 5, "asleepFor": -1, "awakeFor": d, "lag": C.rest() });
+    ok("waking: not settled at once", !C.settled(wake(0.3)));
+    const mid = C.optsAt(wake(0.45), 1, false);
+    ok("waking: in between", mid.frac > 0.3 && mid.frac < 1 && mid.sag > 0 && mid.sag < 16);
+    ok("waking: settled after 0.9 s", C.settled(wake(0.9)));
+    eq("waking: lands on the awake pose", JSON.stringify(C.optsAt(wake(0.9), 1, false)), JSON.stringify(C.finalOpts(1, false)));
 }
 
 // The drag lag: a spring, settles under 0.5 px after release
