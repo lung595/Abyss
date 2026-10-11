@@ -287,7 +287,7 @@ DMS's *Reduce motion* is respected: every movement stops.
 Every peer carries tags, and the search bar and the launcher match them.
 
 - **Automatic tags** come from what the peer is: its kind (`nas`, `phone`, `server`, `vps`, `pi`, `laptop`, `desktop`), `exit` when it can lend Internet, `subnet` when it carries a network, and the name of your group for it (a group called Home gives `home`, Work gives `work`).
-- **Manual tags** are yours. They are lowercase letters, digits, `-` and `_`; anything else is turned into `-`. At most 8 per peer, 24 characters each, and 200 tagged peers. Setting them from a card is a separate step; for now they come from the `tags` entry of Abyss's settings file.
+- **Manual tags** are yours. They are lowercase letters, digits, `-` and `_`; anything else is turned into `-`. At most 8 per peer, 24 characters each, and 200 tagged peers. No screen sets them yet: editing tags on a card comes with a later step.
 - **Searching**: `#nas` matches that tag exactly. A plain word such as `work` also matches the start of a tag, next to names and the other words, so `work online` or `#work >100ms` combine as usual. In the launcher, `abyss #work`, `abyss ssh work` and `abyss copy #nas` offer those peers.
 
 Tags are only stored in Abyss's own settings (see [Privacy](#privacy)); nothing is computed or listed while no view is open.

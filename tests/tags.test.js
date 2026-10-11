@@ -16,9 +16,6 @@ const big = {};
 for (let i = 0; i < 300; i++)
     big["p" + i] = ["t"];
 eq("map: capped at 200 peers", Object.keys(T.cleanMap(big)).length, 200);
-eq("setManual adds", T.setManual({}, "a", ["Backup"]), { "a": ["backup"] });
-eq("setManual with [] removes", T.setManual({ "a": ["x"] }, "a", []), {});
-eq("setManual keeps a full map full", Object.keys(T.setManual(T.cleanMap(big), "new", ["t"])).length, 200);
 
 const peer = { id: "a", name: "atlas", kind: "nas", exit: true, networks: ["192.168.1.0/24", "0.0.0.0/0"] };
 const groups = [{ id: "u1", name: "Home", members: ["a"] }];
@@ -36,4 +33,6 @@ ok("a plain word matches a tag start", Q.parse("wor", [], tagsOf)[0].test(peer))
 ok("a plain word no tag has fails", !Q.parse("zzz", [], tagsOf)[0].test(peer));
 ok("without tagsOf nothing breaks", !Q.parse("#work", [])[0].test(peer));
 ok("known words keep their meaning", Q.parse("nas", [], tagsOf)[0].label === "NAS");
-done();
+eq("a __proto__ key is refused", Object.keys(T.cleanMap(JSON.parse('{"__proto__":["x"],"a":["y"]}'))), ["a"]);
+eq("a huge id is refused", Object.keys(T.cleanMap({ ["x".repeat(5000)]: ["y"] })), []);
+done("tags");

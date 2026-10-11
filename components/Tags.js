@@ -5,14 +5,17 @@
 // only, tested with gjs in tests/. Manual tags live in Abyss settings only:
 // { peerId: ["nas", "backup"] }.
 
+.import "Query.js" as Query
+
 const MAX_PER_PEER = 8;
 const MAX_PEERS = 200;
 const MAX_LENGTH = 24;
+const MAX_ID_LENGTH = 200;
 
 // One tag: lower case letters, digits, "-" and "_" only, so it can be typed
 // after "#" without quoting. Returns "" when nothing usable is left.
 function clean(s) {
-    return String(s === undefined || s === null ? "" : s).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/^#/, "").replace(/[^a-z0-9_-]+/g, "-").replace(/-{2,}/g, "-").replace(/^-+|-+$/g, "").slice(0, MAX_LENGTH);
+    return Query.norm(s).replace(/^#/, "").replace(/[^a-z0-9_-]+/g, "-").replace(/-{2,}/g, "-").replace(/^-+|-+$/g, "").slice(0, MAX_LENGTH);
 }
 
 // A list of tags: cleaned, without doubles, capped
@@ -32,22 +35,14 @@ function cleanMap(map) {
     if (!map || typeof map !== "object" || Array.isArray(map))
         return out;
     Object.keys(map).slice(0, MAX_PEERS).forEach(id => {
+        // Same guard as the "names" setting: no prototype key, no huge id
+        if (id === "__proto__" || id.length > MAX_ID_LENGTH)
+            return;
         const list = cleanList(map[id]);
         if (list.length)
             out[id] = list;
     });
     return out;
-}
-
-// The map with a peer's tags replaced (a new map; an empty list removes it)
-function setManual(map, peerId, list) {
-    const next = cleanMap(map);
-    const tags = cleanList(list);
-    if (tags.length && (next[peerId] || Object.keys(next).length < MAX_PEERS))
-        next[peerId] = tags;
-    else
-        delete next[peerId];
-    return next;
 }
 
 // What a peer is, without anything typed: its kind, "exit" when it can lend

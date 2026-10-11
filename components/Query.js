@@ -89,7 +89,7 @@ function parse(query, relays, tagsOf) {
             return;
         }
         out.push({
-            "label": "name ≈ “" + tok + "”",
+            "label": "name or tag ≈ “" + tok + "”",
             "name": true,
             "test": p => norm(p.name).indexOf(tok) >= 0 || (tok.length >= 3 && subseq(tok, norm(p.name))) || tagged(p, tok, false)
         });

@@ -99,7 +99,9 @@ function items(s, query) {
     // as nas or phone…) pick the peers themselves, as in the deep's search:
     // "abyss >100ms", "abyss ssh nas", "abyss copy phones"
     const toks = q.split(/\s+/), verb = ["copy", "ssh", "send"].indexOf(toks[0]) >= 0 ? toks[0] : "";
-    const tagsOf = p => Tags.of(p, s.groups, s.tags);
+    // Tags are worked out once per peer, not once per row and word
+    const tagCache = {};
+    const tagsOf = p => tagCache[p.id] || (tagCache[p.id] = Tags.of(p, s.groups, s.tags));
     const words = verb ? toks.slice(1) : toks;
     const filters = Query.parse(words.join(" "), s.relays, tagsOf);
     const smart = filters.some(f => !f.name);
@@ -118,9 +120,9 @@ function items(s, query) {
         s.peers.filter(p => p.online && filters.every(f => f.test(p))).forEach(p => rows(p).forEach(r => found.push(r)));
         return head.concat(net).filter(i => _match(i, q)).concat(found);
     }
-    // A peer whose tag starts a typed word ("work") is offered even when
-    // its name does not contain it
-    const tagHit = p => tagsOf(p).some(t => words.some(w => w && t.indexOf(w) === 0)) && words.every(w => p.name.toLowerCase().indexOf(w) >= 0 || tagsOf(p).some(t => t.indexOf(w) === 0));
+    // A peer the filters accept (they carry the tag rule, stop words and
+    // accents, as in the search bar) is offered even when its name lacks the words
+    const tagHit = p => filters.length > 0 && filters.every(f => f.test(p));
     const peers = [], tagged = [];
     s.peers.filter(p => p.online).forEach(p => rows(p).forEach(r => (tagHit(p) ? tagged : peers).push(r)));
     return head.concat(net, peers).filter(i => _match(i, q)).concat(tagged);
