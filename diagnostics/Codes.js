@@ -56,6 +56,7 @@ var SETTINGS = {
     "drift": "bool",
     "celebrate": "bool",
     "statusDot": "bool",
+    "healthColor": "bool",
     "middleToggle": "bool",
     "searchHints": "bool",
     "desktopLive": "bool",
