@@ -1,5 +1,6 @@
 import QtQuick
 import qs.Common
+import "Layout.js" as Lay
 
 // A network (route) reached through a peer, drawn as a cave on the sea floor.
 // Its rim always catches a little light so it reads against the black water;
@@ -8,16 +9,23 @@ import qs.Common
 Item {
     id: cave
 
+    required property int index
     property var scene
     property var net
     readonly property bool on: net.on && scene.connected
     // The pointer is over the cave or its label (the scene then shows its thread)
-    readonly property bool hovered: caveArea.containsMouse
+    readonly property bool hovered: caveArea.containsMouse || nameArea.containsMouse
+
+    // Squeezed row (Layout.js caveRow): the name stands higher and may ellipsize
+    readonly property real lift: scene ? Lay.caveLift(scene.frame, index) : 0
+    readonly property real nameW: scene ? Lay.caveRow(scene.frame).nameW : 0
 
     signal toggled
 
-    // A hovered label may be wider than the cave: keep it above its neighbours
-    z: hovered ? 1 : 0
+    // Above the creatures and the resting group, which in a squeezed row can
+    // stand over a name and would take its click; a hovered label may also be
+    // wider than the cave, so it stays above its neighbours
+    z: hovered ? 4 : 3
     width: 0
     height: 0
 
@@ -220,20 +228,35 @@ Item {
         id: label
         // Above the rock, kept inside the deep when it widens on hover
         x: Math.max(-cave.x + 6, Math.min(-width / 2, (cave.parent ? cave.parent.width : 1e6) - cave.x - width - 6))
-        y: -60 - height
-        title: cave.net.id
+        y: -60 - height - cave.lift
+        // Chip width follows font metrics; caveName assumes a fixed advance, a
+        // little wider than the real glyphs, so the pill stays within nameW
+        title: cave.hovered ? cave.net.id : Lay.caveName(cave.net.id, cave.nameW)
         titleSize: 11
         sub: !cave.hovered ? "" : !cave.scene.connected ? cave.net.cidr : (cave.net.via ? "via " + cave.net.via + " · " : "") + (cave.on ? "click to switch off" : "click to switch on")
         ink: cave.on ? cave.scene.abyss : cave.scene.ink
         subInk: cave.on ? Qt.rgba(cave.scene.abyss.r, cave.scene.abyss.g, cave.scene.abyss.b, 0.75) : cave.scene.inkDim
         color: cave.on ? Theme.tertiary : Qt.rgba(cave.scene.abyss.r, cave.scene.abyss.g, cave.scene.abyss.b, 0.66)
     }
+    // Two areas, not one column: in a squeezed row the column under a lifted
+    // name would run over the names of the neighbours standing lower
     MouseArea {
         id: caveArea
-        x: -52
-        y: label.y - 4
-        width: 104
-        height: 4 - y
+        readonly property real half: scene ? Lay.caveRockHalf(scene.frame) : 52
+        x: -half
+        y: -60
+        width: 2 * half
+        height: 64
+        hoverEnabled: true
+        cursorShape: Qt.PointingHandCursor
+        onClicked: cave.toggled()
+    }
+    MouseArea {
+        id: nameArea
+        x: label.x
+        y: label.y
+        width: label.width
+        height: label.height
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
         onClicked: cave.toggled()

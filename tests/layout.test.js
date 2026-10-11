@@ -372,4 +372,58 @@ const LAB = [1, 2, 12, 60, 120].flatMap(n => [3, 5, 10].map(max => ["lab:" + n, 
     ok("a dozing peer floats, an asleep one rests", !l.peers.d.floor && l.peers.z.floor && l.peers.d.y < l.peers.z.y - 40);
 }
 
+// Squeezed cave row: names keep clear space (no overlap with each other or the edge)
+{
+        const box = (fr, i, name) => {
+        const row = L.caveRow(fr), shown = L.caveName(name, row.nameW);
+        const w = Math.min(row.nameW, shown.length * L.CAVE_CHAR_W + L.CAVE_CHIP_PAD), x = L.caveX(fr, i), lift = L.caveLift(fr, i);
+        return { "l": x - w / 2, "r": x + w / 2, "b": lift, "t": lift + L.CAVE_NAME_H };
+    };
+    const hit = (a, b) => a.l < b.r && b.l < a.r && a.b < b.t && b.b < a.t;
+    [[480, 340], [646, 420], [1100, 700]].forEach(([w, h]) => [4, 8, 15].forEach(n => {
+        const fr = L.frame(w, h, 60, { "caves": n });
+        const names = [...Array(n).keys()].map(i => "cave-network-number-" + i);
+        const bs = names.map((nm, i) => box(fr, i, nm));
+        ok(w + "x" + h + " " + n + " caves: a name box is lower than the tier lift", L.CAVE_NAME_H <= L.CAVE_TIER_LIFT);
+        ok(w + "x" + h + " " + n + " caves: names never overlap",
+            bs.every((a, i) => bs.every((b, j) => i >= j || !hit(a, b))));
+        ok(w + "x" + h + " " + n + " caves: names stay inside the deep", bs.every(b => b.l >= 0 && b.r <= w));
+        ok(w + "x" + h + " " + n + " caves: the last cave stays on the floor", L.caveX(fr, n - 1) <= w - 60);
+        ok(w + "x" + h + " " + n + " caves: names never shrink below readable", L.caveRow(fr).nameW >= 48);
+        // Click areas: the rock strips never meet, and sit below every name box
+        const half = L.caveRockHalf(fr);
+        ok(w + "x" + h + " " + n + " caves: no rock strip is hit by another cave's name or strip",
+            bs.every((b, i) => [...Array(n).keys()].every(j => {
+                const x = L.caveX(fr, j);
+                return i === j || (Math.abs(x - L.caveX(fr, i)) >= 2 * half - 1e-9 && (x + half <= b.l || x - half >= b.r || b.b >= 0));
+            })));
+    }));
+    // Creatures keep clear of the names too, squeezed arrangement included
+    [[480, 340], [580, 480], [780, 620]].forEach(([w, h]) => [4, 8, 15].forEach(n => {
+        const crowd = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"].map((id, i) => p(id, [4, 12, 40, 70, 150][i % 5]));
+        const lay2 = L.layout(crowd, w, h, 60, { "caves": n });
+        const fy = lay2.frame.floorY, bx = [...Array(n).keys()].map(c => ({ "x": L.caveX(lay2.frame, c), "lift": L.caveLift(lay2.frame, c), "half": L.caveRow(lay2.frame).tiers > 1 ? L.caveRow(lay2.frame).nameW / 2 : 50 }));
+        ok(w + "x" + h + " " + n + " caves: no creature over a name", Object.keys(lay2.peers).filter(id => !lay2.peers[id].floor).every(id => bx.every(c => {
+            const q = lay2.peers[id];
+            return Math.abs(q.x - c.x) >= c.half + 50 || q.y + 66 <= fy - 88 - c.lift || q.y - 30 >= fy - 52;
+        })));
+        // The lift for the caves must not make creatures overlap more than without caves
+        const clashes = lay => {
+            const its = Object.keys(lay.peers).filter(id => !lay.peers[id].floor).map(id => lay.peers[id]);
+            return its.reduce((c, a, i) => c + its.filter((b, j) => i < j && Math.abs(a.x - b.x) < L.BODY_W && Math.abs(a.y - b.y) < L.BODY_UP).length, 0);
+        };
+        ok(w + "x" + h + " " + n + " caves: lifted creatures overlap no more than without caves (" + clashes(lay2) + " vs " + clashes(L.layout(crowd, w, h, 60, null)) + ")",
+            clashes(lay2) <= clashes(L.layout(crowd, w, h, 60, null)));
+        const its = Object.keys(lay2.peers).filter(id => !lay2.peers[id].floor).map(id => lay2.peers[id]);
+        ok(w + "x" + h + " " + n + " caves: creatures stay under the surface", its.every(q => q.y - 30 >= lay2.frame.surfaceY));
+    }));
+    const roomy = L.frame(646, 420, 60, { "caves": 3 });
+    ok("a roomy row is untouched", L.caveRow(roomy).tiers === 1 && L.caveLift(roomy, 2) === 0 && Math.abs(L.caveX(roomy, 1) - L.caveX(roomy, 0) - 646 * 0.16) < 1e-9);
+    const wide = L.frame(1100, 700, 60, { "caves": 4 });
+    eq("a roomy row shows a 14-char name whole (edge room is the cap)", L.caveName("cave-network-1", L.caveRow(wide).nameW), "cave-network-1");
+    eq("a short name stays whole", L.caveName("lab", 60), "lab");
+    eq("a long name ellipsizes deterministically", L.caveName("very-long-network-name", 80), "very-lon\u2026");
+    eq("the same input gives the same cut", L.caveName("very-long-network-name", 80), L.caveName("very-long-network-name", 80));
+}
+
 done("layout");

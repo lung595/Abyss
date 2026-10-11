@@ -96,6 +96,12 @@ The caves on the floor are your networks and routes. Click one to turn it on or 
 
 ![Networks](../screenshots/networks.png)
 
+### Many networks in a small deep
+
+When the caves no longer fit side by side, the row closes up and the names stand on up to three heights so none touches another. A name too long for its room ends in an ellipsis; hover the cave to read the whole name. Creatures keep clear of the names. The click area is the cave's rock and its own name.
+
+![15 caves in a small deep](img/caves15-after.png)
+
 ## Find a peer
 
 Just type a name: the deep keeps the matches (favorites first) and dims the rest. <kbd>Enter</kbd> opens the first one's card, <kbd>Esc</kbd> clears.

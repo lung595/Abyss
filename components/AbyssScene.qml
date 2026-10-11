@@ -859,7 +859,7 @@ Item {
                 return;
             const o = offsetOf(id);
             th.push({
-                "pts": Lay.thread([Lay.caveX(f, i), f.floorY - Lay.CAVE_TOP], [at.x + o.x, at.y + o.y]),
+                "pts": Lay.thread([Lay.caveX(f, i), f.floorY - Lay.caveTop(f, i)], [at.x + o.x, at.y + o.y]),
                 "color": Theme.tertiary
             });
         });
@@ -1866,7 +1866,6 @@ Item {
                 model: root.source ? root.source.networks : []
                 Cave {
                     required property var modelData
-                    required property int index
                     scene: root
                     net: modelData
                     x: Lay.caveX(root.frame, index)

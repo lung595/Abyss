@@ -117,11 +117,11 @@ const BOX_W = 88, BOX_H = 60;
 // peer may become the top consumer, so every one keeps that room (P124).
 // Sideways, the top consumer's rates widen its pill: it keeps 100 px from a
 // cave, not 88 (104 put a tentacle over a lantern in the lab demo).
-const BODY_UP = 30, LABEL_DOWN = 66, CAVE_LABEL = [88, 52], CAVE_W = 100;
+const BODY_UP = 30, BODY_W = 50, LABEL_DOWN = 66, CAVE_LABEL = [88, 52], CAVE_W = 100;
 function _clash(a, b, strict) {
     if (a.cave || b.cave) {
         const c = a.cave ? a : b, q = a.cave ? b : a;
-        return Math.abs(q.x - c.x) < CAVE_W && q.y + LABEL_DOWN > c.floorY - CAVE_LABEL[0] && q.y - BODY_UP < c.floorY - CAVE_LABEL[1];
+        return Math.abs(q.x - c.x) < (c.half || CAVE_W / 2) + CAVE_W / 2 && q.y + LABEL_DOWN > c.floorY - CAVE_LABEL[0] - (c.lift || 0) && q.y - BODY_UP < c.floorY - CAVE_LABEL[1];
     }
     if (Math.abs(a.x - b.x) < BOX_W && Math.abs(a.y - b.y) < BOX_H)
         return true;
@@ -143,9 +143,7 @@ function spread(f, rings, strict, prev) {
     const n = order.length, S = spreadSpan(n);
     const ideal = _keepOrder(order.map(o => o.p.id), fanAngles(n, n > 1 ? S / (n - 1) : 0), prev);
     // The caves' labels are in the way too (never a tentacle clash: no ring)
-    const caves = [];
-    for (let c = 0; c < f.caves; c++)
-        caves.push({ "x": caveX(f, c), "floorY": f.floorY, "cave": true, "ring": -1, "deg": 999 });
+    const caves = _caveBoxes(f);
     const placed = caves.slice();
     for (let i = 0; i < n; i++) {
         const k = order[i].k, rho = f.fan.rings[k];
@@ -176,6 +174,14 @@ function _keepOrder(ids, angles, prev) {
     return out;
 }
 
+// The caves' name boxes as _clash sees them (a squeezed row lifts some names)
+function _caveBoxes(f) {
+    const row = caveRow(f), boxes = [];
+    for (let c = 0; c < f.caves; c++)
+        boxes.push({ "x": caveX(f, c), "floorY": f.floorY, "cave": true, "ring": -1, "deg": 999, "lift": caveLift(f, c), "half": row.tiers > 1 ? row.nameW / 2 : CAVE_W / 2 });
+    return boxes;
+}
+
 // The crowded arrangement: each ring filled from the middle at a label's
 // width apart; nothing overlaps, but things may hang one below the other
 function pack(f, rings, prev) {
@@ -183,6 +189,35 @@ function pack(f, rings, prev) {
     rings.forEach((ps, k) => {
         const angles = _keepOrder(ps.map(p => p.id), fanAngles(ps.length, ringStep(f, k)), prev);
         ps.forEach((p, i) => items.push(Object.assign({ "id": p.id, "deg": angles[i], "rho": f.fan.rings[k], "ring": k }, fanPoint(f, angles[i], f.fan.rings[k]))));
+    });
+    // A creature that hangs over a cave's name is lifted clear of it
+    const caves = _caveBoxes(f);
+    items.forEach(it => caves.filter(c => _clash(it, c, false)).forEach(c => {
+        it.y = Math.min(it.y, c.floorY - CAVE_LABEL[0] - c.lift - LABEL_DOWN);
+        it.lifted = true;
+    }));
+    // A lifted creature may land on another one: it takes the nearest spot
+    // (up a body height at a time, then aside) that is clear of the names and
+    // has the fewest creatures on it, never above the surface or off the deep.
+    // Staying put on the name is not an option, so in an overfull deep a rest
+    // of overlap between creatures can remain (ROADMAP, known limits).
+    const hits = (c, it) => items.filter(o => o !== it && Math.abs(o.x - c.x) < BODY_W && Math.abs(o.y - c.y) < BODY_UP).length;
+    items.filter(it => it.lifted).forEach(it => {
+        let best = null;
+        for (let up = 0; it.y - up - BODY_UP >= f.surfaceY; up += BODY_UP)
+            [0, -BODY_W, BODY_W, -2 * BODY_W, 2 * BODY_W].forEach(dx => {
+                const c = { "x": it.x + dx, "y": it.y - up, "cave": false, "ring": it.ring, "deg": it.deg };
+                if (c.x < BODY_W / 2 || c.x > f.w - BODY_W / 2 || caves.some(q => _clash(c, q, false)))
+                    return;
+                const cost = hits(c, it) * 1000 + up + Math.abs(dx);
+                if (!best || cost < best.cost)
+                    best = { "cost": cost, "x": c.x, "y": c.y };
+            });
+        if (best) {
+            it.x = best.x;
+            it.y = best.y;
+        }
+        delete it.lifted;
     });
     return items;
 }
@@ -324,9 +359,56 @@ function layout(peers, w, h, top, inset, prev) {
 // A cave's thread leaves from the top of its label (Cave.qml: label above
 // the rock, taller on hover), never through the text or the rock
 const CAVE_TOP = 96;
+// Roomy: caves 16 % of the deep apart. When that overruns the floor the row
+// squeezes: caves close up and their names stagger over up to CAVE_TIERS
+// heights, so a name may be up to tiers x step wide without touching the
+// next name on its own height. A roomy row gives a name the whole step; a
+// squeezed one aims at CAVE_NAME_W and never goes below CAVE_NAME_MIN (below
+// that the row is simply overfull).
+const CAVE_TIERS = 3, CAVE_TIER_LIFT = 26, CAVE_NAME_H = 24, CAVE_NAME_W = 96, CAVE_NAME_MIN = 48, CAVE_NAME_GAP = 6;
+// A cave's click area is a strip of its rock, at most this wide each side
+const CAVE_ROCK_HALF = 52;
+// The edge room also keeps the first and last names (at most 2 x (edge - 6) wide) inside the deep
+const CAVE_EDGE = 64, CAVE_CHAR_W = 7, CAVE_CHIP_PAD = 16;
+
+// { step, tiers, nameW } for the row of frame.caves caves
+function caveRow(frame) {
+    const n = frame.caves, usable = frame.w - 2 * frame.insetFloor;
+    const natural = Math.max(96, usable * 0.16), edgeRoom = 2 * (frame.insetFloor + CAVE_EDGE - 6);
+    const fit = n > 1 ? (usable - 2 * CAVE_EDGE) / (n - 1) : natural;
+    if (n < 2 || fit >= natural)
+        return { "step": natural, "tiers": 1, "nameW": Math.min(natural - CAVE_NAME_GAP, edgeRoom) };
+    const step = Math.max(fit, 1);
+    const tiers = Math.min(CAVE_TIERS, Math.ceil((CAVE_NAME_W + CAVE_NAME_GAP) / step));
+    return { "step": step, "tiers": tiers, "nameW": Math.max(CAVE_NAME_MIN, Math.min(tiers * step - CAVE_NAME_GAP, edgeRoom)) };
+}
+
+// Half width of cave i's rock click strip: strips of neighbours never meet,
+// and a name is hit through its own box (Cave.qml), not through a column
+// that would run over the names standing on the other heights
+function caveRockHalf(frame) {
+    return Math.min(CAVE_ROCK_HALF, caveRow(frame).step / 2);
+}
 
 function caveX(frame, i) {
-    return frame.insetFloor + 64 + i * Math.max(96, (frame.w - 2 * frame.insetFloor) * 0.16);
+    return frame.insetFloor + CAVE_EDGE + i * caveRow(frame).step;
+}
+
+// Cave i's name stands on height i mod tiers; higher names lift the label
+function caveLift(frame, i) {
+    return (i % caveRow(frame).tiers) * CAVE_TIER_LIFT;
+}
+
+// Where cave i's thread leaves: the top of its (maybe lifted) label
+function caveTop(frame, i) {
+    return CAVE_TOP + caveLift(frame, i);
+}
+
+// A name cut to the chars that fit nameW, with an ellipsis: deterministic
+// (a fixed advance per char), so layout never depends on font metrics
+function caveName(name, nameW) {
+    const room = Math.max(3, Math.floor((nameW - CAVE_CHIP_PAD) / CAVE_CHAR_W));
+    return name.length <= room ? name : name.slice(0, room - 1) + "\u2026";
 }
 
 // A tentacle from the jellyfish rim to a peer, optionally through a relay:
