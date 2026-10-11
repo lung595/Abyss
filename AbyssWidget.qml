@@ -106,6 +106,39 @@ PluginComponent {
             width: parent ? parent.width : 0
             implicitHeight: root.popoutHeight
 
+            // The app invite sits over the top of the scene while an
+            // app-opening action waits for the app; loaded only then
+            Loader {
+                id: invite
+                z: 2
+                // Set while a band exists: it keeps the Loader up for the 100 ms exit fade
+                property bool lingering: false
+                active: (!!root.daemon && !!root.daemon.appRequest) || lingering
+                anchors.fill: parent
+                sourceComponent: AppInstallBand {
+                    installer: root.daemon.appInstaller
+                    action: root.daemon.appRequest ? root.daemon.appRequest.action : "send"
+                    deviceName: root.daemon.appRequest ? root.daemon.appRequest.device : ""
+                    reduceMotion: root.prefs.reduceMotion
+                    open: !!root.daemon.appRequest
+                    Component.onCompleted: invite.lingering = true
+                    onFaded: invite.lingering = false
+                    onDismissed: dontAsk => {
+                        const req = root.daemon.appRequest;
+                        root.daemon.endApp(dontAsk);
+                        // Not now: carry on without the app (the picker)
+                        if (req && req.action === "send")
+                            root.daemon.send.pick(root.daemon.findPeer(req.device), false);
+                    }
+                    onProceed: () => {
+                        const req = root.daemon.appRequest;
+                        root.daemon.endApp(false);
+                        if (req && req.ready)
+                            req.ready();
+                    }
+                }
+            }
+
             AbyssScene {
                 id: scene
                 anchors.fill: parent

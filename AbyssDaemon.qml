@@ -3,6 +3,7 @@ import Quickshell
 import Quickshell.Io
 import qs.Services
 import "components"
+import "components/AppInstall.js" as AppInstall
 import "components/Terminal.js" as Terminal
 import "components/Connect.js" as Connect
 import "components/MyGroups.js" as MyGroups
@@ -77,6 +78,85 @@ Item {
     readonly property alias prefs: prefs
     Prefs {
         id: prefs
+    }
+
+    // The Abyss app: install check and invite. appRequest is the app-opening
+    // action waiting for the app ({action, device}), null when none.
+    readonly property alias appInstaller: appInstaller
+    property var appRequest: null
+    readonly property string _dir: Qt.resolvedUrl(".").toString().replace(/^file:\/\//, "").replace(/\/$/, "")
+    AppInstaller {
+        id: appInstaller
+        pluginDir: root._dir
+        widgetVersion: manifest.version
+    }
+    // Value 12: DMS leaves the app behind when the plugin folder is deleted, so on
+    // unload a detached one-shot checks whether plugin.json is gone and sweeps what
+    // the widget installed (a restart finds the manifest and does nothing)
+    Component.onDestruction: {
+        const argv = AppInstall.sweepCommand(root._dir, Quickshell.env("XDG_DATA_HOME"), Quickshell.env("HOME"));
+        if (argv)
+            Quickshell.execDetached(argv);
+    }
+    FileView {
+        id: manifest
+        property string version: ""
+        path: root._dir + "/plugin.json"
+        blockLoading: true
+        onLoaded: {
+            try {
+                manifest.version = JSON.parse(manifest.text()).version || "";
+            } catch (e) {
+                manifest.version = "";
+            }
+        }
+    }
+
+    // An app-opening action asked for the app. The version probe answers once;
+    // `ready` runs when the app is current, otherwise the invite shows in the
+    // popout. `fallback` runs for "don't ask again" or when the popout is absent.
+    property var _pending: null
+    function askApp(action, device, ready, fallback) {
+        // A second ask while the probe runs settles the first one on its fallback
+        if (root._pending)
+            root._pending.fallback();
+        root._pending = {
+            "action": action,
+            "device": device || "",
+            "ready": ready,
+            "fallback": fallback
+        };
+        appInstaller.refresh();
+    }
+    Connections {
+        target: appInstaller
+        function onChecked(state) {
+            const p = root._pending;
+            root._pending = null;
+            if (!p)
+                return;
+            const outcome = AppInstall.askOutcome(state, prefs.appDontAsk);
+            if (outcome === "ready")
+                p.ready();
+            else if (outcome === "fallback" || !root.open())
+                p.fallback();
+            else {
+                root.appRequest = {
+                    "action": p.action,
+                    "device": p.device,
+                    "ready": p.ready
+                };
+                appInstaller.phase = "idle";
+                appInstaller.step = 0;
+            }
+        }
+    }
+
+    function endApp(dontAskAgain) {
+        if (dontAskAgain)
+            prefs.set("appDontAsk", true);
+        root.appRequest = null;
+        appInstaller.phase = "idle";
     }
 
     // Sending files to a peer: one hub for the menu, Ctrl+V, the

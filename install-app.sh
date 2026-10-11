@@ -37,10 +37,15 @@ entry_ours() {
     [ -f "$entry" ] && grep -qxF "Exec=\"$home_dir/abyss\"" "$entry"
 }
 
+by_widget=
 case "${1-}" in
---uninstall)
+--sweep | --uninstall)
     if [ ! -f "$marker" ]; then
         echo "Nothing to remove: $home_dir is not an Abyss app install." >&2
+        exit 0
+    fi
+    # --sweep (the plugin was removed) only touches what the widget itself installed
+    if [ "$1" = --sweep ] && ! grep -qxF 'by widget' "$marker"; then
         exit 0
     fi
     # The link and the entry only when they are ours, so a command or an entry
@@ -67,8 +72,9 @@ case "${1-}" in
     exit 0
     ;;
 "") ;;
+--by-widget) by_widget=1 ;;
 *)
-    echo "Usage: install-app.sh [--uninstall]" >&2
+    echo "Usage: install-app.sh [--uninstall | --by-widget | --sweep]" >&2
     exit 2
     ;;
 esac
@@ -103,16 +109,50 @@ for dir in "$data" "$data/applications" "$bin_dir" "$home_dir"; do
 $dir"
 done
 
+# The origin: a plain run is a standalone install; a widget run over an existing
+# install keeps that install's origin, so the plugin removal only sweeps what the
+# widget itself installed
+if [ -n "$by_widget" ] && [ -f "$marker" ] && ! grep -qxF 'by widget' "$marker"; then
+    by_widget=
+fi
+
 # Only the app's own files: the widget (QML at the repository root) is not part of it
 rm -rf -- "$home_dir"
-mkdir -p -- "$home_dir/components/settings" "$data/applications" "$bin_dir"
-cp -- "$src/app/shell.qml" "$src/app/usage.txt" "$src/app/abyss" "$home_dir/"
-cp -L -- "$src/app/components/"*.js "$src/app/components/"*.qml "$src/app/components/qmldir" "$home_dir/components/"
-cp -rL -- "$src/app/components/assets" "$home_dir/components/"
-mkdir -p -- "$home_dir/views"
-cp -- "$src/app/views/"*.qml "$home_dir/views/"
-cp -- "$src/components/settings/"* "$home_dir/components/settings/"
-printf '%s\n' "$created" | sed -n 's/^\(..*\)$/dir \1/p' >"$marker"
+mkdir -p -- "$data/applications" "$bin_dir" "$home_dir"
+if [ -n "$by_widget" ]; then
+    # A widget install runs the app from the plugin folder, so a widget update
+    # updates the app; the stub is all that is installed
+    case $src in
+    *[\'\"\`\$\\]* | *'
+'*)
+        echo "The plugin folder path holds a character the launcher cannot quote." >&2
+        exit 1
+        ;;
+    esac
+    cat >"$home_dir/abyss" <<STUB
+#!/bin/sh
+# Runs the app from the Abyss plugin folder (written by install-app.sh --by-widget)
+app='$src/app/abyss'
+[ -x "\$app" ] || { echo "abyss: the Abyss plugin folder is gone; run install-app.sh --sweep." >&2; exit 1; }
+exec "\$app" "\$@"
+STUB
+    chmod +x -- "$home_dir/abyss"
+else
+    mkdir -p -- "$home_dir/components/settings" "$home_dir/views"
+    cp -- "$src/app/shell.qml" "$src/app/usage.txt" "$src/app/abyss" "$home_dir/"
+    cp -L -- "$src/app/components/"*.js "$src/app/components/"*.qml "$src/app/components/qmldir" "$home_dir/components/"
+    cp -rL -- "$src/app/components/assets" "$home_dir/components/"
+    cp -- "$src/app/views/"*.qml "$home_dir/views/"
+    cp -- "$src/components/settings/"* "$home_dir/components/settings/"
+fi
+cp -- "$src/install-app.sh" "$home_dir/"
+if ! {
+    printf '%s\n' "$created" | sed -n 's/^\(..*\)$/dir \1/p'
+    if [ -n "$by_widget" ]; then echo 'by widget'; fi
+} >"$marker"; then
+    echo "Could not write $marker." >&2
+    exit 1
+fi
 ln -sf -- "$home_dir/abyss" "$link"
 
 # The desktop entry gets the full quoted path: a menu does not always have

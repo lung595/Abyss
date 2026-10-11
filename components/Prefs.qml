@@ -82,6 +82,9 @@ QtObject {
     readonly property string labTraffic: _get("labTraffic", "normal")
     readonly property bool labLazy: _get("labLazy", false)
 
+    // "Don't ask again" on the app invite; reset from the Abyss app settings row
+    readonly property bool appDontAsk: _get("appDontAsk", false)
+
     readonly property bool reduceMotion: SettingsData.reduceMotion
 
     function set(key, value) {

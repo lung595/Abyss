@@ -52,6 +52,7 @@ var SETTINGS = {
     "notifications": "bool",
     "terminal": ["auto", "ghostty", "kitty", "foot", "alacritty", "wezterm", "konsole", "ptyxis", "gnome-terminal", "xterm"],
     "shareSsh": "bool",
+    "appDontAsk": "bool",
     "smooth": "bool",
     "drift": "bool",
     "celebrate": "bool",
