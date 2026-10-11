@@ -109,6 +109,62 @@ Item {
                         });
             return rows;
         }
+        // Primary and secondary share one row when they fit; the command is never cut mid-word
+        function test_row_and_command_data() {
+            return [
+                {
+                    "tag": "failed/580",
+                    "p": "failed",
+                    "w": 580,
+                    "a": "Try again",
+                    "b": "Not now"
+                },
+                {
+                    "tag": "failed/360",
+                    "p": "failed",
+                    "w": 360,
+                    "a": "Try again",
+                    "b": "Not now"
+                },
+                {
+                    "tag": "idle/580",
+                    "p": "idle",
+                    "w": 580,
+                    "a": "Install the Abyss app",
+                    "b": "Not now"
+                },
+                {
+                    "tag": "missing/360",
+                    "p": "missing",
+                    "w": 360,
+                    "a": "Check again",
+                    "b": "Not now"
+                }
+            ];
+        }
+        function test_row_and_command(d) {
+            const inst = createTemporaryObject(fakeComponent, host, {
+                "phase": d.p,
+                "step": 2
+            });
+            const holder = createTemporaryObject(holderComponent, host, {
+                "width": d.w
+            });
+            const band = bandComponent.createObject(holder, {
+                "installer": inst,
+                "action": "settings",
+                "deviceName": "x"
+            });
+            wait(350);
+            const all = leaves(band, []);
+            const a = all.find(i => i.text === d.a);
+            const b = all.find(i => i.text === d.b);
+            verify(a && b, "buttons found");
+            compare(Math.round(box(band, a).y), Math.round(box(band, b).y), "same row");
+            for (const t of all.filter(i => i.font.family === "monospace"))
+                verify(t.wrapMode === Text.WordWrap, "command wraps at spaces only");
+            holder.destroy();
+        }
         function test_states(d) {
             check_state(d.p, d.a, d.w);
         }

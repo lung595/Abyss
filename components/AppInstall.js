@@ -116,5 +116,7 @@ function failureReason(stderr, home) {
     let line = lines[lines.length - 1];
     if (home && home.length > 1)
         line = line.split(home.replace(/\/+$/, "")).join("~");
-    return line.length > 120 ? line.slice(0, 119) + "…" : line;
+    line = line.length > 120 ? line.slice(0, 119) + "…" : line;
+    // The band appends a second sentence, so the reason must end with a stop
+    return /[.!?…]$/.test(line) ? line : line + ".";
 }

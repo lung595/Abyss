@@ -302,6 +302,13 @@ Rectangle {
             color: Theme.surfaceContainerHighest
             border.width: 1
             border.color: Theme.outline
+            // Full command width, to decide between a labelled and an icon-only Copy
+            TextMetrics {
+                id: cmdMetrics
+                text: band.installer.help.command || ""
+                font.family: "monospace"
+                font.pixelSize: Theme.fontSizeSmall
+            }
             Flow {
                 id: cmdRow
                 x: 12
@@ -313,7 +320,8 @@ Rectangle {
                     height: 44
                     verticalAlignment: Text.AlignVCenter
                     text: band.installer.help.command || ""
-                    wrapMode: Text.WrapAnywhere
+                    // Break at spaces only: a command is never cut inside a word
+                    wrapMode: Text.WordWrap
                     font.family: "monospace"
                     font.pixelSize: Theme.fontSizeSmall
                     color: Theme.surfaceText
@@ -322,7 +330,10 @@ Rectangle {
                     id: copy
                     kind: "flat"
                     iconName: "content_copy"
-                    label: copied ? "Copied" : "Copy"
+                    // Icon only when the command and a labelled button share no line
+                    readonly property bool compact: cmdMetrics.width + 24 + 8 + 96 > cmdRow.parent.width
+                    label: compact ? "" : (copied ? "Copied" : "Copy")
+                    tip: compact ? (copied ? "Copied" : "Copy") : ""
                     reduceMotion: band.reduceMotion
                     property bool copied: false
                     onClicked: {
@@ -338,12 +349,23 @@ Rectangle {
         Item {
             id: actions
             width: parent.width
-            readonly property bool fits: left.implicitWidth + 8 + right.implicitWidth <= width
+            readonly property bool fits: left.natural + 8 + right.implicitWidth <= width
             height: fits ? left.height : left.height + (right.implicitWidth > 0 ? 8 + right.height : 0)
 
             Flow {
                 id: left
-                width: actions.fits ? implicitWidth : parent.width
+                // An unsized Flow reports one column, so the row width is summed here
+                readonly property real natural: {
+                    let w = 0, n = 0;
+                    for (const c of children) {
+                        if (c.visible) {
+                            w += c.implicitWidth;
+                            n++;
+                        }
+                    }
+                    return w + 8 * Math.max(0, n - 1);
+                }
+                width: actions.fits ? natural : parent.width
                 spacing: 8
 
                 BandButton {
