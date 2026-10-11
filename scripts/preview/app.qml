@@ -55,7 +55,7 @@ Window {
     function fillSend() {
         const long = root.scene === "send-long";
         const names = long ? ["/x/quarterly-report-final-version-2-reviewed-by-everyone-and-signed-off.pdf", "/x/holiday-photos-from-the-long-weekend-in-the-mountains-2026.zip"] : ["/x/report.pdf", "/x/photos.zip", "/x/notes.txt"];
-        let q = Queue.add(Queue.empty(), names, ["laptop-anna", "nas-box"]).state;
+        let q = Queue.add(Queue.empty(), names, (long ? ["laptop-anna", "workstation-in-the-basement-lab-rack-07"] : ["laptop-anna", "nas-box"])).state;
         // 1: rsync with a meter, 2: done (stays until dismissed), 4: scp without
         // progress, 5: failed (goes to the history)
         q = Queue.progress(Queue.start(q, 1), 1, 0.42);
@@ -68,11 +68,11 @@ Window {
         frame.sendView.q = q;
         frame.sendView.chosen = ["laptop-anna"];
         if (root.scene === "send-refused")
-            frame.sendView.failure = {
+            frame.sendView.say({
                 "title": "nas-box refused the file",
                 "advice": "Check that SSH is allowed on that device.",
                 "guide": "https://example.invalid/guide"
-            };
+            }, 5);
     }
 
     Timer {

@@ -370,6 +370,12 @@ Item {
             }
         }
 
+        Item {
+            visible: view.notice !== null
+            width: 1
+            height: visible ? Theme.spacingS : 0
+        }
+
         GuideBand {
             visible: view.notice !== null
             width: view.width

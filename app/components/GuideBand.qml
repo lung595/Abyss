@@ -20,23 +20,38 @@ Rectangle {
 
     height: 44
     radius: Theme.cornerRadius
-    color: Theme.surfaceContainerHigh
+    // The error kind is the error role at 13 % over the surface (spec 2.9.4)
+    color: band.error ? Theme.withAlpha(Theme.error, 0.13) : Theme.surfaceContainerHigh
     border.width: 1
     border.color: band.error ? Theme.error : Theme.warning
 
-    Text {
+    // Two strokes, as the mark of the mockup (a font glyph reads too thin)
+    Item {
         id: cross
 
         visible: band.error
+        width: 12
+        height: 12
         anchors {
             left: parent.left
             leftMargin: Theme.spacingL
             verticalCenter: parent.verticalCenter
         }
-        text: "✕"
-        color: Theme.error
-        font.pixelSize: Theme.fontSizeMedium
-        font.weight: Font.Bold
+
+        Repeater {
+            model: [45, -45]
+
+            Rectangle {
+                required property int modelData
+
+                anchors.centerIn: parent
+                width: 16
+                height: 2
+                radius: 1
+                rotation: modelData
+                color: Theme.error
+            }
+        }
     }
 
     Text {
@@ -53,7 +68,7 @@ Rectangle {
         elide: Text.ElideRight
     }
 
-    Text {
+    Rectangle {
         id: retry
 
         visible: band.actionLabel !== ""
@@ -62,12 +77,23 @@ Rectangle {
             rightMargin: Theme.spacingL
             verticalCenter: parent.verticalCenter
         }
-        text: band.actionLabel
-        color: Theme.primary
-        font.pixelSize: 14
-        font.weight: Font.DemiBold
+        width: retryText.implicitWidth + 2 * Theme.spacingL
+        height: 32
+        radius: height / 2
+        color: Theme.error
         Accessible.role: Accessible.Button
         Accessible.name: band.actionLabel
+
+        Text {
+            id: retryText
+
+            anchors.centerIn: parent
+            text: band.actionLabel
+            // The surface role reads on the error fill in both themes
+            color: Theme.surface
+            font.pixelSize: Theme.fontSizeMedium
+            font.weight: Font.DemiBold
+        }
 
         TapHandler {
             onTapped: band.acted()
