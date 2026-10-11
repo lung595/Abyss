@@ -40,6 +40,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 - Ctrl+V on an open card now finds the peer (it looked it up by the wrong id and never pasted); two *Send a file…* pickers can no longer be open at once; a view is counted once, and released from a hub that is swapped out, so the notification-or-scene choice is right.
 
+### Documentation
+
+- **Jellyfish grab mockups**: the before state and options A and B (A approved) of the tentacles wrapping around a device, in light, dark and reduce-motion, on one board page (`docs/design/grab/`), with the offscreen preview scene that renders them (`scripts/preview/grab.qml`, `grab.sh`). Design material only: no change to the plugin.
+
 ## 0.5.2 - 2026-10-03
 
 ### Documentation
