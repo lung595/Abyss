@@ -72,6 +72,43 @@ Item {
             check("ipc demo refuses on the real mesh", test.ipc.demo("needsLogin") === "Not in demo mode");
         },
         () => {
+            // Favourite alerts, driven with a clock and peer lists of our own
+            const view = daemon.source.view, atlas = view.peers.find(p => p.name === "atlas");
+            const withAtlas = online => ({
+                    "state": "connected",
+                    "peers": view.peers.map(p => p.id === atlas.id ? Object.assign({}, p, {
+                            "online": online
+                        }) : p)
+                });
+            const shown = () => ToastService.shown.filter(t => t.indexOf("atlas") === 0 || t.indexOf("Atlas") === 0);
+            const t0 = 1000000;
+            daemon.prefs.set("favouriteAlerts", true);
+            daemon.prefs.set("favouriteAlertDelay", "30");
+            daemon.prefs.toggleFavorite(atlas.id, "atlas");
+            daemon._alertStep(t0, withAtlas(true));
+            daemon._alertStep(t0 + 1000, withAtlas(false));
+            daemon._alertStep(t0 + 10000, withAtlas(false));
+            daemon._alertStep(t0 + 12000, withAtlas(true));
+            check("a drop shorter than the wait raises nothing", shown().length === 0, ToastService.shown);
+            daemon._alertStep(t0 + 20000, withAtlas(false));
+            daemon._alertStep(t0 + 60000, withAtlas(false));
+            check("a drop past the wait gives one toast", shown().filter(t => /offline/.test(t)).length === 1, ToastService.shown);
+            daemon._alertStep(t0 + 61000, withAtlas(false));
+            check("and only one while it stays down", shown().filter(t => /offline/.test(t)).length === 1, ToastService.shown);
+            // The source's own notification for the same favourite is held back
+            daemon.prefs.set("notifications", true);
+            const before = ToastService.shown.length;
+            daemon.source.peerEvent("atlas", false);
+            check("with all device notifications on, a favourite is announced once", ToastService.shown.length === before, ToastService.shown);
+            daemon._alertStep(t0 + 140000, withAtlas(true));
+            check("back gives the outage duration", shown().some(t => /back after 2 min/.test(t)), ToastService.shown);
+            daemon._alertStep(t0 + 200000, withAtlas(false));
+            daemon.prefs.set("favouriteAlerts", false);
+            daemon._alertStep(t0 + 300000, withAtlas(false));
+            check("switched off, nothing is announced and nothing is remembered", shown().filter(t => /offline/.test(t)).length === 1 && Object.keys(daemon._alertState).length === 0, daemon._alertState);
+            daemon.prefs.set("notifications", false);
+        },
+        () => {
             // The knocks run one after the other (2 s each at most)
             check("ssh as a user opens a terminal at once, with user@fqdn", Quickshell.launched.some(l => l.slice(-1)[0] === "tom@atlas.netbird.cloud"), Quickshell.launched);
             check("a device that does not answer says how to fix it", ToastService.warned.some(t => t.indexOf("! atlas is not sharing its screen") === 0), ToastService.warned);

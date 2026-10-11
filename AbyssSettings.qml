@@ -508,18 +508,18 @@ PluginSettings {
                                 id: drop
                                 required property var modelData
                                 readonly property bool lit: modelData.s >= Number(alertDelay.value)
-                                spacing: 4
+                                spacing: Theme.spacingXS
                                 Rectangle {
                                     width: drop.modelData.w
-                                    height: 16
-                                    radius: 8
+                                    height: Theme.spacingL
+                                    radius: height / 2
                                     color: drop.lit ? Theme.primary : "transparent"
                                     border.width: 1
                                     border.color: drop.lit ? Theme.primary : Theme.outline
                                 }
                                 StyledText {
                                     text: drop.modelData.label + "\n" + (drop.lit ? "alert" : "silent")
-                                    font.pixelSize: 11
+                                    font.pixelSize: Theme.fontSizeSmall
                                     font.weight: drop.lit ? Font.DemiBold : Font.Normal
                                     color: drop.lit ? Theme.surfaceText : Theme.surfaceVariantText
                                 }

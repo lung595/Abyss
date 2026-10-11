@@ -371,8 +371,8 @@ Item {
             root._alertStep();
         }
     }
-    function _alertStep() {
-        const view = root.source ? root.source.view : null;
+    // now and view are parameters only so that the daemon test can drive the clock and the peers
+    function _alertStep(now = Date.now(), view = root.source ? root.source.view : null) {
         // Without a live mesh the peers are all "offline" for the wrong reason
         const live = prefs.favouriteAlerts && view && view.state === "connected";
         const peers = live ? view.peers.map(p => ({
@@ -381,7 +381,7 @@ Item {
                     "connected": p.online
                 })) : null;
         const r = Alerts.step(root._alertState, {
-            "now": Date.now(),
+            "now": now,
             "peers": peers
         }, {
             "enabled": prefs.favouriteAlerts,
@@ -403,10 +403,7 @@ Item {
             return "Refused: " + user + " is not a user name";
         if (user && (kind === "ssh" || kind === "sftp")) {
             const host = p.fqdn || p.ip;
-            return root.ssh(host, prefs.terminal, {
-                "user": user,
-                "port": prefs.linkOf(p.id).port
-            }, kind) ? "OK" : "Refused: " + host + " is not a plain host name";
+            return root.ssh(host, prefs.terminal, { "user": user, "port": prefs.linkOf(p.id).port }, kind) ? "OK" : "Refused: " + host + " is not a plain host name";
         }
         return root.reach(kind, p) ? "OK" : "Refused: " + (p.fqdn || p.ip) + " is not a plain host name";
     }

@@ -22,5 +22,6 @@ eq("down and back make two toasts, down first", T.toasts([back("a", 1000), down(
     ["Kelp-Pi is offline.", "Reef NAS is back after 1 s."]);
 eq("a dash in a name is replaced", T.toasts([down("a")], () => "Nas — one")[0].title, "Nas - one is offline.");
 eq("an unknown device is still said", T.toasts([down("z")], nameOf)[0].title, "A favourite is offline.");
+eq("two events with one unknown name stay a sentence", T.toasts([down("z"), down("b")], nameOf)[0].title, "A favourite and Kelp-Pi are offline.");
 eq("junk events are ignored", T.toasts([null, { kind: "x", id: "a" }], nameOf), []);
 done();

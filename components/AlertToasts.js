@@ -10,8 +10,9 @@
 const MAX_LISTED = 3;
 
 function _clean(name) {
-    // Names come from outside: no dash character may reach the screen
-    return String(name === undefined || name === null ? "" : name).replace(/[–—]/g, "-");
+    // Names come from outside: no dash character may reach the screen, and a
+    // peer that vanished from the list still reads as a sentence
+    return String(name === undefined || name === null ? "" : name).replace(/[–—]/g, "-") || "A favourite";
 }
 
 function _sentence(kind, names, event) {
@@ -26,7 +27,7 @@ function _details(kind, items) {
     if (items.length === 1)
         return "";
     const part = i => kind === "back" ? i.name + " " + Alerts.formatDuration(i.event.duration) : i.name;
-    const shown = items.slice(0, items.length === 2 ? 2 : MAX_LISTED).map(part);
+    const shown = items.slice(0, MAX_LISTED).map(part);
     if (items.length > MAX_LISTED)
         shown.push("+" + (items.length - MAX_LISTED) + " more");
     return shown.join(" · ");
@@ -45,7 +46,7 @@ function toasts(events, nameOf) {
             return;
         const names = items.map(i => i.name);
         out.push({
-            "title": _sentence(kind, items.length === 1 ? [names[0]] : names, items[0].event),
+            "title": _sentence(kind, names, items[0].event),
             "details": _details(kind, items)
         });
     });
