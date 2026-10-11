@@ -2,6 +2,7 @@ import QtQuick
 import qs.Common
 import qs.Widgets
 import "Mesh.js" as Mesh
+import "Boids.js" as Boids
 import "Swim.js" as Swim
 import "Layout.js" as Lay
 
@@ -74,6 +75,64 @@ Item {
     // flight leaves from here)
     // The school's own rhythm, so two groups never swim in step
     readonly property real schoolSeed: item ? Swim.seed(item.id) : 0
+    // The awake members swim as a real school (Boids.js), stepped on the
+    // deep's swim clock, so it moves only while the group is open and watched.
+    // Only awake members are in it (asleep ones rest where they are drawn).
+    // Slots are the open layout at full size, whatever the camera does, so the
+    // school is the one the tests cover. Rebuilt when the slots or the awake
+    // set change, keeping the fish that stay where they swim; flockRev tells
+    // the members to re-read.
+    property var _flock: null
+    property var _flockIds: []
+    property real _flockAt: 0
+    property int flockRev: 0
+    function _awake(id) {
+        const p = scene.peerById[id];
+        return !!p && p.online && scene.connected;
+    }
+    function _entries() {
+        const entries = [];
+        members.forEach((id, i) => {
+            if (spots[i])
+                entries.push({
+                    "id": id,
+                    "awake": _awake(id),
+                    "x": spots[i].x,
+                    "y": spots[i].y
+                });
+        });
+        return entries;
+    }
+    function _buildFlock() {
+        const next = Boids.rebuild(_entries(), _flock ? {
+            "ids": _flockIds,
+            "school": _flock
+        } : null, schoolSeed);
+        _flockIds = next.ids;
+        _flock = next.school;
+    }
+    function _flockPose(id) {
+        return flockRev >= 0 && scene.peekLive && _flock ? Boids.pose(_flock, _flockIds.indexOf(id)) : Swim.REST;
+    }
+    Connections {
+        target: gp.scene
+        enabled: gp.open
+        function onSwimChanged() {
+            if (!scene.peekLive)
+                return;
+            const dt = scene.swim - gp._flockAt;
+            gp._flockAt = scene.swim;
+            if (Boids.stale(gp._entries(), gp._flock ? {
+                "ids": gp._flockIds
+            } : null))
+                gp._buildFlock();
+            Boids.step(gp._flock, dt);
+            gp.flockRev++;
+        }
+    }
+    onSpotsChanged: if (_flock)
+        _buildFlock()
+
     function memberPose(peerId) {
         const i = members.indexOf(peerId), q = spots[i] || {
             "x": 0,
@@ -81,7 +140,7 @@ Item {
         };
         const o = scene.offsetOf("m:" + peerId);
         const p = scene.peerById[peerId];
-        const sh = scene.peekLive && p && p.online && scene.connected ? Swim.shoal(scene.swim, schoolSeed, i) : Swim.REST;
+        const sh = p && p.online && scene.connected ? _flockPose(peerId) : Swim.REST;
         return {
             "x": cx + q.x * grow + o.x + sh.dx * _g,
             "y": cy + q.y * grow + o.y + sh.dy * _g,
@@ -247,7 +306,7 @@ Item {
             // Alive while the group is open (Swim.idle), calmer when asleep
             readonly property var life: gp.scene.peekLive && p ? Swim.idle(p.kind, gp.scene.swim, Swim.seed(modelData), live ? 1 : 0) : Swim.REST
             // Swimming together with the others (awake members only)
-            readonly property var school: gp.scene.peekLive && live ? Swim.shoal(gp.scene.swim, gp.schoolSeed, index) : Swim.REST
+            readonly property var school: live ? gp._flockPose(modelData) : Swim.REST
             readonly property bool named: gp.members.length <= 8 || index < 3 || focused
             // Labels sit outward: above for the upper half, below for the lower
             readonly property bool above: spot.y < -4
