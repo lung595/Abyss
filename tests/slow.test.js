@@ -24,7 +24,7 @@ eq("throughput alone", v({ mbps: 3 }).level, "slow");
 const r = v({ direct: false, relayReason: "no direct route", latencyMs: 10 });
 eq("relay is never good", r.level, "fair");
 ok("relay and reason said", r.text.indexOf("Relayed link (no direct route)") === 0);
-ok("relay without reason", v({ direct: false, latencyMs: 10 }).text.indexOf("Relayed link:") === 0);
+ok("relay without reason", v({ direct: false, latencyMs: 10 }).text.indexOf("Relayed link, 10 ms") === 0);
 eq("relay and slow stays slow", v({ direct: false, latencyMs: 400 }).level, "slow");
 ok("direct is said", v({ direct: true, latencyMs: 10 }).text.indexOf("Direct link") === 0);
 ok("reason flattened", v({ direct: false, relayReason: "a—b\nc–d" }).text.indexOf("(a-b c-d)") > 0);
