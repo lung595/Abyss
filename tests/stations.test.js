@@ -9,14 +9,14 @@ const go = (words) => S.landing(Cli.parse(words, "/tmp"));
 
 eq("three stations, top to bottom", S.STATIONS.map(s => s.id).join(), "settings,send,map");
 eq("depths 0 / 200 / 4000", S.STATIONS.map(s => s.depth).join(), "0,200,4000");
-eq("home is the map", go([]).station, "map");
+eq("a bare abyss opens Send while the map is a placeholder", go([]).station, "send");
 eq("abyss map", go(["map"]).station, "map");
 eq("abyss settings", go(["settings"]).station, "settings");
 eq("abyss settings category", go(["settings", "send"]).category, "send");
 eq("abyss send device", go(["send", "atlas"]).station + "/" + go(["send", "atlas"]).device, "send/atlas");
 eq("abyss peer opens the map", go(["peer", "atlas"]).station, "map");
 eq("abyss peer keeps the device", go(["peer", "atlas"]).device, "atlas");
-eq("a refused line lands on the map", S.landing({ "ok": false }).station, "map");
+eq("a refused line lands on the home station", S.landing({ "ok": false }).station, S.HOME);
 
 const peers = [{ "name": "Atlas-Server" }, { "name": "kite" }];
 eq("findPeer ignores case", S.findPeer(peers, "atlas-server").name, "Atlas-Server");

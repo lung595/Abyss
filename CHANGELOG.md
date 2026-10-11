@@ -9,6 +9,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - App install: the widget's install is marked; unloading the plugin with its `plugin.json` gone sweeps the app it installed (`install-app.sh --sweep`, one detached one-shot, nothing at rest); a standalone install is kept. GUIDE sections: install, Quickshell missing, uninstall.
 - App install: a widget install now runs the app from the plugin folder (a small launcher in `~/.local`), so the app always has the widget's version; a plain `./install-app.sh` stays a standalone copy and is never swept (NAK-292).
 
+### Added
+
+- **Open Abyss from the launcher** (NAK-707): the desktop entry now answers to "Abyss" and "send file" (Keywords, GenericName), and has a single main category so it is listed once. `install-app.sh` puts the entry and the `abyss` command under `~/.local` only. A bare `abyss` lands on Send until the map view exists.
+
 ### Fixed
 
 - **Settings never overlap at narrow width**: switches, choice lists and the folder field are the plugin's own rows (titles and descriptions wrap before the control), the Join button drops under the self-hosted check, help lines grow instead of cutting. Saved keys and values are unchanged; a new offscreen test checks every page at 366 px (NAK-423).

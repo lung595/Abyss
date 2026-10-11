@@ -224,7 +224,7 @@ With the [Abyss app](#the-abyss-app) installed, the entry runs `abyss send vega`
 
 ## The Abyss app
 
-Abyss also runs as an app of its own, without DankMaterialShell: one window, started by the `abyss` command or from the application menu. It needs only Quickshell (`qs`). The window holds the depth gauge and three stations; their views come next (see below).
+Abyss also runs as an app of its own, without DankMaterialShell: one window, started by the `abyss` command or from the application menu (type "Abyss" or "send file"). It needs only Quickshell (`qs`). The window holds the depth gauge and three stations; their views come next (see below).
 
 ### Install and remove
 

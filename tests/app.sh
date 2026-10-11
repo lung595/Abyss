@@ -30,6 +30,23 @@ check "a refused request still creates none" "$(count)" 1
 check "an option-like word creates no second process" "$(count)" 1
 check "help starts nothing" "$("$tmp/app/abyss" --help | head -n 1)" "Usage: abyss [command]"
 
+# The window loads in both schemes with a clean log. Only Quickshell's own
+# offscreen platform warnings are tolerated; any QML error or binding warning fails.
+# The earlier instance must be gone first, or `abyss` only hands its request over IPC
+pkill -f "qs -p $tmp/app" 2>/dev/null
+for _ in 1 2 3 4 5 6 7 8 9 10; do [ "$(count)" = 0 ] && break; sleep 0.5; done
+wait
+for scheme in dark light; do
+    ABYSS_SCHEME=$scheme timeout 20 "$tmp/app/abyss" >"$tmp/$scheme.log" 2>&1 &
+    sleep 4
+    pkill -f "qs -p $tmp/app" 2>/dev/null
+    wait
+    bad=$(sed 's/\x1b\[[0-9;]*m//g' "$tmp/$scheme.log" | grep -E 'ERROR|\.qml:|TypeError|ReferenceError' | grep -v 'Launching config' | head -n 3)
+    # An empty log means nothing was launched, so it must not count as clean
+    check "$scheme scheme really launched" "$(grep -c 'Launching config' "$tmp/$scheme.log")" 1
+    check "$scheme scheme loads without QML error" "$bad" ""
+done
+
 # Closing the window quits: a copy whose window closes itself after a moment
 rm -rf "$tmp/app" && cp -rL app "$tmp/app"
 sed -i 's|^        visible: true|        visible: true\n        Timer { running: true; interval: 1000; onTriggered: window.visible = false }|' "$tmp/app/shell.qml"

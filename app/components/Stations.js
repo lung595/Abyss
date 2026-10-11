@@ -6,6 +6,11 @@
 
 const MAX_DEPTH = 4000;
 
+// Where a bare `abyss` and any unknown request land. The map view is still a
+// placeholder, so the launcher entry must open the only built view, Send.
+// Point this back to "map" when the map view exists.
+const HOME = "send";
+
 // Top to bottom. `title` is the view heading, `mark` the short depth text inside its target (as in the mockup).
 const STATIONS = [
     { "id": "settings", "depth": 0, "title": "Settings", "mark": "0" },
@@ -23,10 +28,10 @@ function indexOf(id) {
 
 // Where a parsed command line (Cli.parse) lands: { station, device, files,
 // category }. `peer` is the map with that device's card open. Anything the
-// views do not know yet falls back to the map, the home station.
+// views do not know yet falls back to HOME.
 function landing(target) {
     const view = target && target.ok ? target.view : "home";
-    const station = view === "peer" ? "map" : (byId(view) ? view : "map");
+    const station = view === "peer" ? "map" : (byId(view) ? view : HOME);
     return {
         "station": station,
         "device": target && target.device ? target.device : "",
