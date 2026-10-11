@@ -111,19 +111,24 @@ Item {
         opener.start();
     }
 
-    // "Send a file…": the `abyss` command when it is installed (argument list,
-    // the name already validated), otherwise the picker of the widget
-    AppLookup {
+    // "Send a file…": the `abyss` command when the app is installed and current
+    // (argument list, the name already validated), the invite when it is not,
+    // otherwise the picker of the widget
+    QtObject {
         id: sender
         property string device: ""
 
-        onFound: installed => {
+        function start() {
             const argv = SendIntent.appCommand(sender.device);
-            // Detached: the app must outlive the launcher, and the shell
-            if (installed && argv) {
-                Quickshell.execDetached(argv);
+            if (!argv) {
+                sender.fallback();
                 return;
             }
+            // Detached: the app must outlive the launcher, and the shell
+            root.daemon.askApp("send", sender.device, () => Quickshell.execDetached(argv), sender.fallback);
+        }
+
+        function fallback() {
             picker.peer = root.daemon.findPeer(sender.device);
             if (picker.peer)
                 picker.start();

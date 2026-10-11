@@ -25,6 +25,8 @@ Item {
         })
 
     signal finished(bool installed)
+    // The answer of a refresh(): install | update | ok
+    signal checked(string state)
 
     // Reads the installed version (appState compares it with the widget) on demand
     function refresh() {
@@ -118,6 +120,7 @@ Item {
         onExited: code => {
             if (code !== 0)
                 versionProbe.version = "";
+            root.checked(root.appState);
         }
     }
 

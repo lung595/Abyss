@@ -263,6 +263,13 @@ PluginSettings {
                             color: Theme.surfaceVariantText
                         }
                     }
+
+                    AppSettingRow {
+                        visible: !!root.daemon
+                        installer: root.daemon ? root.daemon.appInstaller : null
+                        prefs: root.prefs
+                        reduceMotion: SettingsData.reduceMotion
+                    }
                 }
 
                 // ===== The deep ==================================================

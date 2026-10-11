@@ -79,6 +79,73 @@ Item {
         id: prefs
     }
 
+    // The Abyss app: install check and invite. appRequest is the app-opening
+    // action waiting for the app ({action, device}), null when none.
+    readonly property alias appInstaller: appInstaller
+    property var appRequest: null
+    readonly property string _dir: Qt.resolvedUrl(".").toString().replace(/^file:\/\//, "").replace(/\/$/, "")
+    AppInstaller {
+        id: appInstaller
+        pluginDir: root._dir
+        widgetVersion: manifest.version
+    }
+    FileView {
+        id: manifest
+        property string version: ""
+        path: root._dir + "/plugin.json"
+        blockLoading: true
+        onLoaded: {
+            try {
+                manifest.version = JSON.parse(manifest.text()).version || "";
+            } catch (e) {
+                manifest.version = "";
+            }
+        }
+    }
+
+    // An app-opening action asked for the app. The version probe answers once;
+    // `ready` runs when the app is current, otherwise the invite shows in the
+    // popout. `fallback` runs for "don't ask again" or when the popout is absent.
+    property var _pending: null
+    function askApp(action, device, ready, fallback) {
+        root._pending = {
+            "action": action,
+            "device": device || "",
+            "ready": ready,
+            "fallback": fallback
+        };
+        appInstaller.refresh();
+    }
+    Connections {
+        target: appInstaller
+        function onChecked(state) {
+            const p = root._pending;
+            root._pending = null;
+            if (!p)
+                return;
+            if (state === "ok")
+                p.ready();
+            else if (prefs.appDontAsk || !root.open())
+                p.fallback();
+            else {
+                root.appRequest = {
+                    "action": p.action,
+                    "device": p.device,
+                    "ready": p.ready
+                };
+                appInstaller.phase = "idle";
+                appInstaller.step = 0;
+            }
+        }
+    }
+
+    function endApp(dontAskAgain) {
+        if (dontAskAgain)
+            prefs.set("appDontAsk", true);
+        root.appRequest = null;
+        appInstaller.phase = "idle";
+    }
+
     // Sending files to a peer: one hub for the menu, Ctrl+V, the
     // launcher and the IPC. Each open view plays the outcome itself; with no
     // view open it comes as a notification instead
@@ -361,7 +428,10 @@ Item {
             return "Refused: " + user + " is not a user name";
         if (user && (kind === "ssh" || kind === "sftp")) {
             const host = p.fqdn || p.ip;
-            return root.ssh(host, prefs.terminal, { "user": user, "port": prefs.linkOf(p.id).port }, kind) ? "OK" : "Refused: " + host + " is not a plain host name";
+            return root.ssh(host, prefs.terminal, {
+                "user": user,
+                "port": prefs.linkOf(p.id).port
+            }, kind) ? "OK" : "Refused: " + host + " is not a plain host name";
         }
         return root.reach(kind, p) ? "OK" : "Refused: " + (p.fqdn || p.ip) + " is not a plain host name";
     }
