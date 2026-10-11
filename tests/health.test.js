@@ -58,4 +58,7 @@ eq("inputOf unknown exit peer is not an alarm", H.inputOf(view, "ghost").exit.ac
 eq("inputOf nothing", H.evaluate(H.inputOf(null, "")).state, "ok");
 eq("inputOf feeds a slow link", H.evaluate(H.inputOf({ "relays": [], "peers": [{ "name": "a", "online": true, "latencyMs": 300 }] }, "")).state, "warn");
 
+eq("inputOf prefers the smoothed latency", H.evaluate(H.inputOf({ "relays": [], "peers": [{ "name": "a", "online": true, "latencyMs": 300, "steadyMs": 40 }] }, "")).state, "ok");
+eq("colorRole", ["ok", "warn", "bad", "?"].map(H.colorRole), ["primary", "warning", "error", "primary"]);
+
 done("health");

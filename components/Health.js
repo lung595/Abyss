@@ -81,16 +81,29 @@ function _latency(peers, warnMs, badMs) {
     return null;
 }
 
+// A QML "var" can hand lists over as array-like wrappers that fail
+// Array.isArray; copy them into real arrays
+function _list(v) {
+    return v && typeof v.length === "number" ? Array.from(v) : [];
+}
+
 // What evaluate() needs, read from a NetBird view ({ relays: [{ available }],
 // peers: [{ name, online, latencyMs }] }) and the name of the peer carrying
 // Internet ("" for none). An exit peer the view does not list is not
 // reported down: only a known, offline one is.
 function inputOf(view, exitNode) {
-    const v = view || {}, relays = Array.isArray(v.relays) ? v.relays : [], peers = Array.isArray(v.peers) ? v.peers : [];
+    const v = view || {}, relays = _list(v.relays), peers = _list(v.peers);
     const carrier = exitNode ? peers.find(p => p && p.name === exitNode) : null;
     return {
         "relays": { "up": relays.filter(r => r && r.available).length, "total": relays.length },
-        "peers": peers.map(p => ({ "connected": !!(p && p.online), "latencyMs": p ? p.latencyMs : undefined })),
+        // The smoothed latency when the view has one, so a single spike does not flip the colour
+        "peers": peers.map(p => ({ "connected": !!(p && p.online), "latencyMs": p ? (typeof p.steadyMs === "number" ? p.steadyMs : p.latencyMs) : undefined })),
         "exit": { "active": !!carrier, "up": carrier ? !!carrier.online : true }
     };
+}
+
+// The DMS Theme colour a state is drawn with, by property name: the one
+// place the mapping lives, shared by the widget and the preview.
+function colorRole(state) {
+    return state === "bad" ? "error" : state === "warn" ? "warning" : "primary";
 }

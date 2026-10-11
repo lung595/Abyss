@@ -77,7 +77,7 @@ Window {
                 JellyGlyph {
                     width: 28
                     height: 28
-                    color: item.h.state === "bad" ? Theme.error : item.h.state === "warn" ? Theme.warning : Theme.primary
+                    color: Theme[Health.colorRole(item.h.state)]
                 }
                 StyledText {
                     width: 120

@@ -45,7 +45,7 @@ Every refusal in Abyss says why in a short note, with a GitHub mark that opens t
 
 While connected, the bar jellyfish changes colour when something is wrong, so you see it without opening Abyss: **orange** when some relay servers are unreachable or a device answers slowly (150 ms or more), **red** when no relay is reachable, a device answers very slowly (500 ms or more) or the Internet exit you chose is offline. Hover the jellyfish: the reason is the first line of the tooltip, in one short sentence. Normal colour means everything is fine.
 
-The verdict is recomputed only when NetBird's status is read, never on a timer, and nothing animates: it costs nothing more than the plain jellyfish. Turn it off with **Settings > Bar & alerts > Health colour**. Each colour is a draw of the DMS theme (warning, error).
+The verdict is recomputed only when NetBird's status is read, never on a timer, and nothing animates: it costs nothing more than the plain jellyfish. Turn it off with **Settings > Bar & alerts > Health colour**. Both colours come from the DMS theme (warning, error).
 
 ![The bar jellyfish: healthy, a relay down, the Internet exit down](img/health-bar.png)
 

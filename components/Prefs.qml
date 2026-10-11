@@ -114,10 +114,7 @@ QtObject {
         if (!user && !port)
             delete next[id];
         else
-            next[id] = {
-                "user": user || "",
-                "port": port || ""
-            };
+            next[id] = { "user": user || "", "port": port || "" };
         set("links", next);
     }
     function toggleMuted(id, name) {
