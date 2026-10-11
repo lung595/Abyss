@@ -1,5 +1,13 @@
 singleton Theme 1.0 Theme.qml
 DepthGauge 1.0 DepthGauge.qml
 StationTarget 1.0 StationTarget.qml
+FocusRing 1.0 FocusRing.qml
+RevealFlickable 1.0 RevealFlickable.qml
 GuideBand 1.0 GuideBand.qml
 GitHubMark 1.0 GitHubMark.qml
+SendJobProcess 1.0 SendJobProcess.qml
+SendJobRow 1.0 SendJobRow.qml
+DropZone 1.0 DropZone.qml
+DevicePicker 1.0 DevicePicker.qml
+CliRunner 1.0 CliRunner.qml
+JobList 1.0 JobList.qml

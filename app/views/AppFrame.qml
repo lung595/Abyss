@@ -14,6 +14,8 @@ Item {
     property string station: "map"
     // A peer the command line asked for; "" when none
     property string device: ""
+    // The files of `abyss send <device> files...`
+    property var files: []
     // The peers once read; null while unknown, so nothing is called unknown yet
     property var peers: null
     property string netbirdState: "unknown"
@@ -30,10 +32,38 @@ Item {
     readonly property var current: Stations.byId(station)
     readonly property bool deviceUnknown: device !== "" && Array.isArray(peers) && Stations.findPeer(peers, device) === null
 
+    // Window closing while a transfer runs: the first attempt only asks (the
+    // Send view says so), the next one cancels everything and lets it close
+    property bool closeAsked: false
+    // Latched by the first visit to Send
+    property bool sendOpened: station === "send"
+    // The Send view once built (untyped: a Loader item)
+    readonly property var sendView: sendLoader.item
+    readonly property bool sending: sendView !== null && sendView.busy
+
+    function confirmClose() {
+        if (sending && !closeAsked) {
+            closeAsked = true;
+            // The question is shown by the Send view: bring it up
+            show("send");
+            return false;
+        }
+        if (sendView)
+            sendView.cancelAll();
+        return true;
+    }
+
+    onStationChanged: if (station === "send")
+        sendOpened = true
+
+    onSendingChanged: if (!sending)
+        closeAsked = false
+
     // Lands a parsed command line (Cli.parse) on its station
     function go(target) {
         const l = Stations.landing(target);
         device = l.device;
+        files = l.files;
         show(l.station);
     }
 
@@ -144,11 +174,43 @@ Item {
                 easing.type: Easing.OutCubic
             }
 
-            // One placeholder until the views of the other stories exist
-            PlaceholderView {
+            // Send is built; the other stations keep a placeholder until their stories
+            // Kept alive once opened: leaving Send must not cancel a transfer
+            // or forget the history (it costs nothing while the queue is empty)
+            Loader {
+                id: sendLoader
+
                 anchors.fill: parent
-                title: frame.current.title
-                note: Array.isArray(frame.peers) && frame.station === "map" && frame.device !== "" && !frame.deviceUnknown ? "Map · " + frame.device : ""
+                active: frame.sendOpened
+                visible: frame.station === "send"
+                sourceComponent: sendC
+            }
+
+            Loader {
+                anchors.fill: parent
+                active: frame.station !== "send"
+                sourceComponent: placeholderC
+            }
+
+            Component {
+                id: sendC
+
+                SendView {
+                    device: frame.device
+                    peers: frame.peers
+                    files: frame.files
+                    shown: frame.visible && frame.station === "send"
+                    closeAsked: frame.closeAsked
+                }
+            }
+
+            Component {
+                id: placeholderC
+
+                PlaceholderView {
+                    title: frame.current.title
+                    note: Array.isArray(frame.peers) && frame.station === "map" && frame.device !== "" && !frame.deviceUnknown ? "Map · " + frame.device : ""
+                }
             }
         }
     }

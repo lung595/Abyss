@@ -237,7 +237,23 @@ The window is a dive. On the left, the **depth gauge** is a vertical scale with 
 - **Switch station**: click a target, or press Tab until one is ringed and then Enter, Space or numpad Enter. The view changes with a brief dive (200 ms going down, 150 ms going up, nothing else moves); with Reduce motion on, it changes at once.
 - **From the command line**: `abyss map`, `abyss settings`, `abyss send <device>` and `abyss peer <device>` land on the right station (`peer` opens the map).
 - **Narrow window**: down to 900×600 the gauge narrows to 56 px and the padding to 24 px; the signal readout then shows its glyph only.
-- **Settings and Send** are empty for now: only their title, until their own views land.
+- **Settings** is empty for now: only its title, until its own view lands. **Send** is described below.
+
+### Send
+
+The **Send** station (200 m) is a queue. Pick one or more devices, then give it files and folders; each file and device pair becomes a job.
+
+- **Add files**: drop files or folders on the view or on a device, press **Ctrl+O** for the file picker, or press **Ctrl+V** to add what you copied in your file manager. A paste works like a drop on the view: jobs for the ticked devices, and with no device ticked the device choice opens first. Ctrl+V inside a text field keeps its normal meaning. An empty clipboard, or a missing `wl-paste`, shows a short message with the GitHub mark that opens this section.
+- **Close during a transfer**: closing the window while something is sending asks once to finish or cancel; cancelling stops every transfer. The Send view keeps running when you switch to another station.
+- **From the command line**: `abyss send <device> [files…]` opens the view with the device chosen and the files queued (the number of files is capped). Large files go through `rsync` when the device has it (probed once per device), otherwise `scp` with an indeterminate indicator.
+- **Several devices**: tick as many as you like. A device receives one transfer at a time; the others wait their turn.
+- **Progress**: with `rsync` on both sides you see a percentage and a rate, and an interrupted transfer resumes. Otherwise `scp` runs with an "in progress" indicator: Abyss never invents a percentage.
+- **Cancel and retry**: a job can be cancelled while it waits or runs (the program stops with it); a failed or cancelled job can be retried.
+- **History**: the finished jobs of this session, capped in size. It lives in memory only and goes away with the window.
+- **Closing the window** during a transfer asks once whether to finish or cancel.
+- **From the command line**: `abyss send <device> [files…]` lands here with the device chosen.
+
+A refusal (login refused, device unreachable, folder missing…) is explained in one sentence with the GitHub mark that opens this section.
 
 #### A device is not found
 
@@ -312,7 +328,7 @@ Tags are only stored in Abyss's own settings (see [Privacy](#privacy)); nothing 
 - **Names are only names.** A peer's name is shown as plain text: it never becomes a link in a toast, and *Open page* only opens a plain host name or address.
 - **Who can ask Abyss to act.** Like every DMS plugin, the `dms ipc call abyss …` commands answer programs running in your own session, the same way your keyboard shortcuts do. They can connect, disconnect or open a peer, never read a setup key.
 - **Nothing in the log.** Abyss writes no peer, address or command line to the shell's journal.
-- **Sending a file** runs your own `scp` once, only when you send. **Ctrl+V** on a card reads the clipboard once with `wl-paste` (the list of copied files), only on that keypress; nothing of it is kept. **Send a file…** opens `zenity`, your file picker. Paths go to these programs as arguments, never through a shell, and are never logged.
+- **Sending a file** runs your own `scp` once, only when you send. **Ctrl+V** on a card reads the clipboard once with `wl-paste` (the list of copied files), only on that keypress; nothing of it is kept. In the app, **Ctrl+V** on the Send view does the same, once per keypress. **Send a file…** opens `zenity`, your file picker. Paths go to these programs as arguments, never through a shell, and are never logged.
 - **Local tools only**: copy uses DMS's clipboard, SSH, SFTP, VNC and RDP open your own programs, Ping runs your own `ping` to one peer of your mesh, only when you click it. The GitHub mark in help notes opens the docs in your browser, on click only.
 
 ## Performance

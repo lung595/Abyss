@@ -16,9 +16,9 @@ done
 
 if "$PYTHON" -c "import PySide6" 2>/dev/null; then
     for t in tests/qml/*.test.qml; do
-        # QtTest files: they need the preview stand-ins, see below
+        # A QtTest file: it needs the preview stand-ins, see below
         case "$t" in
-            tests/qml/Settings.test.qml | tests/qml/SettingsOverlap.test.qml | tests/qml/SettingsFocus.test.qml) continue ;;
+            tests/qml/Settings.test.qml | tests/qml/SettingsOverlap.test.qml | tests/qml/SettingsFocus.test.qml | tests/qml/SendKeys.test.qml) continue ;;
         esac
         out=$(QT_QPA_PLATFORM=offscreen "$PYTHON" tests/qml/qmltest.py "$t" 2>&1) || { failed=1; printf '%s\n' "$out" | grep -v '^qml: ✓'; }
         printf '%s\n' "$out" | tail -n 1
@@ -34,8 +34,9 @@ tests/install.sh || failed=1
 # The settings page and rail tests are QtTest cases over the preview stand-ins
 # (Theme, widgets), which the PySide6 runner above does not have
 if command -v qmltestrunner-qt6 >/dev/null; then
-    for t in Settings SettingsOverlap SettingsFocus; do
-        out=$(QT_QPA_PLATFORM=offscreen timeout 120 qmltestrunner-qt6 -platform offscreen -import scripts/preview/imports -input tests/qml/$t.test.qml 2>&1) || { failed=1; printf '%s\n' "$out" | grep -E '^(FAIL|XFAIL|Totals)|Actual|Expected'; }
+    # One runner call per file: with several -input flags only the last one runs
+    for t in tests/qml/Settings.test.qml tests/qml/SettingsOverlap.test.qml tests/qml/SettingsFocus.test.qml tests/qml/SendKeys.test.qml; do
+        out=$(QT_QPA_PLATFORM=offscreen timeout 120 qmltestrunner-qt6 -platform offscreen -import scripts/preview/imports -input "$t" 2>&1) || { failed=1; printf '%s\n' "$out" | grep -E '^(FAIL|XFAIL|Totals)|Actual|Expected'; }
         printf '%s\n' "$out" | grep '^Totals'
     done
 else

@@ -1,0 +1,15 @@
+#!/bin/sh
+# Stands in for rsync in the QML tests: one line per launch in
+# $FAKE_NB/rsync.launches, then a meter that rewrites one line with \r like
+# the real --info=progress2, 0.3 s per step. A host named slow.mesh hangs
+# instead (the test cancels it).
+for last; do :; done
+echo "$last" >> "$FAKE_NB/rsync.launches"
+case "$last" in
+    *slow.mesh:*) echo $$ > "$FAKE_NB/slow.pid"; exec sleep 30 ;;
+esac
+for pct in 20 50 80 100; do
+    printf '  1,000  %s%%  1.00MB/s    0:00:01\r' "$pct"
+    sleep 0.3
+done
+exit 0

@@ -165,7 +165,7 @@ abyss settings [category]      # open the settings
 abyss --help | --version
 ```
 
-Install it with `./install-app.sh` (only under `~/.local`; `./install-app.sh --uninstall` removes it). Details and limits in the [guide](docs/GUIDE.md#the-abyss-app). The window has its depth gauge and switches between three stations (Settings, Send, Map); the views themselves come next.
+Install it with `./install-app.sh` (only under `~/.local`; `./install-app.sh --uninstall` removes it). Details and limits in the [guide](docs/GUIDE.md#the-abyss-app). The window has its depth gauge and switches between three stations (Settings, Send, Map). The Send station has a queue, several devices at once, a session history, cancel and retry, drag and drop, a file picker (Ctrl+O) and Ctrl+V paste of files copied in your file manager (the clipboard is read once, on the keypress); the Map comes next. Details in the [guide](docs/GUIDE.md#send).
 
 Bind them in your compositor, for example in niri: `Mod+A { spawn "dms" "ipc" "call" "abyss" "open"; }`, or in Hyprland: `bind = SUPER, A, exec, dms ipc call abyss open`.
 

@@ -11,19 +11,54 @@ Rectangle {
     // Anchor in docs/GUIDE.md, without the leading #
     required property string anchor
 
+    // Red for a failure, amber for a hint; `actionLabel` adds a button (Retry)
+    property bool error: false
+    property string actionLabel: ""
+    signal acted
+
     readonly property string url: "https://github.com/lung595/Abyss/blob/main/docs/GUIDE.md#" + anchor
 
     height: 44
     radius: Theme.cornerRadius
-    color: Theme.surfaceContainerHigh
+    // The error kind is the error role at 13 % over the surface (spec 2.9.4)
+    color: band.error ? Theme.withAlpha(Theme.error, 0.13) : Theme.surfaceContainerHigh
     border.width: 1
-    border.color: Theme.warning
+    border.color: band.error ? Theme.error : Theme.warning
 
-    Text {
+    // Two strokes, as the mark of the mockup (a font glyph reads too thin)
+    Item {
+        id: cross
+
+        visible: band.error
+        width: 12
+        height: 12
         anchors {
             left: parent.left
             leftMargin: Theme.spacingL
-            right: mark.left
+            verticalCenter: parent.verticalCenter
+        }
+
+        Repeater {
+            model: [45, -45]
+
+            Rectangle {
+                required property int modelData
+
+                anchors.centerIn: parent
+                width: 16
+                height: 2
+                radius: 1
+                rotation: modelData
+                color: Theme.error
+            }
+        }
+    }
+
+    Text {
+        anchors {
+            left: cross.visible ? cross.right : parent.left
+            leftMargin: cross.visible ? Theme.spacingM : Theme.spacingL
+            right: retry.visible ? retry.left : mark.left
             rightMargin: Theme.spacingM
             verticalCenter: parent.verticalCenter
         }
@@ -31,6 +66,63 @@ Rectangle {
         color: Theme.surfaceText
         font.pixelSize: Theme.fontSizeMedium
         elide: Text.ElideRight
+    }
+
+    Rectangle {
+        id: retry
+
+        visible: band.actionLabel !== ""
+        anchors {
+            right: mark.left
+            rightMargin: Theme.spacingL
+            verticalCenter: parent.verticalCenter
+        }
+        width: retryText.implicitWidth + 2 * Theme.spacingL
+        height: 32
+        radius: height / 2
+        color: Theme.error
+        activeFocusOnTab: true
+        Accessible.role: Accessible.Button
+        Accessible.name: band.actionLabel
+        Keys.onPressed: event => {
+            if (event.key === Qt.Key_Return || event.key === Qt.Key_Space) {
+                band.acted();
+                event.accepted = true;
+            }
+        }
+
+        FocusRing {
+            target: parent
+        }
+
+        Text {
+            id: retryText
+
+            anchors.centerIn: parent
+            text: band.actionLabel
+            // The surface role reads on the error fill in both themes
+            color: Theme.surface
+            font.pixelSize: Theme.fontSizeMedium
+            font.weight: Font.DemiBold
+        }
+
+        // Hover and pressed push the fill away from the label colour (surface), never towards it,
+        // so the label contrast only grows (it fell to 3.91:1 pressed in light with a surface veil)
+        Rectangle {
+            anchors.fill: parent
+            radius: parent.radius
+            color: Theme.withAlpha(Theme.surfaceText, tap.pressed ? 0.2 : retryHover.hovered ? 0.12 : 0)
+        }
+
+        HoverHandler {
+            id: retryHover
+        }
+
+        TapHandler {
+            id: tap
+
+            onTapped: band.acted()
+        }
     }
 
     GitHubMark {
