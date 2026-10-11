@@ -5,6 +5,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## Unreleased
 
+### Fixed
+
+- **Settings never overlap at narrow width**: switches, choice lists and the folder field are the plugin's own rows (titles and descriptions wrap before the control), the Join button drops under the self-hosted check, help lines grow instead of cutting. Saved keys and values are unchanged; a new offscreen test checks every page at 366 px (NAK-423).
+
 ### Added
 
 - **Tags and search**: pure `Tags.js` gives each peer automatic tags (kind, `exit`, `subnet`, the name of your group) plus manual ones kept in Abyss settings only (capped: 8 per peer, 24 characters, 200 peers). `#tag` matches exactly, a plain word also matches the start of a tag, in the search bar and in the launcher (`abyss #work`, `abyss ssh work`). Editing tags on a card is a separate, later story.
