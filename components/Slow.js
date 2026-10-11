@@ -88,6 +88,14 @@ function verdict(link, thresholds) {
     return { level: level, text: facts.join(", ") + ": " + verdictText + "." };
 }
 
+// The advice for a relayed link, empty for any other (direct, unknown). A
+// relay is a detour: a direct link needs UDP open on both networks.
+function tip(link) {
+    if (!link || link.direct !== false)
+        return "";
+    return "Traffic goes through a relay. A direct link is faster: allow UDP on both networks, or turn off a restrictive firewall.";
+}
+
 // A short, single-line, dash-free copy of an outside text
 function _clean(text) {
     return String(text === undefined || text === null ? "" : text)

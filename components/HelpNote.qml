@@ -14,10 +14,6 @@ Rectangle {
     // { title, hint, anchor, x, y }: set by scene.explain(), null when gone
     readonly property var info: scene.note
 
-    // The user guide the link opens (the README only installs); the anchor
-    // picks the section
-    readonly property string readme: "https://github.com/lung595/Abyss/blob/main/docs/GUIDE.md#"
-
     visible: opacity > 0.01
     opacity: info ? 1 : 0
     Behavior on opacity {
@@ -67,25 +63,11 @@ Rectangle {
             }
         }
         // The way to the explanation
-        Item {
-            width: 24
-            height: 24
+        GuideLink {
             anchors.verticalCenter: parent.verticalCenter
-            GitHubMark {
-                anchors.centerIn: parent
-                size: 16
-                color: link.containsMouse ? Theme.primary : note.scene.inkDim
-            }
-            MouseArea {
-                id: link
-                anchors.fill: parent
-                hoverEnabled: true
-                cursorShape: Qt.PointingHandCursor
-                onClicked: {
-                    Qt.openUrlExternally(note.readme + (note.info ? note.info.anchor : ""));
-                    note.scene.note = null;
-                }
-            }
+            anchor: note.info ? note.info.anchor : ""
+            tint: note.scene.inkDim
+            onOpened: note.scene.note = null
         }
     }
 }

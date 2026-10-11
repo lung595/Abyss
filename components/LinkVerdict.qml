@@ -12,15 +12,16 @@ Column {
 
     required property var scene
     required property var peer
-    required property color ink
+    // Same guard as the rest of the card: online and the mesh connected
+    required property bool live
 
-    readonly property string guide: "https://github.com/lung595/Abyss/blob/main/docs/GUIDE.md#why-is-it-slow"
-    readonly property bool live: !!peer && peer.online
-    readonly property var verdict: Slow.verdict({
-        "direct": live ? !peer.relayed : undefined,
-        "relayReason": live && peer.relayed && peer.relay ? "via " + peer.relay : "",
-        "latencyMs": live && peer.latencyMs > 0 ? peer.latencyMs : undefined
-    })
+    readonly property var link: ({
+            "direct": live ? !peer.relayed : undefined,
+            "relayReason": live && peer.relayed && peer.relay ? "via " + peer.relay : "",
+            "latencyMs": live && peer.latencyMs > 0 ? peer.latencyMs : undefined
+        })
+    readonly property var verdict: Slow.verdict(link)
+    readonly property string tip: Slow.tip(link)
     // Level colour from the theme, never fixed
     readonly property color levelColor: verdict.level === "good" ? Theme.primary : verdict.level === "fair" ? Theme.tertiary : verdict.level === "slow" ? Theme.error : scene.inkDim
 
@@ -37,31 +38,19 @@ Column {
     }
 
     Row {
-        visible: !!root.peer && root.peer.relayed
+        visible: root.tip !== ""
         width: parent.width
         spacing: 8
         StyledText {
-            width: parent.width - 24
-            text: "Traffic goes through a relay. A direct link is faster: allow UDP on both networks, or turn off a restrictive firewall."
+            width: parent.width - 32
+            text: root.tip
             font.pixelSize: 11
             color: root.scene.inkDim
             wrapMode: Text.WordWrap
         }
-        Item {
-            width: 16
-            height: 16
-            GitHubMark {
-                anchors.centerIn: parent
-                size: 16
-                color: link.containsMouse ? Theme.primary : root.scene.inkDim
-            }
-            MouseArea {
-                id: link
-                anchors.fill: parent
-                hoverEnabled: true
-                cursorShape: Qt.PointingHandCursor
-                onClicked: Qt.openUrlExternally(root.guide)
-            }
+        GuideLink {
+            anchor: "why-is-it-slow"
+            tint: root.scene.inkDim
         }
     }
 }

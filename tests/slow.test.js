@@ -67,4 +67,10 @@ ok("one sentence each", many.every(l => sentences(v(l).text) === 1 && /[.]$/.tes
 eq("inverted latency pair", v({ direct: true, latencyMs: 100 }, { fairLatencyMs: 200, slowLatencyMs: 50 }).level, "fair");
 eq("inverted speed pair", v({ direct: true, mbps: 30 }, { fairMbps: 5, slowMbps: 20 }).level, "fair");
 
+// The relayed tip: only for a relayed link
+ok("tip for relayed", W.tip({ direct: false }).indexOf("direct link") > 0 && !/[–—]/.test(W.tip({ direct: false })));
+eq("no tip when direct", W.tip({ direct: true }), "");
+eq("no tip when unknown", W.tip({}), "");
+eq("no tip without a link", W.tip(null), "");
+
 done("slow");

@@ -660,7 +660,7 @@ Item {
             LinkVerdict {
                 scene: card.scene
                 peer: card.peer
-                ink: card.ink
+                live: card.live
             }
 
             Repeater {
