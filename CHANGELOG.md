@@ -11,7 +11,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ### Added
 
-- **Open Abyss from the launcher** (NAK-707): the desktop entry now answers to "Abyss" and "send file" (Keywords, GenericName), and has a single main category so it is listed once. `install-app.sh` puts the entry and the `abyss` command under `~/.local` only.
+- **Open Abyss from the launcher** (NAK-707): the desktop entry now answers to "Abyss" and "send file" (Keywords, GenericName), and has a single main category so it is listed once. `install-app.sh` puts the entry and the `abyss` command under `~/.local` only. A bare `abyss` lands on Send until the map view exists.
 
 ### Fixed
 
