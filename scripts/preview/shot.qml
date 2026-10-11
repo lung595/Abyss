@@ -24,7 +24,9 @@ Window {
     readonly property string rawMode: args[args.length - 2]
     readonly property bool light: rawMode.indexOf("-light") >= 0
     readonly property bool cc: rawMode.indexOf("-cc") >= 0
-    readonly property string mode: rawMode.replace(/-light|-cc/g, "")
+    // "-hold": stay open, no capture (the window outils/essai.sh opens for a safe try)
+    readonly property bool hold: rawMode.indexOf("-hold") >= 0
+    readonly property string mode: rawMode.replace(/-light|-cc|-hold/g, "")
     readonly property string out: args[args.length - 1]
     readonly property bool desk: mode.indexOf("desk") === 0
     width: cc ? 560 : desk ? 780 : 580
@@ -851,6 +853,8 @@ Window {
         property int waits: 0
         interval: 1600
         onTriggered: {
+            if (win.hold)
+                return;
             if (scene._swimming && waits < 50) {
                 waits++;
                 interval = 100;
