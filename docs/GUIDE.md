@@ -7,6 +7,7 @@ Every refusal in Abyss says why in a short note, with a GitHub mark that opens t
 ## Contents
 
 - [Widgets](#widgets)
+- [Mesh health in the bar](#mesh-health-in-the-bar)
 - [Connect and disconnect](#connect-and-disconnect)
 - [Open a peer's card](#open-a-peers-card)
 - [Open a group](#open-a-group)
@@ -39,6 +40,14 @@ Every refusal in Abyss says why in a short note, with a GitHub mark that opens t
 | Desktop fishbowl | Control Center |
 | --- | --- |
 | ![The fishbowl desktop widget](../screenshots/desk.png) | ![Control Center](../screenshots/connected-cc.png) |
+
+## Mesh health in the bar
+
+While connected, the bar jellyfish changes colour when something is wrong, so you see it without opening Abyss: **orange** when some relay servers are unreachable or a device answers slowly (150 ms or more), **red** when no relay is reachable, a device answers very slowly (500 ms or more) or the Internet exit you chose is offline. Hover the jellyfish: the reason is the first line of the tooltip, in one short sentence. Normal colour means everything is fine.
+
+The verdict is recomputed only when NetBird's status is read, never on a timer, and nothing animates: it costs nothing more than the plain jellyfish. Turn it off with **Settings > Bar & alerts > Health colour**. Each colour is a draw of the DMS theme (warning, error).
+
+![The bar jellyfish: healthy, a relay down, the Internet exit down](img/health-bar.png)
 
 ## Connect and disconnect
 
@@ -294,6 +303,7 @@ Nothing is run through a shell: the words reach the app as data only.
 | | Show offline peers | On | Asleep on the floor, or hidden. With NetBird's lazy connections on, idle peers doze a little above the floor instead ("idle · wake on use"): NetBird does not say which of them are really off |
 | | Light pulses | On | Pulses of traffic along the tentacles |
 | | Companion | On | Darwin (Darwin Watterson from *The Amazing World of Gumball*, © Cartoon Network, see the README's credits), a goldfish with a life of his own: he eats the crumbs the traffic drops, scrubs the glass as it clouds over, sleeps on the bottom while the mesh is down and waves when clicked. He only moves while a view is open, and stays still with *Reduce motion* |
+| Bar & alerts | Health colour | On | The bar jellyfish turns orange or red when a relay is down, a link is slow or the Internet exit is down, and the tooltip says why |
 | Peers | Bar pill | Peers online | What the small jellyfish in the bar says beside it: how many peers are online, the total traffic, or nothing |
 | | Notifications | Off | When a peer comes or goes; muted peers stay quiet |
 | | Terminal for SSH | Automatic | The terminal used for SSH |

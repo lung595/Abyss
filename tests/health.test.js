@@ -49,4 +49,13 @@ const all = [{}, { "relays": { "up": 0, "total": 1 } }, { "relays": { "up": 1, "
 ok("no em or en dash", all.every(r => !/[–—]/.test(r)));
 ok("short sentences", all.every(r => r.length <= 50 && /\.$/.test(r)));
 
+// Reading a NetBird view
+const view = { "relays": [{ "available": true }, { "available": false }], "peers": [{ "name": "atlas", "online": true, "latencyMs": 40 }, { "name": "harbor", "online": false, "latencyMs": 0 }] };
+eq("inputOf counts relays", H.inputOf(view, "").relays, { "up": 1, "total": 2 });
+eq("inputOf exit up", H.inputOf(view, "atlas").exit, { "active": true, "up": true });
+eq("inputOf exit down", H.evaluate(H.inputOf(view, "harbor")).state, "bad");
+eq("inputOf unknown exit peer is not an alarm", H.inputOf(view, "ghost").exit.active, false);
+eq("inputOf nothing", H.evaluate(H.inputOf(null, "")).state, "ok");
+eq("inputOf feeds a slow link", H.evaluate(H.inputOf({ "relays": [], "peers": [{ "name": "a", "online": true, "latencyMs": 300 }] }, "")).state, "warn");
+
 done("health");

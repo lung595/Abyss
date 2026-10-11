@@ -55,7 +55,7 @@ ok("no secret key exists", !S.KEYS.some(k => /key|token|secret|password/i.test(k
 const widget = {
     "source": "demo", "showOffline": false, "pulses": false, "notifications": true, "terminal": "foot",
     "sendFolder": "~/Inbox", "links": { "p": { "user": "u", "port": "1" } }, "shareSsh": true, "smooth": false,
-    "drift": false, "celebrate": false, "statusDot": false, "middleToggle": false, "searchHints": false,
+    "drift": false, "celebrate": false, "statusDot": false, "healthColor": false, "middleToggle": false, "searchHints": false,
     "desktopLive": true, "maxItems": 7, "pill": "icon", "companion": false, "groupOpen": "hover",
     "muted": { "m": "M" }, "favorites": { "f": "F" }, "groups": [{ "id": "u2", "name": "G", "members": ["m"] }], "tags": { "m": ["nas"] },
     "exitTies": { "e": "E" }, "exitGroup": "u2", "labMesh": "work", "labPeers": 10, "labLatency": 50,

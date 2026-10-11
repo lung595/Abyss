@@ -5,6 +5,7 @@ import qs.Widgets
 import qs.Modules.Plugins
 import "components"
 import "components/Mesh.js" as Mesh
+import "components/Health.js" as Health
 
 // Bar pill + bar popout + Control Center tile. All three show the same
 // source, owned by the daemon. The popout keeps its content loaded, so its
@@ -25,6 +26,12 @@ PluginComponent {
 
     // Internet goes out through a peer: a small still sun in the pill
     readonly property bool lending: connected && !!source && source.exitNode !== ""
+    // Only a connected mesh has a health; the verdict is recomputed when the
+    // NetBird view changes, never on a timer
+    readonly property var health: connected && prefs.healthColor ? Health.evaluate(Health.inputOf(view, source ? source.exitNode : "")) : ({
+            "state": "ok",
+            "reason": ""
+        })
     readonly property color dotColor: connected ? Theme.success : (meshState === "needsLogin" || meshState === "connecting") ? Theme.warning : Theme.error
     // The tooltip on the bar's jellyfish: everything in four short lines
     readonly property string tipText: {
@@ -37,6 +44,8 @@ PluginComponent {
                     "needsLogin": "NetBird needs you to sign in",
                     "stopped": "The NetBird service is stopped"
                 })[meshState] || meshState];
+        if (health.state !== "ok")
+            lines.push(health.reason);
         if (connected) {
             lines.push("↓ " + Mesh.fmtRate(view.down) + "   ↑ " + Mesh.fmtRate(view.up));
             lines.push("Internet " + (daemon ? daemon.exitText() : "directly"));
@@ -44,7 +53,7 @@ PluginComponent {
         lines.push("Click: open" + (prefs.middleToggle ? " · Middle: " + (connected ? "disconnect" : "connect") : "") + " · Right: " + (connected ? "disconnect" : "connect"));
         return lines.join("\n");
     }
-    readonly property color stateColor: connected ? Theme.primary : (meshState === "needsLogin" || meshState === "stopped") ? Theme.warning : meshState === "connecting" ? Theme.withAlpha(Theme.primary, 0.7) : Theme.surfaceVariantText
+    readonly property color stateColor: connected ? (health.state === "bad" ? Theme.error : health.state === "warn" ? Theme.warning : Theme.primary) : (meshState === "needsLogin" || meshState === "stopped") ? Theme.warning : meshState === "connecting" ? Theme.withAlpha(Theme.primary, 0.7) : Theme.surfaceVariantText
 
     // --- Control Center -------------------------------------------------------
     ccWidgetIcon: connected ? "vpn_lock" : "vpn_key_off"

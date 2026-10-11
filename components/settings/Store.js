@@ -47,6 +47,7 @@ const SCHEMA = {
     "drift": bool(true),
     "celebrate": bool(true),
     "statusDot": bool(true),
+    "healthColor": bool(true),
     "middleToggle": bool(true),
     "searchHints": bool(true),
     "desktopLive": bool(false),

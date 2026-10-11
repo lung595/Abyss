@@ -426,6 +426,12 @@ PluginSettings {
                         defaultValue: true
                     }
                     SettingToggleRow {
+                        settingKey: "healthColor"
+                        label: "Health colour"
+                        description: "The jellyfish turns orange or red when a relay is down, a link is slow or the Internet exit is down"
+                        defaultValue: true
+                    }
+                    SettingToggleRow {
                         settingKey: "middleToggle"
                         label: "Middle-click connects"
                         description: "A middle click on the jellyfish connects or disconnects"

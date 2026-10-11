@@ -125,7 +125,7 @@ In **Settings → Plugins**, turn **Abyss** on. The launcher entry works right a
 | **Connect** | Add this computer with a setup key (self-hosted server optional) · Let my devices into this computer (SSH) · Terminal · Folder files are sent to (default `~/Downloads` on the device) · Saved logins (user and port per device, forget them here) |
 | **The deep** | Things on screen (3 to 10) · Open groups · Show offline devices · Search suggestions |
 | **Effects & battery** | Smooth motion (60 fps) · Creatures drift · Light pulses · Darwin the goldfish · Celebrations · Keep the desktop fishbowl alive. Each says its battery use (⚡ high, some, light) right under it |
-| **Bar & alerts** | Beside the jellyfish: devices online, total traffic or nothing · Status dot · Middle-click connects · Notifications |
+| **Bar & alerts** | Beside the jellyfish: devices online, total traffic or nothing · Status dot · Health colour · Middle-click connects · Notifications |
 | **Desktop** | Screens showing the fishbowl |
 | **Source & lab** | Mesh source: automatic, NetBird, test lab · the test lab's mesh, latency, trouble, traffic, lazy connections |
 | **Help** | The whole of Abyss in six lines, and the user guide |

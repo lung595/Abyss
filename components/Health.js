@@ -80,3 +80,17 @@ function _latency(peers, warnMs, badMs) {
         return { "state": "warn", "reason": "A device answers slowly (" + Math.round(worst) + " ms)." };
     return null;
 }
+
+// What evaluate() needs, read from a NetBird view ({ relays: [{ available }],
+// peers: [{ name, online, latencyMs }] }) and the name of the peer carrying
+// Internet ("" for none). An exit peer the view does not list is not
+// reported down: only a known, offline one is.
+function inputOf(view, exitNode) {
+    const v = view || {}, relays = Array.isArray(v.relays) ? v.relays : [], peers = Array.isArray(v.peers) ? v.peers : [];
+    const carrier = exitNode ? peers.find(p => p && p.name === exitNode) : null;
+    return {
+        "relays": { "up": relays.filter(r => r && r.available).length, "total": relays.length },
+        "peers": peers.map(p => ({ "connected": !!(p && p.online), "latencyMs": p ? p.latencyMs : undefined })),
+        "exit": { "active": !!carrier, "up": carrier ? !!carrier.online : true }
+    };
+}

@@ -42,6 +42,9 @@ QtObject {
     readonly property bool celebrate: _get("celebrate", true)
     // Bar: a coloured dot for the state; middle click connects
     readonly property bool statusDot: _get("statusDot", true)
+    // The jellyfish takes the mesh health colour (relay down, slow link,
+    // Internet exit down) and says why on hover
+    readonly property bool healthColor: _get("healthColor", true)
     readonly property bool middleToggle: _get("middleToggle", true)
     // Shortcuts under the empty search bar
     readonly property bool searchHints: _get("searchHints", true)
@@ -111,7 +114,10 @@ QtObject {
         if (!user && !port)
             delete next[id];
         else
-            next[id] = { "user": user || "", "port": port || "" };
+            next[id] = {
+                "user": user || "",
+                "port": port || ""
+            };
         set("links", next);
     }
     function toggleMuted(id, name) {
