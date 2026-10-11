@@ -21,6 +21,10 @@ Rectangle {
     // not now / don't ask again / done: the caller falls back or proceeds
     signal dismissed(bool dontAskAgain)
     signal proceed(string action)
+    // The 100 ms exit fade is over: the caller may unload the band
+    signal faded
+    // The caller sets this to false when the action ends; the band fades out
+    property bool open: true
 
     readonly property string phase: installer.phase
     readonly property bool busy: phase === "checking" || phase === "installing"
@@ -29,12 +33,19 @@ Rectangle {
             "expand": ["See the whole sea in the Abyss app", "Not now keeps the map in this popout."],
             "settings": ["All settings live in the Abyss app", "Not now opens the widget settings."]
         })
-    readonly property var _steps: ["Check Quickshell", "Copy the app to your home folder", "Add the abyss command"]
+    readonly property var _steps: ["Check Quickshell", "Set up the app", "Add the abyss command"]
 
     // 0 asked, 1..3 steps; installed = 3, failed keeps the step that failed
     readonly property int position: phase === "idle" ? 0 : (phase === "installed" ? 3 : Math.max(1, installer.step))
     readonly property string title: phase === "idle" ? _invite[action][0] : (phase === "installed" ? "Abyss app installed" : (phase === "failed" ? "The app was not installed" : (phase === "missing" ? "Quickshell is missing" : "Installing the Abyss app")))
     readonly property bool showSteps: phase !== "idle" && phase !== "missing"
+
+    // With no known command there is nothing to run: point to the guide
+    readonly property string _missingText: {
+        const h = installer.help;
+        const seen = h.name ? "Detected: " + h.name + ". " : "";
+        return h.command ? seen + "Run this in a terminal, then check again. Abyss never runs it for you." : seen + "Quickshell has no single command here. Open the guide with the GitHub mark, then check again. Abyss never installs it for you.";
+    }
 
     // Names longer than 15 characters are cut in the middle
     function shortName(name) {
@@ -54,15 +65,47 @@ Rectangle {
     border.color: Theme.outline
     focus: true
     Keys.onEscapePressed: band.dismissed(false)
+    Keys.onReturnPressed: band.activate()
+    Keys.onEnterPressed: band.activate()
+    // The primary button, also on Enter
+    function activate() {
+        if (busy)
+            return;
+        if (phase === "installed")
+            proceed(action);
+        else
+            installer.install();
+    }
     Accessible.role: Accessible.Dialog
     Accessible.name: "Abyss app"
-    Accessible.description: band.title
+    Accessible.description: band.busy ? band._steps[Math.max(1, band.position) - 1] : band.title
 
     // Enter once, 200 ms; the exit is a 100 ms fade driven by the caller
     opacity: 0
     transform: Translate {
         id: lift
         y: 16
+    }
+    onOpenChanged: {
+        if (open) {
+            // Asked again during the fade: stay
+            leave.stop();
+            opacity = 1;
+            return;
+        }
+        if (reduceMotion)
+            faded();
+        else
+            leave.start();
+    }
+    NumberAnimation {
+        id: leave
+        target: band
+        property: "opacity"
+        to: 0
+        duration: 100
+        easing.type: Easing.OutCubic
+        onFinished: band.faded()
     }
     Component.onCompleted: {
         if (reduceMotion) {
@@ -99,11 +142,14 @@ Rectangle {
 
         Row {
             width: parent.width
+            // The gauge starts under the title block, which may take two lines
+            height: Math.max(gauge.y + gauge.height, textColumn.height)
             spacing: 12
 
             // Gauge: wire, three graduations, float, ping ring
             Item {
                 id: gauge
+                y: titleText.height - 24
                 width: 16
                 height: 96
                 Rectangle {
@@ -178,10 +224,14 @@ Rectangle {
             }
 
             Column {
+                id: textColumn
                 width: parent.width - 28
                 spacing: 0
                 StyledText {
+                    id: titleText
                     width: parent.width
+                    lineHeight: 24
+                    lineHeightMode: Text.FixedHeight
                     text: band.title
                     wrapMode: Text.WordWrap
                     // The longest invite title wraps at the narrow popout instead of being cut
@@ -194,7 +244,7 @@ Rectangle {
                 StyledText {
                     visible: band.phase === "idle" || band.phase === "missing"
                     width: parent.width
-                    text: band.phase === "missing" ? "Detected: " + (band.installer.help.name || "unknown distribution") + ". Run this in a terminal, then check again. Abyss never runs it for you." : "Not installed yet. It goes in your home folder: no password, nothing downloaded."
+                    text: band.phase === "missing" ? band._missingText : "Not installed yet. It goes in your home folder: no password, nothing downloaded."
                     wrapMode: Text.WordWrap
                     font.pixelSize: Theme.fontSizeMedium
                     color: Theme.surfaceVariantText
@@ -265,7 +315,7 @@ Rectangle {
                     text: band.installer.help.command || ""
                     wrapMode: Text.WrapAnywhere
                     font.family: "monospace"
-                    font.pixelSize: 12
+                    font.pixelSize: Theme.fontSizeSmall
                     color: Theme.surfaceText
                 }
                 BandButton {
@@ -283,39 +333,58 @@ Rectangle {
             }
         }
 
-        Flow {
+        // Actions: primary and secondary on the left; "Don't ask again" and the
+        // GitHub mark on the right of the same row when they fit, else beneath
+        Item {
+            id: actions
             width: parent.width
-            spacing: 8
+            readonly property bool fits: left.implicitWidth + 8 + right.implicitWidth <= width
+            height: fits ? left.height : left.height + (right.implicitWidth > 0 ? 8 + right.height : 0)
 
-            BandButton {
-                kind: "primary"
-                visible: band.phase === "idle" || band.busy || band.phase === "failed" || band.phase === "missing" || band.phase === "installed"
-                enabled: !band.busy
-                reduceMotion: band.reduceMotion
-                label: band.phase === "idle" ? "Install the Abyss app" : (band.busy ? "Installing…" : (band.phase === "failed" ? "Try again" : (band.phase === "missing" ? "Check again" : band.doneLabel)))
-                onClicked: band.phase === "installed" ? band.proceed(band.action) : band.installer.install()
+            Flow {
+                id: left
+                width: actions.fits ? implicitWidth : parent.width
+                spacing: 8
+
+                BandButton {
+                    kind: "primary"
+                    visible: band.phase === "idle" || band.busy || band.phase === "failed" || band.phase === "missing" || band.phase === "installed"
+                    enabled: !band.busy
+                    reduceMotion: band.reduceMotion
+                    label: band.phase === "idle" ? "Install the Abyss app" : (band.busy ? "Installing…" : (band.phase === "failed" ? "Try again" : (band.phase === "missing" ? "Check again" : band.doneLabel)))
+                    // The full name, as the label may be shortened
+                    tip: band.phase === "installed" && band.action === "send" ? "Send a file to " + band.deviceName : ""
+                    onClicked: band.activate()
+                }
+                BandButton {
+                    kind: "secondary"
+                    visible: !band.busy
+                    reduceMotion: band.reduceMotion
+                    label: band.phase === "installed" ? "Close" : "Not now"
+                    onClicked: band.dismissed(false)
+                }
             }
-            BandButton {
-                kind: "secondary"
-                visible: !band.busy
-                reduceMotion: band.reduceMotion
-                label: band.phase === "installed" ? "Close" : "Not now"
-                onClicked: band.dismissed(false)
-            }
-            BandButton {
-                kind: "quiet"
-                visible: band.phase === "idle"
-                reduceMotion: band.reduceMotion
-                label: "Don't ask again"
-                onClicked: band.dismissed(true)
-            }
-            BandButton {
-                kind: "mark"
-                visible: band.phase === "failed" || band.phase === "missing"
-                reduceMotion: band.reduceMotion
-                tip: "Open the guide: docs/GUIDE.md#install-the-app"
-                Accessible.name: "Open the guide on GitHub"
-                onClicked: Qt.openUrlExternally(band.guideUrl + (band.phase === "missing" ? "quickshell-is-missing" : "install-the-app"))
+            Row {
+                id: right
+                spacing: 8
+                x: actions.width - width
+                y: actions.fits ? 0 : left.height + 8
+
+                BandButton {
+                    kind: "quiet"
+                    visible: band.phase === "idle"
+                    reduceMotion: band.reduceMotion
+                    label: "Don't ask again"
+                    onClicked: band.dismissed(true)
+                }
+                BandButton {
+                    kind: "mark"
+                    visible: band.phase === "failed" || band.phase === "missing"
+                    reduceMotion: band.reduceMotion
+                    tip: "Open the guide: docs/GUIDE.md#install-the-app"
+                    Accessible.name: "Open the guide on GitHub"
+                    onClicked: Qt.openUrlExternally(band.guideUrl + (band.phase === "missing" ? "quickshell-is-missing" : "install-the-app"))
+                }
             }
         }
     }

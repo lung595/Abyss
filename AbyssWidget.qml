@@ -111,16 +111,18 @@ PluginComponent {
             Loader {
                 id: invite
                 z: 2
-                active: !!root.daemon && !!root.daemon.appRequest
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.top: parent.top
-                anchors.margins: Theme.spacingM
+                // Set while a band exists: it keeps the Loader up for the 100 ms exit fade
+                property bool lingering: false
+                active: (!!root.daemon && !!root.daemon.appRequest) || lingering
+                anchors.fill: parent
                 sourceComponent: AppInstallBand {
                     installer: root.daemon.appInstaller
                     action: root.daemon.appRequest ? root.daemon.appRequest.action : "send"
                     deviceName: root.daemon.appRequest ? root.daemon.appRequest.device : ""
                     reduceMotion: root.prefs.reduceMotion
+                    open: !!root.daemon.appRequest
+                    Component.onCompleted: invite.lingering = true
+                    onFaded: invite.lingering = false
                     onDismissed: dontAsk => {
                         const req = root.daemon.appRequest;
                         root.daemon.endApp(dontAsk);

@@ -37,7 +37,7 @@ Rectangle {
 
     width: parent ? parent.width : 0
     height: layout.implicitHeight + 32
-    radius: 12
+    radius: Theme.cornerRadius
     color: Theme.surfaceContainer
 
     Component.onCompleted: installer.refresh()
@@ -49,14 +49,15 @@ Rectangle {
         x: 16
         y: 16
         width: parent.width - 32
-        spacing: 16
+        // 8 between rows; the texts keep 8 more on their right for 16 between columns
+        spacing: 8
 
         Column {
             // A base width of 160 lets the buttons wrap under the text
             width: Math.max(160, layout.width - ctl.implicitWidth - layout.spacing)
             spacing: 4
             StyledText {
-                width: parent.width
+                width: parent.width - 8
                 text: "Abyss app"
                 font.pixelSize: Theme.fontSizeLarge
                 font.weight: Font.DemiBold
@@ -64,7 +65,7 @@ Rectangle {
                 wrapMode: Text.WordWrap
             }
             StyledText {
-                width: parent.width
+                width: parent.width - 8
                 text: row.help
                 font.pixelSize: Theme.fontSizeSmall
                 color: Theme.surfaceVariantText
@@ -101,7 +102,8 @@ Rectangle {
             }
             BandButton {
                 visible: row.mode !== "confirm" && !row.present
-                kind: "primary"
+                // Secondary once the app was just removed; primary only when never installed
+                kind: row.mode === "removed" && row.phase !== "failed" ? "secondary" : "primary"
                 enabled: !row.busy
                 label: row.busy ? "Installing…" : (row.phase === "failed" ? "Try again" : "Install the app")
                 reduceMotion: row.reduceMotion
