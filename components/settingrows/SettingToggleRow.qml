@@ -64,8 +64,13 @@ Item {
         height: 30
         radius: 15
         color: root.value ? Theme.primary : Theme.surfaceContainerHighest
-        border.width: root.activeFocus ? 2 : 0
-        border.color: Theme.primary
+        // Hover and pressed tints, no timer or animation needed
+        Rectangle {
+            anchors.fill: parent
+            radius: parent.radius
+            color: Theme.surfaceText
+            opacity: tap.pressed ? 0.12 : (hover.hovered ? 0.08 : 0)
+        }
         Rectangle {
             width: 22
             height: 22
@@ -75,7 +80,21 @@ Item {
             color: root.value ? Theme.primaryText : Theme.outline
         }
     }
+    // Focus ring outside the track: primary on the surface, not on the primary fill
+    Rectangle {
+        anchors.fill: track
+        anchors.margins: -4
+        radius: 19
+        color: "transparent"
+        border.width: 2
+        border.color: Theme.primary
+        visible: root.activeFocus
+    }
+    HoverHandler {
+        id: hover
+    }
     TapHandler {
+        id: tap
         onTapped: {
             root.forceActiveFocus();
             root.toggle();
