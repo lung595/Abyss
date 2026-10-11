@@ -20,10 +20,12 @@ Item {
 
     readonly property bool _filled: kind === "primary"
     readonly property color _fg: _filled ? Theme.primaryText : (kind === "quiet" ? Theme.surfaceVariantText : Theme.surfaceText)
+    // Icon plus the row spacing; the label width must not feed back into implicitWidth
+    readonly property int _iconSpace: iconName !== "" ? 24 : 0
     readonly property int _pad: kind === "quiet" ? 8 : (kind === "flat" ? 12 : 16)
 
     implicitHeight: 44
-    implicitWidth: kind === "mark" ? 44 : Math.max(44, content.implicitWidth + _pad * 2)
+    implicitWidth: kind === "mark" ? 44 : Math.max(44, labelText.implicitWidth + _iconSpace + _pad * 2)
     opacity: enabled ? 1 : 0.5
     scale: area.pressed && !reduceMotion ? 0.97 : 1
     activeFocusOnTab: true
@@ -69,7 +71,7 @@ Item {
         color: "transparent"
         border.width: 2
         border.color: Theme.primary
-        visible: btn.visualFocus
+        visible: btn.activeFocus
     }
 
     Row {
@@ -90,9 +92,10 @@ Item {
             color: Theme.surfaceText
         }
         StyledText {
+            id: labelText
             visible: btn.kind !== "mark"
             anchors.verticalCenter: parent.verticalCenter
-            width: Math.min(implicitWidth, btn.width - btn._pad * 2 - (btn.iconName !== "" ? 24 : 0))
+            width: Math.min(implicitWidth, btn.width - btn._pad * 2 - btn._iconSpace)
             text: btn.label
             elide: Text.ElideRight
             color: btn._fg

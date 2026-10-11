@@ -182,10 +182,10 @@ Rectangle {
                 spacing: 0
                 StyledText {
                     width: parent.width
-                    height: 24
                     text: band.title
                     wrapMode: Text.WordWrap
-                    maximumLineCount: 1
+                    // The longest invite title wraps at the narrow popout instead of being cut
+                    maximumLineCount: 2
                     elide: Text.ElideRight
                     font.pixelSize: Theme.fontSizeLarge
                     font.weight: Font.DemiBold
