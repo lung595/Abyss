@@ -13,7 +13,7 @@
 # root object: it calls Qt.exit(failures) when done.
 import os, shutil, sys, tempfile
 
-from PySide6.QtCore import QObject, QProcess, QProcessEnvironment, Property, Signal, QTimer, QUrl
+from PySide6.QtCore import QObject, QProcess, QProcessEnvironment, Property, Signal, Slot, QTimer, QUrl
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine, qmlRegisterType
 
@@ -32,6 +32,48 @@ class StdioCollector(QObject):
         return self._text
 
     text = Property(str, _get, notify=textChanged)
+
+
+class FileView(QObject):
+    # Reads the file as soon as its path is set, like blockLoading does, and
+    # answers loaded; an unreadable file stays silent (text() is empty)
+    loaded = Signal()
+    pathChanged = Signal()
+    blockLoadingChanged = Signal()
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._path = ''
+        self._text = ''
+        self._block = False
+
+    def _getPath(self):
+        return self._path
+
+    def _setPath(self, v):
+        self._path = v
+        self.pathChanged.emit()
+        try:
+            with open(v, encoding='utf-8') as f:
+                self._text = f.read()
+        except OSError:
+            self._text = ''
+            return
+        self.loaded.emit()
+
+    def _getBlock(self):
+        return self._block
+
+    def _setBlock(self, v):
+        self._block = v
+        self.blockLoadingChanged.emit()
+
+    path = Property(str, _getPath, _setPath, notify=pathChanged)
+    blockLoading = Property(bool, _getBlock, _setBlock, notify=blockLoadingChanged)
+
+    @Slot(result=str)
+    def text(self):
+        return self._text
 
 
 class SplitParser(QObject):
@@ -203,6 +245,7 @@ def main():
     qmlRegisterType(StdioCollector, "Quickshell.Io", 1, 0, "StdioCollector")
     qmlRegisterType(IpcHandler, "Quickshell.Io", 1, 0, "IpcHandler")
     qmlRegisterType(SplitParser, "Quickshell.Io", 1, 0, "SplitParser")
+    qmlRegisterType(FileView, "Quickshell.Io", 1, 0, "FileView")
     app = QGuiApplication([sys.argv[0]])
     eng = QQmlApplicationEngine()
     eng.addImportPath(os.path.join(HERE, "imports"))
