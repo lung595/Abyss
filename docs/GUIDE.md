@@ -17,6 +17,7 @@ Every refusal in Abyss says why in a short note, with a GitHub mark that opens t
 - [Find a peer](#find-a-peer)
 - [The list](#the-list)
 - [Ping](#ping)
+- [Web apps on a device](#web-apps-on-a-device)
 - [Connect to a peer](#connect-to-a-peer)
 - [Search and commands](#search-and-commands)
 - [Tags](#tags)
@@ -117,6 +118,10 @@ With 12 peers or more, a list icon appears in the top bar: every peer as one lin
 ## Ping
 
 A peer's card has a **Ping** button: three echoes to its address, and a toast with the average, the best and worst time and how many answered. It runs only when you ask (also `dms ipc call abyss ping <peer>`); Abyss never pings by itself. In the test lab it says what the made-up mesh claims.
+
+## Web apps on a device
+
+When you open the card of an online peer, Abyss tries a few well-known ports of that device (Jellyfin 8096, Home Assistant 8123, Proxmox 8006, Nextcloud 8080, Syncthing 8384, Portainer 9443, Immich 2283, then plain http and https) for about one second. Each app found becomes a button under *Web apps on ...* that opens it in your browser, on click only. Nothing is tried while no card is open, closing the card stops the attempts, and the section is absent when nothing answers. Turn it off with *Settings > Find web apps on a device*. The only network traffic is a connection attempt to that peer's own ports.
 
 ## Connect to a peer
 
@@ -320,7 +325,7 @@ Tags are only stored in Abyss's own settings (see [Privacy](#privacy)); nothing 
 
 ## Privacy
 
-- **No network access by the plugin itself, no telemetry.** NetBird is read through its local `netbird` command, never through a shell: no peer name or address can run anything. QR codes are drawn locally.
+- **No network access by the plugin itself, no telemetry.** The one exception is the [web app scan](#web-apps-on-a-device): when you open an online peer's card, a connection attempt to a few of that peer's own ports (switchable off). NetBird is read through its local `netbird` command, never through a shell: no peer name or address can run anything. QR codes are drawn locally.
 - **Secrets stay secret.** A setup key goes to `netbird` through its environment, which only you can read, never on a command line (visible to every user in `ps`). It is never saved, logged or put on the clipboard. The command line takes a key file, never the key (see [Join a mesh](#join-a-mesh)).
 - **Written to disk: only your settings**, saved by DMS. They hold peer names and identifiers (NetBird's key for each peer, or its name or address when it has none) for your favorites, muted peers and own groups, which peer carries each exit route once seen, and the login (user, port) you set for a peer. Live peers, addresses and traffic stay in memory for the session.
 - **Tags** you give peers are saved with your other settings (peer identifier and tag text), capped at 200 peers, 8 tags each. They are not part of the anonymous diagnostics.

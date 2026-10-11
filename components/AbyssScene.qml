@@ -1261,6 +1261,11 @@ Item {
         else if (actions)
             actions.openUrl(url);
     }
+    // A service found on a peer: the address comes from Services.url
+    function openService(url) {
+        if (actions)
+            actions.openUrl(url);
+    }
     // The online peer under a point
     function _peerAt(px, py) {
         let best = null, dist = 46;

@@ -33,6 +33,8 @@ QtObject {
     // How to reach each peer over SSH: peer id -> { user, port } (a phone
     // running Termux listens on 8022 and has its own user)
     readonly property var links: _get("links", ({}))
+    // Look for web services (Jellyfin, Home Assistant...) when a card opens
+    readonly property bool serviceScan: _get("serviceScan", true)
     // This device lets the other peers SSH in (NetBird's SSH server)
     readonly property bool shareSsh: _get("shareSsh", false)
     // Effects (Settings > Effects & battery): 60 fps while things move (else

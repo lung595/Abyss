@@ -46,6 +46,14 @@ Item {
     signal closed
     signal step(int dir)
 
+    // Web services found on the peer: the scan lives only while the card is
+    // shown on an online peer, and the setting can turn it off
+    ServiceScan {
+        id: scan
+        active: card.visible && card.live && card.scene.prefs.serviceScan
+        ip: card.peer ? card.peer.ip : ""
+    }
+
     readonly property bool live: peer.online && scene.connected
     readonly property color ink: scene.ink
     // What you send: your own colour, as the "you" chip
@@ -151,7 +159,6 @@ Item {
             onClicked: card.scene.copy(parent.value, parent.what)
         }
     }
-
 
     // One way in: a big tile, icon over its name, the protocol small below
     component ConnectTile: Rectangle {
@@ -591,6 +598,33 @@ Item {
             // Who you log in as, and on which port: said plainly, changed in place
             LoginRow {
                 width: parent.width
+            }
+
+            // Web apps found on the device, one click each; no section when
+            // none answered
+            Column {
+                visible: scan.services.length > 0
+                width: parent.width
+                spacing: 4
+                StyledText {
+                    text: "Web apps on " + card.peer.name
+                    font.pixelSize: 11
+                    color: card.scene.inkDim
+                }
+                Flow {
+                    width: parent.width
+                    spacing: 6
+                    Repeater {
+                        model: scan.services
+                        ActionChip {
+                            required property var modelData
+                            icon: "open_in_new"
+                            text: modelData.name
+                            ink: card.ink
+                            onClicked: card.scene.openService(modelData.url)
+                        }
+                    }
+                }
             }
 
             Flow {
