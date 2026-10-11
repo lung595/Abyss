@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Window
 import qs.Common
-import "../../components"
 
 // CPU bench scene, runs until stopped:
 //   qml-qt6 -I imports bench-band.qml -- <none|invite|installing|loop> /dev/null
@@ -32,10 +31,12 @@ Window {
         anchors.right: parent.right
         anchors.top: parent.top
         anchors.margins: Theme.spacingM
-        sourceComponent: AppInstallBand {
-            installer: fake
-            action: "send"
-            deviceName: "demo-laptop"
+        // Resolved at run time so the base revision (no band yet) still runs
+        // this scene, drawing nothing: the A/B difference is then the band's cost
+        source: Qt.resolvedUrl("../../components/AppInstallBand.qml")
+        onLoaded: {
+            item.installer = fake;
+            item.deviceName = "demo-laptop";
         }
     }
 
