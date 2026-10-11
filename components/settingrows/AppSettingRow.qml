@@ -23,7 +23,7 @@ Rectangle {
 
     readonly property string help: {
         if (busy)
-            return "Installing, step " + Math.max(1, installer.step) + " of 3: " + ["checking Quickshell", "copying the app to your home folder", "adding the abyss command"][Math.max(1, installer.step) - 1];
+            return "Installing, step " + Math.max(1, installer.step) + " of 3: " + ["checking Quickshell", "setting up the app", "adding the abyss command"][Math.max(1, installer.step) - 1];
         if (phase === "failed")
             return "Not installed: " + installer.reason + " Nothing was changed.";
         if (mode === "confirm")

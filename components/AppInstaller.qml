@@ -109,11 +109,16 @@ Item {
         onExited: versionProbe.running = true
     }
 
-    // `abyss --version` through the launcher on PATH; empty when absent
+    // `abyss --version` through the launcher on PATH; empty when absent.
+    // Run through sh so the process always exits: Quickshell never emits
+    // `exited` for a binary it cannot start, and the answer would be lost.
     Process {
         id: versionProbe
         property string version: ""
-        command: ["abyss", "--version"]
+        command: ["sh", "-c", "command -v -- \"$1\" >/dev/null 2>&1 || exit 127; exec \"$1\" --version", "sh", "abyss"]
+        // A stale answer must never survive a failed run
+        onRunningChanged: if (running)
+            version = ""
         stdout: StdioCollector {
             onStreamFinished: versionProbe.version = text.trim()
         }

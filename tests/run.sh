@@ -30,6 +30,7 @@ fi
 # The app launcher: single instance and quit on close, offscreen
 tests/app.sh || failed=1
 tests/install.sh || failed=1
+tests/appinstaller.sh || failed=1
 
 # The settings page and rail tests are QtTest cases over the preview stand-ins
 # (Theme, widgets), which the PySide6 runner above does not have

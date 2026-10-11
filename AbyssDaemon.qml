@@ -441,10 +441,7 @@ Item {
             return "Refused: " + user + " is not a user name";
         if (user && (kind === "ssh" || kind === "sftp")) {
             const host = p.fqdn || p.ip;
-            return root.ssh(host, prefs.terminal, {
-                "user": user,
-                "port": prefs.linkOf(p.id).port
-            }, kind) ? "OK" : "Refused: " + host + " is not a plain host name";
+            return root.ssh(host, prefs.terminal, { "user": user, "port": prefs.linkOf(p.id).port }, kind) ? "OK" : "Refused: " + host + " is not a plain host name";
         }
         return root.reach(kind, p) ? "OK" : "Refused: " + (p.fqdn || p.ip) + " is not a plain host name";
     }
