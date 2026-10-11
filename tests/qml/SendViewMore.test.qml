@@ -153,6 +153,7 @@ Item {
 
     function closeIt() {
         check("abyss send <device> <file> queues the file", frame.sendView.q.jobs.length === 1 && frame.sendView.chosen.join() === "slow");
+        check("a queued row gives the scrolling list its height", frame.sendView.list.contentHeight > 0, frame.sendView.list.contentHeight);
         check("no false duplicate notice", frame.sendView.failure === null);
         frame.show("map");
         check("closing from another station brings Send back", frame.confirmClose() === false && frame.station === "send");

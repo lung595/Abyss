@@ -165,12 +165,31 @@ Item {
         width: 100
         height: 44
         radius: Theme.cornerRadius
-        color: "transparent"
+        color: tap.pressed ? Qt.rgba(Theme.primary.r, Theme.primary.g, Theme.primary.b, 0.2) : hover.hovered ? Theme.surfaceContainerHigh : "transparent"
         border.width: 1
         border.color: Theme.outlineStrong
         activeFocusOnTab: true
+        // Set by the key handler only, so a click never draws the ring
+        property bool focusByKey: false
+        onActiveFocusChanged: if (!activeFocus)
+            focusByKey = false
+        Keys.onPressed: event => {
+            focusByKey = true;
+            if (event.key === Qt.Key_Return || event.key === Qt.Key_Space) {
+                row.action(row.actionLabel.toLowerCase());
+                event.accepted = true;
+            }
+        }
         Accessible.role: Accessible.Button
         Accessible.name: row.actionLabel
+
+        FocusRing {
+            target: parent
+        }
+
+        HoverHandler {
+            id: hover
+        }
 
         Text {
             anchors.centerIn: parent
@@ -181,6 +200,8 @@ Item {
         }
 
         TapHandler {
+            id: tap
+
             onTapped: row.action(row.actionLabel.toLowerCase())
         }
     }

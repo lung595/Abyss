@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
+import QtQuick.Controls
 import "../components"
 import "../components/SendQueue.js" as Queue
 import "../components/SendTransfer.js" as Transfer
@@ -57,6 +58,8 @@ Item {
     property int failedId: 0
     readonly property var lastFailed: failedId > 0 ? q.history.find(j => j.id === failedId) ?? null : null
     readonly property int runningCount: running.count
+    // The scrolling list under the "To" row (queue, band, history)
+    readonly property Flickable list: scroller
     readonly property var online: (Array.isArray(peers) ? peers : []).filter(p => p.online)
     readonly property var names: online.map(p => p.name)
     readonly property var notice: closeAsked ? {
@@ -344,7 +347,11 @@ Item {
         onDroppedOn: (name, urls) => view.addItems(urls, name)
     }
 
-    Column {
+    // Queue, band and history scroll together; the drop zone and the "To"
+    // row stay in place. Wheel and keys, no animation at rest.
+    Flickable {
+        id: scroller
+
         anchors {
             left: parent.left
             right: parent.right
@@ -353,62 +360,81 @@ Item {
             bottom: parent.bottom
         }
         clip: true
-
-        Repeater {
-            model: liveRows
-
-            SendJobRow {
-                id: liveRow
-
-                required property var model
-
-                width: view.width
-                job: view.rowJob(liveRow.model)
-                rate: view.rates[liveRow.model.jid] ?? ""
-                animate: view.shown
-                onAction: kind => view.act(job, kind)
+        contentWidth: width
+        contentHeight: list.height
+        boundsBehavior: Flickable.StopAtBounds
+        flickableDirection: Flickable.VerticalFlick
+        ScrollBar.vertical: ScrollBar {
+            policy: scroller.contentHeight > scroller.height ? ScrollBar.AlwaysOn : ScrollBar.AlwaysOff
+            contentItem: Rectangle {
+                implicitWidth: 4
+                radius: 2
+                color: Theme.outlineStrong
             }
         }
 
-        Item {
-            visible: view.notice !== null
-            width: 1
-            height: visible ? Theme.spacingS : 0
-        }
+        Column {
+            id: list
 
-        GuideBand {
-            visible: view.notice !== null
-            width: view.width
-            error: view.notice !== null && view.notice === view.failure
-            actionLabel: error && view.lastFailed !== null ? "Retry" : ""
-            message: view.notice ? view.notice.title + ". " + view.notice.advice : ""
-            anchor: view.notice ? Flow.anchor(view.notice) : ""
-            onActed: view.act(view.lastFailed, "retry")
-        }
+            // Room for the scroll indicator on the right
+            width: scroller.width - 12
 
-        Text {
-            visible: historyRows.count > 0
-            height: visible ? view.headerHeight : 0
-            verticalAlignment: Text.AlignVCenter
-            text: "History"
-            color: Theme.surfaceText
-            font.pixelSize: Theme.fontSizeLarge
-            font.weight: Font.DemiBold
-        }
+            Repeater {
+                model: liveRows
 
-        Repeater {
-            model: historyRows
+                SendJobRow {
+                    id: liveRow
 
-            SendJobRow {
-                id: pastRow
+                    required property var model
 
-                required property var model
+                    width: list.width
+                    job: view.rowJob(liveRow.model)
+                    rate: view.rates[liveRow.model.jid] ?? ""
+                    animate: view.shown
+                    onAction: kind => view.act(job, kind)
+                }
+            }
 
-                width: view.width
-                history: true
-                now: view.clock
-                job: view.rowJob(pastRow.model)
-                onAction: kind => view.act(job, kind)
+            Item {
+                visible: view.notice !== null
+                width: 1
+                height: visible ? Theme.spacingS : 0
+            }
+
+            GuideBand {
+                visible: view.notice !== null
+                width: list.width
+                error: view.notice !== null && view.notice === view.failure
+                actionLabel: error && view.lastFailed !== null ? "Retry" : ""
+                message: view.notice ? view.notice.title + ". " + view.notice.advice : ""
+                anchor: view.notice ? Flow.anchor(view.notice) : ""
+                onActed: view.act(view.lastFailed, "retry")
+            }
+
+            Text {
+                visible: historyRows.count > 0
+                height: visible ? view.headerHeight : 0
+                verticalAlignment: Text.AlignVCenter
+                text: "History"
+                color: Theme.surfaceText
+                font.pixelSize: Theme.fontSizeLarge
+                font.weight: Font.DemiBold
+            }
+
+            Repeater {
+                model: historyRows
+
+                SendJobRow {
+                    id: pastRow
+
+                    required property var model
+
+                    width: list.width
+                    history: true
+                    now: view.clock
+                    job: view.rowJob(pastRow.model)
+                    onAction: kind => view.act(job, kind)
+                }
             }
         }
     }
