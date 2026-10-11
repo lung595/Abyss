@@ -1,0 +1,15 @@
+#!/bin/sh
+# Stands in for timeout in the QML tests, so no real connection is made. The
+# probe is "timeout 1 bash -c script abyss-probe <ip> <port>"; the address
+# decides the outcome:
+#   10.0.0.1  ports 8096 and 8123 accept (exit 0), the others refuse (exit 1)
+#   10.0.0.2  every port refuses
+#   10.9.9.9  every probe hangs (the test closes the card; pids are saved)
+# The probe's arguments are saved in $FAKE_NB/probe.argv (the last probe wins).
+printf '%s\n' "$@" > "$FAKE_NB/probe.argv"
+ip=$6 port=$7
+case "$ip" in
+    10.0.0.1) case "$port" in 8096|8123) exit 0 ;; esac; exit 1 ;;
+    10.9.9.9) echo $$ > "$FAKE_NB/hang.$port.pid"; exec sleep 30 ;;
+esac
+exit 1

@@ -87,6 +87,18 @@ function url(service, ip) {
     return service.scheme + "://" + host + (plain ? "" : ":" + service.port) + "/";
 }
 
+// The URL of a service named by its id, or "" for an unknown id
+function urlById(id, ip) {
+    return url(SERVICES.find(s => s.id === id), ip);
+}
+
+// The title above the buttons. Dashes in a name are shown as a hyphen (an em
+// dash is never drawn on screen); a name that is not text gives a plain title.
+function heading(name) {
+    const who = typeof name === "string" && name !== "" ? name.replace(/\s*[\u2013\u2014]\s*/g, " - ") : "this device";
+    return "Web apps on " + who;
+}
+
 // Probe answers -> the buttons to show: [{ id, name, url }] in table order.
 // results is a list of { id, open } (an unknown id, a missing field or an
 // answer that is not exactly true counts as closed). Empty when nothing

@@ -59,4 +59,12 @@ eq("bad cap falls back", S.servicesFrom("10.0.0.1", res(Object.keys(want)), -1).
 eq("invalid address shows nothing", S.servicesFrom("x", res(["jellyfin"])), []);
 eq("IPv6 buttons", S.servicesFrom("fd7a::1", res(["proxmox"]))[0].url, "https://[fd7a::1]:8006/");
 
+// By id and heading
+eq("url by id", S.urlById("proxmox", "100.64.0.7"), "https://100.64.0.7:8006/");
+eq("unknown id", S.urlById("nope", "100.64.0.7"), "");
+eq("by id, bad address", S.urlById("proxmox", "x"), "");
+eq("heading", S.heading("nas"), "Web apps on nas");
+eq("heading without dash", S.heading("my \u2014 nas \u2013 2"), "Web apps on my - nas - 2");
+eq("heading without name", [S.heading(""), S.heading(undefined)], ["Web apps on this device", "Web apps on this device"]);
+
 done("services");

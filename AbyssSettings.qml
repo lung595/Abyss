@@ -161,12 +161,6 @@ PluginSettings {
                         icon: "terminal"
                         title: "Opening a device"
                         sub: "Terminal, Files, Screen and Desktop on a device's card"
-                        SettingToggleRow {
-                            settingKey: "serviceScan"
-                            label: "Find web apps on a device"
-                            description: "Tries a few well-known ports of the device when its card opens (about 1 s), then offers Jellyfin, Home Assistant... as buttons. Off: nothing is tried"
-                            defaultValue: true
-                        }
                         SettingChoiceRow {
                             settingKey: "terminal"
                             label: "Terminal"
@@ -187,6 +181,12 @@ PluginSettings {
                             font.pixelSize: Theme.fontSizeSmall
                             color: Theme.surfaceVariantText
                             wrapMode: Text.WordWrap
+                        }
+                        SettingToggleRow {
+                            settingKey: "serviceScan"
+                            label: "Find web apps on a device"
+                            description: "Tries a few well-known ports of the device when its card opens (about 1 s), then offers Jellyfin, Home Assistant... as buttons. Off: nothing is tried"
+                            defaultValue: true
                         }
                     }
 

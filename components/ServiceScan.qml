@@ -24,17 +24,17 @@ QtObject {
     // Bumped by every start and stop: a late answer of an older scan is ignored
     property int _round: 0
 
-    onActiveChanged: root._restart()
-    onIpChanged: root._restart()
-
-    function _restart() {
+    // The address being scanned, "" while nothing should run: one change here
+    // is one restart, even when active and ip change together
+    readonly property string _target: root.active ? root.ip : ""
+    on_TargetChanged: {
         root._stop();
-        if (root.active)
+        if (root._target !== "")
             root._start();
     }
 
     function _start() {
-        const plan = Services.probePlan(root.ip);
+        const plan = Services.probePlan(root._target);
         if (!plan.ok)
             return;
         const round = root._round;
@@ -69,7 +69,7 @@ QtObject {
         ]);
         if (root._answers.length < root._probes.length)
             return;
-        root._services = Services.servicesFrom(root.ip, root._answers);
+        root._services = Services.servicesFrom(root._target, root._answers);
         // Done: the finished processes are not kept
         root._probes.forEach(p => p.destroy());
         root._probes = [];
@@ -80,8 +80,10 @@ QtObject {
         Process {
             required property string probeId
             required property int round
-            // Exit 0 = the port accepted; a timeout, a refusal or a program
-            // that cannot start all count as closed
+            // Exit 0 = the port accepted; a timeout or a refusal counts as
+            // closed. A program that cannot start never exits: every probe
+            // uses the same one, so nothing could be tested and no section
+            // shows (the next stop destroys the waiting probes)
             onExited: (code, status) => root._answer(round, probeId, code === 0)
         }
     }

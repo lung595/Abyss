@@ -43,6 +43,7 @@ Tools: `gjs` (unit tests), Python with PySide6 (integration tests: `pip install 
 
 1. **Source**: two objects with the same interface (`view`, `networks`, `exitNode`, `profiles`, `watch()`, `connect()`, `setExitNode()`…); the daemon creates only the one picked by the **Mesh source** setting (`auto` checks `command -v netbird` once at start).
    - `components/NetbirdSource.qml` reads the daemon through the `netbird` CLI. `Netbird.js` (pure) builds every command and reads every answer; `CliRunner.qml` runs commands one at a time (argv lists, never a shell). Reads and actions have separate queues, so a sign-in waiting in the browser never stops the reads.
+   - `components/ServiceScan.qml` probes the well-known ports of a peer while its card is open (`Services.js`, pure, builds the probes and the buttons); one component, nine short `Process` probes, all killed when the card closes.
    - `components/DemoSource.qml` serves made-up meshes (`DemoMesh.js`) shaped exactly like `netbird status --json`.
    - **Exit nodes**: a peer's `networks` in the status only lists routes going through it *now*. Which peers can lend Internet comes from `netbird networks list` (`0.0.0.0/0` routes), matched to peers by `Netbird.exitMap`.
 2. **View model**: `Mesh.js` turns what NetBird reports into the small model the scene draws.
@@ -101,7 +102,7 @@ PYTHON=/path/to/python tests/run.sh   # a Python that has PySide6
 Run them before every commit; CI runs them on every push (`.github/workflows/tests.yml`).
 
 - **Unit tests** (`gjs`): the pure `.js` files in `components/` are tested in `tests/<name>.test.js`; `tests/load.js` loads QML-flavoured JavaScript (`.pragma`, `.import`) into gjs.
-- **Integration tests** (PySide6, skipped without it): `tests/qml/*.test.qml` run through `tests/qml/qmltest.py`, which plays Quickshell's `Process` with a real `QProcess` and puts a fake `netbird` (`tests/qml/fake-netbird`, outputs taken from the NetBird client's code) first on the `PATH`. They cover `CliRunner`, `NetbirdSource`, `AbyssDaemon`, the send engine, `SendHub` and `SendView` (with fake `scp`, `wl-paste` and `zenity`; `touch $FAKE_NB/missing.<program>` makes a program fail to start). **Scene tests** (`tests/scene/*.test.qml`, `tests/scene/run.sh`, `qml-qt6` with the fake shell modules of `scripts/preview/imports`) drive the scene itself: menu, Ctrl+V. `FAKE_NB_DELAY=0.3` makes every fake call slow, to try a slow machine.
+- **Integration tests** (PySide6, skipped without it): `tests/qml/*.test.qml` run through `tests/qml/qmltest.py`, which plays Quickshell's `Process` with a real `QProcess` and puts a fake `netbird` (`tests/qml/fake-netbird`, outputs taken from the NetBird client's code) first on the `PATH`. They cover `CliRunner`, `ServiceScan` (fake `timeout`), `NetbirdSource`, `AbyssDaemon`, the send engine, `SendHub` and `SendView` (with fake `scp`, `wl-paste` and `zenity`; `touch $FAKE_NB/missing.<program>` makes a program fail to start). **Scene tests** (`tests/scene/*.test.qml`, `tests/scene/run.sh`, `qml-qt6` with the fake shell modules of `scripts/preview/imports`) drive the scene itself: menu, Ctrl+V. `FAKE_NB_DELAY=0.3` makes every fake call slow, to try a slow machine.
 - `NOTES.md` logs every bug found in review: where, why, the fix and the test that shows it.
 
 ## Screenshots and GIFs

@@ -3,6 +3,7 @@ import QtQuick.Effects
 import qs.Common
 import qs.Widgets
 import "Mesh.js" as Mesh
+import "Services.js" as Services
 
 // Everything about one peer, opened by a click on its creature: live rates
 // (either side of its medallion) and the last minute, its addresses to copy, and what you can do with it.
@@ -50,8 +51,8 @@ Item {
     // shown on an online peer, and the setting can turn it off
     ServiceScan {
         id: scan
-        active: card.visible && card.live && card.scene.prefs.serviceScan
         ip: card.peer ? card.peer.ip : ""
+        active: card.visible && card.live && card.scene.prefs.serviceScan
     }
 
     readonly property bool live: peer.online && scene.connected
@@ -607,7 +608,9 @@ Item {
                 width: parent.width
                 spacing: 4
                 StyledText {
-                    text: "Web apps on " + card.peer.name
+                    width: parent.width
+                    elide: Text.ElideRight
+                    text: Services.heading(card.peer.name)
                     font.pixelSize: 11
                     color: card.scene.inkDim
                 }
@@ -621,7 +624,7 @@ Item {
                             icon: "open_in_new"
                             text: modelData.name
                             ink: card.ink
-                            onClicked: card.scene.openService(modelData.url)
+                            onClicked: card.scene.openService(card.peer, modelData.id)
                         }
                     }
                 }

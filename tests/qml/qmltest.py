@@ -190,6 +190,8 @@ def main():
     os.symlink(os.path.join(HERE, "fake-wakeonlan"), os.path.join(bin_dir, "wakeonlan"))
     os.symlink(os.path.join(HERE, "fake-ssh"), os.path.join(bin_dir, "ssh"))
     os.symlink(os.path.join(HERE, "fake-rsync"), os.path.join(bin_dir, "rsync"))
+    # The port probes of the service scan run through a fake timeout
+    os.symlink(os.path.join(HERE, "fake-timeout"), os.path.join(bin_dir, "timeout"))
     # The clipboard reader and the file picker are fakes too (see their files)
     os.symlink(os.path.join(HERE, "fake-wl-paste"), os.path.join(bin_dir, "wl-paste"))
     os.symlink(os.path.join(HERE, "fake-zenity"), os.path.join(bin_dir, "zenity"))

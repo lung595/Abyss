@@ -58,6 +58,7 @@ var SETTINGS = {
     "statusDot": "bool",
     "middleToggle": "bool",
     "searchHints": "bool",
+    "serviceScan": "bool",
     "desktopLive": "bool",
     "maxItems": "int",
     "pill": ["peers", "rate", "icon"],
