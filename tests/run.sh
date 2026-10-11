@@ -35,7 +35,7 @@ tests/install.sh || failed=1
 # (Theme, widgets), which the PySide6 runner above does not have
 if command -v qmltestrunner-qt6 >/dev/null; then
     # One runner call per file: with several -input flags only the last one runs
-    for t in tests/qml/Settings.test.qml tests/qml/SettingsOverlap.test.qml tests/qml/SettingsFocus.test.qml tests/qml/SendKeys.test.qml; do
+    for t in tests/qml/Settings.test.qml tests/qml/SettingsOverlap.test.qml tests/qml/SettingsFocus.test.qml tests/qml/SendKeys.test.qml tests/qml/BarHealth.test.qml; do
         out=$(QT_QPA_PLATFORM=offscreen timeout 120 qmltestrunner-qt6 -platform offscreen -import scripts/preview/imports -input "$t" 2>&1) || { failed=1; printf '%s\n' "$out" | grep -E '^(FAIL|XFAIL|Totals)|Actual|Expected'; }
         printf '%s\n' "$out" | grep '^Totals'
     done
