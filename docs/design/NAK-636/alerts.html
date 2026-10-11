@@ -1,0 +1,231 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Abyss · NAK-636 · Favourite alerts</title>
+<style>
+/* Every colour below is a DMS Theme role; the palettes are fictitious theme data set from JS. */
+:root{--r:12px;--ease:cubic-bezier(.33,1,.68,1)}
+*{box-sizing:border-box}
+body{margin:0;padding:24px;background:var(--bg);color:var(--text);font:13px/20px Inter,'Noto Sans',sans-serif}
+h1{font-size:20px;line-height:28px;font-weight:600;margin:0 0 4px}h2{font-size:15px;line-height:24px;font-weight:600;margin:32px 0 12px}
+p{margin:0 0 4px;color:var(--variant);max-width:80ch}
+.num,code,td{font-variant-numeric:tabular-nums}
+code{font:12px/20px 'JetBrains Mono','Noto Sans Mono',monospace;color:var(--text);overflow-wrap:anywhere}
+.switches{display:flex;flex-wrap:wrap;gap:12px 20px;margin:20px 0}
+.grp{display:flex;flex-wrap:wrap;align-items:center;gap:4px}.grp>span{font-size:12px;color:var(--variant);margin-right:4px}
+.grp button{font:inherit;min-height:44px;padding:0 12px;border-radius:var(--r);border:1px solid var(--outline);background:none;color:var(--text);cursor:pointer}
+.grp button[aria-pressed=true]{background:var(--primary);color:var(--onprimary);border-color:var(--primary)}
+button:focus-visible,.f-focus{outline:2px solid var(--primary);outline-offset:2px}
+.sheet{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start}
+.cell{max-width:100%}.cell>small{display:block;font-size:12px;line-height:16px;color:var(--variant);margin-bottom:8px}
+
+/* Settings panel at its real width: 720 wide, 400 narrow, section rail on the left, body straight on the page (no card). */
+.panel{display:flex;gap:24px;width:720px;max-width:100%;background:var(--surface);border:1px solid var(--outline);border-radius:16px;padding:24px}
+.narrow .panel{width:440px;gap:16px;padding:16px}
+.rail{flex:0 0 176px;display:flex;flex-direction:column;gap:4px}
+
+.rail div{min-height:44px;padding:12px;border-radius:var(--r);font-size:14px;line-height:20px;color:var(--variant);overflow-wrap:anywhere}
+.rail div.on{background:var(--highest);color:var(--text);font-weight:600;position:relative}
+.rail div.on::before{content:"";position:absolute;left:-4px;top:8px;width:8px;height:28px;border-radius:4px;background:var(--primary)}
+.body{flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:16px}
+.body h3{font-size:20px;line-height:28px;font-weight:600;margin:0}
+.body h3+small{display:block;font-size:12px;line-height:16px;color:var(--variant);margin-top:4px}
+/* SettingToggleRow (NAK-423): words take the room left, the title wraps before the control. */
+.row{display:flex;gap:12px;align-items:center}
+.words{flex:1 1 0;min-width:0}
+.words b{display:block;font-size:14px;line-height:20px;font-weight:500;overflow-wrap:anywhere}
+.words small{display:block;font-size:12px;line-height:16px;color:var(--variant);overflow-wrap:anywhere}
+.tg{position:relative;flex:0 0 52px;width:52px;height:44px;padding:0;border:0;background:none;cursor:pointer;border-radius:22px}
+.tg::before{content:"";position:absolute;left:0;top:7px;width:52px;height:30px;border-radius:15px;background:var(--highest);border:1px solid var(--outline)}
+.tg::after{content:"";position:absolute;left:4px;top:11px;width:22px;height:22px;border-radius:11px;background:var(--variant);transition:transform .15s var(--ease)}
+.tg[aria-checked=true]::before{background:var(--primary);border-color:var(--primary)}
+.tg[aria-checked=true]::after{background:var(--onprimary);transform:translateX(22px)}
+.tg:hover::after,.tg.f-hover::after{opacity:.88}.tg:active::after,.tg.f-press::after{transform:scale(.9)}
+.tg[aria-checked=true]:active::after,.tg[aria-checked=true].f-press::after{transform:translateX(22px) scale(.9)}
+/* Consumption pill (D419, same part as Effects & battery): chip, then the reason; the reason drops under the chip when narrow. */
+.fx{display:flex;flex-direction:column;gap:6px}
+.cost{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center}
+.chip{position:relative;display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 8px;border-radius:11px;color:var(--primary);font-size:11px;line-height:16px;font-weight:600;white-space:nowrap}
+.chip::before{content:"";position:absolute;inset:0;border-radius:11px;background:var(--primary);opacity:.15}
+.chip svg{width:13px;height:13px;fill:currentColor}
+.cost span{font-size:11px;line-height:16px;color:var(--variant);overflow-wrap:anywhere;min-width:0}
+/* SettingChoiceRow: words, then a Flow of pills that wraps. */
+.choice{display:flex;flex-direction:column;gap:8px;transition:opacity .15s var(--ease)}
+.choice.off{opacity:.5}
+.pills{display:flex;flex-wrap:wrap;gap:8px}
+.pill{position:relative;font:500 14px/20px Inter,'Noto Sans',sans-serif;min-height:36px;padding:8px 16px;border-radius:18px;border:1px solid var(--outline);background:none;color:var(--text);cursor:pointer}
+.pill::after{content:"";position:absolute;inset:-4px 0;border-radius:18px}/* 44 px target on a 36 px pill */
+.pill[aria-checked=true]{background:var(--primary);border-color:var(--primary);color:var(--onprimary);font-weight:600}
+.pill:hover,.pill.f-hover{border-color:var(--text)}.pill:active,.pill.f-press{transform:scale(.97)}
+.choice.off .pill{cursor:default}.choice.off .pill:hover{border-color:var(--outline)}.choice.off .pill:active{transform:none}
+/* The silence strip: one day of a favourite as a line; a drop is a gap. Gaps shorter than the wait stay hollow, longer ones light up. */
+.strip{display:flex;align-items:flex-start;gap:0;margin-top:4px}
+.strip .ln{flex:1 1 8px;height:1px;background:var(--outline);margin-top:8px;min-width:8px}
+.drop{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:4px;width:64px}
+.drop i{display:block;width:100%;height:16px;border-radius:8px;border:1px dashed var(--outline)}
+.drop.w1 i{width:16px}.drop.w2 i{width:32px}.drop.w3 i{width:64px}
+.drop.hit i{border:0;background:var(--primary)}
+.drop em{font-style:normal;font-size:11px;line-height:16px;color:var(--variant);text-align:center}
+.drop.hit em{color:var(--text);font-weight:600}
+.narrow .drop{width:56px}.narrow .drop.w3 i{width:56px}
+hr{border:0;height:1px;background:var(--outline);opacity:.4;margin:0;width:100%}
+
+/* The DMS toast, top centre of the screen: one line, wraps for a long name. Width 16 + 24 + 12 + text + 16, capped at 420. */
+.screen{position:relative;width:480px;max-width:100%;padding:12px 16px 20px;background:var(--bg);border:1px solid var(--outline);border-radius:16px}
+.narrow .screen{width:320px}
+.toast{display:flex;gap:12px;align-items:flex-start;width:fit-content;max-width:min(420px,100%);margin:0 auto;padding:12px 16px;border-radius:var(--r);background:var(--high);border:1px solid var(--outline)}
+.toast svg{flex:0 0 24px;width:24px;height:24px}
+.toast .m{min-width:0;font-size:14px;line-height:24px;font-weight:500;color:var(--text);overflow-wrap:anywhere}
+.toast .m small{display:block;font-size:12px;line-height:16px;font-weight:400;color:var(--variant);margin-top:4px}
+.jf{fill:none;stroke:var(--variant);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.jf.up{stroke:var(--primary)}.jf.up .bell{fill:var(--primary)}
+.toast.play{animation:tin .2s var(--ease) 1}
+@keyframes tin{from{opacity:0;transform:translateY(-8px)}}
+table{border-collapse:collapse;font-size:12px;line-height:16px;max-width:100%}td,th{padding:4px 16px 4px 0;text-align:left;vertical-align:top;font-weight:400;color:var(--variant)}th{color:var(--text);font-weight:600}td:first-child{color:var(--text)}
+.notes{background:var(--surface);border:1px solid var(--outline);border-radius:16px;padding:16px;max-width:960px;overflow-x:auto}
+.notes h2:first-child{margin-top:0}
+.states{display:flex;flex-wrap:wrap;gap:16px 24px;align-items:center;background:var(--surface);border:1px solid var(--outline);border-radius:16px;padding:16px;width:fit-content;max-width:100%}
+.states label{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;line-height:16px;color:var(--variant)}
+.static *{transition:none!important;animation:none!important}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+<h1>Abyss · Favourite alerts (NAK-636, for NAK-229)</h1>
+<p>Idea: <b>a favourite surfaces or sinks.</b> The jellyfish of the toast is lit and full when the device is back, hollow and sunk when it is offline. In the settings, a line with gaps shows which drops stay silent for the wait you picked.</p>
+<p>Why it is not generic: the state is carried by the plugin's own creature and by the shape of the outage (a gap in a line), not by a red or green dot.</p>
+<p>Fictitious data. Every switch and control below is live.</p>
+
+<div class="switches">
+ <div class="grp" data-k="mode"><span>Theme</span><button data-v="dark">Dark</button><button data-v="light">Light</button></div>
+ <div class="grp" data-k="pal"><span>Palette</span><button data-v="def">Default</button><button data-v="sea">Deep sea</button><button data-v="wall">From wallpaper</button></div>
+ <div class="grp" data-k="width"><span>Width</span><button data-v="wide">Wide</button><button data-v="narrow">Narrow</button></div>
+ <div class="grp" data-k="copy"><span>Existing row</span><button data-v="new">Renamed (recommended)</button><button data-v="old">Label kept</button></div>
+ <div class="grp" data-k="icon"><span>Toast icon</span><button data-v="jf">Abyss jellyfish</button><button data-v="info">DMS info (fallback)</button></div>
+ <div class="grp" data-k="motion"><span>Motion</span><button data-v="on">On</button><button data-v="off">Reduce motion</button></div>
+</div>
+
+<h2>1 · Settings, section "Alerts &amp; sounds"</h2>
+<div class="sheet"><div class="cell"><small id="panelcap"></small>
+<div class="panel">
+ <div class="rail" aria-hidden="true"><div>Connect</div><div>Appearance</div><div>Effects &amp; battery</div><div>Bar</div><div>Desktop</div><div class="on">Alerts &amp; sounds</div><div>Advanced</div><div>Help</div></div>
+ <div class="body">
+  <div><h3>Alerts &amp; sounds</h3><small>When Abyss speaks up</small></div>
+  <div class="fx">
+   <div class="row"><div class="words"><b>Favourite alerts</b><small>Tells you when a favourite stays offline, and when it is back, with how long it was gone</small></div>
+    <button class="tg" id="fav" role="switch" aria-checked="true" aria-label="Favourite alerts"></button></div>
+   <div class="cost"><span class="chip"><svg viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>Light on battery</span><span>Reads the status Abyss already refreshes. No timer of its own</span></div>
+  </div>
+  <div class="choice" id="delay"><div class="words"><b>Wait before alerting</b><small>A favourite must stay offline this long. Shorter drops stay silent</small></div>
+   <div class="pills" role="radiogroup" aria-label="Wait before alerting"><button class="pill" role="radio" data-s="10">10 s</button><button class="pill" role="radio" data-s="30">30 s</button><button class="pill" role="radio" data-s="60">1 min</button><button class="pill" role="radio" data-s="300">5 min</button></div>
+   <div class="strip" id="strip" aria-hidden="true"></div>
+  </div>
+  <hr>
+  <div class="row"><div class="words"><b id="oldl"></b><small id="oldd"></small></div>
+   <button class="tg" role="switch" aria-checked="false" id="all" aria-label="All device notifications"></button></div>
+ </div>
+</div></div></div>
+
+<h2>2 · Control states</h2>
+<div class="states static">
+ <label><button class="tg" role="switch" aria-checked="false" tabindex="-1"></button>off</label>
+ <label><button class="tg" role="switch" aria-checked="true" tabindex="-1"></button>on</label>
+ <label><button class="tg f-hover" role="switch" aria-checked="true" tabindex="-1"></button>hover</label>
+ <label><button class="tg f-press" role="switch" aria-checked="true" tabindex="-1"></button>pressed</label>
+ <label><button class="tg f-focus" role="switch" aria-checked="true" tabindex="-1"></button>focus</label>
+ <label><button class="pill" tabindex="-1">30 s</button>default</label>
+ <label><button class="pill" aria-checked="true" tabindex="-1">30 s</button>selected</label>
+ <label><button class="pill f-hover" tabindex="-1">30 s</button>hover</label>
+ <label><button class="pill f-press" tabindex="-1">30 s</button>pressed</label>
+ <label><button class="pill f-focus" tabindex="-1">30 s</button>focus</label>
+ <label><span class="choice off"><button class="pill" tabindex="-1">30 s</button></span>disabled</label>
+</div>
+
+<h2>3 · Notifications, as the shell shows them (DMS toast, top centre)</h2>
+<p>One toast per refresh, never a burst. Click a toast to replay its entrance.</p>
+<div class="sheet" id="toasts"></div>
+
+<h2>4 · Notes for the Shell Engineer (NAK-229)</h2>
+<div class="notes">
+<h2>What each row writes</h2>
+<table>
+<tr><th>Row</th><th>Component</th><th>Key (proposed)</th><th>Type, default</th><th>Notes</th></tr>
+<tr><td>Favourite alerts</td><td><code>Effect</code> (toggle + pill)</td><td><code>favouriteAlerts</code></td><td>bool, <code>false</code></td><td>Passed as <code>opts.enabled</code> to <code>Alerts.step</code>. <code>impact: "low"</code>.</td></tr>
+<tr><td>Wait before alerting</td><td><code>SettingChoiceRow</code></td><td><code>favouriteAlertDelay</code></td><td>string of seconds, <code>"30"</code></td><td>Options <code>"10" "30" "60" "300"</code>; <code>debounceMs = Number(value) * 1000</code>. Row at opacity 0.5 and not focusable while Favourite alerts is off.</td></tr>
+<tr><td>All device notifications</td><td><code>SettingToggleRow</code></td><td><code>notifications</code> (unchanged)</td><td>bool, <code>false</code></td><td>Only the label and description change. A favourite handled by Favourite alerts is skipped here, so one event never raises two toasts.</td></tr>
+</table>
+<h2>Exact strings</h2>
+<table>
+<tr><th>Where</th><th>Text</th></tr>
+<tr><td>Row 1 label / description</td><td><code>Favourite alerts</code> / <code>Tells you when a favourite stays offline, and when it is back, with how long it was gone</code></td></tr>
+<tr><td>Row 1 pill / reason</td><td><code>Light on battery</code> / <code>Reads the status Abyss already refreshes. No timer of its own</code></td></tr>
+<tr><td>Row 2 label / description</td><td><code>Wait before alerting</code> / <code>A favourite must stay offline this long. Shorter drops stay silent</code></td></tr>
+<tr><td>Row 2 options</td><td><code>10 s</code> <code>30 s</code> <code>1 min</code> <code>5 min</code></td></tr>
+<tr><td>Strip captions</td><td><code>20 s</code> <code>45 s</code> <code>12 min</code>, and under each <code>silent</code> or <code>alert</code> (follows the wait)</td></tr>
+<tr><td>Row 3 label / description</td><td><code>All device notifications</code> / <code>Every device, the moment it comes online or goes offline. No wait, no duration (muted ones stay quiet)</code></td></tr>
+<tr><td>One down / back</td><td><code>{name} is offline.</code> / <code>{name} is back after {duration}.</code> (already in <code>Alerts.message</code>)</td></tr>
+<tr><td>Two together</td><td><code>{a} and {b} are offline.</code> / <code>{a} and {b} are back.</code> details <code>{a} {duration} · {b} {duration}</code></td></tr>
+<tr><td>Three or more</td><td><code>{n} favourites are offline.</code> / <code>{n} favourites are back.</code> details: names joined by <code> · </code> (with each duration for "back"), at most 3, then <code>+{k} more</code></td></tr>
+<tr><td>No name</td><td><code>A favourite is offline.</code> (already in <code>Alerts.message</code>)</td></tr>
+<tr><td>Durations</td><td><code>45 s</code>, <code>3 min</code>, <code>2 h 5 min</code>, <code>1 d 4 h</code> (<code>Alerts.formatDuration</code>, unchanged)</td></tr>
+</table>
+<h2>Tokens and measures</h2>
+<table>
+<tr><th>Part</th><th>Tokens</th><th>Measures</th></tr>
+<tr><td>Rows</td><td>title <code>Theme.surfaceText</code>, description <code>Theme.surfaceVariantText</code></td><td>Column spacing <code>Theme.spacingL</code> (16). Order: Favourite alerts, Wait before alerting, 1 px divider (<code>Theme.outline</code> at 0.4), All device notifications.</td></tr>
+<tr><td>Pill (D419)</td><td><code>Theme.primary</code> text and bolt on <code>Theme.primary</code> at 0.15; reason <code>Theme.surfaceVariantText</code></td><td>Existing <code>Effect</code> part: chip 22 high, radius 11, 6 under the row; reason drops under the chip when narrow.</td></tr>
+<tr><td>Silence strip</td><td>line and hollow gaps <code>Theme.outline</code>; lit gap <code>Theme.primary</code>; caption <code>Theme.surfaceVariantText</code>, lit caption <code>Theme.surfaceText</code> DemiBold</td><td>4 under the pills. Line 1 px. Gaps 16 / 32 / 64 wide (56 when narrow), 16 high, radius 8, hollow = 1 px dashed. Captions 11 px, 4 under the gap. Fixed sample drops 20 s, 45 s, 12 min; lit when drop ≥ wait. Plain Rectangles and a binding on the value: no Timer, no animation.</td></tr>
+<tr><td>Toast</td><td>DMS <code>ToastService.showInfo(message, details)</code> through <code>_toast</code>: surface, text and outline are DMS's own</td><td>Nothing to build for the frame. Sentence 14 px Medium, details 12 px.</td></tr>
+<tr><td>Jellyfish icon</td><td>back: bell filled and stroked <code>Theme.primary</code>; offline: stroke only <code>Theme.surfaceVariantText</code>, bell 4 px lower, tentacles short</td><td>24 x 24 grid, stroke 2, round caps. State is carried by fill and position, not by colour alone.</td></tr>
+</table>
+<h2>Behaviour</h2>
+<p>Grouping: every event returned by one <code>Alerts.step</code> call makes at most two toasts, one for the "down" events and one for the "back" events. The sentence for 2 and for 3 or more is new pure logic for <code>Alerts.js</code> (with gjs tests). A muted favourite stays quiet, like today.</p>
+<p>Motion: none at rest. The toast entrance is DMS's own. The toggle knob slides 22 px in 150 ms (existing row); with Reduce motion everything changes at once.</p>
+<p>Narrow form (440 px with the 176 px rail, 216 px left for the rows): titles wrap before the switch, the delay pills wrap onto a second line, the pill reason drops under the chip. Nothing overlaps (checked by script on this page, both widths).</p>
+<p>Open point, not verified in a build: <code>ToastService.showInfo</code> has no icon parameter (message, details, command, category). With a plain toast the shell draws its own info icon ("Toast icon" switch above). The jellyfish needs either a desktop notification with the plugin icon or a small Abyss-owned toast; that choice belongs to NAK-229.</p>
+<p>The "Light on battery" level rests on a written reason (the alert step runs inside the refresh Abyss already does, no extra process or timer). It is not measured yet: to be confirmed by the bench of NAK-229.</p>
+</div>
+
+<script>
+const PAL={def:{dark:{bg:"#141218",surface:"#211F26",high:"#2B2930",highest:"#36343B",text:"#E6E0E9",variant:"#CAC4D0",outline:"#938F99",primary:"#D0BCFF",onprimary:"#381E72"},
+light:{bg:"#E7E0EC",surface:"#FEF7FF",high:"#ECE6F0",highest:"#E6E0E9",text:"#1D1B20",variant:"#49454F",outline:"#79747E",primary:"#6750A4",onprimary:"#FFFFFF"}},
+sea:{dark:{bg:"#0F1417",surface:"#1B2023",high:"#252B2E",highest:"#303639",text:"#DEE3E7",variant:"#BFC8CD",outline:"#899297",primary:"#8AD0EE",onprimary:"#003546"},
+light:{bg:"#DFE5E9",surface:"#F5FAFE",high:"#E9EFF3",highest:"#DEE3E7",text:"#171C1F",variant:"#40484C",outline:"#70787D",primary:"#0A6780",onprimary:"#FFFFFF"}},
+wall:{dark:{bg:"#17130B",surface:"#231F17",high:"#2E2920",highest:"#39342B",text:"#ECE1D4",variant:"#D1C5B4",outline:"#9A8F80",primary:"#EFBF6D",onprimary:"#422C00"},
+light:{bg:"#EFE3D0",surface:"#FFF8F1",high:"#F3E7D6",highest:"#EDE1D0",text:"#1F1B13",variant:"#4E4639",outline:"#807667",primary:"#7A5900",onprimary:"#FFFFFF"}}};
+const S={mode:"dark",pal:"sea",width:"wide",copy:"new",icon:"jf",motion:"on",wait:30};
+const $=q=>document.querySelector(q),$$=q=>[...document.querySelectorAll(q)];
+const JF={up:'<svg viewBox="0 0 24 24" class="jf up"><path class="bell" d="M5 11a7 7 0 0 1 14 0z"/><path d="M8 14v5M12 14v7M16 14v5"/></svg>',
+down:'<svg viewBox="0 0 24 24" class="jf"><path class="bell" d="M5 15a7 7 0 0 1 14 0z"/><path d="M8 18v2M12 18v3M16 18v2"/></svg>',
+info:'<svg viewBox="0 0 24 24" class="jf"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7v.5"/></svg>'};
+// Fictitious devices; the long one checks wrapping.
+const T=[["Favourite offline","down","Reef NAS is offline."],
+["Back, seconds range","up","Reef NAS is back after 45 s."],
+["Back, minutes range","up","Reef NAS is back after 3 min."],
+["Back, hours range","up","Reef NAS is back after 2 h 5 min."],
+["Back, days range","up","Reef NAS is back after 1 d 4 h."],
+["Very long device name","down","lanternfish-workstation-basement-rack-02.coral-mesh.example is offline."],
+["Very long device name, back","up","lanternfish-workstation-basement-rack-02.coral-mesh.example is back after 12 min."],
+["Device without a name","down","A favourite is offline."],
+["Two drop together","down","Reef NAS and Kelp Laptop are offline."],
+["Three or more drop together","down","5 favourites are offline.","Reef NAS · Kelp Laptop · Tide Pi · +2 more"],
+["Two back together","up","Reef NAS and Kelp Laptop are back.","Reef NAS 12 min · Kelp Laptop 14 min"],
+["Three or more back together","up","3 favourites are back.","Reef NAS 12 min · Kelp Laptop 14 min · Tide Pi 2 h 5 min"]];
+const DROPS=[[20,"20 s","w1"],[45,"45 s","w2"],[720,"12 min","w3"]];
+function draw(){
+ const p=PAL[S.pal][S.mode];for(const k in p)document.documentElement.style.setProperty("--"+k,p[k]);
+ document.body.classList.toggle("narrow",S.width==="narrow");document.body.classList.toggle("static",S.motion==="off");
+ $$(".grp").forEach(g=>g.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",S[g.dataset.k]===b.dataset.v)));
+ $("#panelcap").textContent=S.width==="narrow"?"Settings panel, narrow form, 440 px with the 176 px section rail":"Settings panel, 720 px with the 176 px section rail";
+ const on=$("#fav").getAttribute("aria-checked")==="true";
+ $("#delay").classList.toggle("off",!on);
+ $$("#delay .pill").forEach(b=>{b.setAttribute("aria-checked",+b.dataset.s===S.wait);b.tabIndex=on?0:-1;b.setAttribute("aria-disabled",!on)});
+ $("#strip").innerHTML='<span class="ln"></span>'+DROPS.map(d=>{const h=d[0]>=S.wait;return `<span class="drop ${d[2]}${h?" hit":""}"><i></i><em>${d[1]}<br>${h?"alert":"silent"}</em></span><span class="ln"></span>`}).join("");
+ $("#oldl").textContent=S.copy==="new"?"All device notifications":"Notifications";
+ $("#oldd").textContent=S.copy==="new"?"Every device, the moment it comes online or goes offline. No wait, no duration (muted ones stay quiet)":"When a device comes online or goes offline (muted ones stay quiet)";
+ $("#toasts").innerHTML=T.map(t=>`<div class="cell"><small>${t[0]}</small><div class="screen"><div class="toast" tabindex="0" role="status">${S.icon==="jf"?JF[t[1]]:JF.info}<div class="m">${t[2]}${t[3]?`<small>${t[3]}</small>`:""}</div></div></div></div>`).join("");
+}
+document.addEventListener("click",e=>{
+ const g=e.target.closest(".grp button");if(g){S[g.parentNode.dataset.k]=g.dataset.v;return draw()}
+ const t=e.target.closest(".panel .tg");if(t){t.setAttribute("aria-checked",t.getAttribute("aria-checked")!=="true");return draw()}
+ const p=e.target.closest("#delay .pill");if(p&&!$("#delay").classList.contains("off")){S.wait=+p.dataset.s;return draw()}
+ const o=e.target.closest(".toast");if(o){o.classList.remove("play");void o.offsetWidth;o.classList.add("play")}
+});
+draw();
+</script>
+</html>
