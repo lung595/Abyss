@@ -14,6 +14,7 @@ No promises, no dates. Everything here was asked for and is not in a release yet
 
 ## Known limits
 
+- About 24 caves or more in a 480 px wide deep: the names on one height touch (the name width stops at 48 px, below that it is not readable).
 - Waking a device (not wired yet) identifies a network by its IPv4 subnet only: on a foreign network with the same numbers the magic packet would go out there. The wiring will add a discriminator such as the gateway MAC.
 - A file send shows no percentage: `scp` prints no count without a terminal, so progress is a moving mark.
 - Naming a group needs keyboard focus, which the desktop widget may not get: rename it from the bar popout.
