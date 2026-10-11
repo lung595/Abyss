@@ -28,7 +28,7 @@ Window {
     readonly property string out: args[args.length - 1]
     readonly property bool desk: mode.indexOf("desk") === 0
     width: cc ? 560 : desk ? 780 : 580
-    height: cc ? 360 : desk ? 620 : 480
+    height: cc ? 360 : desk ? 620 : mode.indexOf("card-link") === 0 ? 900 : 480
     visible: true
     color: "#141218"
 
@@ -126,6 +126,25 @@ Window {
         // card-phone: a phone's card, with the Termux hint ready to accept
         if (mode === "card-phone")
             scene.cardId = "demo-kestrel-phone";
+        // card-link-*: the "Why is it slow?" verdict (NAK-226), card scrolled to its end.
+        // relay = relayed peer, direct = P2P peer, down = relayed peer, mesh disconnected
+        if (mode.indexOf("card-link") === 0) {
+            scene.cardId = mode === "card-link-direct" ? "demo-kestrel-phone" : "demo-harbor-vps";
+            if (mode === "card-link-down")
+                demo.setState("disconnected");
+            later.task = () => {
+                // The card's Flickable is the one with the most to scroll
+                let f = null;
+                (function walk(o) {
+                    if (o.contentY !== undefined && (!f || o.contentHeight - o.height > f.contentHeight - f.height))
+                        f = o;
+                    (o.children || []).forEach(walk);
+                })(scene);
+                if (f)
+                    f.contentY = Math.max(0, f.contentHeight - f.height);
+            };
+            later.start();
+        }
         if (mode === "find")
             scene.query = "pi";
         // hints / cmd: the search bar's panel, empty (shortcuts) or with a command typed
